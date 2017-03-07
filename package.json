@@ -1,6 +1,6 @@
 {
   "name": "react-native-image-marker",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "mark image",
   "main": "index.js",
   "scripts": {

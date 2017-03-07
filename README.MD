@@ -1,5 +1,5 @@
 # react-native-image-marker
-Marking text on image
+Marking text on image, 
 
 ## Installation
 * npm install react-native-image-marker --save
@@ -12,14 +12,31 @@ let ImageMarker = NativeModules.ImageMarker;
 
 ···
 
-ImageMarker.addText(img.uri, text, waterMarker.rect, waterMarker.color, waterMarker.fontName, waterMarker.fontSize, (b ,path)=>{
+ImageMarker.addText(
+    Platform.OS == 'android'? img.uri.replace('file://', '') : img.uri,
+    text,
+    X,
+    Y,
+    color,
+    fontName,
+    fontSize,
+    (path)=>{
     //TODO
 });
 
 ···
 
-ImageMarker.addTextByPostion(img.uri, text, waterMarker.position, waterMarker.size, waterMarker.color, waterMarker.fontName, waterMarker.fontSize, (b ,path)=>{
-    //TODO
-});
+ImageMarker.addTextByPostion(
+    Platform.OS == 'android'? img.uri.replace('file://', '') : img.uri,
+    text,
+    position,
+    width,
+    height,
+    color,
+    fontName,
+    fontSize,
+    (path)=>{
+        //TODO
+    });
 
 ```
