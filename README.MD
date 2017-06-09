@@ -50,7 +50,7 @@ ImageMarker.addTextByPostion(
 | Y | number | any number | y |
 | text | string | any string | the text you want to mark on |
 | color | hexColor | any color | text color |
-| fontName | string | any fontFamily name |  |
+| fontName | string | any fontFamily name | fontFamily |
 | fontSize | number | any number | the text font size |
 | width | number | any number | text width |
 | height | number | any number | text height |
