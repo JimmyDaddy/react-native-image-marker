@@ -44,7 +44,7 @@ ImageMarker.addTextByPostion(
 ## props
 
 | name | type | value | description |
-| --- | --- | --- |
+| --- | --- | --- | --- |
 | position | string | 'topLeft', 'topCenter','topRight','bottomLeft','bottomCenter','bottomRight','center'| text postion enum on image |
 | X | number | any number | x |
 | Y | number | any number | y |
