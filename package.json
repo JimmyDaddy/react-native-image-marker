@@ -1,6 +1,6 @@
 {
   "name": "react-native-image-marker",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "mark image",
   "main": "index.js",
   "scripts": {
@@ -12,8 +12,13 @@
   },
   "keywords": [
     "react-native",
-    "baidumap"
+    "image",
+    "marker",
+    "text"
   ],
+  "peerDependencies": {
+    "react-native": ">=0.40.0"
+  },
   "author": "jimmydaddy",
   "license": "ISC",
   "bugs": {

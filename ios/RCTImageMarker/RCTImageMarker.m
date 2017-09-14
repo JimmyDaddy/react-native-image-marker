@@ -7,7 +7,7 @@
 //
 
 #import "RCTImageMarker.h"
-#import "RCTBridgeModule.h"
+#import <React/RCTBridgeModule.h>
 #include <CoreText/CTFont.h>
 #include <CoreText/CTStringAttributes.h>
 #include "RCTConvert+ImageMarker.h"
@@ -198,7 +198,8 @@ RCT_EXPORT_METHOD(addText: (NSString *)path
                   color:(NSString*)color
                   fontName:(NSString*)fontName
                   fontSize:(CGFloat)fontSize
-                  callback:(RCTResponseSenderBlock)callback)
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
 {
     NSString* fullPath = generateCacheFilePathForMarker(@".jpg");
     //这里之前是loadImageOrDataWithTag
@@ -208,7 +209,7 @@ RCT_EXPORT_METHOD(addText: (NSString *)path
             if (image == nil) {
                 NSLog(@"Can't retrieve the file from the path");
                 
-                callback(@[@"Can't retrieve the file from the path.", @""]);
+                reject(@"error", @"Can't retrieve the file from the path.", error);
                 return;
             }
         }
@@ -219,13 +220,13 @@ RCT_EXPORT_METHOD(addText: (NSString *)path
         UIImage * scaledImage = markerImg(image, text, X, Y , uiColor, font);
         if (scaledImage == nil) {
             NSLog(@"Can't mark the image");
-            callback(@[@"Can't mark the image.", @""]);
+            reject(@"error",@"Can't mark the image.", error);
             return;
         }
         NSLog(@" file from the path");
         
         saveImageForMarker(fullPath, scaledImage, 1);
-        callback(@[fullPath]);
+        resolve(@[fullPath]);
     }];
 }
 
@@ -237,7 +238,8 @@ RCT_EXPORT_METHOD(addTextByPostion: (NSString *)path
                   color:(NSString*)color
                   fontName:(NSString*)fontName
                   fontSize:(CGFloat)fontSize
-                  callback:(RCTResponseSenderBlock)callback)
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
 {
     NSString* fullPath = generateCacheFilePathForMarker(@".jpg");
     //这里之前是loadImageOrDataWithTag
@@ -250,7 +252,7 @@ RCT_EXPORT_METHOD(addTextByPostion: (NSString *)path
                 image = [[UIImage alloc] initWithContentsOfFile:path];
             }
             if (image == nil) {
-                callback(@[@"Can't retrieve the file from the path.", @""]);
+                reject(@"error", @"Can't retrieve the file from the path.", error);
                 return;
             }
         }
@@ -261,13 +263,13 @@ RCT_EXPORT_METHOD(addTextByPostion: (NSString *)path
         UIImage * scaledImage = markerImgByPostion(image, text, position, width, height, uiColor, font);
         if (scaledImage == nil) {
             NSLog(@"Can't mark the image");
-            callback(@[@"Can't mark the image.", @""]);
+            reject(@"error",@"Can't mark the image.", error);
             return;
         }
         NSLog(@" file from the path");
         
         saveImageForMarker(fullPath, scaledImage, 1);
-        callback(@[fullPath]);
+        resolve(@[fullPath]);
     }];
 }
 

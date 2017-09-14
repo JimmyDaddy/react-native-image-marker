@@ -7,8 +7,8 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "RCTBridge.h"
-#import "RCTImageLoader.h"
+#import <React/RCTBridge.h>
+#import <React/RCTImageLoader.h>
 
 
 

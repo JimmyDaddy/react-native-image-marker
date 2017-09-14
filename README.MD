@@ -1,14 +1,17 @@
 # react-native-image-marker
-Marking text on image,
+
+Marking text on image
 
 ## Installation
+
 * npm install react-native-image-marker --save
 * react-native link
 
 ## Usage
 
-```
-let ImageMarker = NativeModules.ImageMarker;
+```javascript
+
+import ImageMarker from "react-native-image-marker"
 
 ···
 
@@ -19,10 +22,12 @@ ImageMarker.addText(
     Y,
     color,
     fontName,
-    fontSize,
-    (path)=>{
-    //TODO
-});
+    fontSize
+).then((res) => {
+    console.log("the path is"+res)
+}).catch((err) => {
+    console.log(err)
+})
 
 ···
 
@@ -34,23 +39,11 @@ ImageMarker.addTextByPostion(
     height,
     color,
     fontName,
-    fontSize,
-    (path)=>{
-        //TODO
-    });
+    fontSize
+).then((res) => {
+    console.log("the path is"+res)
+}).catch((err) => {
+    console.log(err)
+})
 
 ```
-
-## props
-
-| name | type | value | description |
-| --- | --- | --- | --- |
-| position | string | 'topLeft', 'topCenter','topRight','bottomLeft','bottomCenter','bottomRight','center'| text postion enum on image |
-| X | number | any number | x |
-| Y | number | any number | y |
-| text | string | any string | the text you want to mark on |
-| color | hexColor | any color | text color |
-| fontName | string | any fontFamily name | fontFamily |
-| fontSize | number | any number | the text font size |
-| width | number | any number | text width |
-| height | number | any number | text height |

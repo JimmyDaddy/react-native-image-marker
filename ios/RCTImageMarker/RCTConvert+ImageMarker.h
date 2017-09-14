@@ -8,7 +8,7 @@
 
 #ifndef RCTConvert_ImageMarker_h
 #define RCTConvert_ImageMarker_h
-#import "RCTConvert.h"
+#import <React/RCTConvert.h>
 
 @interface RCTConvert(ImageMarker)
 + (CGPoint)CGPoint:(id)json offset:(NSUInteger)offset;
