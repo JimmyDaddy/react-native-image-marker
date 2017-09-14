@@ -10,11 +10,13 @@ import android.graphics.Typeface;
 import android.text.TextUtils;
 
 import com.facebook.react.bridge.Callback;
+import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 
 import java.io.BufferedOutputStream;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
@@ -44,29 +46,55 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
      * @param color
      * @param fontName
      * @param fontSize
-     * @param callback
+     * @param promise
      */
     @ReactMethod
-    public static void addText(String imgSavePath, String mark, Integer X, Integer Y, String color, String fontName, int fontSize, Callback callback) {
+    public static void addText(String imgSavePath, String mark, Integer X, Integer Y, String color, String fontName, int fontSize, Promise promise) {
        if (TextUtils.isEmpty(mark)){
-           callback.invoke(imgSavePath);
+           promise.reject("error", "mark should not be empty", null);
        }
         BufferedOutputStream bos = null;
         boolean isFinished;
         Bitmap icon = null;
         try {
+
+
+            File file = new File(imgSavePath);
+            if (!file.exists()){
+                promise.reject( "error","Can't retrieve the file from the path.",null);
+            }
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inJustDecodeBounds = true;
-            BitmapFactory.decodeFile(imgSavePath, options); //此时返回bm为空
-            float percent =
-                    options.outHeight > options.outWidth ? options.outHeight / 960f : options.outWidth / 960f;
+            try {
+                BitmapFactory.decodeFile(imgSavePath, options); //此时返回bm为空
+            } catch (OutOfMemoryError e) {
+                System.out.print(e.getMessage());
+                System.gc();
+                System.runFinalization();
+                BitmapFactory.decodeFile(imgSavePath, options); //此时返回bm为空
 
-            if (percent < 1) {
-                percent = 1;
             }
-            int width = (int) (options.outWidth / percent);
-            int height = (int) (options.outHeight / percent);
-            icon = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
+//            float percent =
+//                    options.outHeight > options.outWidth ? options.outHeight / 960f : options.outWidth / 960f;
+//
+//            if (percent < 1) {
+//                percent = 1;
+//            }
+//            int width = (int) (options.outWidth / percent);
+//            int height = (int) (options.outHeight / percent);
+
+            int height = options.outHeight;
+            int width =  options.outWidth;
+            try {
+                icon = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
+            } catch (OutOfMemoryError e) {
+                System.out.print(e.getMessage());
+                while(icon == null) {
+                    System.gc();
+                    System.runFinalization();
+                    icon = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
+                }
+            }
 
             //初始化画布 绘制的图像到icon上
             Canvas canvas = new Canvas(icon);
@@ -77,11 +105,20 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             //过滤一些
             //                    photoPaint.setFilterBitmap(true);
             options.inJustDecodeBounds = false;
-
-            Bitmap prePhoto = BitmapFactory.decodeFile(imgSavePath);
-            if (percent > 1) {
-                prePhoto = Bitmap.createScaledBitmap(prePhoto, width, height, true);
+            Bitmap prePhoto = null;
+            try {
+                prePhoto = BitmapFactory.decodeFile(imgSavePath);
+            } catch (OutOfMemoryError e) {
+                System.out.print(e.getMessage());
+                while(prePhoto == null) {
+                    System.gc();
+                    System.runFinalization();
+                    prePhoto = BitmapFactory.decodeFile(imgSavePath);
+                }
             }
+//            if (percent > 1) {
+//                prePhoto = Bitmap.createScaledBitmap(prePhoto, width, height, true);
+//            }
 
             canvas.drawBitmap(prePhoto, 0, 0, photoPaint);
 
@@ -125,14 +162,14 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
 
             bos = new BufferedOutputStream(new FileOutputStream(imgSavePath));
 
-            int quaility = (int) (100 / percent > 80 ? 80 : 100 / percent);
-            icon.compress(Bitmap.CompressFormat.JPEG, quaility, bos);
+//            int quaility = (int) (100 / percent > 80 ? 80 : 100 / percent);
+            icon.compress(Bitmap.CompressFormat.JPEG, 80, bos);
             bos.flush();
             //保存成功的
-            callback.invoke(imgSavePath);
+            promise.resolve(imgSavePath);
         } catch (Exception e) {
             e.printStackTrace();
-            callback.invoke(e);
+            promise.reject("error", e.getMessage(), e);
         } finally {
             isFinished = true;
             if (bos != null) {
@@ -160,34 +197,55 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
      * @param color
      * @param fontName
      * @param fontSize
-     * @param callback
+     * @param promise
      */
     @ReactMethod
-    public static void addTextByPostion(String imgSavePath, String mark, String position, Integer sizeWidth, Integer sizeHeight, String color, String fontName, Integer fontSize, Callback callback) {
+    public static void addTextByPostion(String imgSavePath, String mark, String position, Integer sizeWidth, Integer sizeHeight, String color, String fontName, Integer fontSize, Promise promise) {
         if (TextUtils.isEmpty(mark)){
-            callback.invoke(imgSavePath);
+            promise.reject("error", "mark should not be empty", null);
         }
         BufferedOutputStream bos = null;
         boolean isFinished;
         Bitmap icon = null;
         try {
-
+            File file = new File(imgSavePath);
+            if (!file.exists()){
+                promise.reject("error", imgSavePath+"not exist", null);
+            }
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inJustDecodeBounds = true;
             //获取图片信息
-            BitmapFactory.decodeFile(imgSavePath, options); //此时返回bm为空
+            try {
+                BitmapFactory.decodeFile(imgSavePath, options); //此时返回bm为空
+            } catch (OutOfMemoryError e) {
+                System.out.print(e.getMessage());
+                System.gc();
+                System.runFinalization();
+                BitmapFactory.decodeFile(imgSavePath, options); //此时返回bm为空
 
-            float percent =
-                    options.outHeight > options.outWidth ? options.outHeight / 960f : options.outWidth / 960f;
-
-            if (percent < 1) {
-                percent = 1;
             }
-            int width = (int) (options.outWidth / percent);
-            int height = (int) (options.outHeight / percent);
+//            float percent =
+//                    options.outHeight > options.outWidth ? options.outHeight / 960f : options.outWidth / 960f;
+
+//            if (percent < 1) {
+//                percent = 1;
+//            }
+//            int width = (int) (options.outWidth / percent);
+//            int height = (int) (options.outHeight / percent);
+            int height = options.outHeight;
+            int width =  options.outWidth;
 
             //根据图片宽高创建画布
-            icon = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
+            try {
+                icon = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
+            } catch (OutOfMemoryError e) {
+                System.out.print(e.getMessage());
+                while(icon == null) {
+                    System.gc();
+                    System.runFinalization();
+                    icon = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
+                }
+            }
 
             //初始化画布 绘制的图像到icon上
             Canvas canvas = new Canvas(icon);
@@ -254,17 +312,17 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
 
             bos = new BufferedOutputStream(new FileOutputStream(imgSavePath));
 
-            int quaility = (int) (100 / percent > 80 ? 80 : 100 / percent);
+//            int quaility = (int) (100 / percent > 80 ? 80 : 100 / percent);
 
 
-            icon.compress(Bitmap.CompressFormat.JPEG, quaility, bos);
+            icon.compress(Bitmap.CompressFormat.JPEG, 80, bos);
 
             bos.flush();
             //保存成功的
-            callback.invoke(imgSavePath);
+            promise.resolve(imgSavePath);
         } catch (Exception e) {
             e.printStackTrace();
-            callback.invoke(e.getMessage());
+            promise.reject("error",e.getMessage(), e);
         } finally {
             isFinished = true;
             if (bos != null) {
