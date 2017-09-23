@@ -1,6 +1,6 @@
 # react-native-image-marker
 
-Marking text and image icon on image
+Marking text and icon on image
 
 ## sample
 
@@ -25,8 +25,8 @@ import ImageMarker from "react-native-image-marker"
 ImageMarker.addText(
     Platform.OS == 'android'? img.uri.replace('file://', '') : img.uri,
     text,
-    X,
-    Y,
+    X, // left
+    Y, // top
     color,
     fontName,
     fontSize
@@ -51,7 +51,7 @@ ImageMarker.addTextByPostion(
     console.log(err)
 })
 
-// mark image icon on image
+// mark icon on image
 
 const iconUri = Platform.OS == 'android'? icon.uri.replace('file://', '') : icon.uri
 const backGroundUri = Platform.OS == 'android'? img.uri.replace('file://', '') : img.uri
@@ -59,8 +59,8 @@ const backGroundUri = Platform.OS == 'android'? img.uri.replace('file://', '') :
 ImageMarker.markWithImage(
     backGroundUri, 
     iconUri, // icon uri
-    X, 
-    Y, 
+    X, // left
+    Y, // top
     scale // scale of icon
 ).then((path) => {
     this.setState({
