@@ -84,17 +84,112 @@ UIImage * markerImg(UIImage *image, NSString* text, CGFloat X, CGFloat Y, UIColo
     
 }
 
-UIImage * markerImgByPostion(UIImage *image, NSString* text, MarkerPosition position, CGFloat width, CGFloat height, UIColor* color, UIFont* font){
+/**
+ *
+ */
+UIImage * markeImageWithImage(UIImage *image, UIImage * waterImage, CGFloat X, CGFloat Y, CGFloat scale){
+    int w = image.size.width;
+    int h = image.size.height;
+    int ww = waterImage.size.width * scale;
+    int wh = waterImage.size.height * scale;
+    
+    UIGraphicsBeginImageContextWithOptions(image.size, NO, 0);
+    [image drawInRect:CGRectMake(0, 0, w, h)];
+    CGRect position = CGRectMake(X, Y, ww, wh);
+    [waterImage drawInRect:position];
+    UIImage * newImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return newImage;
+}
+
+UIImage * markeImageWithImageByPostion(UIImage *image, UIImage * waterImage, MarkerPosition position, CGFloat scale) {
     int w = image.size.width;
     int h = image.size.height;
     
-    CGSize size = CGSizeMake(width, height);
-    UIGraphicsBeginImageContext(image.size);
+    int ww = waterImage.size.width * scale;
+    int wh = waterImage.size.height * scale;
+    UIGraphicsBeginImageContextWithOptions(image.size, NO, 0);
     [image drawInRect:CGRectMake(0, 0, w, h)];
+    
+    CGSize size = CGSizeMake(ww, wh);
+    
+    
+    CGRect rect;
+
+    switch (position) {
+        case TopLeft:
+            rect = (CGRect){
+                CGPointMake(20, 20),
+                size
+            };
+            break;
+        case TopCenter:
+            rect = (CGRect){
+                CGPointMake((w-(size.width))/2, 20),
+                size
+            };
+            break;
+        case TopRight:
+            rect = (CGRect){
+                CGPointMake((w-size.width-20), 20),
+                size
+            };
+            break;
+        case BottomLeft:
+            rect = (CGRect){
+                CGPointMake(20, h-size.height-20),
+                size
+            };
+            break;
+        case BottomCenter:
+            rect = (CGRect){
+                CGPointMake((w-(size.width))/2, h-size.height-20),
+                size
+            };
+            break;
+        case BottomRight:
+            rect = (CGRect){
+                CGPointMake(w-(size.width), h-size.height-20),
+                size
+            };
+            break;
+        case Center:
+            rect = (CGRect){
+                CGPointMake((w-(size.width))/2, (h-size.height)/2),
+                size
+            };
+            break;
+        default:
+            rect = (CGRect){
+                CGPointMake(20, 20),
+                size
+            };
+            break;
+    }
+    
+    [waterImage drawInRect:rect];
+    UIImage * newImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return newImage;
+
+
+}
+
+
+UIImage * markerImgByPostion(UIImage *image, NSString* text, MarkerPosition position, UIColor* color, UIFont* font){
+    int w = image.size.width;
+    int h = image.size.height;
+    
     NSDictionary *attr = @{
                            NSFontAttributeName: font,   //设置字体
                            NSForegroundColorAttributeName : color      //设置字体颜色
                            };
+
+    CGSize size = [text sizeWithAttributes:attr];
+    
+//    CGSize size = CGSizeMake(fontSize, height);
+    UIGraphicsBeginImageContext(image.size);
+    [image drawInRect:CGRectMake(0, 0, w, h)];
     CGRect rect;
     switch (position) {
         case TopLeft:
@@ -233,8 +328,6 @@ RCT_EXPORT_METHOD(addText: (NSString *)path
 RCT_EXPORT_METHOD(addTextByPostion: (NSString *)path
                   text:(NSString*)text
                   position:(MarkerPosition)position
-                  width:(CGFloat)width
-                  height:(CGFloat)height
                   color:(NSString*)color
                   fontName:(NSString*)fontName
                   fontSize:(CGFloat)fontSize
@@ -260,7 +353,7 @@ RCT_EXPORT_METHOD(addTextByPostion: (NSString *)path
         // Do mark
         UIFont* font = [UIFont fontWithName:fontName size:fontSize];
         UIColor* uiColor = [self getColor:color];
-        UIImage * scaledImage = markerImgByPostion(image, text, position, width, height, uiColor, font);
+        UIImage * scaledImage = markerImgByPostion(image, text, position, uiColor, font);
         if (scaledImage == nil) {
             NSLog(@"Can't mark the image");
             reject(@"error",@"Can't mark the image.", error);
@@ -272,5 +365,99 @@ RCT_EXPORT_METHOD(addTextByPostion: (NSString *)path
         resolve(fullPath);
     }];
 }
+
+
+RCT_EXPORT_METHOD(markWithImage: (NSString *)path
+                  markImagePath: (NSString *)markerPath
+                  X:(CGFloat)X
+                  Y:(CGFloat)Y
+                  scale:(CGFloat)scale
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    NSString* fullPath = generateCacheFilePathForMarker(@".jpg");
+    //这里之前是loadImageOrDataWithTag
+    [_bridge.imageLoader loadImageWithURLRequest:[RCTConvert NSURLRequest:path] callback:^(NSError *error, UIImage *image) {
+        if (error || image == nil) {
+            image = [[UIImage alloc] initWithContentsOfFile:path];
+            if (image == nil) {
+                NSLog(@"Can't retrieve the file from the path");
+                
+                reject(@"error", @"Can't retrieve the file from the path.", error);
+                return;
+            }
+        }
+        [_bridge.imageLoader loadImageWithURLRequest:[RCTConvert NSURLRequest:markerPath] callback:^(NSError *markerError, UIImage *marker) {
+            if (markerError || marker == nil) {
+                marker = [[UIImage alloc] initWithContentsOfFile:path];
+                if (marker == nil) {
+                    NSLog(@"Can't retrieve the file from the path");
+                    
+                    reject(@"error", @"Can't retrieve the file from the path.", markerError);
+                    return;
+                }
+            }
+            // Do mark
+            UIImage * scaledImage = markeImageWithImage(image, marker, X, Y, scale);
+            if (scaledImage == nil) {
+                NSLog(@"Can't mark the image");
+                reject(@"error",@"Can't mark the image.", error);
+                return;
+            }
+            NSLog(@" file from the path");
+            
+            saveImageForMarker(fullPath, scaledImage, 1);
+            resolve(fullPath);
+        }];
+    }];
+}
+
+RCT_EXPORT_METHOD(markWithImageByPosition: (NSString *)path
+                  markImagePath: (NSString *)markerPath
+                  position:(MarkerPosition)position
+                  scale:(CGFloat)scale
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    NSString* fullPath = generateCacheFilePathForMarker(@".jpg");
+    //这里之前是loadImageOrDataWithTag
+    [_bridge.imageLoader loadImageWithURLRequest:[RCTConvert NSURLRequest:path] callback:^(NSError *error, UIImage *image) {
+        if (error || image == nil) {
+            image = [[UIImage alloc] initWithContentsOfFile:path];
+            if (image == nil) {
+                NSLog(@"Can't retrieve the file from the path");
+                
+                reject(@"error", @"Can't retrieve the file from the path.", error);
+                return;
+            }
+        }
+        [_bridge.imageLoader loadImageWithURLRequest:[RCTConvert NSURLRequest:markerPath] callback:^(NSError *markerError, UIImage *marker) {
+            if (markerError || marker == nil) {
+                marker = [[UIImage alloc] initWithContentsOfFile:path];
+                if (marker == nil) {
+                    NSLog(@"Can't retrieve the file from the path");
+                    
+                    reject(@"error", @"Can't retrieve the file from the path.", markerError);
+                    return;
+                }
+            }
+            // Do mark
+            UIImage * scaledImage = markeImageWithImageByPostion(image, marker, position, scale);
+            if (scaledImage == nil) {
+                NSLog(@"Can't mark the image");
+                reject(@"error",@"Can't mark the image.", error);
+                return;
+            }
+            NSLog(@" file from the path");
+            
+            saveImageForMarker(fullPath, scaledImage, 1);
+            resolve(fullPath);
+        }];
+    }];
+}
+
+
+
+
 
 @end
