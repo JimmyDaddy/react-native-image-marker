@@ -2,6 +2,13 @@
 
 Marking text and image icon on image
 
+## sample
+
+<figure>
+    <img src="https://github.com/JimmyDaddy/react-native-image-marker/blob/master/asset/IOSMarker.gif" width='300'><img src="https://github.com/JimmyDaddy/react-native-image-marker/blob/master/asset/AndroidMarker.gif" width='300'>
+</figure>
+
+
 ## Installation
 
 * npm install react-native-image-marker --save
@@ -82,8 +89,4 @@ ImageMarker.markWithImageByPosition(
 
 [example](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/example/example)
 
-## sample
 
-![sample1](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/asset/IOSMarker.gif)
-
-![sample2](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/asset/AndroidMarker.gif)
