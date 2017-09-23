@@ -78,6 +78,10 @@ ImageMarker.markWithImageByPosition(
 
 ```
 
+## example
+
+[example](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/example/example)
+
 ## sample
 
 ![sample1](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/asset/IOSMarker.gif)
