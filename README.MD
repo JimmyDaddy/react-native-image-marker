@@ -80,6 +80,6 @@ ImageMarker.markWithImageByPosition(
 
 ## sample
 
-![sample1](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/asset/sample1.png)
+![sample1](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/asset/IOSMarker.gif)
 
-![sample2](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/asset/sample2.png)
+![sample2](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/asset/AndroidMarker.gif)
