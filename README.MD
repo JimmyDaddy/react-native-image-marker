@@ -1,4 +1,4 @@
-# react-native-image-marker
+# react-native-image-marker ![npm version](https://badge.fury.io/js/react-native-image-marker.svg)
 
 Marking text and icon on image
 
@@ -85,7 +85,13 @@ ImageMarker.markWithImageByPosition(
 
 ```
 
-## example
+## Save image to file
+
+* If you want to save the new image result to the phone camera roll, just use the [CameraRoll-module from react-native](https://facebook.github.io/react-native/docs/cameraroll.html#savetocameraroll).
+* If you want to save it to an arbitrary file path, use something like [react-native-fs](https://github.com/itinance/react-native-fs).
+* For any more advanced needs, you can write your own (or find another) native module that would solve your use-case.
+
+## Example
 
 [example](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/example/example)
 
