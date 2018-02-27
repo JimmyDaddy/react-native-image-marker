@@ -131,7 +131,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
 //            textPaint.setTypeface(Typeface.DEFAULT);
             //设置字体失败时使用默认字体
 
-             textPaint.setTypeface(ReactFontManager.getInstance().getTypeface(fontName, Typeface.NORMAL, this.getReactApplicationContext().getAssets()) );            } catch (Exception e) {
+             textPaint.setTypeface(ReactFontManager.getInstance().getTypeface(fontName, Typeface.NORMAL, this.getReactApplicationContext().getAssets()) );
 
             //采用的颜色
             textPaint.setColor(Color.parseColor(color));
