@@ -91,6 +91,11 @@ ImageMarker.markWithImageByPosition(
 * If you want to save it to an arbitrary file path, use something like [react-native-fs](https://github.com/itinance/react-native-fs).
 * For any more advanced needs, you can write your own (or find another) native module that would solve your use-case.
 
+## Contributors
+[@filipef101](https://github.com/filipef101)
+[@mikaello](https://github.com/mikaello)
+
+
 ## Example
 
 [example](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/example/example)
