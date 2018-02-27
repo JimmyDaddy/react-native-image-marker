@@ -130,13 +130,9 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
 
 //            textPaint.setTypeface(Typeface.DEFAULT);
             //设置字体失败时使用默认字体
-            try {
-                textPaint.setTypeface(Typeface.create(fontName, Typeface.NORMAL));
-            } catch (Exception e) {
 
-            } finally {
-                textPaint.setTypeface(Typeface.DEFAULT);
-            }
+             textPaint.setTypeface(ReactFontManager.getInstance().getTypeface(fontName, Typeface.NORMAL, this.getReactApplicationContext().getAssets()) );            } catch (Exception e) {
+
             //采用的颜色
             textPaint.setColor(Color.parseColor(color));
             //阴影设置
@@ -268,13 +264,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             textPaint.setAntiAlias(true);
 
             //设置字体失败时使用默认字体
-            try {
-                textPaint.setTypeface(Typeface.create(fontName, Typeface.NORMAL));
-            } catch (Exception e) {
-
-            } finally {
-                textPaint.setTypeface(Typeface.DEFAULT);
-            }
+            textPaint.setTypeface(ReactFontManager.getInstance().getTypeface(fontName, Typeface.NORMAL, this.getReactApplicationContext().getAssets()) );            } catch (Exception e) {
 
             Integer fSize = 14;
             if (fontSize != null){
