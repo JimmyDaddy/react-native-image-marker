@@ -15,6 +15,7 @@ import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.views.text.ReactFontManager;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -263,9 +264,12 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
 
             textPaint.setAntiAlias(true);
 
+            try {
             //设置字体失败时使用默认字体
-            textPaint.setTypeface(ReactFontManager.getInstance().getTypeface(fontName, Typeface.NORMAL, this.getReactApplicationContext().getAssets()) );            } catch (Exception e) {
-
+            textPaint.setTypeface(ReactFontManager.getInstance().getTypeface(fontName, Typeface.NORMAL, this.getReactApplicationContext().getAssets()) );
+            } catch (Exception e) {
+                textPaint.setTypeface(Typeface.DEFAULT);
+            }
             Integer fSize = 14;
             if (fontSize != null){
                 fSize = fontSize;
