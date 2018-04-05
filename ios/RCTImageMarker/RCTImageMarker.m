@@ -320,7 +320,7 @@ RCT_EXPORT_METHOD(addText: (NSString *)path
         }
         NSLog(@" file from the path");
         
-        saveImageForMarker(fullPath, scaledImage, 1);
+        saveImageForMarker(fullPath, scaledImage, 100);
         resolve(fullPath);
     }];
 }
@@ -450,7 +450,7 @@ RCT_EXPORT_METHOD(markWithImageByPosition: (NSString *)path
             }
             NSLog(@" file from the path");
             
-            saveImageForMarker(fullPath, scaledImage, 1);
+            saveImageForMarker(fullPath, scaledImage, 100);
             resolve(fullPath);
         }];
     }];
