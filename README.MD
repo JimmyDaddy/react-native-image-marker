@@ -15,7 +15,8 @@ Marking text and icon on image
 * react-native link
 
 ## API 
-|name|paramter|return|decription|
+
+|name|parameter|return|decription|
 |--|--|--|--|
 |`markText`|`TextMarkOption`|`Promise<String>`|mark image with text|
 |`markImage`|`ImageMarkOption`|`Promise<String>`| mark image with icon|
