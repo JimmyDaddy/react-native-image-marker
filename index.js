@@ -2,7 +2,7 @@
  * @Author: JimmyDaddy
  * @Date: 2017-09-14 10:40:09
  * @Last Modified by: JimmyDaddy
- * @Last Modified time: 2018-04-08 14:47:03
+ * @Last Modified time: 2018-04-08 17:46:14
  * @Description
  * @flow
  */
@@ -104,10 +104,6 @@ export default class Marker {
       quality,
       position
      } = option
-
-     console.log('====================================');
-     console.log(option);
-     console.log('====================================');
 
      if (!position) {
        return ImageMarker.markWithImage(
