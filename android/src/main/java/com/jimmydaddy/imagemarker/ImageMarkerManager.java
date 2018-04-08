@@ -53,7 +53,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
      * @param promise
      */
     @ReactMethod
-    public void addText(String imgSavePath, String mark, Integer X, Integer Y, String color, String fontName, int fontSize, Promise promise) {
+    public void addText(String imgSavePath, String mark, Integer X, Integer Y, String color, String fontName, int fontSize, float scale, int quality,  Promise promise) {
        if (TextUtils.isEmpty(mark)){
            promise.reject("error", "mark should not be empty", null);
        }
@@ -67,31 +67,14 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             if (!file.exists()){
                 promise.reject( "error","Can't retrieve the file from the path.",null);
             }
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inJustDecodeBounds = true;
-            try {
-                BitmapFactory.decodeFile(imgSavePath, options); //此时返回bm为空
-            } catch (OutOfMemoryError e) {
-                System.out.print(e.getMessage());
-                System.gc();
-                System.runFinalization();
-                BitmapFactory.decodeFile(imgSavePath, options); //此时返回bm为空
+            Bitmap prePhoto = Utils.rotateBitmap(imgSavePath, scale);
 
-            }
 
-            int height = options.outHeight;
-            int width =  options.outWidth;
-            try {
-                icon = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
-            } catch (OutOfMemoryError e) {
-                System.out.print(e.getMessage());
-                while(icon == null) {
-                    System.gc();
-                    System.runFinalization();
-                    icon = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
-                }
-            }
+            int height = prePhoto.getHeight();
+            int width =  prePhoto.getWidth();
 
+
+            icon = Utils.getBlankBitmap(width, height);
             //初始化画布 绘制的图像到icon上
             Canvas canvas = new Canvas(icon);
             //建立画笔
@@ -99,19 +82,6 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             //获取跟清晰的图像采样
             photoPaint.setDither(true);
             //过滤一些
-            //                    photoPaint.setFilterBitmap(true);
-            options.inJustDecodeBounds = false;
-            Bitmap prePhoto = null;
-            try {
-                prePhoto = BitmapFactory.decodeFile(imgSavePath);
-            } catch (OutOfMemoryError e) {
-                System.out.print(e.getMessage());
-                while(prePhoto == null) {
-                    System.gc();
-                    System.runFinalization();
-                    prePhoto = BitmapFactory.decodeFile(imgSavePath);
-                }
-            }
 //            if (percent > 1) {
 //                prePhoto = Bitmap.createScaledBitmap(prePhoto, width, height, true);
 //            }
@@ -155,8 +125,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             String resultFile = generateCacheFilePathForMarker(imgSavePath);
             bos = new BufferedOutputStream(new FileOutputStream(resultFile));
 
-//            int quaility = (int) (100 / percent > 80 ? 80 : 100 / percent);
-            icon.compress(Bitmap.CompressFormat.JPEG, 80, bos);
+            icon.compress(Bitmap.CompressFormat.JPEG, quality, bos);
             bos.flush();
             //保存成功的
             promise.resolve(resultFile);
@@ -191,7 +160,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
      * @param promise
      */
     @ReactMethod
-    public void addTextByPostion(String imgSavePath, String mark, String position, String color, String fontName, Integer fontSize, Promise promise) {
+    public void addTextByPostion(String imgSavePath, String mark, String position, String color, String fontName, Integer fontSize, float scale, Integer quality, Promise promise) {
         if (TextUtils.isEmpty(mark)){
             promise.reject("error", "mark should not be empty", null);
         }
@@ -203,40 +172,15 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             if (!file.exists()){
                 promise.reject("error", imgSavePath+"not exist", null);
             }
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inJustDecodeBounds = true;
-            //获取图片信息
-            try {
-                BitmapFactory.decodeFile(imgSavePath, options); //此时返回bm为空
-            } catch (OutOfMemoryError e) {
-                System.out.print(e.getMessage());
-                System.gc();
-                System.runFinalization();
-                BitmapFactory.decodeFile(imgSavePath, options); //此时返回bm为空
 
-            }
-//            float percent =
-//                    options.outHeight > options.outWidth ? options.outHeight / 960f : options.outWidth / 960f;
+            Bitmap prePhoto = Utils.rotateBitmap(imgSavePath, scale);
 
-//            if (percent < 1) {
-//                percent = 1;
-//            }
-//            int width = (int) (options.outWidth / percent);
-//            int height = (int) (options.outHeight / percent);
-            int height = options.outHeight;
-            int width =  options.outWidth;
 
-            //根据图片宽高创建画布
-            try {
-                icon = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
-            } catch (OutOfMemoryError e) {
-                System.out.print(e.getMessage());
-                while(icon == null) {
-                    System.gc();
-                    System.runFinalization();
-                    icon = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
-                }
-            }
+            int height = prePhoto.getHeight();
+            int width =  prePhoto.getWidth();
+
+
+            icon = Utils.getBlankBitmap(width, height);
 
             //初始化画布 绘制的图像到icon上
             Canvas canvas = new Canvas(icon);
@@ -246,10 +190,8 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             photoPaint.setDither(true);
             //过滤一些
             //                    photoPaint.setFilterBitmap(true);
-            options.inJustDecodeBounds = false;
             //创建画布背
-            Bitmap originBitMap = BitmapFactory.decodeFile(imgSavePath);
-            canvas.drawBitmap(originBitMap, 0, 0, photoPaint);
+            canvas.drawBitmap(prePhoto, 0, 0, photoPaint);
             //建立画笔
             Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.DEV_KERN_TEXT_FLAG);
 
@@ -265,8 +207,8 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             textPaint.setAntiAlias(true);
 
             try {
-            //设置字体失败时使用默认字体
-            textPaint.setTypeface(ReactFontManager.getInstance().getTypeface(fontName, Typeface.NORMAL, this.getReactApplicationContext().getAssets()) );
+                //设置字体失败时使用默认字体
+                textPaint.setTypeface(ReactFontManager.getInstance().getTypeface(fontName, Typeface.NORMAL, this.getReactApplicationContext().getAssets()) );
             } catch (Exception e) {
                 textPaint.setTypeface(Typeface.DEFAULT);
             }
@@ -292,7 +234,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             bos = new BufferedOutputStream(new FileOutputStream(resultFile));
 
 //            int quaility = (int) (100 / percent > 80 ? 80 : 100 / percent);
-            icon.compress(Bitmap.CompressFormat.JPEG, 80, bos);
+            icon.compress(Bitmap.CompressFormat.JPEG, quality, bos);
             bos.flush();
             //保存成功的
             promise.resolve(resultFile);
@@ -317,12 +259,10 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void markWithImage(String imgSavePath, String markerPath, Integer X, Integer Y, Float scale, Promise promise ) {
+    public void markWithImage(String imgSavePath, String markerPath, Integer X, Integer Y, Float scale,Float markerScale, int qulaity,  Promise promise ) {
         BufferedOutputStream bos = null;
-        boolean isFinished;
         Bitmap icon = null;
-        Bitmap marker = null;
-
+        Boolean isFinished;
         try {
 
             // 原图生成 - start
@@ -330,30 +270,21 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             if (!file.exists()){
                 promise.reject( "error","Can't retrieve the file from the path.",null);
             }
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inJustDecodeBounds = true;
-            try {
-                BitmapFactory.decodeFile(imgSavePath, options); //此时返回bm为空
-            } catch (OutOfMemoryError e) {
-                System.out.print(e.getMessage());
-                System.gc();
-                System.runFinalization();
-                BitmapFactory.decodeFile(imgSavePath, options); //此时返回bm为空
 
+
+            File markerFile = new File(markerPath);
+            if (!markerFile.exists()){
+                promise.reject( "error","Can't retrieve the file from the path.",null);
             }
 
-            int height = options.outHeight;
-            int width =  options.outWidth;
-            try {
-                icon = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
-            } catch (OutOfMemoryError e) {
-                System.out.print(e.getMessage());
-                while(icon == null) {
-                    System.gc();
-                    System.runFinalization();
-                    icon = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
-                }
-            }
+            Bitmap prePhoto = Utils.rotateBitmap(imgSavePath, scale);
+
+
+            int height = prePhoto.getHeight();
+            int width =  prePhoto.getWidth();
+
+
+            icon = Utils.getBlankBitmap(width, height);
 
             //初始化画布 绘制的图像到icon上
             //建立画笔
@@ -361,19 +292,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             //获取跟清晰的图像采样
             photoPaint.setDither(true);
             //过滤一些
-            //                    photoPaint.setFilterBitmap(true);
-            options.inJustDecodeBounds = false;
-            Bitmap prePhoto = null;
-            try {
-                prePhoto = BitmapFactory.decodeFile(imgSavePath);
-            } catch (OutOfMemoryError e) {
-                System.out.print(e.getMessage());
-                while(prePhoto == null) {
-                    System.gc();
-                    System.runFinalization();
-                    prePhoto = BitmapFactory.decodeFile(imgSavePath);
-                }
-            }
+
 //            if (percent > 1) {
 //                prePhoto = Bitmap.createScaledBitmap(prePhoto, width, height, true);
 //            }
@@ -391,35 +310,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             // 原图生成 - end
 
             // marker生成 -start
-            File markerFile = new File(markerPath);
-            if (!markerFile.exists()){
-                promise.reject( "error","Can't retrieve the file from the path.",null);
-            }
-            BitmapFactory.Options markerOptions = new BitmapFactory.Options();
-
-
-            try {
-                prePhoto = BitmapFactory.decodeFile(markerPath, markerOptions);
-            } catch (OutOfMemoryError e) {
-                System.out.print(e.getMessage());
-                while(prePhoto == null) {
-                    System.gc();
-                    System.runFinalization();
-                    prePhoto = BitmapFactory.decodeFile(markerPath, markerOptions);
-                }
-            }
-
-            Bitmap newMarker = prePhoto;
-
-            if (scale != 1 && scale >= 0){
-
-                // 取得想要缩放的matrix参数
-                Matrix matrix = new Matrix();
-                matrix.postScale(scale, scale);
-                // 得到新的图片
-                newMarker = Bitmap.createBitmap(prePhoto, 0, 0, markerOptions.outWidth, markerOptions.outHeight, matrix,
-                        true);
-            }
+            Bitmap newMarker = Utils.rotateBitmap(markerPath, markerScale);
 
 
             canvas.drawBitmap(newMarker, X, Y, photoPaint);
@@ -435,7 +326,6 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
                 System.gc();
             }
 
-
             // 保存
             canvas.save(Canvas.ALL_SAVE_FLAG);
             // 存储
@@ -444,7 +334,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             bos = new BufferedOutputStream(new FileOutputStream(resultFile));
 
 //            int quaility = (int) (100 / percent > 80 ? 80 : 100 / percent);
-            icon.compress(Bitmap.CompressFormat.JPEG, 80, bos);
+            icon.compress(Bitmap.CompressFormat.JPEG, qulaity, bos);
             bos.flush();
             //保存成功的
             promise.resolve(resultFile);
@@ -469,10 +359,9 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void markWithImageByPosition(String imgSavePath, String markerPath, String position, Float scale, Promise promise ) {
+    public void markWithImageByPosition(String imgSavePath, String markerPath, String position, Float scale, Float markerScale, int quality, Promise promise ) {
         BufferedOutputStream bos = null;
         Bitmap icon = null;
-        Bitmap marker = null;
         try {
 
             // 原图生成 - start
@@ -480,30 +369,20 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             if (!file.exists()){
                 promise.reject( "error","Can't retrieve the file from the path.",null);
             }
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inJustDecodeBounds = true;
-            try {
-                BitmapFactory.decodeFile(imgSavePath, options); //此时返回bm为空
-            } catch (OutOfMemoryError e) {
-                System.out.print(e.getMessage());
-                System.gc();
-                System.runFinalization();
-                BitmapFactory.decodeFile(imgSavePath, options); //此时返回bm为空
 
+            File markerFile = new File(markerPath);
+            if (!markerFile.exists()){
+                promise.reject( "error","Can't retrieve the file from the path.",null);
             }
 
-            int height = options.outHeight;
-            int width =  options.outWidth;
-            try {
-                icon = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
-            } catch (OutOfMemoryError e) {
-                System.out.print(e.getMessage());
-                while(icon == null) {
-                    System.gc();
-                    System.runFinalization();
-                    icon = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
-                }
-            }
+            Bitmap prePhoto = Utils.rotateBitmap(imgSavePath, scale);
+
+
+            int height = prePhoto.getHeight();
+            int width =  prePhoto.getWidth();
+
+
+            icon = Utils.getBlankBitmap(width, height);
 
             //初始化画布 绘制的图像到icon上
             Canvas canvas = new Canvas(icon);
@@ -513,22 +392,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             photoPaint.setDither(true);
             //过滤一些
             //                    photoPaint.setFilterBitmap(true);
-            options.inJustDecodeBounds = false;
-            Bitmap prePhoto = null;
-            try {
-                prePhoto = BitmapFactory.decodeFile(imgSavePath);
-            } catch (OutOfMemoryError e) {
-                System.out.print(e.getMessage());
-                while(prePhoto == null) {
-                    System.gc();
-                    System.runFinalization();
-                    prePhoto = BitmapFactory.decodeFile(imgSavePath);
-                }
-            }
-//            if (percent > 1) {
-//                prePhoto = Bitmap.createScaledBitmap(prePhoto, width, height, true);
-//            }
-
+//            Log.e(Utils.TAG, "markWithImageByPosition: "+Utils.getMaxMemory());
             canvas.drawBitmap(prePhoto, 0, 0, photoPaint);
 
             if (prePhoto != null && !prePhoto.isRecycled()) {
@@ -543,43 +407,13 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
 //            ImageLoaderModule loader = new ImageLoaderModule()
 
             // marker生成 -start
-            File markerFile = new File(markerPath);
-            if (!markerFile.exists()){
-                promise.reject( "error","Can't retrieve the file from the path.",null);
-            }
-            BitmapFactory.Options markerOptions = new BitmapFactory.Options();
 
 
-            try {
-                prePhoto = BitmapFactory.decodeFile(markerPath, markerOptions);
-            } catch (OutOfMemoryError e) {
-                System.out.print(e.getMessage());
-                while(prePhoto == null) {
-                    System.gc();
-                    System.runFinalization();
-                    prePhoto = BitmapFactory.decodeFile(markerPath, markerOptions);
-                }
-            }
-
-            Bitmap newMarker = prePhoto;
-
-            if (scale != 1 && scale >= 0){
-
-                // 取得想要缩放的matrix参数
-                Matrix matrix = new Matrix();
-                matrix.postScale(scale, scale);
-                // 得到新的图片
-                newMarker = Bitmap.createBitmap(prePhoto, 0, 0, markerOptions.outWidth, markerOptions.outHeight, matrix,
-                        true);
-            }
+            Bitmap newMarker = Utils.rotateBitmap(markerPath, markerScale);
 
             Position pos = getRectFromPosition(position, newMarker.getWidth(), newMarker.getHeight(), width, height);
 
-
-
             canvas.drawBitmap(newMarker, pos.getX(), pos.getY(), photoPaint);
-
-
 
             if (prePhoto != null && !prePhoto.isRecycled()) {
                 prePhoto.recycle();
@@ -601,7 +435,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             bos = new BufferedOutputStream(new FileOutputStream(resultFile));
 
 //            int quaility = (int) (100 / percent > 80 ? 80 : 100 / percent);
-            icon.compress(Bitmap.CompressFormat.JPEG, 80, bos);
+            icon.compress(Bitmap.CompressFormat.JPEG, quality, bos);
             bos.flush();
             //保存成功的
             promise.resolve(resultFile);
@@ -640,7 +474,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
                 pos.setX(left);
                 break;
             case "topRight":
-                pos.setX(right);
+                pos.setX(right-20);
                 break;
             case "center":
                 left = (imageWidth)/2 - width/2;
@@ -650,19 +484,19 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
                 break;
             case "bottomLeft":
                 top = imageHeigt - height;
-                pos.setY(top);
+                pos.setY(top-20);
                 break;
             case "bottomRight":
                 top = imageHeigt - height;
                 left = imageWidth - width - 20;
-                pos.setX(left);
-                pos.setY(top);
+                pos.setX(left-20);
+                pos.setY(top-20);
                 break;
             case "bottomCenter":
                 top = imageHeigt - height;
                 left = (imageWidth)/2 - width/2;
-                pos.setX(left);
-                pos.setY(top);
+                pos.setX(left-20);
+                pos.setY(top-20);
 
         }
         return pos;

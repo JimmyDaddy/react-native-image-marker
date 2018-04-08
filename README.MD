@@ -14,6 +14,40 @@ Marking text and icon on image
 * npm install react-native-image-marker --save
 * react-native link
 
+## API 
+|name|paramter|return|decription|
+|--|--|--|--|
+|`markText`|`TextMarkOption`|`Promise<String>`|mark image with text|
+|`markImage`|`ImageMarkOption`|`Promise<String>`| mark image with icon|
+
+* `TextMarkOption`
+
+|name|description|
+|--|--|
+|`src`|image url **(Android only support local image)**|
+|`text`|the text you want to mark with|
+|`position`| text position(`topLeft`,`topRight`,`topCenter`, `center`, `bottomLeft`, `bottomCenter`, `bottomRight`)|
+|`X`|distance to the left, **if you set `position` you don't need to set this property**|
+|`Y`|distance to the top,**if you set `position` you don't need to set this property**|
+|`color`| text color |
+|`fontName`| fontName |
+|`fontSize`| fontSize |
+|`scale`| scale image |
+|`quality`| image qulaity |
+
+* `ImageMarkOption`
+
+|name|description|
+|--|--|
+|`src`|image url **(Android only support local image)**|
+|`markerSrc`|the icon you want to mark with  **(Android only support local image)** |
+|`position`| text position(`topLeft`,`topRight`,`topCenter`, `center`, `bottomLeft`, `bottomCenter`, `bottomRight`)|
+|`X`|distance to the left, **if you set `position` you don't need to set this property**|
+|`Y`|distance to the top, **if you set `position` you don't need to set this property**|
+|`markerScale`| scale icon |
+|`scale`| scale image |
+|`quality`| image qulaity |
+
 ## Usage
 
 ```javascript
@@ -22,65 +56,108 @@ import ImageMarker from "react-native-image-marker"
 
 ···
 // mark text on image
-ImageMarker.addText(
-    Platform.OS == 'android'? img.uri.replace('file://', '') : img.uri,
-    text,
-    X, // left
-    Y, // top
-    color,
-    fontName,
-    fontSize
-).then((res) => {
+
+ this.setState({
+    loading: true
+ })
+ Marker.markText({
+    src: Platform.OS == 'android'? img.uri.replace('file://', '') : img.uri,, 
+    text: 'text marker', 
+    X: 30,
+    Y: 30, 
+    color: '#FF0000',
+    fontName: 'Arial-BoldItalicMT', 
+    fontSize: 44, 
+    scale: 1, 
+    quality: 100
+ }).then((res) => {
+     this.setState({
+        loading: false,
+        markResult: res
+     })
     console.log("the path is"+res)
-}).catch((err) => {
+ }).catch((err) => {
     console.log(err)
-})
+    this.setState({
+        loading: false,
+        err
+    })
+ })
 
 ···
-
-ImageMarker.addTextByPostion(
-    Platform.OS == 'android'? img.uri.replace('file://', '') : img.uri,
-    text,
-    position, // topLeft, topCenter,topRight, bottomLeft, bottomCenter , bottomRight, center
-    color,
-    fontName,
-    fontSize
-).then((res) => {
+this.setState({
+    loading: true
+})
+Marker.markText({
+    src: Platform.OS == 'android'? img.uri.replace('file://', '') : img.uri,, 
+    text: 'text marker', 
+    position: 'topLeft', 
+    color: '#FF0000',
+    fontName: 'Arial-BoldItalicMT', 
+    fontSize: 44, 
+    scale: 1, 
+    quality: 100
+}).then((res) => {
     console.log("the path is"+res)
+    this.setState({
+        loading: false,
+        markResult: res
+    })
 }).catch((err) => {
     console.log(err)
+    this.setState({
+        loading: false,
+        err
+    })
 })
 
 // mark icon on image
 
 const iconUri = Platform.OS == 'android'? icon.uri.replace('file://', '') : icon.uri
 const backGroundUri = Platform.OS == 'android'? img.uri.replace('file://', '') : img.uri
-
-ImageMarker.markWithImage(
-    backGroundUri, 
-    iconUri, // icon uri
-    X, // left
-    Y, // top
-    scale // scale of icon
-).then((path) => {
-    this.setState({
-        uri: Platform.OS === 'android' ? 'file://' + path : path
-    })
-}).catch((err) => {
-    console.log(err, 'err')
+this.setState({
+    loading: true
 })
 
-ImageMarker.markWithImageByPosition(
-    backGroundUri, 
-    iconUri,
-    position, // topLeft, topCenter,topRight, bottomLeft, bottomCenter , bottomRight, center
-    scale // scale of icon
-).then((path) => {
+Marker.markImage({
+    src: backGroundUri, 
+    markerSrc: iconUri, // icon uri
+    X: 100, // left
+    Y: 150, // top
+    scale: 1, // scale of bg
+    markerScale: 0.5, // scale of icon
+    quality: 100 // quality of image
+}).then((path) => {
     this.setState({
-        uri: Platform.OS === 'android' ? 'file://' + path : path
+        uri: Platform.OS === 'android' ? 'file://' + path : path,
+        loading: false
     })
 }).catch((err) => {
     console.log(err, 'err')
+    this.setState({
+        loading: false,
+        err
+    })
+})
+
+Marker.markImage({
+    src: backGroundUri, 
+    markerSrc: iconUri, 
+    position: 'topLeft',  // topLeft, topCenter,topRight, bottomLeft, bottomCenter , bottomRight, center
+    scale: 1, 
+    markerScale: 0.5, 
+    quality: 100
+}).then((path) => {
+    this.setState({
+        uri: Platform.OS === 'android' ? 'file://' + path : path,
+        loading: false
+    })
+}).catch((err) => {
+    console.log(err, 'err')
+     this.setState({
+        loading: false,
+        err
+    })
 })
 
 ```

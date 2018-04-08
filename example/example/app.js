@@ -146,7 +146,14 @@ export default class MarkerTest extends React.Component {
 
   _markByPosition = (type) => {
     if (this.state.markImage) {
-      Marker.markWithImageByPosition(this.state.image, this.state.marker, type, 0.5).then((path) => {
+      Marker.markImage({
+        src: this.state.image, 
+        markerSrc: this.state.marker, 
+        position: type, 
+        scale: 1, 
+        markerScale: 0.5, 
+        quality: 100
+      }).then((path) => {
         this.setState({
           uri: Platform.OS === 'android' ? 'file://' + path : path,
           show: true
@@ -157,7 +164,16 @@ export default class MarkerTest extends React.Component {
         console.log('====================================')
       })
     } else {
-      Marker.addTextByPostion(this.state.image, 'text marker', type, '#FF0000', 'Arial-BoldItalicMT', 44)
+      Marker.markText({
+        src: this.state.image, 
+        text: 'text marker', 
+        position: type, 
+        color: '#FF0000',
+        fontName: 'Arial-BoldItalicMT', 
+        fontSize: 44, 
+        scale: 1, 
+        quality: 100
+      })
       .then((path) => {
         this.setState({
           show: true,
@@ -174,7 +190,15 @@ export default class MarkerTest extends React.Component {
 
   _mark = () => {
     if (this.state.markImage) {
-      Marker.markWithImage(this.state.image, this.state.marker, 100, 150, 0.5).then((path) => {
+      Marker.markImage({
+        src: this.state.image, 
+        markerSrc: this.state.marker, 
+        X: 100, 
+        Y: 150, 
+        scale: 1,
+        markerScale: 0.5, 
+        quality: 100
+      }).then((path) => {
         this.setState({
           uri: Platform.OS === 'android' ? 'file://' + path : path,
           show: true
@@ -185,8 +209,17 @@ export default class MarkerTest extends React.Component {
         console.log('====================================')
       })
     } else {
-      Marker.addText(this.state.image, 'text mark', 30, 30, '#FF0000', 'Arial-BoldItalicMT', 44)
-      .then((path) => {
+      Marker.markText({
+        src: this.state.image, 
+        text: 'text marker', 
+        X: 30,
+        Y: 30, 
+        color: '#FF0000',
+        fontName: 'Arial-BoldItalicMT', 
+        fontSize: 44, 
+        scale: 1, 
+        quality: 100
+      }).then((path) => {
         this.setState({
           show: true,
           uri: Platform.OS === 'android' ? 'file://' + path : path

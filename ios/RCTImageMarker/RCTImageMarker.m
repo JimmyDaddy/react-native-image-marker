@@ -66,9 +66,9 @@ NSString * generateCacheFilePathForMarker(NSString * ext)
     return fullPath;
 }
 
-UIImage * markerImg(UIImage *image, NSString* text, CGFloat X, CGFloat Y, UIColor* color, UIFont* font){
-    int w = image.size.width;
-    int h = image.size.height;
+UIImage * markerImg(UIImage *image, NSString* text, CGFloat X, CGFloat Y, UIColor* color, UIFont* font, CGFloat scale){
+    int w = image.size.width * scale;
+    int h = image.size.height * scale;
     
     UIGraphicsBeginImageContext(image.size);
     [image drawInRect:CGRectMake(0, 0, w, h)];
@@ -87,12 +87,13 @@ UIImage * markerImg(UIImage *image, NSString* text, CGFloat X, CGFloat Y, UIColo
 /**
  *
  */
-UIImage * markeImageWithImage(UIImage *image, UIImage * waterImage, CGFloat X, CGFloat Y, CGFloat scale){
-    int w = image.size.width;
-    int h = image.size.height;
-    int ww = waterImage.size.width * scale;
-    int wh = waterImage.size.height * scale;
+UIImage * markeImageWithImage(UIImage *image, UIImage * waterImage, CGFloat X, CGFloat Y, CGFloat scale,  CGFloat markerScale ){
+    int w = image.size.width * scale;
+    int h = image.size.height * scale;
     
+    int ww = waterImage.size.width * markerScale;
+    int wh = waterImage.size.height * markerScale;
+
     UIGraphicsBeginImageContextWithOptions(image.size, NO, 0);
     [image drawInRect:CGRectMake(0, 0, w, h)];
     CGRect position = CGRectMake(X, Y, ww, wh);
@@ -102,12 +103,12 @@ UIImage * markeImageWithImage(UIImage *image, UIImage * waterImage, CGFloat X, C
     return newImage;
 }
 
-UIImage * markeImageWithImageByPostion(UIImage *image, UIImage * waterImage, MarkerPosition position, CGFloat scale) {
-    int w = image.size.width;
-    int h = image.size.height;
+UIImage * markeImageWithImageByPostion(UIImage *image, UIImage * waterImage, MarkerPosition position, CGFloat scale, CGFloat markerScale) {
+    int w = image.size.width * scale;
+    int h = image.size.height * scale;
     
-    int ww = waterImage.size.width * scale;
-    int wh = waterImage.size.height * scale;
+    int ww = waterImage.size.width * markerScale;
+    int wh = waterImage.size.height * markerScale;
     UIGraphicsBeginImageContextWithOptions(image.size, NO, 0);
     [image drawInRect:CGRectMake(0, 0, w, h)];
     
@@ -176,9 +177,9 @@ UIImage * markeImageWithImageByPostion(UIImage *image, UIImage * waterImage, Mar
 }
 
 
-UIImage * markerImgByPostion(UIImage *image, NSString* text, MarkerPosition position, UIColor* color, UIFont* font){
-    int w = image.size.width;
-    int h = image.size.height;
+UIImage * markerImgByPostion(UIImage *image, NSString* text, MarkerPosition position, UIColor* color, UIFont* font, CGFloat scale){
+    int w = image.size.width * scale;
+    int h = image.size.height * scale;
     
     NSDictionary *attr = @{
                            NSFontAttributeName: font,   //设置字体
@@ -293,6 +294,8 @@ RCT_EXPORT_METHOD(addText: (NSString *)path
                   color:(NSString*)color
                   fontName:(NSString*)fontName
                   fontSize:(CGFloat)fontSize
+                  scale:(CGFloat)scale
+                  quality:(NSInteger) quality
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
@@ -312,7 +315,7 @@ RCT_EXPORT_METHOD(addText: (NSString *)path
         // Do mark
         UIFont* font = [UIFont fontWithName:fontName size:fontSize];
         UIColor* uiColor = [self getColor:color];
-        UIImage * scaledImage = markerImg(image, text, X, Y , uiColor, font);
+        UIImage * scaledImage = markerImg(image, text, X, Y , uiColor, font, scale);
         if (scaledImage == nil) {
             NSLog(@"Can't mark the image");
             reject(@"error",@"Can't mark the image.", error);
@@ -320,7 +323,7 @@ RCT_EXPORT_METHOD(addText: (NSString *)path
         }
         NSLog(@" file from the path");
         
-        saveImageForMarker(fullPath, scaledImage, 100);
+        saveImageForMarker(fullPath, scaledImage, quality);
         resolve(fullPath);
     }];
 }
@@ -331,6 +334,8 @@ RCT_EXPORT_METHOD(addTextByPostion: (NSString *)path
                   color:(NSString*)color
                   fontName:(NSString*)fontName
                   fontSize:(CGFloat)fontSize
+                  scale:(CGFloat)scale
+                  quality:(NSInteger) quality
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
@@ -353,7 +358,7 @@ RCT_EXPORT_METHOD(addTextByPostion: (NSString *)path
         // Do mark
         UIFont* font = [UIFont fontWithName:fontName size:fontSize];
         UIColor* uiColor = [self getColor:color];
-        UIImage * scaledImage = markerImgByPostion(image, text, position, uiColor, font);
+        UIImage * scaledImage = markerImgByPostion(image, text, position, uiColor, font, scale);
         if (scaledImage == nil) {
             NSLog(@"Can't mark the image");
             reject(@"error",@"Can't mark the image.", error);
@@ -361,7 +366,7 @@ RCT_EXPORT_METHOD(addTextByPostion: (NSString *)path
         }
         NSLog(@" file from the path");
         
-        saveImageForMarker(fullPath, scaledImage, 1);
+        saveImageForMarker(fullPath, scaledImage, quality);
         resolve(fullPath);
     }];
 }
@@ -372,6 +377,8 @@ RCT_EXPORT_METHOD(markWithImage: (NSString *)path
                   X:(CGFloat)X
                   Y:(CGFloat)Y
                   scale:(CGFloat)scale
+                  markerScale: (CGFloat) markerScale
+                  quality:(NSInteger) quality
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
@@ -398,7 +405,7 @@ RCT_EXPORT_METHOD(markWithImage: (NSString *)path
                 }
             }
             // Do mark
-            UIImage * scaledImage = markeImageWithImage(image, marker, X, Y, scale);
+            UIImage * scaledImage = markeImageWithImage(image, marker, X, Y, scale, markerScale);
             if (scaledImage == nil) {
                 NSLog(@"Can't mark the image");
                 reject(@"error",@"Can't mark the image.", error);
@@ -406,7 +413,7 @@ RCT_EXPORT_METHOD(markWithImage: (NSString *)path
             }
             NSLog(@" file from the path");
             
-            saveImageForMarker(fullPath, scaledImage, 1);
+            saveImageForMarker(fullPath, scaledImage, quality);
             resolve(fullPath);
         }];
     }];
@@ -416,6 +423,8 @@ RCT_EXPORT_METHOD(markWithImageByPosition: (NSString *)path
                   markImagePath: (NSString *)markerPath
                   position:(MarkerPosition)position
                   scale:(CGFloat)scale
+                  markerScale:(CGFloat)markerScale
+                  quality: (NSInteger) quality
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
@@ -442,7 +451,7 @@ RCT_EXPORT_METHOD(markWithImageByPosition: (NSString *)path
                 }
             }
             // Do mark
-            UIImage * scaledImage = markeImageWithImageByPostion(image, marker, position, scale);
+            UIImage * scaledImage = markeImageWithImageByPostion(image, marker, position, scale, markerScale);
             if (scaledImage == nil) {
                 NSLog(@"Can't mark the image");
                 reject(@"error",@"Can't mark the image.", error);
@@ -450,7 +459,7 @@ RCT_EXPORT_METHOD(markWithImageByPosition: (NSString *)path
             }
             NSLog(@" file from the path");
             
-            saveImageForMarker(fullPath, scaledImage, 100);
+            saveImageForMarker(fullPath, scaledImage, quality);
             resolve(fullPath);
         }];
     }];
