@@ -21,7 +21,6 @@ DerivedData
 *.ipa
 *.xcuserstate
 *.iml
-project.xcworkspace
 
 # Android/IJ
 #
@@ -33,4 +32,3 @@ local.properties
 # node.js
 #
 npm-debug.log
-node_modules/doctorstrange-updater/.git/*
