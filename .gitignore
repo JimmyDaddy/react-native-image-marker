@@ -21,6 +21,9 @@ DerivedData
 *.ipa
 *.xcuserstate
 *.iml
+.project
+example/example/android/app/bin
+.settings
 
 # Android/IJ
 #
