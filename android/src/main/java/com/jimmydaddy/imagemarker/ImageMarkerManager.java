@@ -120,7 +120,14 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             if (Y != null) {
                 pY = Y;
             }
-            canvas.drawText(mark, pX, pY, textPaint);
+            
+             // split text
+            String[] markParts = mark.split("\\n");
+            Integer numOfTextLines = 0;
+            for (String textLine : markParts) {
+                canvas.drawText(textLine, pX, pY + numOfTextLines * 50, textPaint);
+                numOfTextLines++;
+            }
 
             String resultFile = generateCacheFilePathForMarker(imgSavePath);
             bos = new BufferedOutputStream(new FileOutputStream(resultFile));
@@ -225,7 +232,13 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             textPaint.setColor(Color.parseColor(color));
             Position pos = getRectFromPosition(position, textBounds.width(), textBounds.height(), width, height);
 
-            canvas.drawText(mark, pos.getX(), pos.getY(), textPaint);
+            //split text
+            String[] markParts = mark.split("\\n");
+            Integer numOfTextLines = 0;
+            for (String textLine : markParts) {
+                canvas.drawText(textLine, pos.getX(), pos.getY() + numOfTextLines * 50, textPaint);
+                numOfTextLines++;
+            }
 
             canvas.save(Canvas.ALL_SAVE_FLAG);
             canvas.restore();
