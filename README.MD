@@ -161,10 +161,10 @@ Marker.markImage({
     })
 })
 
-// you can also use the bundled image for marking
+// you can also use the bundled images for marking
 Marker.markImage({
     src: backGroundUri, 
-    markerSrc: require('./icon.png), 
+    markerSrc: require('./icon.png'), 
     position: 'topLeft',  // topLeft, topCenter,topRight, bottomLeft, bottomCenter , bottomRight, center
     scale: 1, 
     markerScale: 0.5, 
