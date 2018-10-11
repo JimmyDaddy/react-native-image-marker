@@ -8,36 +8,230 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.net.Uri;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
+import android.content.res.*;
 
+import com.facebook.common.references.CloseableReference;
+import com.facebook.datasource.DataSource;
+import com.facebook.drawee.backends.pipeline.Fresco;
+import com.facebook.imagepipeline.datasource.BaseBitmapDataSubscriber;
+import com.facebook.imagepipeline.image.CloseableImage;
+import com.facebook.imagepipeline.request.ImageRequest;
+import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.views.text.ReactFontManager;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.UUID;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 
 /**
  * Created by jimmydaddy on 2017/3/6.
  */
 
+
 public class ImageMarkerManager extends ReactContextBaseJavaModule {
+    private ReactApplicationContext context;
+    private static final String PROP_ICON_URI = "uri";
 
 
     public ImageMarkerManager(ReactApplicationContext reactContext) {
         super(reactContext);
+        this.context = reactContext;
     }
 
     @Override
     public String getName() {
         return "ImageMarker";
+    }
+
+    private Resources getResources() {
+        return this.context.getResources();
+    }
+
+    private int getDrawableResourceByName(String name) {
+        return this.getResources().getIdentifier(
+                name,
+                "drawable",
+                this.context.getPackageName());
+    }
+
+    private Drawable getDrawableByName(String name) {
+        int drawableResId = getDrawableResourceByName(name);
+        if (drawableResId != 0) {
+            return getResources().getDrawable(getDrawableResourceByName(name));
+        } else {
+            return null;
+        }
+    }
+
+    private void markImage(
+            final String imgSavePath,
+            ReadableMap source,
+            final String position,
+            final Integer X,
+            final Integer Y,
+            final Float scale,
+            final Float markerScale,
+            final int quality,
+            final Promise promise) {
+        try {
+            String preImgPath = imgSavePath;
+            if (imgSavePath.startsWith("file://")) {
+                preImgPath = imgSavePath.replace("file://", "");
+            }
+            File file = new File(preImgPath);
+            if (!file.exists()){
+                promise.reject( "error","Can't retrieve the file from the path: " + imgSavePath,null);
+                return;
+            }
+
+            final String uri = source.getString(PROP_ICON_URI);
+
+            if (uri.startsWith("http://") || uri.startsWith("https://") || uri.startsWith("file://")) {
+                ImageRequest imageRequest = ImageRequest.fromUri(uri);
+                DataSource<CloseableReference<CloseableImage>> dataSource = Fresco.getImagePipeline().fetchDecodedImage(imageRequest, null);
+                Executor executor = Executors.newSingleThreadExecutor();
+                dataSource.subscribe(new BaseBitmapDataSubscriber() {
+                    @Override
+                    public void onNewResultImpl(@Nullable Bitmap bitmap) {
+                        if (bitmap != null) {
+                            Bitmap mark = Utils.scaleBitmap(bitmap, markerScale);
+                            String preImgPath = imgSavePath;
+                            if (imgSavePath.startsWith("file://")) {
+                                preImgPath = imgSavePath.replace("file://", "");
+                            }
+                            markImageByBitmap(preImgPath, mark, position, X, Y, scale, quality, promise);
+                        } else {
+                            promise.reject( "error","Can't retrieve the file from the path: " + uri,null);
+                        }
+                    }
+
+                    @Override
+                    public void onFailureImpl(DataSource dataSource) {
+                        promise.reject( "error","Can't request the image from the uri: " + uri,null);
+                    }
+                }, executor);
+            } else {
+                int resId = getDrawableResourceByName(uri);
+                if (resId == 0) {
+                    promise.reject( "error","Can't get resource by the path: " + uri,null);
+                } else {
+                    Resources r = this.context.getResources();
+                    InputStream is = r.openRawResource(resId);
+                    Bitmap bitmap = BitmapFactory.decodeStream(is);
+                    Bitmap mark = Utils.scaleBitmap(bitmap, markerScale);
+                    if (bitmap != null && !bitmap.isRecycled()) {
+                        bitmap.recycle();
+                        System.gc();
+                    }
+                    markImageByBitmap(imgSavePath, mark, position, X, Y, scale, quality, promise);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            promise.reject("error", e.getMessage(), e);
+        }
+    }
+
+
+    private void markImageByBitmap (String imgSavePath, Bitmap marker, String position, Integer X, Integer Y, Float scale, int qulaity, final Promise promise) {
+        BufferedOutputStream bos = null;
+        Bitmap icon = null;
+        try {
+
+            // 原图生成 - start
+
+
+            Bitmap prePhoto = Utils.scaleBitmap(imgSavePath, scale);
+
+
+            int height = prePhoto.getHeight();
+            int width =  prePhoto.getWidth();
+
+
+            icon = Utils.getBlankBitmap(width, height);
+
+            //初始化画布 绘制的图像到icon上
+            //建立画笔
+            Paint photoPaint = new Paint();
+            //获取跟清晰的图像采样
+            photoPaint.setDither(true);
+            //过滤一些
+
+//            if (percent > 1) {
+//                prePhoto = Bitmap.createScaledBitmap(prePhoto, width, height, true);
+//            }
+            Canvas canvas = new Canvas(icon);
+
+
+            canvas.drawBitmap(prePhoto, 0, 0, photoPaint);
+
+            // 原图生成 - end
+
+
+            if (position != null) {
+                Position pos = getRectFromPosition(position, marker.getWidth(), marker.getHeight(), width, height);
+                canvas.drawBitmap(marker, pos.getX(), pos.getY(), photoPaint);
+            } else {
+                canvas.drawBitmap(marker, X, Y, photoPaint);
+            }
+
+            if (prePhoto != null && !prePhoto.isRecycled()) {
+                prePhoto.recycle();
+                System.gc();
+            }
+
+            if (marker != null && !marker.isRecycled()) {
+                marker.recycle();
+                System.gc();
+            }
+
+
+            // 保存
+            canvas.save(Canvas.ALL_SAVE_FLAG);
+            // 存储
+            canvas.restore();
+            String resultFile = generateCacheFilePathForMarker(imgSavePath);
+            bos = new BufferedOutputStream(new FileOutputStream(resultFile));
+
+//            int quaility = (int) (100 / percent > 80 ? 80 : 100 / percent);
+            icon.compress(Bitmap.CompressFormat.JPEG, qulaity, bos);
+            bos.flush();
+            //保存成功的
+            promise.resolve(resultFile);
+        } catch (Exception e) {
+            e.printStackTrace();
+            promise.reject("error", e.getMessage(), e);
+        } finally {
+            if (bos != null) {
+                try {
+                    bos.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (icon != null && !icon.isRecycled()) {
+                icon.recycle();
+                icon = null;
+                System.gc();
+            }
+        }
     }
 
 
@@ -67,7 +261,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             if (!file.exists()){
                 promise.reject( "error","Can't retrieve the file from the path.",null);
             }
-            Bitmap prePhoto = Utils.rotateBitmap(imgSavePath, scale);
+            Bitmap prePhoto = Utils.scaleBitmap(imgSavePath, scale);
 
 
             int height = prePhoto.getHeight();
@@ -120,14 +314,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             if (Y != null) {
                 pY = Y;
             }
-            
-             // split text
-            String[] markParts = mark.split("\\n");
-            Integer numOfTextLines = 0;
-            for (String textLine : markParts) {
-                canvas.drawText(textLine, pX, pY + numOfTextLines * 50, textPaint);
-                numOfTextLines++;
-            }
+            canvas.drawText(mark, pX, pY, textPaint);
 
             String resultFile = generateCacheFilePathForMarker(imgSavePath);
             bos = new BufferedOutputStream(new FileOutputStream(resultFile));
@@ -180,7 +367,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
                 promise.reject("error", imgSavePath+"not exist", null);
             }
 
-            Bitmap prePhoto = Utils.rotateBitmap(imgSavePath, scale);
+            Bitmap prePhoto = Utils.scaleBitmap(imgSavePath, scale);
 
 
             int height = prePhoto.getHeight();
@@ -232,13 +419,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             textPaint.setColor(Color.parseColor(color));
             Position pos = getRectFromPosition(position, textBounds.width(), textBounds.height(), width, height);
 
-            //split text
-            String[] markParts = mark.split("\\n");
-            Integer numOfTextLines = 0;
-            for (String textLine : markParts) {
-                canvas.drawText(textLine, pos.getX(), pos.getY() + numOfTextLines * 50, textPaint);
-                numOfTextLines++;
-            }
+            canvas.drawText(mark, pos.getX(), pos.getY(), textPaint);
 
             canvas.save(Canvas.ALL_SAVE_FLAG);
             canvas.restore();
@@ -272,203 +453,13 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void markWithImage(String imgSavePath, String markerPath, Integer X, Integer Y, Float scale,Float markerScale, int qulaity,  Promise promise ) {
-        BufferedOutputStream bos = null;
-        Bitmap icon = null;
-        Boolean isFinished;
-        try {
-
-            // 原图生成 - start
-            File file = new File(imgSavePath);
-            if (!file.exists()){
-                promise.reject( "error","Can't retrieve the file from the path.",null);
-            }
-
-
-            File markerFile = new File(markerPath);
-            if (!markerFile.exists()){
-                promise.reject( "error","Can't retrieve the file from the path.",null);
-            }
-
-            Bitmap prePhoto = Utils.rotateBitmap(imgSavePath, scale);
-
-
-            int height = prePhoto.getHeight();
-            int width =  prePhoto.getWidth();
-
-
-            icon = Utils.getBlankBitmap(width, height);
-
-            //初始化画布 绘制的图像到icon上
-            //建立画笔
-            Paint photoPaint = new Paint();
-            //获取跟清晰的图像采样
-            photoPaint.setDither(true);
-            //过滤一些
-
-//            if (percent > 1) {
-//                prePhoto = Bitmap.createScaledBitmap(prePhoto, width, height, true);
-//            }
-            Canvas canvas = new Canvas(icon);
-
-
-            canvas.drawBitmap(prePhoto, 0, 0, photoPaint);
-
-            if (prePhoto != null && !prePhoto.isRecycled()) {
-                prePhoto.recycle();
-                prePhoto = null;
-                System.gc();
-            }
-
-            // 原图生成 - end
-
-            // marker生成 -start
-            Bitmap newMarker = Utils.rotateBitmap(markerPath, markerScale);
-
-
-            canvas.drawBitmap(newMarker, X, Y, photoPaint);
-
-
-            if (prePhoto != null && !prePhoto.isRecycled()) {
-                prePhoto.recycle();
-                System.gc();
-            }
-
-            if (newMarker != null && !newMarker.isRecycled()){
-                newMarker.recycle();
-                System.gc();
-            }
-
-            // 保存
-            canvas.save(Canvas.ALL_SAVE_FLAG);
-            // 存储
-            canvas.restore();
-            String resultFile = generateCacheFilePathForMarker(imgSavePath);
-            bos = new BufferedOutputStream(new FileOutputStream(resultFile));
-
-//            int quaility = (int) (100 / percent > 80 ? 80 : 100 / percent);
-            icon.compress(Bitmap.CompressFormat.JPEG, qulaity, bos);
-            bos.flush();
-            //保存成功的
-            promise.resolve(resultFile);
-        } catch (Exception e) {
-            e.printStackTrace();
-            promise.reject("error", e.getMessage(), e);
-        } finally {
-            isFinished = true;
-            if (bos != null) {
-                try {
-                    bos.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (icon != null && !icon.isRecycled()) {
-                icon.recycle();
-                icon = null;
-                System.gc();
-            }
-        }
+    public void markWithImage(String imgSavePath, ReadableMap marker, Integer X, Integer Y, Float scale, Float markerScale, int quality, final Promise promise ) {
+        markImage(imgSavePath, marker, null, X, Y, scale, markerScale, quality, promise);
     }
 
     @ReactMethod
-    public void markWithImageByPosition(String imgSavePath, String markerPath, String position, Float scale, Float markerScale, int quality, Promise promise ) {
-        BufferedOutputStream bos = null;
-        Bitmap icon = null;
-        try {
-
-            // 原图生成 - start
-            File file = new File(imgSavePath);
-            if (!file.exists()){
-                promise.reject( "error","Can't retrieve the file from the path.",null);
-            }
-
-            File markerFile = new File(markerPath);
-            if (!markerFile.exists()){
-                promise.reject( "error","Can't retrieve the file from the path.",null);
-            }
-
-            Bitmap prePhoto = Utils.rotateBitmap(imgSavePath, scale);
-
-
-            int height = prePhoto.getHeight();
-            int width =  prePhoto.getWidth();
-
-
-            icon = Utils.getBlankBitmap(width, height);
-
-            //初始化画布 绘制的图像到icon上
-            Canvas canvas = new Canvas(icon);
-            //建立画笔
-            Paint photoPaint = new Paint();
-            //获取跟清晰的图像采样
-            photoPaint.setDither(true);
-            //过滤一些
-            //                    photoPaint.setFilterBitmap(true);
-//            Log.e(Utils.TAG, "markWithImageByPosition: "+Utils.getMaxMemory());
-            canvas.drawBitmap(prePhoto, 0, 0, photoPaint);
-
-            if (prePhoto != null && !prePhoto.isRecycled()) {
-                prePhoto.recycle();
-                prePhoto = null;
-                System.gc();
-            }
-
-            // 原图生成 - end
-
-            // marker生成 -start
-//            ImageLoaderModule loader = new ImageLoaderModule()
-
-            // marker生成 -start
-
-
-            Bitmap newMarker = Utils.rotateBitmap(markerPath, markerScale);
-
-            Position pos = getRectFromPosition(position, newMarker.getWidth(), newMarker.getHeight(), width, height);
-
-            canvas.drawBitmap(newMarker, pos.getX(), pos.getY(), photoPaint);
-
-            if (prePhoto != null && !prePhoto.isRecycled()) {
-                prePhoto.recycle();
-                System.gc();
-            }
-
-            if (newMarker != null && !newMarker.isRecycled()){
-                newMarker.recycle();
-                System.gc();
-            }
-
-
-            // 保存
-            canvas.save(Canvas.ALL_SAVE_FLAG);
-            // 存储
-            canvas.restore();
-
-            String resultFile = generateCacheFilePathForMarker(imgSavePath);
-            bos = new BufferedOutputStream(new FileOutputStream(resultFile));
-
-//            int quaility = (int) (100 / percent > 80 ? 80 : 100 / percent);
-            icon.compress(Bitmap.CompressFormat.JPEG, quality, bos);
-            bos.flush();
-            //保存成功的
-            promise.resolve(resultFile);
-        } catch (Exception e) {
-            e.printStackTrace();
-            promise.reject("error", e.getMessage(), e);
-        } finally {
-            if (bos != null) {
-                try {
-                    bos.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (icon != null && !icon.isRecycled()) {
-                icon.recycle();
-                icon = null;
-                System.gc();
-            }
-        }
+    public void markWithImageByPosition(String imgSavePath, ReadableMap marker, String position, Float scale, Float markerScale, int quality, final Promise promise ) {
+        markImage(imgSavePath, marker, position, 0, 0, scale, markerScale, quality, promise);
     }
 
     static Position getRectFromPosition(String position, int width, int height, int imageWidth, int imageHeigt){

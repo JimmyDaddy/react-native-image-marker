@@ -2,13 +2,14 @@
  * @Author: JimmyDaddy
  * @Date: 2017-09-14 10:40:09
  * @Last Modified by: JimmyDaddy
- * @Last Modified time: 2018-04-08 17:46:14
+ * @Last Modified time: 2018-10-11 15:13:23
  * @Description
  * @flow
  */
-import { NativeModules } from 'react-native'
+import { NativeModules, Image } from 'react-native'
 
 const { ImageMarker } = NativeModules
+const { resolveAssetSource } = Image
 
 export type Position = $Enum<{
   'topLeft': string, 
@@ -105,26 +106,38 @@ export default class Marker {
       position
      } = option
 
-     if (!position) {
-       return ImageMarker.markWithImage(
-        src,
-        markerSrc,
-        X,
-        Y,
-        scale,
-        markerScale,
-        quality
-       )
-     } else {
-      return ImageMarker.markWithImageByPosition(
-        src,
-        markerSrc,
-        position,
-        scale,
-        markerScale,
-        quality
-       )
-     }
+    if (!markerSrc) {
+      throw new Error('please set marker image!')
+    }
+
+    let markerObj = resolveAssetSource(markerSrc)
+    if (!markerObj) {
+      markerObj = {
+        uri: markerSrc,
+        __packager_asset: false
+      }
+    }
+    
+    if (!position) {
+      return ImageMarker.markWithImage(
+      src,
+      markerObj,
+      X,
+      Y,
+      scale,
+      markerScale,
+      quality
+      )
+    } else {
+    return ImageMarker.markWithImageByPosition(
+      src,
+      markerObj,
+      position,
+      scale,
+      markerScale,
+      quality
+      )
+    }
   }
 }
 

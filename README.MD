@@ -62,7 +62,7 @@ import ImageMarker from "react-native-image-marker"
     loading: true
  })
  Marker.markText({
-    src: Platform.OS == 'android'? img.uri.replace('file://', '') : img.uri,, 
+    src: img.uri,
     text: 'text marker', 
     X: 30,
     Y: 30, 
@@ -90,7 +90,7 @@ this.setState({
     loading: true
 })
 Marker.markText({
-    src: Platform.OS == 'android'? img.uri.replace('file://', '') : img.uri,, 
+    src: img.uri,
     text: 'text marker', 
     position: 'topLeft', 
     color: '#FF0000',
@@ -114,8 +114,8 @@ Marker.markText({
 
 // mark icon on image
 
-const iconUri = Platform.OS == 'android'? icon.uri.replace('file://', '') : icon.uri
-const backGroundUri = Platform.OS == 'android'? img.uri.replace('file://', '') : img.uri
+const iconUri = icon.uri
+const backGroundUri = img.uri
 this.setState({
     loading: true
 })
@@ -161,6 +161,27 @@ Marker.markImage({
     })
 })
 
+// you can also use the bundled image for marking
+Marker.markImage({
+    src: backGroundUri, 
+    markerSrc: require('./icon.png), 
+    position: 'topLeft',  // topLeft, topCenter,topRight, bottomLeft, bottomCenter , bottomRight, center
+    scale: 1, 
+    markerScale: 0.5, 
+    quality: 100
+}).then((path) => {
+    this.setState({
+        uri: Platform.OS === 'android' ? 'file://' + path : path,
+        loading: false
+    })
+}).catch((err) => {
+    console.log(err, 'err')
+     this.setState({
+        loading: false,
+        err
+    })
+})
+
 ```
 
 ## Save image to file
@@ -172,6 +193,7 @@ Marker.markImage({
 ## Contributors
 [@filipef101](https://github.com/filipef101)
 [@mikaello](https://github.com/mikaello)
+[@Peretz30](https://github.com/Peretz30)
 
 
 ## Example

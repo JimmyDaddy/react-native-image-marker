@@ -8,6 +8,7 @@
 
 #import "RCTImageMarker.h"
 #import <React/RCTBridgeModule.h>
+#import <React/RCTImageSource.h>
 #include <CoreText/CTFont.h>
 #include <CoreText/CTStringAttributes.h>
 #include "RCTConvert+ImageMarker.h"
@@ -373,7 +374,7 @@ RCT_EXPORT_METHOD(addTextByPostion: (NSString *)path
 
 
 RCT_EXPORT_METHOD(markWithImage: (NSString *)path
-                  markImagePath: (NSString *)markerPath
+                  markImagePath: (NSDictionary *)markerPath
                   X:(CGFloat)X
                   Y:(CGFloat)Y
                   scale:(CGFloat)scale
@@ -394,6 +395,7 @@ RCT_EXPORT_METHOD(markWithImage: (NSString *)path
                 return;
             }
         }
+        
         [_bridge.imageLoader loadImageWithURLRequest:[RCTConvert NSURLRequest:markerPath] callback:^(NSError *markerError, UIImage *marker) {
             if (markerError || marker == nil) {
                 marker = [[UIImage alloc] initWithContentsOfFile:path];
@@ -420,7 +422,7 @@ RCT_EXPORT_METHOD(markWithImage: (NSString *)path
 }
 
 RCT_EXPORT_METHOD(markWithImageByPosition: (NSString *)path
-                  markImagePath: (NSString *)markerPath
+                  markImagePath: (NSDictionary *)markerPath
                   position:(MarkerPosition)position
                   scale:(CGFloat)scale
                   markerScale:(CGFloat)markerScale
@@ -440,6 +442,9 @@ RCT_EXPORT_METHOD(markWithImageByPosition: (NSString *)path
                 return;
             }
         }
+        
+        RCTImageSource *imageSource = [RCTConvert RCTImageSource:markerPath];
+
         [_bridge.imageLoader loadImageWithURLRequest:[RCTConvert NSURLRequest:markerPath] callback:^(NSError *markerError, UIImage *marker) {
             if (markerError || marker == nil) {
                 marker = [[UIImage alloc] initWithContentsOfFile:path];
