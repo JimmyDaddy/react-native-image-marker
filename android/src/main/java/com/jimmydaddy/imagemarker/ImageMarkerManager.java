@@ -257,11 +257,17 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
         try {
 
 
-            File file = new File(imgSavePath);
+            String preImgPath = imgSavePath;
+            if (imgSavePath.startsWith("file://")) {
+                preImgPath = imgSavePath.replace("file://", "");
+            }
+
+            File file = new File(preImgPath);
             if (!file.exists()){
                 promise.reject( "error","Can't retrieve the file from the path.",null);
+                return;
             }
-            Bitmap prePhoto = Utils.scaleBitmap(imgSavePath, scale);
+            Bitmap prePhoto = Utils.scaleBitmap(preImgPath, scale);
 
 
             int height = prePhoto.getHeight();
@@ -314,8 +320,12 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             if (Y != null) {
                 pY = Y;
             }
-            canvas.drawText(mark, pX, pY, textPaint);
-
+            String[] markParts = mark.split("\\n");
+            Integer numOfTextLines = 0;
+            for (String textLine : markParts) {
+                canvas.drawText(textLine, pX, pY + numOfTextLines * 50, textPaint);
+                numOfTextLines++;
+            }
             String resultFile = generateCacheFilePathForMarker(imgSavePath);
             bos = new BufferedOutputStream(new FileOutputStream(resultFile));
 
@@ -362,12 +372,17 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
         boolean isFinished;
         Bitmap icon = null;
         try {
-            File file = new File(imgSavePath);
-            if (!file.exists()){
-                promise.reject("error", imgSavePath+"not exist", null);
+            String preImgPath = imgSavePath;
+            if (imgSavePath.startsWith("file://")) {
+                preImgPath = imgSavePath.replace("file://", "");
             }
 
-            Bitmap prePhoto = Utils.scaleBitmap(imgSavePath, scale);
+            File file = new File(preImgPath);
+            if (!file.exists()){
+                promise.reject( "error","Can't retrieve the file from the path.",null);
+                return;
+            }
+            Bitmap prePhoto = Utils.scaleBitmap(preImgPath, scale);
 
 
             int height = prePhoto.getHeight();
@@ -419,8 +434,12 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             textPaint.setColor(Color.parseColor(color));
             Position pos = getRectFromPosition(position, textBounds.width(), textBounds.height(), width, height);
 
-            canvas.drawText(mark, pos.getX(), pos.getY(), textPaint);
-
+            String[] markParts = mark.split("\\n");
+            Integer numOfTextLines = 0;
+            for (String textLine : markParts) {
+                canvas.drawText(textLine, pos.getX(), pos.getY() + numOfTextLines * 50, textPaint);
+                numOfTextLines++;
+            }
             canvas.save(Canvas.ALL_SAVE_FLAG);
             canvas.restore();
 

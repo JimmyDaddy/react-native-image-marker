@@ -167,7 +167,8 @@ export default class MarkerTest extends React.Component {
     } else {
       Marker.markText({
         src: this.state.image, 
-        text: 'text marker \n muiltline text', 
+        text: `text marker
+         muiltline text`, 
         position: type, 
         color: '#FF0000',
         fontName: 'Arial-BoldItalicMT', 
