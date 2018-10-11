@@ -29,12 +29,24 @@ public class MainApplication extends Application implements ReactApplication {
             new ImageMarkerPackage()
       );
     }
+
+    @Override
+    protected String getJSMainModuleName() {
+      if(BuildConfig.DEBUG){
+        return "index";
+      }else {
+        return "index.android";
+      }
+
+    }
   };
 
   @Override
   public ReactNativeHost getReactNativeHost() {
     return mReactNativeHost;
   }
+
+
 
   @Override
   public void onCreate() {

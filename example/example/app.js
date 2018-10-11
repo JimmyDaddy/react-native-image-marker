@@ -2,6 +2,7 @@ import React from 'react'
 import { TouchableOpacity, Image, View, Text, Platform, Dimensions, StyleSheet, ScrollView } from 'react-native'
 import Marker from 'react-native-image-marker'
 import Picker from 'react-native-image-picker'
+const icon = require('./icon.jpeg')
 
 const { width } = Dimensions.get('window')
 
@@ -42,7 +43,7 @@ export default class MarkerTest extends React.Component {
     this.state = {
       uri: '',
       image: '',
-      marker: '',
+      marker: icon,
       markImage: true
     }
   }
@@ -75,7 +76,7 @@ export default class MarkerTest extends React.Component {
             style={[s.btn, {backgroundColor: '#2296F3'}]}
             onPress={() => this._pickImage('mark')}
           >
-            <Text style={s.text}>pick marke image</Text>
+            <Text style={s.text}>pick an image for mark</Text>
           </TouchableOpacity>
         </View>
         <View style={s.op}>
@@ -166,7 +167,7 @@ export default class MarkerTest extends React.Component {
     } else {
       Marker.markText({
         src: this.state.image, 
-        text: 'text marker', 
+        text: 'text marker \n muiltline text', 
         position: type, 
         color: '#FF0000',
         fontName: 'Arial-BoldItalicMT', 
@@ -211,7 +212,7 @@ export default class MarkerTest extends React.Component {
     } else {
       Marker.markText({
         src: this.state.image, 
-        text: 'text marker', 
+        text: 'text marker \n muiltline text', 
         X: 30,
         Y: 30, 
         color: '#FF0000',
@@ -261,7 +262,7 @@ export default class MarkerTest extends React.Component {
       } else {
            // You can display the image using either:
            // const source = {uri: 'data:image/jpeg;base64,' + response.data, isStatic: true};
-        const uri = Platform.OS === 'android' ? response.uri.replace('file://', '') : response.uri
+        const uri = response.uri
         if (type === 'image') {
           this.setState({
             image: uri
