@@ -30,15 +30,6 @@ public class MainApplication extends Application implements ReactApplication {
       );
     }
 
-    @Override
-    protected String getJSMainModuleName() {
-      if(BuildConfig.DEBUG){
-        return "index";
-      }else {
-        return "index.android";
-      }
-
-    }
   };
 
   @Override

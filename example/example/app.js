@@ -2,7 +2,7 @@ import React from 'react'
 import { TouchableOpacity, Image, View, Text, Platform, Dimensions, StyleSheet, ScrollView } from 'react-native'
 import Marker from 'react-native-image-marker'
 import Picker from 'react-native-image-picker'
-const icon = require('./icon.jpeg')
+const icon = require('./icon.png')
 
 const { width } = Dimensions.get('window')
 
@@ -129,6 +129,10 @@ export default class MarkerTest extends React.Component {
           >
             <Text style={s.text} >bottomRight</Text>
           </TouchableOpacity>
+          <Image source={require('./assets/icon.png')} style={{
+            width: 100,
+            height: 100
+          }}></Image>
         </View>
         <View
           style={{flex: 1}}
@@ -137,7 +141,7 @@ export default class MarkerTest extends React.Component {
           this.state.show
             ? <Image source={{uri: this.state.uri}} resizeMode='contain' style={s.preview} />
           : null
-        }
+          }
         </View>
 
       </ScrollView>

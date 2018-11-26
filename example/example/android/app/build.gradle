@@ -102,6 +102,21 @@ android {
         ndk {
             abiFilters "armeabi-v7a", "x86"
         }
+
+    }
+    signingConfigs {
+        release {
+            storeFile file('../keystores/mykey')
+            storePassword 'guitar'
+            keyAlias 'key0'
+            keyPassword 'guitar'
+        }
+        debug {
+            storeFile file('../keystores/mykey')
+            storePassword 'guitar'
+            keyAlias 'key0'
+            keyPassword 'guitar'
+        }
     }
     splits {
         abi {
@@ -115,6 +130,7 @@ android {
         release {
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+            signingConfig signingConfigs.release
         }
     }
     // applicationVariants are e.g. debug, release

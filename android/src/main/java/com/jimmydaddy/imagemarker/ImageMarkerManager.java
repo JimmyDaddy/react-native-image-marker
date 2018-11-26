@@ -48,6 +48,7 @@ import java.util.concurrent.Executors;
 public class ImageMarkerManager extends ReactContextBaseJavaModule {
     private ReactApplicationContext context;
     private static final String PROP_ICON_URI = "uri";
+    private static final String IMAGE_MARKER_TAG = "[ImageMarker]";
 
 
     public ImageMarkerManager(ReactApplicationContext reactContext) {
@@ -103,6 +104,9 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
 
             final String uri = source.getString(PROP_ICON_URI);
 
+            Log.d(IMAGE_MARKER_TAG, uri);
+            Log.d(IMAGE_MARKER_TAG, source.toString());
+
             if (uri.startsWith("http://") || uri.startsWith("https://") || uri.startsWith("file://")) {
                 ImageRequest imageRequest = ImageRequest.fromUri(uri);
                 DataSource<CloseableReference<CloseableImage>> dataSource = Fresco.getImagePipeline().fetchDecodedImage(imageRequest, null);
@@ -130,20 +134,28 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             } else {
                 int resId = getDrawableResourceByName(uri);
                 if (resId == 0) {
+                    Log.d(IMAGE_MARKER_TAG, "cannot find res");
                     promise.reject( "error","Can't get resource by the path: " + uri,null);
                 } else {
-                    Resources r = this.context.getResources();
-                    InputStream is = r.openRawResource(resId);
-                    Bitmap bitmap = BitmapFactory.decodeStream(is);
+                    Log.d(IMAGE_MARKER_TAG, "res：" + resId);
+
+                    Resources r = this.getResources();
+//                    InputStream is = r.openRawResource(resId);
+                    Bitmap bitmap = BitmapFactory.decodeResource(r, resId);
+//                    Bitmap bitmap = BitmapFactory.decodeStream(is);
+                    Log.d(IMAGE_MARKER_TAG, bitmap.getHeight() + "");
                     Bitmap mark = Utils.scaleBitmap(bitmap, markerScale);
+                    Log.d(IMAGE_MARKER_TAG, mark.getHeight() + "");
+
                     if (bitmap != null && !bitmap.isRecycled()) {
                         bitmap.recycle();
                         System.gc();
                     }
-                    markImageByBitmap(imgSavePath, mark, position, X, Y, scale, quality, promise);
+                    markImageByBitmap(preImgPath, mark, position, X, Y, scale, quality, promise);
                 }
             }
         } catch (Exception e) {
+            Log.d(IMAGE_MARKER_TAG, "error：" + e.getMessage());
             e.printStackTrace();
             promise.reject("error", e.getMessage(), e);
         }
