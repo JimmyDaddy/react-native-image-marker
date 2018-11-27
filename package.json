@@ -1,7 +1,7 @@
 {
   "name": "react-native-image-marker",
-  "version": "0.3.2",
-  "description": "mark image",
+  "version": "0.3.3",
+  "description": "mark image on both Android and iOS",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

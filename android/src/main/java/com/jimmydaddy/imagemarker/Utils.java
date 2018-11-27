@@ -106,6 +106,9 @@ public class Utils {
 
         BitmapFactory.Options options = new BitmapFactory.Options();
         Bitmap prePhoto = null;
+        options.inPurgeable = true;
+        options.inInputShareable = true;
+        options.inSampleSize = scale.intValue();
         try {
             prePhoto = BitmapFactory.decodeFile(path, options);
         } catch (OutOfMemoryError e) {
