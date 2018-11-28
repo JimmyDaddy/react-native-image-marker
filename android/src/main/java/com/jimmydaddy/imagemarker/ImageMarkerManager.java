@@ -147,7 +147,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
                     Bitmap mark = Utils.scaleBitmap(bitmap, markerScale);
                     Log.d(IMAGE_MARKER_TAG, mark.getHeight() + "");
 
-                    if (bitmap != null && !bitmap.isRecycled()) {
+                    if (bitmap != null && !bitmap.isRecycled() && markerScale != 1) {
                         bitmap.recycle();
                         System.gc();
                     }
