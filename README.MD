@@ -1,6 +1,6 @@
 # react-native-image-marker ![npm version](https://badge.fury.io/js/react-native-image-marker.svg)
 
-Add watermark to the image with text and icon
+Add text or icon watermarks to your images
 
 ## sample
 
