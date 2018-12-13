@@ -452,7 +452,8 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
                 canvas.drawText(textLine, pos.getX(), pos.getY() + numOfTextLines * 50, textPaint);
                 numOfTextLines++;
             }
-            canvas.save(Canvas.ALL_SAVE_FLAG);
+            // canvas.save(Canvas.ALL_SAVE_FLAG);
+            canvas.save();
             canvas.restore();
 
             String resultFile = generateCacheFilePathForMarker(imgSavePath);

@@ -129,10 +129,6 @@ export default class MarkerTest extends React.Component {
           >
             <Text style={s.text} >bottomRight</Text>
           </TouchableOpacity>
-          <Image source={require('./assets/icon.png')} style={{
-            width: 100,
-            height: 100
-          }}></Image>
         </View>
         <View
           style={{flex: 1}}
