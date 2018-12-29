@@ -14,6 +14,14 @@ Add text or icon watermarks to your images
 * npm install react-native-image-marker --save
 * react-native link
 
+### iOS Pod Install
+
+You can use `pod` instead of `link`. Add following lines in your `Podfile`:
+
+```
+pod 'RNImageMarker', :path => '../node_modules/react-native-image-marker'
+```
+
 ## API 
 
 |name|parameter|return|decription|
