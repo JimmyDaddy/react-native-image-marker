@@ -202,6 +202,7 @@ Marker.markImage({
 [@filipef101](https://github.com/filipef101)
 [@mikaello](https://github.com/mikaello)
 [@Peretz30](https://github.com/Peretz30)
+[@gaoxiaosong](https://github.com/gaoxiaosong)
 
 
 ## Example
