@@ -92,13 +92,14 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             final int quality,
             final Promise promise) {
         try {
-            String preImgPath = imgSavePath;
-            if (imgSavePath.startsWith("file://")) {
-                preImgPath = imgSavePath.replace("file://", "");
-            }
+
+            Uri myUri = Uri.parse(imgSavePath);
+
+            String preImgPath = myUri.getPath();
+
             File file = new File(preImgPath);
             if (!file.exists()){
-                promise.reject( "error","Can't retrieve the file from the path: " + imgSavePath,null);
+                promise.reject( "imgSavePath error","Can't retrieve the file from the imgSavePath: " + imgSavePath + " " + preImgPath,null);
                 return;
             }
 
@@ -116,13 +117,13 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
                     public void onNewResultImpl(@Nullable Bitmap bitmap) {
                         if (bitmap != null) {
                             Bitmap mark = Utils.scaleBitmap(bitmap, markerScale);
-                            String preImgPath = imgSavePath;
-                            if (imgSavePath.startsWith("file://")) {
-                                preImgPath = imgSavePath.replace("file://", "");
-                            }
+
+                            Uri myUri = Uri.parse(imgSavePath);
+
+                            String preImgPath = myUri.getPath();
                             markImageByBitmap(preImgPath, mark, position, X, Y, scale, quality, promise);
                         } else {
-                            promise.reject( "error","Can't retrieve the file from the path: " + uri,null);
+                            promise.reject( "marker error","Can't retrieve the file from the markerpath: " + uri,null);
                         }
                     }
 
@@ -261,19 +262,18 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
      */
     @ReactMethod
     public void addText(String imgSavePath, String mark, Integer X, Integer Y, String color, String fontName, int fontSize, float scale, int quality,  Promise promise) {
-       if (TextUtils.isEmpty(mark)){
-           promise.reject("error", "mark should not be empty", null);
-       }
+        if (TextUtils.isEmpty(mark)){
+            promise.reject("error", "mark should not be empty", null);
+        }
         BufferedOutputStream bos = null;
         boolean isFinished;
         Bitmap icon = null;
         try {
 
 
-            String preImgPath = imgSavePath;
-            if (imgSavePath.startsWith("file://")) {
-                preImgPath = imgSavePath.replace("file://", "");
-            }
+            Uri myUri = Uri.parse(imgSavePath);
+
+            String preImgPath = myUri.getPath();
 
             File file = new File(preImgPath);
             if (!file.exists()){
@@ -315,7 +315,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
 //            textPaint.setTypeface(Typeface.DEFAULT);
             //设置字体失败时使用默认字体
 
-             textPaint.setTypeface(ReactFontManager.getInstance().getTypeface(fontName, Typeface.NORMAL, this.getReactApplicationContext().getAssets()) );
+            textPaint.setTypeface(ReactFontManager.getInstance().getTypeface(fontName, Typeface.NORMAL, this.getReactApplicationContext().getAssets()) );
 
             //采用的颜色
             textPaint.setColor(Color.parseColor(color));
@@ -385,10 +385,9 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
         boolean isFinished;
         Bitmap icon = null;
         try {
-            String preImgPath = imgSavePath;
-            if (imgSavePath.startsWith("file://")) {
-                preImgPath = imgSavePath.replace("file://", "");
-            }
+            Uri myUri = Uri.parse(imgSavePath);
+
+            String preImgPath = myUri.getPath();
 
             File file = new File(preImgPath);
             if (!file.exists()){
