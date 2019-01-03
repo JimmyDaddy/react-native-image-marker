@@ -2,7 +2,7 @@
  * @Author: JimmyDaddy
  * @Date: 2017-09-14 10:40:09
  * @Last Modified by: JimmyDaddy
- * @Last Modified time: 2018-10-11 15:13:23
+ * @Last Modified time: 2019-01-03 16:04:34
  * @Description
  * @flow
  */
@@ -37,21 +37,23 @@ type TextMarkOption = {
   scale: number,
   // image quality
   quality: number,
-  position?: Position
+  position?: Position,
+  filename?: string
 }
 
 type ImageMarkOption = {
-   // image src, local image
-   src: string,
-   markerSrc: string,
-   X?: number,
-   Y?: number,
-   // marker scale
-   markerScale: number,
-   // image scale
-   scale: number,
-   quality: number,
-   position?: Position
+  // image src, local image
+  src: string,
+  markerSrc: string,
+  X?: number,
+  Y?: number,
+  // marker scale
+  markerScale: number,
+  // image scale
+  scale: number,
+  quality: number,
+  position?: Position,
+  filename?: string
 }
 
 export default class Marker {
@@ -66,7 +68,8 @@ export default class Marker {
       fontSize,
       scale,
       quality,
-      position
+      position,
+      filename
      } = option
     if (!position) {
       return ImageMarker.addText(
@@ -78,7 +81,8 @@ export default class Marker {
         fontName,
         fontSize,
         scale,
-        quality
+        quality,
+        filename
       )
     } else {
       return ImageMarker.addTextByPostion(
@@ -89,7 +93,8 @@ export default class Marker {
         fontName,
         fontSize,
         scale,
-        quality
+        quality,
+        filename
       )
     }
   }
@@ -103,11 +108,12 @@ export default class Marker {
       markerScale,
       scale,
       quality,
-      position
-     } = option
+      position,
+      filename
+    } = option
 
     if (!markerSrc) {
-      throw new Error('please set marker image!')
+      throw new Error('please set mark image!')
     }
 
     let markerObj = resolveAssetSource(markerSrc)
@@ -120,22 +126,24 @@ export default class Marker {
     
     if (!position) {
       return ImageMarker.markWithImage(
-      src,
-      markerObj,
-      X,
-      Y,
-      scale,
-      markerScale,
-      quality
+        src,
+        markerObj,
+        X,
+        Y,
+        scale,
+        markerScale,
+        quality,
+        filename
       )
     } else {
-    return ImageMarker.markWithImageByPosition(
-      src,
-      markerObj,
-      position,
-      scale,
-      markerScale,
-      quality
+      return ImageMarker.markWithImageByPosition(
+        src,
+        markerObj,
+        position,
+        scale,
+        markerScale,
+        quality,
+        filename
       )
     }
   }
