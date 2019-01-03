@@ -1,4 +1,4 @@
-# react-native-image-marker ![npm version](https://badge.fury.io/js/react-native-image-marker.svg)
+# react-native-image-marker ![npm version](https://badge.fury.io/js/react-native-image-marker.svg) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/JimmyDaddy/react-native-image-marker/pulls)
 
 Add text or icon watermark to your images
 
