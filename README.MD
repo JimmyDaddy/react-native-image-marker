@@ -42,6 +42,7 @@ pod 'RNImageMarker', :path => '../node_modules/react-native-image-marker'
 |`fontSize`| fontSize |
 |`scale`| scale image |
 |`quality`| image qulaity |
+|`filename` | set filename for the result |
 
 * `ImageMarkOption`
 
@@ -55,6 +56,7 @@ pod 'RNImageMarker', :path => '../node_modules/react-native-image-marker'
 |`markerScale`| scale icon |
 |`scale`| scale image |
 |`quality`| image qulaity |
+|`filename` | set filename for the result |
 
 ## Usage
 
