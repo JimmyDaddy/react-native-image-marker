@@ -153,8 +153,12 @@ export default class MarkerTest extends React.Component {
         position: type, 
         scale: 1, 
         markerScale: 0.5, 
-        quality: 100
+        quality: 100,
+        filename: 'markerfile1'
       }).then((path) => {
+        console.log('====================================');
+        console.log(path);
+        console.log('====================================');
         this.setState({
           uri: Platform.OS === 'android' ? 'file://' + path : path,
           show: true
@@ -174,14 +178,17 @@ export default class MarkerTest extends React.Component {
         fontName: 'Arial-BoldItalicMT', 
         fontSize: 44, 
         scale: 1, 
-        quality: 100
+        quality: 100,
+        filename: 'markerfile2'
       })
       .then((path) => {
+        console.log('====================================');
+        console.log(path);
+        console.log('====================================');
         this.setState({
           show: true,
           uri: Platform.OS === 'android' ? 'file://' + path : path
         })
-        this.upload()
       }).catch((err) => {
         console.log('====================================')
         console.log(err)
@@ -201,6 +208,9 @@ export default class MarkerTest extends React.Component {
         markerScale: 0.5, 
         quality: 100
       }).then((path) => {
+        console.log('====================================');
+        console.log(path);
+        console.log('====================================');
         this.setState({
           uri: Platform.OS === 'android' ? 'file://' + path : path,
           show: true
@@ -220,13 +230,16 @@ export default class MarkerTest extends React.Component {
         fontName: 'Arial-BoldItalicMT', 
         fontSize: 44, 
         scale: 1, 
-        quality: 100
+        quality: 100,
+        filename: 'markerfile4'
       }).then((path) => {
+        console.log('====================================');
+        console.log(path);
+        console.log('====================================');
         this.setState({
           show: true,
           uri: Platform.OS === 'android' ? 'file://' + path : path
         })
-        this.upload()
       }).catch((err) => {
         console.log('====================================')
         console.log(err)
