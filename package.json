@@ -1,6 +1,6 @@
 {
   "name": "react-native-image-marker",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "description": "mark image on both Android and iOS",
   "main": "index.js",
   "scripts": {
