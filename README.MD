@@ -1,13 +1,12 @@
 # react-native-image-marker ![npm version](https://badge.fury.io/js/react-native-image-marker.svg)
 
-Add text or icon watermarks to your images
+Add text or icon watermark to your images
 
 ## sample
 
 <figure>
-    <img src="https://github.com/JimmyDaddy/react-native-image-marker/blob/master/asset/IOSMarker.gif" width='300'><img src="https://github.com/JimmyDaddy/react-native-image-marker/blob/master/asset/AndroidMarker.gif" width='300'>
+  <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/IOSMarker.gif" width='300'><img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/AndroidMarker.gif" width='300'>
 </figure>
-
 
 ## Installation
 
@@ -18,7 +17,7 @@ Add text or icon watermarks to your images
 
 You can use `pod` instead of `link`. Add following lines in your `Podfile`:
 
-```
+```shell
 pod 'RNImageMarker', :path => '../node_modules/react-native-image-marker'
 ```
 
@@ -64,7 +63,7 @@ pod 'RNImageMarker', :path => '../node_modules/react-native-image-marker'
 import ImageMarker from "react-native-image-marker"
 
 ···
-// mark text on image
+// add text watermark to a photo
 
  this.setState({
     loading: true
@@ -120,7 +119,7 @@ Marker.markText({
     })
 })
 
-// mark icon on image
+// add icon watermark to a photo
 
 const iconUri = icon.uri
 const backGroundUri = img.uri
@@ -169,7 +168,7 @@ Marker.markImage({
     })
 })
 
-// you can also use the bundled images for marking
+// you can also add watermark to a photo with static images
 Marker.markImage({
     src: backGroundUri, 
     markerSrc: require('./icon.png'), 
@@ -199,14 +198,12 @@ Marker.markImage({
 * For any more advanced needs, you can write your own (or find another) native module that would solve your use-case.
 
 ## Contributors
+
 [@filipef101](https://github.com/filipef101)
 [@mikaello](https://github.com/mikaello)
 [@Peretz30](https://github.com/Peretz30)
 [@gaoxiaosong](https://github.com/gaoxiaosong)
 
-
 ## Example
 
-[example](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/example/example)
-
-
+[example](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/example/markerExample)
