@@ -35,8 +35,8 @@ pod 'RNImageMarker', :path => '../node_modules/react-native-image-marker'
 |`src`|image url **(Android only support local image)**|
 |`text`|the text you want to mark with|
 |`position`| text position(`topLeft`,`topRight`,`topCenter`, `center`, `bottomLeft`, `bottomCenter`, `bottomRight`)|
-|`X`|distance to the left, **if you set `position` you don't need to set this property**|
-|`Y`|distance to the top,**if you set `position` you don't need to set this property**|
+|`X`|distance from the left, **if you have set `position` yet you don't need to set this property again**|
+|`Y`|distance from the top, **if you have set `position` you don't need to set this property again**|
 |`color`| text color |
 |`fontName`| fontName |
 |`fontSize`| fontSize |
@@ -51,8 +51,8 @@ pod 'RNImageMarker', :path => '../node_modules/react-native-image-marker'
 |`src`|image url **(Android only support local image)**|
 |`markerSrc`|the icon you want to mark with  **(Android only support local image)** |
 |`position`| text position(`topLeft`,`topRight`,`topCenter`, `center`, `bottomLeft`, `bottomCenter`, `bottomRight`)|
-|`X`|distance to the left, **if you set `position` you don't need to set this property**|
-|`Y`|distance to the top, **if you set `position` you don't need to set this property**|
+|`X`|distance from the left, **if you have set `position` yet you don't need to set this property again**|
+|`Y`|distance from the top, **if you have set `position` you don't need to set this property again**|
 |`markerScale`| scale icon |
 |`scale`| scale image |
 |`quality`| image qulaity |
