@@ -7,9 +7,9 @@
     "test": "jest"
   },
   "dependencies": {
-    "react": "16.6.3",
-    "react-native": "0.57.8",
-    "react-native-image-marker": "^0.3.9",
+    "react": "16.8.1",
+    "react-native": "^0.58.4",
+    "react-native-image-marker": "^0.4.0",
     "react-native-image-picker": "^0.27.2"
   },
   "devDependencies": {

@@ -28,6 +28,7 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.views.text.ReactFontManager;
 
 import java.io.BufferedOutputStream;
@@ -101,7 +102,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
 
             File file = new File(preImgPath);
             if (!file.exists()){
-                promise.reject( "imgSavePath error","Can't retrieve the file from the imgSavePath: " + imgSavePath,null);
+                promise.reject( "imgSavePath error","Can't retrieve the file from the imgSavePath: " + imgSavePath);
                 return;
             }
 
@@ -125,20 +126,20 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
                             String preImgPath = myUri.getPath();
                             markImageByBitmap(preImgPath, mark, position, X, Y, scale, quality, filename, promise);
                         } else {
-                            promise.reject( "marker error","Can't retrieve the file from the markerpath: " + uri,null);
+                            promise.reject( "marker error","Can't retrieve the file from the markerpath: " + uri);
                         }
                     }
 
                     @Override
                     public void onFailureImpl(DataSource dataSource) {
-                        promise.reject( "error","Can't request the image from the uri: " + uri,null);
+                        promise.reject( "error","Can't request the image from the uri: " + uri);
                     }
                 }, executor);
             } else {
                 int resId = getDrawableResourceByName(uri);
                 if (resId == 0) {
                     Log.d(IMAGE_MARKER_TAG, "cannot find res");
-                    promise.reject( "error","Can't get resource by the path: " + uri,null);
+                    promise.reject( "error","Can't get resource by the path: " + uri);
                 } else {
                     Log.d(IMAGE_MARKER_TAG, "res：" + resId);
 
@@ -287,7 +288,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             Promise promise
     ) {
         if (TextUtils.isEmpty(mark)){
-            promise.reject("error", "mark should not be empty", null);
+            promise.reject("error", "mark should not be empty");
         }
         BufferedOutputStream bos = null;
         boolean isFinished;
@@ -301,7 +302,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
 
             File file = new File(preImgPath);
             if (!file.exists()){
-                promise.reject( "error","Can't retrieve the file from the path.",null);
+                promise.reject( "error","Can't retrieve the file from the path.");
                 return;
             }
             Bitmap prePhoto = Utils.scaleBitmap(preImgPath, scale);
@@ -414,7 +415,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             Promise promise
     ) {
         if (TextUtils.isEmpty(mark)){
-            promise.reject("error", "mark should not be empty", null);
+            promise.reject("error", "mark should not be empty");
         }
         BufferedOutputStream bos = null;
         boolean isFinished;
@@ -426,7 +427,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
 
             File file = new File(preImgPath);
             if (!file.exists()){
-                promise.reject( "error","Can't retrieve the file from the path.",null);
+                promise.reject( "error","Can't retrieve the file from the path.");
                 return;
             }
             Bitmap prePhoto = Utils.scaleBitmap(preImgPath, scale);

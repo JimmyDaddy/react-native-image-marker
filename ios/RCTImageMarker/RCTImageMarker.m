@@ -77,10 +77,10 @@ NSString * generateCacheFilePathForMarker(NSString * ext, NSString * filename)
 }
 
 UIImage * markerImg(UIImage *image, NSString* text, CGFloat X, CGFloat Y, UIColor* color, UIFont* font, CGFloat scale){
-    int w = image.size.width * scale;
-    int h = image.size.height * scale;
+    int w = image.size.width;
+    int h = image.size.height;
     
-    UIGraphicsBeginImageContext(image.size);
+    UIGraphicsBeginImageContextWithOptions(image.size, NO, scale);
     [image drawInRect:CGRectMake(0, 0, w, h)];
     NSDictionary *attr = @{
                            NSFontAttributeName: font,   //设置字体
@@ -98,13 +98,13 @@ UIImage * markerImg(UIImage *image, NSString* text, CGFloat X, CGFloat Y, UIColo
  *
  */
 UIImage * markeImageWithImage(UIImage *image, UIImage * waterImage, CGFloat X, CGFloat Y, CGFloat scale,  CGFloat markerScale ){
-    int w = image.size.width * scale;
-    int h = image.size.height * scale;
+    int w = image.size.width;
+    int h = image.size.height;
     
     int ww = waterImage.size.width * markerScale;
     int wh = waterImage.size.height * markerScale;
 
-    UIGraphicsBeginImageContextWithOptions(image.size, NO, 0);
+    UIGraphicsBeginImageContextWithOptions(image.size, NO, scale);
     [image drawInRect:CGRectMake(0, 0, w, h)];
     CGRect position = CGRectMake(X, Y, ww, wh);
     [waterImage drawInRect:position];
@@ -114,12 +114,12 @@ UIImage * markeImageWithImage(UIImage *image, UIImage * waterImage, CGFloat X, C
 }
 
 UIImage * markeImageWithImageByPostion(UIImage *image, UIImage * waterImage, MarkerPosition position, CGFloat scale, CGFloat markerScale) {
-    int w = image.size.width * scale;
-    int h = image.size.height * scale;
+    int w = image.size.width;
+    int h = image.size.height;
     
     int ww = waterImage.size.width * markerScale;
     int wh = waterImage.size.height * markerScale;
-    UIGraphicsBeginImageContextWithOptions(image.size, NO, 0);
+    UIGraphicsBeginImageContextWithOptions(image.size, NO, scale);
     [image drawInRect:CGRectMake(0, 0, w, h)];
     
     CGSize size = CGSizeMake(ww, wh);
@@ -188,8 +188,8 @@ UIImage * markeImageWithImageByPostion(UIImage *image, UIImage * waterImage, Mar
 
 
 UIImage * markerImgByPostion(UIImage *image, NSString* text, MarkerPosition position, UIColor* color, UIFont* font, CGFloat scale){
-    int w = image.size.width * scale;
-    int h = image.size.height * scale;
+    int w = image.size.width;
+    int h = image.size.height;
     
     NSDictionary *attr = @{
                            NSFontAttributeName: font,   //设置字体
@@ -199,7 +199,7 @@ UIImage * markerImgByPostion(UIImage *image, NSString* text, MarkerPosition posi
     CGSize size = [text sizeWithAttributes:attr];
     
 //    CGSize size = CGSizeMake(fontSize, height);
-    UIGraphicsBeginImageContext(image.size);
+    UIGraphicsBeginImageContextWithOptions(image.size, NO, scale);
     [image drawInRect:CGRectMake(0, 0, w, h)];
     CGRect rect;
     switch (position) {

@@ -152,9 +152,8 @@ export default class MarkerTest extends React.Component {
         markerSrc: this.state.marker, 
         position: type, 
         scale: 1, 
-        markerScale: 0.5, 
-        quality: 100,
-        filename: 'markerfile1'
+        markerScale: 1, 
+        quality: 100
       }).then((path) => {
         console.log('====================================');
         console.log(path);
@@ -230,8 +229,7 @@ export default class MarkerTest extends React.Component {
         fontName: 'Arial-BoldItalicMT', 
         fontSize: 44, 
         scale: 1, 
-        quality: 100,
-        filename: 'markerfile4'
+        quality: 100
       }).then((path) => {
         console.log('====================================');
         console.log(path);
