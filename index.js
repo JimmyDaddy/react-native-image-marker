@@ -2,7 +2,7 @@
  * @Author: JimmyDaddy
  * @Date: 2017-09-14 10:40:09
  * @Last Modified by: JimmyDaddy
- * @Last Modified time: 2019-01-03 16:04:34
+ * @Last Modified time: 2019-02-11 19:12:46
  * @Description
  * @flow
  */
@@ -71,9 +71,22 @@ export default class Marker {
       position,
       filename
      } = option
+
+    if (!src) {
+      throw new Error('please set image!')
+    }
+
+    let srcObj = resolveAssetSource(src)
+    if (!srcObj) {
+      srcObj = {
+        uri: src,
+        __packager_asset: false
+      }
+    }
+
     if (!position) {
       return ImageMarker.addText(
-        src,
+        srcObj,
         text,
         X,
         Y,
@@ -86,7 +99,7 @@ export default class Marker {
       )
     } else {
       return ImageMarker.addTextByPostion(
-        src,
+        srcObj,
         text,
         position,
         color,
@@ -112,8 +125,19 @@ export default class Marker {
       filename
     } = option
 
+    if (!src) {
+      throw new Error('please set image!')
+    }
     if (!markerSrc) {
       throw new Error('please set mark image!')
+    }
+
+    let srcObj = resolveAssetSource(src)
+    if (!srcObj) {
+      srcObj = {
+        uri: src,
+        __packager_asset: false
+      }
     }
 
     let markerObj = resolveAssetSource(markerSrc)
@@ -126,7 +150,7 @@ export default class Marker {
     
     if (!position) {
       return ImageMarker.markWithImage(
-        src,
+        srcObj,
         markerObj,
         X,
         Y,
@@ -137,7 +161,7 @@ export default class Marker {
       )
     } else {
       return ImageMarker.markWithImageByPosition(
-        src,
+        srcObj,
         markerObj,
         position,
         scale,

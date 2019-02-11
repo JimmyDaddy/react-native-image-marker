@@ -3,6 +3,7 @@ import { TouchableOpacity, Image, View, Text, Platform, Dimensions, StyleSheet, 
 import Marker from 'react-native-image-marker'
 import Picker from 'react-native-image-picker'
 const icon = require('./icon.jpeg')
+const bg = require('./bg.png')
 
 const { width } = Dimensions.get('window')
 
@@ -42,7 +43,7 @@ export default class MarkerTest extends React.Component {
     super(props)
     this.state = {
       uri: '',
-      image: '',
+      image: bg,
       marker: icon,
       markImage: true
     }
@@ -177,8 +178,7 @@ export default class MarkerTest extends React.Component {
         fontName: 'Arial-BoldItalicMT', 
         fontSize: 44, 
         scale: 1, 
-        quality: 100,
-        filename: 'markerfile2'
+        quality: 100
       })
       .then((path) => {
         console.log('====================================');
