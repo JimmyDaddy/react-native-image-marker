@@ -4,6 +4,7 @@ import Marker from 'react-native-image-marker'
 import Picker from 'react-native-image-picker'
 const icon = require('./icon.jpeg')
 const bg = require('./bg.png')
+const base64Bg = require('./bas64bg').default 
 
 const { width } = Dimensions.get('window')
 
@@ -43,7 +44,7 @@ export default class MarkerTest extends React.Component {
     super(props)
     this.state = {
       uri: '',
-      image: bg,
+      image: base64Bg,
       marker: icon,
       markImage: true
     }
@@ -150,7 +151,7 @@ export default class MarkerTest extends React.Component {
     if (this.state.markImage) {
       Marker.markImage({
         src: this.state.image, 
-        markerSrc: this.state.marker, 
+        markerSrc: base64Bg, 
         position: type, 
         scale: 1, 
         markerScale: 1, 

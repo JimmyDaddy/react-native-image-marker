@@ -13,6 +13,7 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
 import android.content.res.*;
 
@@ -82,6 +83,10 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
 //        }
 //    }
 
+    private Boolean isFrescoImg(String uri) {
+        return uri.startsWith("http://") || uri.startsWith("https://") || uri.startsWith("file://") || (uri.startsWith("data:img") && uri.contains("base64"));
+    }
+
     private void markImage(
             final Bitmap bg,
             ReadableMap source,
@@ -102,7 +107,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             Log.d(IMAGE_MARKER_TAG, uri);
             Log.d(IMAGE_MARKER_TAG, source.toString());
 
-            if (uri.startsWith("http://") || uri.startsWith("https://") || uri.startsWith("file://")) {
+            if (isFrescoImg(uri)) {
                 ImageRequest imageRequest = ImageRequest.fromUri(uri);
                 DataSource<CloseableReference<CloseableImage>> dataSource = Fresco.getImagePipeline().fetchDecodedImage(imageRequest, null);
                 Executor executor = Executors.newSingleThreadExecutor();
@@ -420,7 +425,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             Log.d(IMAGE_MARKER_TAG, uri);
             Log.d(IMAGE_MARKER_TAG, src.toString());
 
-            if (uri.startsWith("http://") || uri.startsWith("https://") || uri.startsWith("file://")) {
+            if (isFrescoImg(uri)) {
                 ImageRequest imageRequest = ImageRequest.fromUri(uri);
                 DataSource<CloseableReference<CloseableImage>> dataSource = Fresco.getImagePipeline().fetchDecodedImage(imageRequest, null);
                 Executor executor = Executors.newSingleThreadExecutor();
@@ -505,7 +510,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             Log.d(IMAGE_MARKER_TAG, uri);
             Log.d(IMAGE_MARKER_TAG, src.toString());
 
-            if (uri.startsWith("http://") || uri.startsWith("https://") || uri.startsWith("file://")) {
+            if (isFrescoImg(uri)) {
                 ImageRequest imageRequest = ImageRequest.fromUri(uri);
                 DataSource<CloseableReference<CloseableImage>> dataSource = Fresco.getImagePipeline().fetchDecodedImage(imageRequest, null);
                 Executor executor = Executors.newSingleThreadExecutor();
@@ -571,7 +576,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             Log.d(IMAGE_MARKER_TAG, uri);
             Log.d(IMAGE_MARKER_TAG, src.toString());
 
-            if (uri.startsWith("http://") || uri.startsWith("https://") || uri.startsWith("file://")) {
+            if (isFrescoImg(uri)) {
                 ImageRequest imageRequest = ImageRequest.fromUri(uri);
                 DataSource<CloseableReference<CloseableImage>> dataSource = Fresco.getImagePipeline().fetchDecodedImage(imageRequest, null);
                 Executor executor = Executors.newSingleThreadExecutor();
@@ -634,7 +639,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             Log.d(IMAGE_MARKER_TAG, uri);
             Log.d(IMAGE_MARKER_TAG, src.toString());
 
-            if (uri.startsWith("http://") || uri.startsWith("https://") || uri.startsWith("file://")) {
+            if (isFrescoImg(uri)) {
                 ImageRequest imageRequest = ImageRequest.fromUri(uri);
                 DataSource<CloseableReference<CloseableImage>> dataSource = Fresco.getImagePipeline().fetchDecodedImage(imageRequest, null);
                 Executor executor = Executors.newSingleThreadExecutor();

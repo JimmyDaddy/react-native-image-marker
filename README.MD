@@ -190,6 +190,28 @@ Marker.markImage({
         err
     })
 })
+// or base64
+Marker.markImage({
+    src: { uri: `data:img/jpg;base64,/9j/4qqqAQSkZJRgABAQEBLAEsAAD/2wBDAAIBAQEBAQIBAQECAgICAgQDAgICAgUEBAMEBgUGBgYFBgYGBwkIBgcJBwYGCAsICQoKCgoKBggLDAsKDAkKCgr/2wBDAQICAgICAgUDAwUKBwYHCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgr/wAARCAHnAooDASIA
+AhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgddddcI` }, 
+    markerSrc: { uri: `data:img/jpg;base64,/9j/4AAQSkZJRgABAQEBLAEsAAD/2wBDAAIBAQEBAQIBAQECAgICAgQDAgICAgUEBAMEBgUGBgYFBgYGBwkIBgcJBwYGCAsICQoKCgoKBggLDAsKDAkKCgr/2wBDAQICAgICAgUDAwUKBwYHCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgr/wAARCAHnAooDASIA
+AhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcI` }, 
+    position: 'topLeft',  // topLeft, topCenter,topRight, bottomLeft, bottomCenter , bottomRight, center
+    scale: 1, 
+    markerScale: 0.5, 
+    quality: 100
+}).then((path) => {
+    this.setState({
+        uri: Platform.OS === 'android' ? 'file://' + path : path,
+        loading: false
+    })
+}).catch((err) => {
+    console.log(err, 'err')
+     this.setState({
+        loading: false,
+        err
+    })
+})
 
 ```
 
