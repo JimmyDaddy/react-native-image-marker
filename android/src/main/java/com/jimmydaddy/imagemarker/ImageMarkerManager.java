@@ -40,6 +40,7 @@ import java.io.InputStream;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.regex.Pattern;
 
 
 /**
@@ -84,7 +85,9 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
 //    }
 
     private Boolean isFrescoImg(String uri) {
-        return uri.startsWith("http://") || uri.startsWith("https://") || uri.startsWith("file://") || (uri.startsWith("data:img") && uri.contains("base64"));
+        String base64Pattern = "^data:(image|img)/(bmp|jpg|png|tif|gif|pcx|tga|exif|fpx|svg|psd|cdr|pcd|dxf|ufo|eps|ai|raw|WMF|webp);base64,(([[A-Za-z0-9+/])*\\s\\S*)*";
+
+        return uri.startsWith("http://") || uri.startsWith("https://") || uri.startsWith("file://") || (uri.startsWith("data:") && uri.contains("base64") && (uri.contains("img") || uri.contains("image")));
     }
 
     private void markImage(
