@@ -179,7 +179,13 @@ export default class MarkerTest extends React.Component {
         fontName: 'Arial-BoldItalicMT', 
         fontSize: 44, 
         scale: 1, 
-        quality: 100
+        quality: 100,
+        shadowStyle: {
+          dx: 10.5,
+          dy: 20.8,
+          radius: 20.9,
+          color: '#ff00ff'
+        }
       })
       .then((path) => {
         console.log('====================================');
