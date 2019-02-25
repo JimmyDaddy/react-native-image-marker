@@ -314,7 +314,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             //建立画笔
             TextPaint textPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG | Paint.DEV_KERN_TEXT_FLAG);
             textPaint.setAntiAlias(true);
-            textPaint.setShadowLayer(10F, 11F,5F, Color.GRAY);
+            textPaint.setShadowLayer(10F, 11F, 5F, Color.GRAY);
             try {
                 //设置字体失败时使用默认字体
                 textPaint.setTypeface(ReactFontManager.getInstance().getTypeface(fontName, Typeface.NORMAL, this.getReactApplicationContext().getAssets()) );
