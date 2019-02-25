@@ -1,24 +1,18 @@
 package com.jimmydaddy.imagemarker;
 
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Matrix;
 import android.graphics.Paint;
-import android.text.TextPaint;
-import android.graphics.Rect;
 import android.graphics.Typeface;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.support.annotation.Nullable;
-import android.text.TextUtils;
-import android.text.StaticLayout;
 import android.text.Layout;
-import android.util.Base64;
+import android.text.StaticLayout;
+import android.text.TextPaint;
+import android.text.TextUtils;
 import android.util.Log;
-import android.content.res.*;
 
 import com.facebook.common.references.CloseableReference;
 import com.facebook.datasource.DataSource;
@@ -26,24 +20,19 @@ import com.facebook.drawee.backends.pipeline.Fresco;
 import com.facebook.imagepipeline.datasource.BaseBitmapDataSubscriber;
 import com.facebook.imagepipeline.image.CloseableImage;
 import com.facebook.imagepipeline.request.ImageRequest;
-import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
-import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.views.text.ReactFontManager;
 
 import java.io.BufferedOutputStream;
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.regex.Pattern;
 
 
 /**
@@ -277,6 +266,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             String color,
             String fontName,
             Integer fontSize,
+            ShadowLayerStyle shadowLayerStyle,
             Integer X,
             Integer Y,
             int quality,
@@ -314,7 +304,9 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             //建立画笔
             TextPaint textPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG | Paint.DEV_KERN_TEXT_FLAG);
             textPaint.setAntiAlias(true);
-            textPaint.setShadowLayer(10F, 11F, 5F, Color.GRAY);
+            if (null != shadowLayerStyle) {
+                textPaint.setShadowLayer(shadowLayerStyle.radius, shadowLayerStyle.dx,shadowLayerStyle.dy, shadowLayerStyle.color);
+            }
             try {
                 //设置字体失败时使用默认字体
                 textPaint.setTypeface(ReactFontManager.getInstance().getTypeface(fontName, Typeface.NORMAL, this.getReactApplicationContext().getAssets()) );
@@ -369,12 +361,6 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
                 }
             }
 
-
-            Log.d("ReactNativeJS", "position: " + position);
-            Log.d("ReactNativeJS", "width: " + width+ ", height: " + height);
-            Log.d("ReactNativeJS", "textWidth: " + textWidth + ", textHeight: " + textHeight);
-            Log.d("ReactNativeJS", "x：" + x + ", y:" + y);
-
             canvas.save();
             canvas.translate(x, y);
             textLayout.draw(canvas);
@@ -426,6 +412,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             final String color,
             final String fontName,
             final Integer fontSize,
+            ReadableMap shadowStyle,
             final float scale,
             final int quality,
             String filename,
@@ -441,6 +428,8 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
 
             final String dest = generateCacheFilePathForMarker(uri, filename);
 
+            final ShadowLayerStyle myShadowStyle  = null != shadowStyle? new ShadowLayerStyle(shadowStyle) : null;
+
             Log.d(IMAGE_MARKER_TAG, uri);
             Log.d(IMAGE_MARKER_TAG, src.toString());
 
@@ -453,7 +442,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
                     public void onNewResultImpl(@Nullable Bitmap bitmap) {
                         if (bitmap != null) {
                             Bitmap bg = Utils.scaleBitmap(bitmap, scale);
-                            markImageByText(bg, mark, null, color, fontName, fontSize, X, Y, quality, dest, promise);
+                            markImageByText(bg, mark, null, color, fontName, fontSize, myShadowStyle, X, Y, quality, dest, promise);
                         } else {
                             promise.reject( "marker error","Can't retrieve the file from the src: " + uri);
                         }
@@ -484,7 +473,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
                         bitmap.recycle();
                         System.gc();
                     }
-                    markImageByText(bg, mark, null, color, fontName, fontSize, X, Y, quality, dest, promise);
+                    markImageByText(bg, mark, null, color, fontName, fontSize, myShadowStyle, X, Y, quality, dest, promise);
                 }
             }
         } catch (Exception e) {
@@ -512,6 +501,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             final String color,
             final String fontName,
             final Integer fontSize,
+            ReadableMap shadowStyle,
             final float scale,
             final Integer quality,
             String filename,
@@ -526,6 +516,9 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
 
             final String dest = generateCacheFilePathForMarker(uri, filename);
 
+            final ShadowLayerStyle myShadowStyle  = null != shadowStyle? new ShadowLayerStyle(shadowStyle) : null;
+
+
             Log.d(IMAGE_MARKER_TAG, uri);
             Log.d(IMAGE_MARKER_TAG, src.toString());
 
@@ -538,7 +531,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
                     public void onNewResultImpl(@Nullable Bitmap bitmap) {
                         if (bitmap != null) {
                             Bitmap bg = Utils.scaleBitmap(bitmap, scale);
-                            markImageByText(bg, mark, position, color, fontName, fontSize, null, null, quality, dest, promise);
+                            markImageByText(bg, mark, position, color, fontName, fontSize, myShadowStyle,null, null, quality, dest, promise);
                         } else {
                             promise.reject( "marker error","Can't retrieve the file from the src: " + uri);
                         }
@@ -569,7 +562,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
                         bitmap.recycle();
                         System.gc();
                     }
-                    markImageByText(bg, mark, position, color, fontName, fontSize, null, null, quality, dest, promise);
+                    markImageByText(bg, mark, position, color, fontName, fontSize, myShadowStyle, null, null, quality, dest, promise);
                 }
             }
         } catch (Exception e) {
