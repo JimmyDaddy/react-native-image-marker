@@ -6,6 +6,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.text.TextPaint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
@@ -13,6 +14,8 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
+import android.text.StaticLayout;
+import android.text.Layout;
 import android.util.Base64;
 import android.util.Log;
 import android.content.res.*;
@@ -288,7 +291,6 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             int height = bg.getHeight();
             int width =  bg.getWidth();
 
-
             icon = Utils.getBlankBitmap(width, height);
             //初始化画布 绘制的图像到icon上
             Canvas canvas = new Canvas(icon);
@@ -310,17 +312,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
 
             //设置画笔
             //建立画笔
-            Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.DEV_KERN_TEXT_FLAG);
-
-            //文字区域
-            //获取size
-
-            int left = 20;
-            int top = 20;
-            int right = 20 + width;
-            int bottom = height + 20;
-            Rect textBounds = new Rect(left, top, right, bottom);
-
+            TextPaint textPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG | Paint.DEV_KERN_TEXT_FLAG);
             textPaint.setAntiAlias(true);
 
             try {
@@ -336,33 +328,57 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             }
 
             textPaint.setTextSize(fSize);
-
-            textPaint.getTextBounds(mark, 0, mark.length(), textBounds);
             textPaint.setColor(Color.parseColor(color));
 
+            // ALIGN_CENTER, ALIGN_NORMAL, ALIGN_OPPOSITE
+            StaticLayout textLayout = new StaticLayout(mark, textPaint, canvas.getWidth(), Layout.Alignment.ALIGN_NORMAL, 1.0f, 0.0f, false);
 
-            float pX = width - textBounds.width() - 30.0f;
-            float pY = height - 30.0f;
+            int textHeight = textLayout.getHeight();
+            int textWidth = 0;
+            int count = textLayout.getLineCount();
+            for (int a = 0; a < count; a++) {
+                textWidth = (int) Math.ceil(Math.max(textWidth, textLayout.getLineWidth(a) + textLayout.getLineLeft(a)));
+            }
+
+            float x = 20;
+            float y = 20;
+
             if (position != null) {
-                Position pos = getRectFromPosition(position, textBounds.width(), textBounds.height(), width, height);
-                pX = pos.getX();
-                pY = pos.getY();
-
+                if("topCenter".equals(position)) {
+                    x = (width - textWidth)/2;
+                } else if("topRight".equals(position)) {
+                    x = (width - textWidth);
+                } else if("center".equals(position)) {
+                    x = (width - textWidth) / 2;
+                    y = (height - textHeight) / 2;
+                } else if("bottomLeft".equals(position)) {
+                    y = (height - textHeight);
+                } else if("bottomCenter".equals(position)) {
+                    x = (width - textWidth) / 2;
+                    y = (height - textHeight);
+                } else if("bottomRight".equals(position)) {
+                    x = (width - textWidth);
+                    y = (height - textHeight);
+                }
             } else {
                 if (null != X) {
-                    pX = X;
+                    x = X;
                 }
                 if ( null != Y) {
-                    pY = Y;
+                    y = Y;
                 }
             }
 
-            String[] markParts = mark.split("\\n");
-            Integer numOfTextLines = 0;
-            for (String textLine : markParts) {
-                canvas.drawText(textLine, pX, pY + numOfTextLines * 50, textPaint);
-                numOfTextLines++;
-            }
+
+            Log.d("ReactNativeJS", "position: " + position);
+            Log.d("ReactNativeJS", "width: " + width+ ", height: " + height);
+            Log.d("ReactNativeJS", "textWidth: " + textWidth + ", textHeight: " + textHeight);
+            Log.d("ReactNativeJS", "x：" + x + ", y:" + y);
+
+            canvas.save();
+            canvas.translate(x, y);
+            textLayout.draw(canvas);
+            canvas.restore();
 
             bos = new BufferedOutputStream(new FileOutputStream(dest));
 
