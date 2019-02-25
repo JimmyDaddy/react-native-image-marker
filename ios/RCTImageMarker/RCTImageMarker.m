@@ -76,7 +76,7 @@ NSString * generateCacheFilePathForMarker(NSString * ext, NSString * filename)
     }
 }
 
-UIImage * markerImgWithText(UIImage *image, NSString* text, CGFloat X, CGFloat Y, UIColor* color, UIFont* font, CGFloat scale){
+UIImage * markerImgWithText(UIImage *image, NSString* text, CGFloat X, CGFloat Y, UIColor* color, UIFont* font, CGFloat scale, NSShadow* shadow){
     int w = image.size.width;
     int h = image.size.height;
     
@@ -84,7 +84,8 @@ UIImage * markerImgWithText(UIImage *image, NSString* text, CGFloat X, CGFloat Y
     [image drawInRect:CGRectMake(0, 0, w, h)];
     NSDictionary *attr = @{
                            NSFontAttributeName: font,   //设置字体
-                           NSForegroundColorAttributeName : color      //设置字体颜色
+                           NSForegroundColorAttributeName : color,      //设置字体颜色
+                           NSShadowAttributeName : shadow
                            };
     CGRect position = CGRectMake(X, Y, w, h);
     [text drawInRect:position withAttributes:attr];
@@ -103,7 +104,7 @@ UIImage * markeImageWithImage(UIImage *image, UIImage * waterImage, CGFloat X, C
     
     int ww = waterImage.size.width * markerScale;
     int wh = waterImage.size.height * markerScale;
-
+    
     UIGraphicsBeginImageContextWithOptions(image.size, NO, scale);
     [image drawInRect:CGRectMake(0, 0, w, h)];
     CGRect position = CGRectMake(X, Y, ww, wh);
@@ -126,7 +127,7 @@ UIImage * markeImageWithImageByPostion(UIImage *image, UIImage * waterImage, Mar
     
     
     CGRect rect;
-
+    
     switch (position) {
         case TopLeft:
             rect = (CGRect){
@@ -182,23 +183,24 @@ UIImage * markeImageWithImageByPostion(UIImage *image, UIImage * waterImage, Mar
     UIImage * newImage = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
     return newImage;
-
-
+    
+    
 }
 
 
-UIImage * markerImgWithTextByPostion    (UIImage *image, NSString* text, MarkerPosition position, UIColor* color, UIFont* font, CGFloat scale){
+UIImage * markerImgWithTextByPostion    (UIImage *image, NSString* text, MarkerPosition position, UIColor* color, UIFont* font, CGFloat scale, NSShadow* shadow){
     int w = image.size.width;
     int h = image.size.height;
     
     NSDictionary *attr = @{
                            NSFontAttributeName: font,   //设置字体
-                           NSForegroundColorAttributeName : color      //设置字体颜色
+                           NSForegroundColorAttributeName : color,      //设置字体颜色
+                           NSShadowAttributeName : shadow
                            };
-
+    
     CGSize size = [text sizeWithAttributes:attr];
     
-//    CGSize size = CGSizeMake(fontSize, height);
+    //    CGSize size = CGSizeMake(fontSize, height);
     UIGraphicsBeginImageContextWithOptions(image.size, NO, scale);
     [image drawInRect:CGRectMake(0, 0, w, h)];
     CGRect rect;
@@ -297,13 +299,28 @@ UIImage * markerImgWithTextByPostion    (UIImage *image, NSString* text, MarkerP
     return int_ch1+int_ch2;
 }
 
-RCT_EXPORT_METHOD(addText: (NSDictionary *)src
-                  text:(NSString*)text
+-(NSShadow*)getShadowStyle:(NSDictionary *) shadowStyle
+{
+    if (shadowStyle != nil) {
+        NSShadow *shadow = [[NSShadow alloc]init];
+        shadow.shadowBlurRadius = [RCTConvert CGFloat: shadowStyle[@"radius"]];
+        shadow.shadowOffset = CGSizeMake([RCTConvert CGFloat: shadowStyle[@"dx"]], [RCTConvert CGFloat: shadowStyle[@"dy"]]);
+        UIColor* color = [self getColor:shadowStyle[@"color"]];
+        shadow.shadowColor = color != nil? color : [UIColor grayColor];
+        return shadow;
+    } else {
+        return nil;
+    }
+}
+
+RCT_EXPORT_METHOD(addText: (nonnull NSDictionary *)src
+                  text:(nonnull NSString*)text
                   X:(CGFloat)X
                   Y:(CGFloat)Y
                   color:(NSString*)color
                   fontName:(NSString*)fontName
                   fontSize:(CGFloat)fontSize
+                  shadowStyle:(nullable NSDictionary *)shadowStyle
                   scale:(CGFloat)scale
                   quality:(NSInteger) quality
                   filename: (NSString *)filename
@@ -326,7 +343,10 @@ RCT_EXPORT_METHOD(addText: (NSDictionary *)src
         // Do mark
         UIFont* font = [UIFont fontWithName:fontName size:fontSize];
         UIColor* uiColor = [self getColor:color];
-        UIImage * scaledImage = markerImgWithText(image, text, X, Y , uiColor, font, scale);
+        NSShadow* shadow = [self getShadowStyle: shadowStyle];
+       
+        
+        UIImage * scaledImage = markerImgWithText(image, text, X, Y , uiColor, font, scale, shadow);
         if (scaledImage == nil) {
             NSLog(@"Can't mark the image");
             reject(@"error",@"Can't mark the image.", error);
@@ -339,12 +359,13 @@ RCT_EXPORT_METHOD(addText: (NSDictionary *)src
     }];
 }
 
-RCT_EXPORT_METHOD(addTextByPostion: (NSDictionary *)src
-                  text:(NSString*)text
+RCT_EXPORT_METHOD(addTextByPostion: (nonnull NSDictionary *)src
+                  text:(nonnull NSString*)text
                   position:(MarkerPosition)position
                   color:(NSString*)color
                   fontName:(NSString*)fontName
                   fontSize:(CGFloat)fontSize
+                  shadowStyle:(NSDictionary *)shadowStyle
                   scale:(CGFloat)scale
                   quality:(NSInteger) quality
                   filename: (NSString *)filename
@@ -371,7 +392,8 @@ RCT_EXPORT_METHOD(addTextByPostion: (NSDictionary *)src
         // Do mark
         UIFont* font = [UIFont fontWithName:fontName size:fontSize];
         UIColor* uiColor = [self getColor:color];
-        UIImage * scaledImage = markerImgWithTextByPostion(image, text, position, uiColor, font, scale);
+        NSShadow* shadow = [self getShadowStyle: shadowStyle];
+        UIImage * scaledImage = markerImgWithTextByPostion(image, text, position, uiColor, font, scale, shadow);
         if (scaledImage == nil) {
             NSLog(@"Can't mark the image");
             reject(@"error",@"Can't mark the image.", error);
@@ -385,8 +407,8 @@ RCT_EXPORT_METHOD(addTextByPostion: (NSDictionary *)src
 }
 
 
-RCT_EXPORT_METHOD(markWithImage: (NSDictionary *)src
-                  markImagePath: (NSDictionary *)markerSrc
+RCT_EXPORT_METHOD(markWithImage: (nonnull NSDictionary *)src
+                  markImagePath: (nonnull NSDictionary *)markerSrc
                   X:(CGFloat)X
                   Y:(CGFloat)Y
                   scale:(CGFloat)scale
@@ -436,8 +458,8 @@ RCT_EXPORT_METHOD(markWithImage: (NSDictionary *)src
     }];
 }
 
-RCT_EXPORT_METHOD(markWithImageByPosition: (NSDictionary *)src
-                  markImagePath: (NSDictionary *)markerSrc
+RCT_EXPORT_METHOD(markWithImageByPosition: (nonnull NSDictionary *)src
+                  markImagePath: (nonnull NSDictionary *)markerSrc
                   position:(MarkerPosition)position
                   scale:(CGFloat)scale
                   markerScale:(CGFloat)markerScale
@@ -460,8 +482,8 @@ RCT_EXPORT_METHOD(markWithImageByPosition: (NSDictionary *)src
             }
         }
         
-//        RCTImageSource *imageSource = [RCTConvert RCTImageSource:markerPath];
-
+        //        RCTImageSource *imageSource = [RCTConvert RCTImageSource:markerPath];
+        
         [_bridge.imageLoader loadImageWithURLRequest:[RCTConvert NSURLRequest:markerSrc] callback:^(NSError *markerError, UIImage *marker) {
             if (markerError || marker == nil) {
                 NSString* path = markerSrc[@"uri"];

@@ -40,6 +40,7 @@ pod 'RNImageMarker', :path => '../node_modules/react-native-image-marker'
 |`color`| text color |
 |`fontName`| fontName |
 |`fontSize`| fontSize |
+|`shadowStyle`| text's shadow style: iOS's `NSShadowAttributeName`, Android's `textPaint.shadowLayerStyle` |
 |`scale`| scale image |
 |`quality`| image qulaity |
 |`filename` | set filename for the result |
@@ -57,6 +58,15 @@ pod 'RNImageMarker', :path => '../node_modules/react-native-image-marker'
 |`scale`| scale image |
 |`quality`| image qulaity |
 |`filename` | set filename for the result |
+
+* `ShadowStyle`
+
+|name|description|
+|--|--|
+|`radius`| blur radius |
+|`dx`| x offset|
+|`dy`| y offset|
+|`color`| shadow color |
 
 ## Usage
 
@@ -78,6 +88,12 @@ import ImageMarker from "react-native-image-marker"
     color: '#FF0000',
     fontName: 'Arial-BoldItalicMT', 
     fontSize: 44, 
+    shadowStyle: {
+        dx: 10.5,
+        dy: 20.8,
+        radius: 20.9,
+        color: '#ff00ff'
+    },
     scale: 1, 
     quality: 100
  }).then((res) => {
@@ -228,6 +244,7 @@ AhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcI` },
 [@Peretz30](https://github.com/Peretz30)
 [@gaoxiaosong](https://github.com/gaoxiaosong)
 [@onka13](https://github.com/onka13)
+[@OrangeFlavoredColdCoffee](https://github.com/OrangeFlavoredColdCoffee)
 
 ## Example
 
