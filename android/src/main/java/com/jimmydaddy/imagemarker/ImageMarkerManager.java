@@ -332,7 +332,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
 
             // ALIGN_CENTER, ALIGN_NORMAL, ALIGN_OPPOSITE
             StaticLayout textLayout = new StaticLayout(mark, textPaint, canvas.getWidth(), Layout.Alignment.ALIGN_NORMAL, 1.0f, 0.0f, false);
-            
+
             int textHeight = textLayout.getHeight();
             int textWidth = 0;
             int count = textLayout.getLineCount();
@@ -342,23 +342,33 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
 
             float x = 20;
             float y = 20;
-            
-            if("topCenter".equals(position)) {
-                x = (width - textWidth)/2;
-            } else if("topRight".equals(position)) {
-                x = (width - textWidth);
-            } else if("center".equals(position)) {
-                x = (width - textWidth) / 2;
-                y = (height - textHeight) / 2;
-            } else if("bottomLeft".equals(position)) {
-                y = (height - textHeight);
-            } else if("bottomCenter".equals(position)) {
-                x = (width - textWidth) / 2;
-                y = (height - textHeight);
-            } else if("bottomRight".equals(position)) {
-                x = (width - textWidth);
-                y = (height - textHeight);
+
+            if (position != null) {
+                if("topCenter".equals(position)) {
+                    x = (width - textWidth)/2;
+                } else if("topRight".equals(position)) {
+                    x = (width - textWidth);
+                } else if("center".equals(position)) {
+                    x = (width - textWidth) / 2;
+                    y = (height - textHeight) / 2;
+                } else if("bottomLeft".equals(position)) {
+                    y = (height - textHeight);
+                } else if("bottomCenter".equals(position)) {
+                    x = (width - textWidth) / 2;
+                    y = (height - textHeight);
+                } else if("bottomRight".equals(position)) {
+                    x = (width - textWidth);
+                    y = (height - textHeight);
+                }
+            } else {
+                if (null != X) {
+                    x = X;
+                }
+                if ( null != Y) {
+                    y = Y;
+                }
             }
+
 
             Log.d("ReactNativeJS", "position: " + position);
             Log.d("ReactNativeJS", "width: " + width+ ", height: " + height);
