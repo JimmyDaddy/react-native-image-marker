@@ -80,11 +80,17 @@ UIImage * markerImgWithText(UIImage *image, NSString* text, CGFloat X, CGFloat Y
     int w = image.size.width;
     int h = image.size.height;
     
+    NSShadow *shadow = [[NSShadow alloc]init];
+    shadow.shadowBlurRadius = 1.0;
+    shadow.shadowOffset = CGSizeMake(1, 1);
+    shadow.shadowColor = [UIColor grayColor];
+    
     UIGraphicsBeginImageContextWithOptions(image.size, NO, scale);
     [image drawInRect:CGRectMake(0, 0, w, h)];
     NSDictionary *attr = @{
                            NSFontAttributeName: font,   //设置字体
-                           NSForegroundColorAttributeName : color      //设置字体颜色
+                           NSForegroundColorAttributeName : color,      //设置字体颜色
+                           NSShadowAttributeName : shadow
                            };
     CGRect position = CGRectMake(X, Y, w, h);
     [text drawInRect:position withAttributes:attr];
