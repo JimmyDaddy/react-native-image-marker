@@ -28,6 +28,13 @@ export type ShadowLayerStyle = {
   'color': string
 }
 
+export type TextBackgroundStyle = {
+  'paddingX': float,
+  'paddingY': float,
+  'type': string,
+  'color': string
+}
+
 type TextMarkOption = {
   // image src, local image
   src: string,
@@ -45,7 +52,8 @@ type TextMarkOption = {
   quality: number,
   position?: Position,
   filename?: string,
-  shadowStyle: ShadowLayerStyle
+  shadowStyle: ShadowLayerStyle,
+  textBackgroundStyle: TextBackgroundStyle
 }
 
 type ImageMarkOption = {
@@ -74,6 +82,7 @@ export default class Marker {
       fontName,
       fontSize,
       shadowStyle,
+      textBackgroundStyle,
       scale,
       quality,
       position,
@@ -93,6 +102,7 @@ export default class Marker {
     }
 
     let mShadowStyle = shadowStyle || {}
+    let mTextBackgroundStyle = textBackgroundStyle || {}
 
     if (!position) {
       return ImageMarker.addText(
@@ -104,6 +114,7 @@ export default class Marker {
         fontName,
         fontSize,
         mShadowStyle,
+        mTextBackgroundStyle,
         scale,
         quality,
         filename
@@ -117,6 +128,7 @@ export default class Marker {
         fontName,
         fontSize,
         mShadowStyle,
+        mTextBackgroundStyle,
         scale,
         quality,
         filename
