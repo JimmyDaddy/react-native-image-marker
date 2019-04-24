@@ -23,6 +23,10 @@ typedef enum{
     Center = 6
 } MarkerPosition;
 
+@implementation TextBackground
+
+@end
+
 @implementation RCTConvert(MarkerPosition)
 
 RCT_ENUM_CONVERTER(MarkerPosition,
@@ -76,7 +80,7 @@ NSString * generateCacheFilePathForMarker(NSString * ext, NSString * filename)
     }
 }
 
-UIImage * markerImgWithText(UIImage *image, NSString* text, CGFloat X, CGFloat Y, UIColor* color, UIFont* font, CGFloat scale, NSShadow* shadow){
+UIImage * markerImgWithText(UIImage *image, NSString* text, CGFloat X, CGFloat Y, UIColor* color, UIFont* font, CGFloat scale, NSShadow* shadow, TextBackground* textBackground){
     int w = image.size.width;
     int h = image.size.height;
     
@@ -87,6 +91,7 @@ UIImage * markerImgWithText(UIImage *image, NSString* text, CGFloat X, CGFloat Y
                            NSForegroundColorAttributeName : color,      //设置字体颜色
                            NSShadowAttributeName : shadow
                            };
+                           
     CGRect position = CGRectMake(X, Y, w, h);
     [text drawInRect:position withAttributes:attr];
     UIImage *aimg = UIGraphicsGetImageFromCurrentImageContext();
@@ -188,10 +193,10 @@ UIImage * markeImageWithImageByPostion(UIImage *image, UIImage * waterImage, Mar
 }
 
 
-UIImage * markerImgWithTextByPostion    (UIImage *image, NSString* text, MarkerPosition position, UIColor* color, UIFont* font, CGFloat scale, NSShadow* shadow){
+UIImage * markerImgWithTextByPostion    (UIImage *image, NSString* text, MarkerPosition position, UIColor* color, UIFont* font, CGFloat scale, NSShadow* shadow, TextBackground* textBackground){
     int w = image.size.width;
     int h = image.size.height;
-    
+      
     NSDictionary *attr = @{
                            NSFontAttributeName: font,   //设置字体
                            NSForegroundColorAttributeName : color,      //设置字体颜色
@@ -203,57 +208,49 @@ UIImage * markerImgWithTextByPostion    (UIImage *image, NSString* text, MarkerP
     //    CGSize size = CGSizeMake(fontSize, height);
     UIGraphicsBeginImageContextWithOptions(image.size, NO, scale);
     [image drawInRect:CGRectMake(0, 0, w, h)];
-    CGRect rect;
+
+    int margin = 20;
+    int posX = margin;
+    int posY = margin;
+
     switch (position) {
-        case TopLeft:
-            rect = (CGRect){
-                CGPointMake(20, 20),
-                size
-            };
-            break;
         case TopCenter:
-            rect = (CGRect){
-                CGPointMake((w-(size.width))/2, 20),
-                size
-            };
+            posX = (w-(size.width))/2;
             break;
         case TopRight:
-            rect = (CGRect){
-                CGPointMake((w-size.width-20), 20),
-                size
-            };
+            posX = (w-size.width) - margin;
             break;
         case BottomLeft:
-            rect = (CGRect){
-                CGPointMake(20, h-size.height-20),
-                size
-            };
+            posY = h-size.height - margin;
             break;
         case BottomCenter:
-            rect = (CGRect){
-                CGPointMake((w-(size.width))/2, h-size.height-20),
-                size
-            };
+            posX = (w-(size.width))/2;
+            posY = h-size.height;
             break;
         case BottomRight:
-            rect = (CGRect){
-                CGPointMake(w-(size.width), h-size.height-20),
-                size
-            };
+            posX = w-(size.width) - margin;
+            posY = h-size.height - margin;
             break;
         case Center:
-            rect = (CGRect){
-                CGPointMake((w-(size.width))/2, (h-size.height)/2),
-                size
-            };
-            break;
-        default:
-            rect = (CGRect){
-                CGPointMake(20, 20),
-                size
-            };
+            posX = (w-(size.width))/2;
+            posY = (h-size.height)/2;
             break;
     }
+
+    if (textBackground != nil) {        
+        CGContextRef context = UIGraphicsGetCurrentContext();
+        CGContextSetFillColorWithColor(context, textBackground.colorBg.CGColor);
+        if([textBackground.typeBg isEqualToString:@"stretchX"]) {
+            CGContextFillRect(context, CGRectMake(0, posY - textBackground.paddingY, w, size.height + 2*textBackground.paddingY)); 
+        } else if([textBackground.typeBg isEqualToString:@"stretchY"]) {
+            CGContextFillRect(context, CGRectMake(posX - textBackground.paddingX, 0, size.width + 2*textBackground.paddingX, h));   
+        } else {
+            CGContextFillRect(context, CGRectMake(posX - textBackground.paddingX, posY - textBackground.paddingY, 
+            size.width + 2*textBackground.paddingX, size.height + 2*textBackground.paddingY)); 
+        }               
+    }
+
+    CGRect rect = (CGRect){ CGPointMake(posX, posY), size };
     [text drawInRect:rect withAttributes:attr];
     UIImage *aimg = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
@@ -313,6 +310,24 @@ UIImage * markerImgWithTextByPostion    (UIImage *image, NSString* text, MarkerP
     }
 }
 
+-(TextBackground*)getTextBackgroundStyle:(NSDictionary *) textBackground
+{
+    if (textBackground != nil) {
+        TextBackground *txtBackground = [[TextBackground alloc]init];
+        txtBackground.typeBg = textBackground[@"type"];
+        txtBackground.paddingX = [RCTConvert CGFloat: textBackground[@"paddingX"]];
+        txtBackground.paddingY = [RCTConvert CGFloat: textBackground[@"paddingY"]];
+        if([textBackground[@"color"] length] > 1) {
+            txtBackground.colorBg = [self getColor:textBackground[@"color"]];
+        } else {
+            txtBackground.colorBg = [UIColor clearColor];
+        }        
+        return txtBackground;
+    } else {
+        return nil;
+    }
+}
+
 RCT_EXPORT_METHOD(addText: (nonnull NSDictionary *)src
                   text:(nonnull NSString*)text
                   X:(CGFloat)X
@@ -321,6 +336,7 @@ RCT_EXPORT_METHOD(addText: (nonnull NSDictionary *)src
                   fontName:(NSString*)fontName
                   fontSize:(CGFloat)fontSize
                   shadowStyle:(nullable NSDictionary *)shadowStyle
+                  textBackgroundStyle:(nullable NSDictionary *)textBackgroundStyle
                   scale:(CGFloat)scale
                   quality:(NSInteger) quality
                   filename: (NSString *)filename
@@ -344,9 +360,9 @@ RCT_EXPORT_METHOD(addText: (nonnull NSDictionary *)src
         UIFont* font = [UIFont fontWithName:fontName size:fontSize];
         UIColor* uiColor = [self getColor:color];
         NSShadow* shadow = [self getShadowStyle: shadowStyle];
-       
+        TextBackground* textBackground = [self getTextBackgroundStyle: textBackgroundStyle];       
         
-        UIImage * scaledImage = markerImgWithText(image, text, X, Y , uiColor, font, scale, shadow);
+        UIImage * scaledImage = markerImgWithText(image, text, X, Y , uiColor, font, scale, shadow, textBackground);
         if (scaledImage == nil) {
             NSLog(@"Can't mark the image");
             reject(@"error",@"Can't mark the image.", error);
@@ -366,6 +382,7 @@ RCT_EXPORT_METHOD(addTextByPostion: (nonnull NSDictionary *)src
                   fontName:(NSString*)fontName
                   fontSize:(CGFloat)fontSize
                   shadowStyle:(NSDictionary *)shadowStyle
+                  textBackgroundStyle:(NSDictionary *)textBackgroundStyle
                   scale:(CGFloat)scale
                   quality:(NSInteger) quality
                   filename: (NSString *)filename
@@ -393,7 +410,9 @@ RCT_EXPORT_METHOD(addTextByPostion: (nonnull NSDictionary *)src
         UIFont* font = [UIFont fontWithName:fontName size:fontSize];
         UIColor* uiColor = [self getColor:color];
         NSShadow* shadow = [self getShadowStyle: shadowStyle];
-        UIImage * scaledImage = markerImgWithTextByPostion(image, text, position, uiColor, font, scale, shadow);
+        TextBackground* textBackground = [self getTextBackgroundStyle: textBackgroundStyle];
+
+        UIImage * scaledImage = markerImgWithTextByPostion(image, text, position, uiColor, font, scale, shadow, textBackground);
         if (scaledImage == nil) {
             NSLog(@"Can't mark the image");
             reject(@"error",@"Can't mark the image.", error);
