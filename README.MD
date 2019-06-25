@@ -79,6 +79,8 @@ pod 'RNImageMarker', :path => '../node_modules/react-native-image-marker'
 
 * `textBackgroundStyle`
 
+> thanks [@onka13](https://github.com/onka13) for [#38](https://github.com/JimmyDaddy/react-native-image-marker/pull/38)
+
 |name|description|
 |--|--|
 |`paddingX`| padding X |
