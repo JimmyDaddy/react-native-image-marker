@@ -4,7 +4,7 @@ import Marker from 'react-native-image-marker'
 import Picker from 'react-native-image-picker'
 const icon = require('./icon.jpeg')
 const bg = require('./bg.png')
-const base64Bg = require('./bas64bg').default 
+const base64Bg = require('./bas64bg').default
 
 const { width } = Dimensions.get('window')
 
@@ -17,12 +17,23 @@ const s = StyleSheet.create({
     marginTop: 20,
     justifyContent: 'center',
     flexDirection: 'row',
-    flexWrap: 'wrap'
+    flexWrap: 'wrap',
+    backgroundColor: '#f1f1f1',
+    padding: 10
   },
   btn: {
     padding: 10,
     borderRadius: 3,
     backgroundColor: '#00BF00',
+    margin: 5,
+    marginTop: 10,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  btnOp: {
+    padding: 10,
+    borderRadius: 3,
+    backgroundColor: '#1A1AA1',
     margin: 5,
     marginTop: 10,
     alignItems: 'center',
@@ -39,14 +50,20 @@ const s = StyleSheet.create({
   }
 })
 
+const textBgStretch = ['', 'stretchX', 'stretchY']
+
 export default class MarkerTest extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
       uri: '',
-      image: base64Bg,
+      image: bg,
       marker: icon,
-      markImage: true
+      markImage: true,
+      base64: false,
+      useTextShadow: true,
+      useTextBgStyle: true,
+      textBgStretch: 0
     }
   }
 
@@ -56,33 +73,50 @@ export default class MarkerTest extends React.Component {
     })
   }
 
+  _switchBg = () => {
+    this.setState({
+      base64: !this.state.base64
+    }, () => {
+      this.setState({
+        image: this.state.base64 ? base64Bg : bg
+      })
+    })
+  }
+
   render () {
     return (
       <ScrollView style={s.container}>
         <View>
           <TouchableOpacity
-            style={[s.btn, {backgroundColor: '#FF7043'}]}
-            onPress={this._switch}
+            style={[s.btn, { backgroundColor: '#FF7043' }]}
+            onPress={this._switchBg}
           >
-            <Text style={s.text}>switch mark {this.state.markImage ? 'image' : 'text'}</Text>
+            <Text style={s.text}> use {this.state.base64 ? 'base64' : 'image'} as background</Text>
           </TouchableOpacity>
         </View>
         <View>
           <TouchableOpacity
-            style={[s.btn, {backgroundColor: '#2296F3'}]}
+            style={[s.btn, { backgroundColor: '#FF7043' }]}
+            onPress={this._switch}
+          >
+            <Text style={s.text}>switch to mark {this.state.markImage ? 'text' : 'image'}</Text>
+          </TouchableOpacity>
+        </View>
+        <View>
+          <TouchableOpacity
+            style={[s.btn, { backgroundColor: '#2296F3' }]}
             onPress={() => this._pickImage('image')}
           >
             <Text style={s.text}>pick image</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[s.btn, {backgroundColor: '#2296F3'}]}
+            style={[s.btn, { backgroundColor: '#2296F3' }]}
             onPress={() => this._pickImage('mark')}
           >
             <Text style={s.text}>pick an image for mark</Text>
           </TouchableOpacity>
         </View>
         <View style={s.op}>
-
           <TouchableOpacity
             style={s.btn}
             onPress={this._mark}
@@ -132,13 +166,54 @@ export default class MarkerTest extends React.Component {
             <Text style={s.text} >bottomRight</Text>
           </TouchableOpacity>
         </View>
+        {
+          !this.state.markImage
+            ? <View style={s.op}>
+              <TouchableOpacity
+                style={s.btnOp}
+                onPress={() => {
+                  this.setState({
+                    useTextShadow: !this.state.useTextShadow
+                  })
+                }}
+              >
+                <Text style={s.text} >textShadow {this.state.useTextShadow ? 'on' : 'off'} </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={s.btnOp}
+                onPress={() => {
+                  this.setState({
+                    useTextBgStyle: !this.state.useTextBgStyle
+                  })
+                }}
+              >
+                <Text style={s.text} >textBg {this.state.useTextBgStyle ? 'on' : 'off'} </Text>
+              </TouchableOpacity>
+              {
+                this.state.useTextBgStyle
+                  ? <TouchableOpacity
+                    style={s.btnOp}
+                    onPress={() => {
+                      this.setState({
+                        textBgStretch: this.state.textBgStretch === 2 ? 0 : this.state.textBgStretch + 1
+                      })
+                    }}
+                  >
+                    <Text style={s.text} >text bg stretch: {this.state.textBgStretch === 0 ? 'fit' : textBgStretch[this.state.textBgStretch]}</Text>
+                  </TouchableOpacity>
+                  : null
+              }
+
+            </View>
+            : null
+        }
         <View
-          style={{flex: 1}}
+          style={{ flex: 1 }}
         >
           {
-          this.state.show
-            ? <Image source={{uri: this.state.uri}} resizeMode='contain' style={s.preview} />
-          : null
+            this.state.show
+              ? <Image source={{ uri: this.state.uri }} resizeMode='contain' style={s.preview} />
+              : null
           }
         </View>
 
@@ -150,16 +225,16 @@ export default class MarkerTest extends React.Component {
   _markByPosition = (type) => {
     if (this.state.markImage) {
       Marker.markImage({
-        src: this.state.image, 
-        markerSrc: base64Bg, 
-        position: type, 
-        scale: 1, 
-        markerScale: 1, 
+        src: this.state.image,
+        markerSrc: base64Bg,
+        position: type,
+        scale: 1,
+        markerScale: 1,
         quality: 100
       }).then((path) => {
-        console.log('====================================');
-        console.log(path);
-        console.log('====================================');
+        console.log('====================================')
+        console.log(path)
+        console.log('====================================')
         this.setState({
           uri: Platform.OS === 'android' ? 'file://' + path : path,
           show: true
@@ -171,52 +246,58 @@ export default class MarkerTest extends React.Component {
       })
     } else {
       Marker.markText({
-        src: this.state.image, 
+        src: this.state.image,
         text: `text marker
-         muiltline text`, 
-        position: type, 
+         muiltline text`,
+        position: type,
         color: '#FF0000',
-        fontName: 'Arial-BoldItalicMT', 
-        fontSize: 44, 
-        scale: 1, 
+        fontName: 'Arial-BoldItalicMT',
+        fontSize: 44,
+        scale: 1,
         quality: 100,
-        shadowStyle: {
+        shadowStyle: this.state.useTextShadow ? {
           dx: 10.5,
           dy: 20.8,
           radius: 20.9,
-          color: '#ff00ff'
-        }
+          color: '#0000FF'
+        } : null,
+        textBackgroundStyle: this.state.useTextBgStyle ? {
+          type: textBgStretch[this.state.textBgStretch],
+          paddingX: 10,
+          paddingY: 10,
+          color: '#0f0'
+        } : null
       })
-      .then((path) => {
-        console.log('====================================');
-        console.log(path);
-        console.log('====================================');
-        this.setState({
-          show: true,
-          uri: Platform.OS === 'android' ? 'file://' + path : path
+        .then((path) => {
+          console.log('====================================')
+          console.log(path)
+          console.log('====================================')
+          this.setState({
+            show: true,
+            uri: Platform.OS === 'android' ? 'file://' + path : path
+          })
+        }).catch((err) => {
+          console.log('====================================')
+          console.log(err)
+          console.log('====================================')
         })
-      }).catch((err) => {
-        console.log('====================================')
-        console.log(err)
-        console.log('====================================')
-      })
     }
   }
 
   _mark = () => {
     if (this.state.markImage) {
       Marker.markImage({
-        src: this.state.image, 
-        markerSrc: this.state.marker, 
-        X: 100, 
-        Y: 150, 
+        src: this.state.image,
+        markerSrc: this.state.marker,
+        X: 100,
+        Y: 150,
         scale: 1,
-        markerScale: 0.5, 
+        markerScale: 0.5,
         quality: 100
       }).then((path) => {
-        console.log('====================================');
-        console.log(path);
-        console.log('====================================');
+        console.log('====================================')
+        console.log(path)
+        console.log('====================================')
         this.setState({
           uri: Platform.OS === 'android' ? 'file://' + path : path,
           show: true
@@ -228,25 +309,31 @@ export default class MarkerTest extends React.Component {
       })
     } else {
       Marker.markText({
-        src: this.state.image, 
-        text: 'text marker \n muiltline text', 
+        src: this.state.image,
+        text: 'text marker \n muiltline text',
         X: 30,
-        Y: 30, 
-        color: '#FF0000',
-        fontName: 'Arial-BoldItalicMT', 
+        Y: 30,
+        color: '#FF0',
+        fontName: 'Arial-BoldItalicMT',
         fontSize: 44,
-        shadowStyle: {
+        shadowStyle: this.state.useTextShadow ? {
           dx: 10.5,
           dy: 20.8,
           radius: 20.9,
-          color: '#ff00ff'
-        },
-        scale: 1, 
+          color: '#0000FF'
+        } : null,
+        textBackgroundStyle: this.state.useTextBgStyle ? {
+          type: textBgStretch[this.state.textBgStretch],
+          paddingX: 10,
+          paddingY: 10,
+          color: '#0f0'
+        } : null,
+        scale: 1,
         quality: 100
       }).then((path) => {
-        console.log('====================================');
-        console.log(path);
-        console.log('====================================');
+        console.log('====================================')
+        console.log(path)
+        console.log('====================================')
         this.setState({
           show: true,
           uri: Platform.OS === 'android' ? 'file://' + path : path
@@ -283,10 +370,10 @@ export default class MarkerTest extends React.Component {
       } else if (response.error) {
         console.log('ImagePickerManager Error: ', response.error)
       } else if (response.customButton) {
-           // this.showCamera();
+        // this.showCamera();
       } else {
-           // You can display the image using either:
-           // const source = {uri: 'data:image/jpeg;base64,' + response.data, isStatic: true};
+        // You can display the image using either:
+        // const source = {uri: 'data:image/jpeg;base64,' + response.data, isStatic: true};
         const uri = response.uri
         if (type === 'image') {
           this.setState({

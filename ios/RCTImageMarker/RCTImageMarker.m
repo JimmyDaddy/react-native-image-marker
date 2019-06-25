@@ -91,9 +91,24 @@ UIImage * markerImgWithText(UIImage *image, NSString* text, CGFloat X, CGFloat Y
                            NSForegroundColorAttributeName : color,      //设置字体颜色
                            NSShadowAttributeName : shadow
                            };
-                           
-    CGRect position = CGRectMake(X, Y, w, h);
-    [text drawInRect:position withAttributes:attr];
+    
+    CGSize size = [text sizeWithAttributes:attr];
+    if (textBackground != nil) {
+        CGContextRef context = UIGraphicsGetCurrentContext();
+        CGContextSetFillColorWithColor(context, textBackground.colorBg.CGColor);
+        if([textBackground.typeBg isEqualToString:@"stretchX"]) {
+            CGContextFillRect(context, CGRectMake(0, Y - textBackground.paddingY, w, size.height + 2*textBackground.paddingY));
+        } else if([textBackground.typeBg isEqualToString:@"stretchY"]) {
+            CGContextFillRect(context, CGRectMake(X - textBackground.paddingX, 0, size.width + 2*textBackground.paddingX, h));
+        } else {
+            CGContextFillRect(context, CGRectMake(X - textBackground.paddingX, Y - textBackground.paddingY,
+                                                  size.width + 2*textBackground.paddingX, size.height + 2*textBackground.paddingY));
+        }
+    }
+    CGRect rect = (CGRect){ CGPointMake(X, Y), size };
+
+//    CGRect position = CGRectMake(X, Y, w, h);
+    [text drawInRect:rect withAttributes:attr];
     UIImage *aimg = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
     return aimg;
@@ -214,6 +229,10 @@ UIImage * markerImgWithTextByPostion    (UIImage *image, NSString* text, MarkerP
     int posY = margin;
 
     switch (position) {
+        case TopLeft:
+            posX = margin;
+            posY = margin;
+            break;
         case TopCenter:
             posX = (w-(size.width))/2;
             break;
@@ -235,6 +254,7 @@ UIImage * markerImgWithTextByPostion    (UIImage *image, NSString* text, MarkerP
             posX = (w-(size.width))/2;
             posY = (h-size.height)/2;
             break;
+            
     }
 
     if (textBackground != nil) {        
@@ -262,38 +282,62 @@ UIImage * markerImgWithTextByPostion    (UIImage *image, NSString* text, MarkerP
     NSString *string = [hexColor substringFromIndex:1];//去掉#号
     unsigned int red,green,blue;
     NSRange range;
-    range.length = 2;
     
-    range.location = 0;
+    bool hex6 = [string length] == 6? YES : NO;
+    if (hex6 == YES) {
+        range.length = 2;
+    } else {
+        range.length = 1;
+    }
+    
     /* 调用下面的方法处理字符串 */
-    red = [self stringToInt:[string substringWithRange:range]];
+    range.location = 0;
+    NSString* redStr = [string substringWithRange:range];
+    red = [self stringToInt:redStr];
     
-    range.location = 2;
-    green = [self stringToInt:[string substringWithRange:range]];
-    range.location = 4;
-    blue = [self stringToInt:[string substringWithRange:range]];
+    range.location = hex6 == YES? 2 : 1;
+    NSString* greenStr = [string substringWithRange:range];
+    green = [self stringToInt:greenStr];
+    
+    range.location = hex6 == YES? 4 : 2;
+    NSString* blueStr = [string substringWithRange:range];
+    blue = [self stringToInt:blueStr];
     
     return [UIColor colorWithRed:(float)(red/255.0f) green:(float)(green / 255.0f) blue:(float)(blue / 255.0f) alpha:1.0f];
 }
 - (int)stringToInt:(NSString *)string {
     
-    unichar hex_char1 = [string characterAtIndex:0]; /* 两位16进制数中的第一位(高位*16) */
-    int int_ch1;
-    if (hex_char1 >= '0' && hex_char1 <= '9')
-        int_ch1 = (hex_char1 - 48) * 16;   /* 0 的Ascll - 48 */
-    else if (hex_char1 >= 'A' && hex_char1 <='F')
-        int_ch1 = (hex_char1 - 55) * 16; /* A 的Ascll - 65 */
-    else
-        int_ch1 = (hex_char1 - 87) * 16; /* a 的Ascll - 97 */
-    unichar hex_char2 = [string characterAtIndex:1]; /* 两位16进制数中的第二位(低位) */
-    int int_ch2;
-    if (hex_char2 >= '0' && hex_char2 <='9')
-        int_ch2 = (hex_char2 - 48); /* 0 的Ascll - 48 */
-    else if (hex_char1 >= 'A' && hex_char1 <= 'F')
-        int_ch2 = hex_char2 - 55; /* A 的Ascll - 65 */
-    else
-        int_ch2 = hex_char2 - 87; /* a 的Ascll - 97 */
-    return int_ch1+int_ch2;
+    if ([string length] == 1) {
+        unichar hex_char = [string characterAtIndex:0]; /* 两位16进制数中的第一位(高位*16) */
+        int int_ch;
+        if (hex_char >= '0' && hex_char <= '9')
+            int_ch = (hex_char - 48) * 16;   /* 0 的Ascll - 48 */
+        else if (hex_char >= 'A' && hex_char <='F')
+            int_ch = (hex_char - 55) * 16; /* A 的Ascll - 65 */
+        else
+            int_ch = (hex_char - 87) * 16; /* a 的Ascll - 97 */
+        return int_ch * 2;
+    } else {
+        unichar hex_char1 = [string characterAtIndex:0]; /* 两位16进制数中的第一位(高位*16) */
+        int int_ch1;
+        if (hex_char1 >= '0' && hex_char1 <= '9')
+            int_ch1 = (hex_char1 - 48) * 16;   /* 0 的Ascll - 48 */
+        else if (hex_char1 >= 'A' && hex_char1 <='F')
+            int_ch1 = (hex_char1 - 55) * 16; /* A 的Ascll - 65 */
+        else
+            int_ch1 = (hex_char1 - 87) * 16; /* a 的Ascll - 97 */
+        unichar hex_char2 = [string characterAtIndex:1]; /* 两位16进制数中的第二位(低位) */
+        int int_ch2;
+        if (hex_char2 >= '0' && hex_char2 <='9')
+            int_ch2 = (hex_char2 - 48); /* 0 的Ascll - 48 */
+        else if (hex_char1 >= 'A' && hex_char1 <= 'F')
+            int_ch2 = hex_char2 - 55; /* A 的Ascll - 65 */
+        else
+            int_ch2 = hex_char2 - 87; /* a 的Ascll - 97 */
+        return int_ch1+int_ch2;
+    }
+    
+   
 }
 
 -(NSShadow*)getShadowStyle:(NSDictionary *) shadowStyle
@@ -303,6 +347,8 @@ UIImage * markerImgWithTextByPostion    (UIImage *image, NSString* text, MarkerP
         shadow.shadowBlurRadius = [RCTConvert CGFloat: shadowStyle[@"radius"]];
         shadow.shadowOffset = CGSizeMake([RCTConvert CGFloat: shadowStyle[@"dx"]], [RCTConvert CGFloat: shadowStyle[@"dy"]]);
         UIColor* color = [self getColor:shadowStyle[@"color"]];
+        
+        NSLog(@"color? %@", color!=nil?@"YES" : @"NO");
         shadow.shadowColor = color != nil? color : [UIColor grayColor];
         return shadow;
     } else {

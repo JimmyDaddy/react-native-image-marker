@@ -5,7 +5,15 @@ Add text or icon watermark to your images
 ## sample
 
 <figure>
-  <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/IOSMarker.gif" width='300'><img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/AndroidMarker.gif" width='300'>
+  <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/IOSMarker.gif" width='300'>
+  <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/AndroidMarker.gif" width='300'>
+</figure>
+
+<figure>
+  <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/shadow_bg_fit.png" width='300'>
+  <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/shadow_bg_sx.png" width='300'>
+  <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/shadow.png" width='300'>
+  <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/shadow_bg_sy.png" width='300'>
 </figure>
 
 ## Installation
@@ -44,6 +52,7 @@ pod 'RNImageMarker', :path => '../node_modules/react-native-image-marker'
 |`scale`| scale image |
 |`quality`| image qulaity |
 |`filename` | set filename for the result |
+|`textBackgroundStyle` | text background style |
 
 * `ImageMarkOption`
 
@@ -68,6 +77,19 @@ pod 'RNImageMarker', :path => '../node_modules/react-native-image-marker'
 |`dy`| y offset|
 |`color`| shadow color |
 
+* `textBackgroundStyle`
+
+'paddingX': number,
+  'paddingY': number,
+  'type': TextBackgroundType,
+  'color': string
+|name|description|
+|--|--|
+|`paddingX`| padding X |
+|`paddingY`| padding y|
+|`type`| default is fit the text, `stretchX` stretch to fill width, `stretchY` stretch to fill height |
+|`color`| bg color |
+
 ## Usage
 
 ```javascript
@@ -86,13 +108,19 @@ import ImageMarker from "react-native-image-marker"
     X: 30,
     Y: 30, 
     color: '#FF0000',
-    fontName: 'Arial-BoldItalicMT', 
-    fontSize: 44, 
+    fontName: 'Arial-BoldItalicMT',
+    fontSize: 44,
     shadowStyle: {
         dx: 10.5,
         dy: 20.8,
         radius: 20.9,
         color: '#ff00ff'
+    },
+    textBackgroundStyle: {
+        type: 'stretchX',
+        paddingX: 10,
+        paddingY: 10,
+        color: '#0f0'
     },
     scale: 1, 
     quality: 100

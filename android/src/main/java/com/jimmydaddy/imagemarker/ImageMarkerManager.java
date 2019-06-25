@@ -364,7 +364,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             }
 
             // Draw text background
-            if(null != textBackgroundStyle) {         
+            if(null != textBackgroundStyle) {
                 Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.LINEAR_TEXT_FLAG);
                 paint.setStyle(Paint.Style.FILL);
                 paint.setColor(textBackgroundStyle.color);

@@ -2,7 +2,7 @@
  * @Author: JimmyDaddy
  * @Date: 2017-09-14 10:40:09
  * @Last Modified by: JimmyDaddy
- * @Last Modified time: 2019-02-25 13:40:41
+ * @Last Modified time: 2019-06-25 13:54:54
  * @Description
  * @flow
  */
@@ -12,26 +12,31 @@ const { ImageMarker } = NativeModules
 const { resolveAssetSource } = Image
 
 export type Position = $Enum<{
-  'topLeft': string, 
+  'topLeft': string,
   'topCenter': string,
-  'topRight': string, 
-  'bottomLeft': string, 
-  'bottomCenter': string , 
-  'bottomRight': string, 
+  'topRight': string,
+  'bottomLeft': string,
+  'bottomCenter': string,
+  'bottomRight': string,
   'center': string
 }>;
 
+export type TextBackgroundType = $Enum<{
+  'stretchX': string,
+  'stretchY': string
+}>
+
 export type ShadowLayerStyle = {
-  'dx': float,
-  'dy': float,
-  'radius': float,
+  'dx': number,
+  'dy': number,
+  'radius': number,
   'color': string
 }
 
 export type TextBackgroundStyle = {
-  'paddingX': float,
-  'paddingY': float,
-  'type': string,
+  'paddingX': number,
+  'paddingY': number,
+  'type': TextBackgroundType,
   'color': string
 }
 
@@ -72,8 +77,8 @@ type ImageMarkOption = {
 }
 
 export default class Marker {
-  static markText(option: TextMarkOption) {
-    const { 
+  static markText (option: TextMarkOption) {
+    const {
       src,
       text,
       X,
@@ -87,7 +92,7 @@ export default class Marker {
       quality,
       position,
       filename
-     } = option
+    } = option
 
     if (!src) {
       throw new Error('please set image!')
@@ -136,8 +141,8 @@ export default class Marker {
     }
   }
 
-  static markImage(option: ImageMarkOption) {
-    const { 
+  static markImage (option: ImageMarkOption) {
+    const {
       src,
       markerSrc,
       X,
@@ -171,7 +176,7 @@ export default class Marker {
         __packager_asset: false
       }
     }
-    
+
     if (!position) {
       return ImageMarker.markWithImage(
         srcObj,
