@@ -171,6 +171,20 @@ public class Utils {
         }
         return scaledBitmap;
     }
+    
+    public static String transRGBColor(String color) {
+        String colorStr = color.substring(1);
+        if (colorStr.length() == 3) {
+            String fullColor = "";
+            for (int i = 0; i < colorStr.length(); i++) {
+                String temp = colorStr.substring(i, i + 1);
+                fullColor += temp + temp;
+            }
+            return "#"+fullColor;
+        } else {
+            return color;
+        }
+    }
 
 //
 //    public static BitmapFactory.Options getOptions () {

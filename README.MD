@@ -79,10 +79,6 @@ pod 'RNImageMarker', :path => '../node_modules/react-native-image-marker'
 
 * `textBackgroundStyle`
 
-'paddingX': number,
-  'paddingY': number,
-  'type': TextBackgroundType,
-  'color': string
 |name|description|
 |--|--|
 |`paddingX`| padding X |

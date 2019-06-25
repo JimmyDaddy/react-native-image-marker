@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import static com.jimmydaddy.imagemarker.Utils.transRGBColor;
 
 
 /**
@@ -321,7 +322,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             }
 
             textPaint.setTextSize(fSize);
-            textPaint.setColor(Color.parseColor(color));
+            textPaint.setColor(Color.parseColor(transRGBColor(color)));
 
             // ALIGN_CENTER, ALIGN_NORMAL, ALIGN_OPPOSITE
             StaticLayout textLayout = new StaticLayout(mark, textPaint, canvas.getWidth(), Layout.Alignment.ALIGN_NORMAL, 1.0f, 0.0f, false);

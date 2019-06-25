@@ -4,6 +4,8 @@ import android.graphics.Color;
 import android.util.Log;
 import com.facebook.react.bridge.ReadableMap;
 
+import static com.jimmydaddy.imagemarker.Utils.transRGBColor;
+
 public class TextBackgroundStyle {
     public String type = "";
     public float paddingX = 0F;
@@ -65,7 +67,7 @@ public class TextBackgroundStyle {
 
     public void setColor(String color) {
         try {
-            Integer parsedColor = Color.parseColor(color);
+            Integer parsedColor = Color.parseColor(transRGBColor(color));
             if (null != parsedColor) {
                 this.setColor(parsedColor);
             }

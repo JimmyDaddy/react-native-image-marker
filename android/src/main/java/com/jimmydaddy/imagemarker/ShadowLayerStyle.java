@@ -5,6 +5,8 @@ import android.util.Log;
 
 import com.facebook.react.bridge.ReadableMap;
 
+import static com.jimmydaddy.imagemarker.Utils.transRGBColor;
+
 /**
  * Created by jimmydaddy on 2019/2/25.
  */
@@ -70,7 +72,7 @@ public class ShadowLayerStyle {
 
     public void setColor(String color) {
         try {
-            Integer parsedColor = Color.parseColor(color);
+            Integer parsedColor = Color.parseColor(transRGBColor(color));
             if (null != parsedColor) {
                 this.setColor(parsedColor);
             }
