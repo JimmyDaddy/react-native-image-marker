@@ -33,6 +33,7 @@ DerivedData
 .gradle
 local.properties
 .vscode
+android/build
 
 # node.js
 #
