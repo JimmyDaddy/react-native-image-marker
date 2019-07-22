@@ -52,6 +52,7 @@ pod 'RNImageMarker', :path => '../node_modules/react-native-image-marker'
 |`scale`| scale image |
 |`quality`| image qulaity |
 |`filename` | set filename for the result |
+|`saveFormat`| `png` or `jpg` |
 |`textBackgroundStyle` | text background style |
 
 * `ImageMarkOption`
@@ -67,6 +68,7 @@ pod 'RNImageMarker', :path => '../node_modules/react-native-image-marker'
 |`scale`| scale image |
 |`quality`| image qulaity |
 |`filename` | set filename for the result |
+|`saveFormat`| `png` or `jpg`, default is `jpg` |
 
 * `ShadowStyle`
 
@@ -178,7 +180,8 @@ Marker.markImage({
     Y: 150, // top
     scale: 1, // scale of bg
     markerScale: 0.5, // scale of icon
-    quality: 100 // quality of image
+    quality: 100, // quality of image
+    saveFormat: 'png', 
 }).then((path) => {
     this.setState({
         uri: Platform.OS === 'android' ? 'file://' + path : path,

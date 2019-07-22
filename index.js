@@ -2,7 +2,7 @@
  * @Author: JimmyDaddy
  * @Date: 2017-09-14 10:40:09
  * @Last Modified by: JimmyDaddy
- * @Last Modified time: 2019-06-25 13:54:54
+ * @Last Modified time: 2019-07-22 23:13:43
  * @Description
  * @flow
  */
@@ -40,6 +40,11 @@ export type TextBackgroundStyle = {
   'color': string
 }
 
+export type ImageFormat = $Enum<{
+  'png': string,
+  'jpg': String,
+}>
+
 type TextMarkOption = {
   // image src, local image
   src: string,
@@ -58,7 +63,8 @@ type TextMarkOption = {
   position?: Position,
   filename?: string,
   shadowStyle: ShadowLayerStyle,
-  textBackgroundStyle: TextBackgroundStyle
+  textBackgroundStyle: TextBackgroundStyle,
+  saveFormat?: ImageFormat,
 }
 
 type ImageMarkOption = {
@@ -91,7 +97,8 @@ export default class Marker {
       scale,
       quality,
       position,
-      filename
+      filename,
+      saveFormat
     } = option
 
     if (!src) {
@@ -122,7 +129,8 @@ export default class Marker {
         mTextBackgroundStyle,
         scale,
         quality,
-        filename
+        filename,
+        saveFormat
       )
     } else {
       return ImageMarker.addTextByPostion(
@@ -136,7 +144,8 @@ export default class Marker {
         mTextBackgroundStyle,
         scale,
         quality,
-        filename
+        filename,
+        saveFormat
       )
     }
   }
@@ -151,7 +160,8 @@ export default class Marker {
       scale,
       quality,
       position,
-      filename
+      filename,
+      saveFormat
     } = option
 
     if (!src) {
@@ -186,7 +196,8 @@ export default class Marker {
         scale,
         markerScale,
         quality,
-        filename
+        filename,
+        saveFormat
       )
     } else {
       return ImageMarker.markWithImageByPosition(
@@ -196,7 +207,8 @@ export default class Marker {
         scale,
         markerScale,
         quality,
-        filename
+        filename,
+        saveFormat
       )
     }
   }

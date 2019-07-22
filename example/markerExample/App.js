@@ -3,6 +3,7 @@ import { TouchableOpacity, Image, View, Text, Platform, Dimensions, StyleSheet, 
 import Marker from 'react-native-image-marker'
 import Picker from 'react-native-image-picker'
 const icon = require('./icon.jpeg')
+// const iconTP = require('./tpimage.png')
 const bg = require('./bg.png')
 const base64Bg = require('./bas64bg').default
 
@@ -46,7 +47,8 @@ const s = StyleSheet.create({
   preview: {
     width,
     height: 300,
-    flex: 1
+    flex: 1,
+    backgroundColor: 'red'
   }
 })
 
@@ -226,11 +228,12 @@ export default class MarkerTest extends React.Component {
     if (this.state.markImage) {
       Marker.markImage({
         src: this.state.image,
-        markerSrc: base64Bg,
+        markerSrc: this.state.markImage,
         position: type,
         scale: 1,
         markerScale: 1,
-        quality: 100
+        quality: 100,
+        saveFormat: 'jpg'
       }).then((path) => {
         console.log('====================================')
         console.log(path)

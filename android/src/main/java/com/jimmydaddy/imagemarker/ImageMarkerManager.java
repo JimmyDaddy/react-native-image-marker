@@ -83,6 +83,10 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
         return uri.startsWith("http://") || uri.startsWith("https://") || uri.startsWith("file://") || (uri.startsWith("data:") && uri.contains("base64") && (uri.contains("img") || uri.contains("image")));
     }
 
+    private Bitmap.CompressFormat getSaveFormat(String saveFormat) {
+        return saveFormat != null && (saveFormat.equals("png") || saveFormat.equals("PNG"))? Bitmap.CompressFormat.PNG : Bitmap.CompressFormat.JPEG;
+    }
+
     private void markImage(
             final Bitmap bg,
             ReadableMap source,
@@ -92,6 +96,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             final Float markerScale,
             final int quality,
             final String dest,
+            final String saveFormat,
             final Promise promise)
     {
         try {
@@ -113,7 +118,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
                         if (bitmap != null) {
                             Bitmap mark = Utils.scaleBitmap(bitmap, markerScale);
 
-                            markImageByBitmap(bg, mark, position, X, Y, quality, dest, promise);
+                            markImageByBitmap(bg, mark, position, X, Y, quality, dest, saveFormat, promise);
                         } else {
                             promise.reject( "marker error","Can't retrieve the file from the markerpath: " + uri);
                         }
@@ -144,7 +149,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
                         bitmap.recycle();
                         System.gc();
                     }
-                    markImageByBitmap(bg, mark, position, X, Y, quality, dest, promise);
+                    markImageByBitmap(bg, mark, position, X, Y, quality, dest, saveFormat, promise);
                 }
             }
         } catch (Exception e) {
@@ -163,6 +168,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             Integer Y,
             int quality,
             String dest,
+            String saveFormat,
             final Promise promise
     ) {
         BufferedOutputStream bos = null;
@@ -223,7 +229,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             bos = new BufferedOutputStream(new FileOutputStream(dest));
 
 //            int quaility = (int) (100 / percent > 80 ? 80 : 100 / percent);
-            icon.compress(Bitmap.CompressFormat.JPEG, quality, bos);
+            icon.compress(getSaveFormat(saveFormat), quality, bos);
             bos.flush();
             //保存成功的
             promise.resolve(dest);
@@ -273,6 +279,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             Integer Y,
             int quality,
             String dest,
+            String saveFormat,
             final Promise promise
     ) {
         BufferedOutputStream bos = null;
@@ -385,7 +392,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
 
             bos = new BufferedOutputStream(new FileOutputStream(dest));
 
-            icon.compress(Bitmap.CompressFormat.JPEG, quality, bos);
+            icon.compress(getSaveFormat(saveFormat) , quality, bos);
             bos.flush();
             //保存成功的
             promise.resolve(dest);
@@ -434,6 +441,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             final float scale,
             final int quality,
             String filename,
+            final String saveFormat,
             final Promise promise
     ) {
         if (TextUtils.isEmpty(mark)){
@@ -444,7 +452,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
 
             final String uri = src.getString(PROP_ICON_URI);
 
-            final String dest = generateCacheFilePathForMarker(uri, filename);
+            final String dest = generateCacheFilePathForMarker(uri, filename, saveFormat);
 
             final ShadowLayerStyle myShadowStyle  = null != shadowStyle? new ShadowLayerStyle(shadowStyle) : null;
             final TextBackgroundStyle myTextBackgroundStyle  = null != textBackgroundStyle ? new TextBackgroundStyle(textBackgroundStyle) : null;
@@ -461,7 +469,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
                     public void onNewResultImpl(@Nullable Bitmap bitmap) {
                         if (bitmap != null) {
                             Bitmap bg = Utils.scaleBitmap(bitmap, scale);
-                            markImageByText(bg, mark, null, color, fontName, fontSize, myShadowStyle, myTextBackgroundStyle, X, Y, quality, dest, promise);
+                            markImageByText(bg, mark, null, color, fontName, fontSize, myShadowStyle, myTextBackgroundStyle, X, Y, quality, dest, saveFormat, promise);
                         } else {
                             promise.reject( "marker error","Can't retrieve the file from the src: " + uri);
                         }
@@ -492,7 +500,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
                         bitmap.recycle();
                         System.gc();
                     }
-                    markImageByText(bg, mark, null, color, fontName, fontSize, myShadowStyle, myTextBackgroundStyle, X, Y, quality, dest, promise);
+                    markImageByText(bg, mark, null, color, fontName, fontSize, myShadowStyle, myTextBackgroundStyle, X, Y, quality, dest, saveFormat, promise);
                 }
             }
         } catch (Exception e) {
@@ -525,6 +533,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             final float scale,
             final Integer quality,
             String filename,
+            final String saveFormat,
             final Promise promise
     ) {
         if (TextUtils.isEmpty(mark)){
@@ -534,7 +543,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
 
             final String uri = src.getString(PROP_ICON_URI);
 
-            final String dest = generateCacheFilePathForMarker(uri, filename);
+            final String dest = generateCacheFilePathForMarker(uri, filename, saveFormat);
 
             final ShadowLayerStyle myShadowStyle  = null != shadowStyle? new ShadowLayerStyle(shadowStyle) : null;
             final TextBackgroundStyle myTextBackgroundStyle  = null != textBackgroundStyle ? new TextBackgroundStyle(textBackgroundStyle) : null;
@@ -552,7 +561,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
                     public void onNewResultImpl(@Nullable Bitmap bitmap) {
                         if (bitmap != null) {
                             Bitmap bg = Utils.scaleBitmap(bitmap, scale);
-                            markImageByText(bg, mark, position, color, fontName, fontSize, myShadowStyle, myTextBackgroundStyle, null, null, quality, dest, promise);
+                            markImageByText(bg, mark, position, color, fontName, fontSize, myShadowStyle, myTextBackgroundStyle, null, null, quality, dest, saveFormat, promise);
                         } else {
                             promise.reject( "marker error","Can't retrieve the file from the src: " + uri);
                         }
@@ -583,7 +592,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
                         bitmap.recycle();
                         System.gc();
                     }
-                    markImageByText(bg, mark, position, color, fontName, fontSize, myShadowStyle, myTextBackgroundStyle, null, null, quality, dest, promise);
+                    markImageByText(bg, mark, position, color, fontName, fontSize, myShadowStyle, myTextBackgroundStyle, null, null, quality, dest, saveFormat, promise);
                 }
             }
         } catch (Exception e) {
@@ -594,7 +603,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void markWithImage(ReadableMap src, final ReadableMap marker, final Integer X, final Integer Y, final Float scale, final Float markerScale, final int quality, String filename, final Promise promise ) {
+    public void markWithImage(ReadableMap src, final ReadableMap marker, final Integer X, final Integer Y, final Float scale, final Float markerScale, final int quality, String filename, final String saveFormat, final Promise promise ) {
 
 
         try {
@@ -604,7 +613,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
 
             final String uri = src.getString(PROP_ICON_URI);
 
-            final String dest = generateCacheFilePathForMarker(uri, filename);
+            final String dest = generateCacheFilePathForMarker(uri, filename, saveFormat);
 
             Log.d(IMAGE_MARKER_TAG, uri);
             Log.d(IMAGE_MARKER_TAG, src.toString());
@@ -618,7 +627,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
                     public void onNewResultImpl(@Nullable Bitmap bitmap) {
                         if (bitmap != null) {
                             Bitmap bg = Utils.scaleBitmap(bitmap, scale);
-                            markImage(bg, marker, null, X, Y, markerScale, quality, dest, promise);
+                            markImage(bg, marker, null, X, Y, markerScale, quality, dest, saveFormat, promise);
                         } else {
                             promise.reject( "marker error","Can't retrieve the file from the src: " + uri);
                         }
@@ -649,7 +658,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
                         bitmap.recycle();
                         System.gc();
                     }
-                    markImage(bg, marker, null, X, Y, markerScale, quality, dest, promise);
+                    markImage(bg, marker, null, X, Y, markerScale, quality, dest, saveFormat, promise);
                 }
             }
         } catch (Exception e) {
@@ -661,13 +670,13 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void markWithImageByPosition(ReadableMap src, final ReadableMap marker, final String position, final Float scale, final Float markerScale, final int quality, final String filename, final Promise promise ) {
+    public void markWithImageByPosition(ReadableMap src, final ReadableMap marker, final String position, final Float scale, final Float markerScale, final int quality, final String filename, final String saveFormat, final Promise promise ) {
 
         try {
 
             final String uri = src.getString(PROP_ICON_URI);
 
-            final String dest = generateCacheFilePathForMarker(uri, filename);
+            final String dest = generateCacheFilePathForMarker(uri, filename, saveFormat);
 
             Log.d(IMAGE_MARKER_TAG, uri);
             Log.d(IMAGE_MARKER_TAG, src.toString());
@@ -681,7 +690,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
                     public void onNewResultImpl(@Nullable Bitmap bitmap) {
                         if (bitmap != null) {
                             Bitmap bg = Utils.scaleBitmap(bitmap, scale);
-                            markImage(bg, marker, position, 0, 0, markerScale, quality, dest, promise);
+                            markImage(bg, marker, position, 0, 0, markerScale, quality, dest, saveFormat, promise);
                         } else {
                             promise.reject( "marker error","Can't retrieve the file from the src: " + uri);
                         }
@@ -712,7 +721,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
                         bitmap.recycle();
                         System.gc();
                     }
-                    markImage(bg, marker, position, 0, 0, markerScale, quality, dest, promise);
+                    markImage(bg, marker, position, 0, 0, markerScale, quality, dest, saveFormat, promise);
                 }
             }
         } catch (Exception e) {
@@ -766,17 +775,19 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
         return pos;
     }
 
-    private String generateCacheFilePathForMarker(String imgSavePath, String filename){
+    private String generateCacheFilePathForMarker(String imgSavePath, String filename, String saveFormat){
         String cacheDir = this.getReactApplicationContext().getCacheDir().getAbsolutePath();
 
+        String ext = saveFormat != null && (saveFormat.equals("PNG") || saveFormat.equals("png"))? ".png" : ".jpg";
         if (null != filename) {
             if (filename.endsWith(".jpg") || filename.endsWith(".png"))
                 return cacheDir + "/" + filename;
             else
-                return cacheDir + "/" + filename + ".jpg";
+                return cacheDir + "/" + filename + ext;
         } else {
             String name = UUID.randomUUID().toString()+"imagemarker";
-            return cacheDir+"/"+name+".jpg";
+
+            return cacheDir+"/"+name+ext;
         }
     }
 }

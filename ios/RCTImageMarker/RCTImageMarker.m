@@ -53,9 +53,9 @@ RCT_ENUM_CONVERTER(MarkerPosition,
 
 RCT_EXPORT_MODULE();
 
-void saveImageForMarker(NSString * fullPath, UIImage * image, float quality)
+void saveImageForMarker(NSString * fullPath, UIImage * image, float quality, bool isPng)
 {
-    NSData* data = UIImageJPEGRepresentation(image, quality / 100.0);
+    NSData* data = isPng? UIImagePNGRepresentation(image) : UIImageJPEGRepresentation(image, quality / 100.0);
     NSFileManager* fileManager = [NSFileManager defaultManager];
     [fileManager createFileAtPath:fullPath contents:data attributes:nil];
 }
@@ -374,6 +374,17 @@ UIImage * markerImgWithTextByPostion    (UIImage *image, NSString* text, MarkerP
     }
 }
 
+-(bool)isPng:(NSString *)saveFormat
+{
+    return saveFormat != nil && ([saveFormat isEqualToString:@"png"] || [saveFormat isEqualToString:@"PNG"]);
+}
+
+-(NSString*)getExt:(NSString* )saveFormat
+{
+    NSString* ext = saveFormat != nil && ([saveFormat isEqualToString:@"png"] || [saveFormat isEqualToString:@"PNG"])? @".png" : @".jpg";
+    return ext;
+}
+
 RCT_EXPORT_METHOD(addText: (nonnull NSDictionary *)src
                   text:(nonnull NSString*)text
                   X:(CGFloat)X
@@ -386,10 +397,11 @@ RCT_EXPORT_METHOD(addText: (nonnull NSDictionary *)src
                   scale:(CGFloat)scale
                   quality:(NSInteger) quality
                   filename: (NSString *)filename
+                  saveFormat: (NSString *)saveFormat
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
-    NSString* fullPath = generateCacheFilePathForMarker(@".jpg", filename);
+    NSString* fullPath = generateCacheFilePathForMarker([self getExt:saveFormat], filename);
     //这里之前是loadImageOrDataWithTag
     [_bridge.imageLoader loadImageWithURLRequest:[RCTConvert NSURLRequest:src] callback:^(NSError *error, UIImage *image) {
         if (error || image == nil) {
@@ -416,7 +428,7 @@ RCT_EXPORT_METHOD(addText: (nonnull NSDictionary *)src
         }
         NSLog(@" file from the path");
         
-        saveImageForMarker(fullPath, scaledImage, quality);
+        saveImageForMarker(fullPath, scaledImage, quality, [self isPng:saveFormat]);
         resolve(fullPath);
     }];
 }
@@ -432,10 +444,11 @@ RCT_EXPORT_METHOD(addTextByPostion: (nonnull NSDictionary *)src
                   scale:(CGFloat)scale
                   quality:(NSInteger) quality
                   filename: (NSString *)filename
+                  saveFormat: (NSString *)saveFormat
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
-    NSString* fullPath = generateCacheFilePathForMarker(@".jpg", filename);
+    NSString* fullPath = generateCacheFilePathForMarker([self getExt:saveFormat], filename);
     //这里之前是loadImageOrDataWithTag
     [_bridge.imageLoader loadImageWithURLRequest:[RCTConvert NSURLRequest:src] callback:^(NSError *error, UIImage *image) {
         if (error || image == nil) {
@@ -466,7 +479,7 @@ RCT_EXPORT_METHOD(addTextByPostion: (nonnull NSDictionary *)src
         }
         NSLog(@" file from the path");
         
-        saveImageForMarker(fullPath, scaledImage, quality);
+        saveImageForMarker(fullPath, scaledImage, quality, [self isPng:saveFormat]);
         resolve(fullPath);
     }];
 }
@@ -480,10 +493,11 @@ RCT_EXPORT_METHOD(markWithImage: (nonnull NSDictionary *)src
                   markerScale: (CGFloat) markerScale
                   quality:(NSInteger) quality
                   filename: (NSString *)filename
+                  saveFormat: (NSString *)saveFormat
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
-    NSString* fullPath = generateCacheFilePathForMarker(@".jpg", filename);
+    NSString* fullPath = generateCacheFilePathForMarker([self getExt:saveFormat], filename);
     //这里之前是loadImageOrDataWithTag
     [_bridge.imageLoader loadImageWithURLRequest:[RCTConvert NSURLRequest:src] callback:^(NSError *error, UIImage *image) {
         if (error || image == nil) {
@@ -517,7 +531,7 @@ RCT_EXPORT_METHOD(markWithImage: (nonnull NSDictionary *)src
             }
             NSLog(@" file from the path");
             
-            saveImageForMarker(fullPath, scaledImage, quality);
+            saveImageForMarker(fullPath, scaledImage, quality, [self isPng:saveFormat]);
             resolve(fullPath);
         }];
     }];
@@ -530,10 +544,11 @@ RCT_EXPORT_METHOD(markWithImageByPosition: (nonnull NSDictionary *)src
                   markerScale:(CGFloat)markerScale
                   quality: (NSInteger) quality
                   filename: (NSString *)filename
+                  saveFormat: (NSString *)saveFormat
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
-    NSString* fullPath = generateCacheFilePathForMarker(@".jpg", filename);
+    NSString* fullPath = generateCacheFilePathForMarker([self getExt:saveFormat], filename);
     //这里之前是loadImageOrDataWithTag
     [_bridge.imageLoader loadImageWithURLRequest:[RCTConvert NSURLRequest:src] callback:^(NSError *error, UIImage *image) {
         if (error || image == nil) {
@@ -569,7 +584,7 @@ RCT_EXPORT_METHOD(markWithImageByPosition: (nonnull NSDictionary *)src
             }
             NSLog(@" file from the path");
             
-            saveImageForMarker(fullPath, scaledImage, quality);
+            saveImageForMarker(fullPath, scaledImage, quality, [self isPng:saveFormat]);
             resolve(fullPath);
         }];
     }];
