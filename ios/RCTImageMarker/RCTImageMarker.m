@@ -27,6 +27,10 @@ typedef enum{
 
 @end
 
+@implementation TextOption
+
+@end
+
 @implementation RCTConvert(MarkerPosition)
 
 RCT_ENUM_CONVERTER(MarkerPosition,
@@ -83,7 +87,7 @@ NSString * generateCacheFilePathForMarker(NSString * ext, NSString * filename)
 UIImage * markerImgWithText(UIImage *image, NSString* text, CGFloat X, CGFloat Y, UIColor* color, UIFont* font, CGFloat scale, NSShadow* shadow, TextBackground* textBackground){
     int w = image.size.width;
     int h = image.size.height;
-    
+
     UIGraphicsBeginImageContextWithOptions(image.size, NO, scale);
     [image drawInRect:CGRectMake(0, 0, w, h)];
     NSDictionary *attr = @{
@@ -91,7 +95,7 @@ UIImage * markerImgWithText(UIImage *image, NSString* text, CGFloat X, CGFloat Y
                            NSForegroundColorAttributeName : color,      //设置字体颜色
                            NSShadowAttributeName : shadow
                            };
-    
+
     CGSize size = [text sizeWithAttributes:attr];
     if (textBackground != nil) {
         CGContextRef context = UIGraphicsGetCurrentContext();
@@ -112,8 +116,47 @@ UIImage * markerImgWithText(UIImage *image, NSString* text, CGFloat X, CGFloat Y
     UIImage *aimg = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
     return aimg;
-    
+
 }
+
+/**
+ * 正对同一张图片，一次水印多个地方
+ */
+UIImage * markerImgWithMultipleTexts(UIImage *image, NSArray <TextOption *>*textOptions, CGFloat scale) {
+    int w = image.size.width;
+    int h = image.size.height;
+
+    UIGraphicsBeginImageContextWithOptions(image.size, NO, scale);
+    [image drawInRect:CGRectMake(0, 0, w, h)];
+    // 遍历
+    for (TextOption *option in textOptions) {
+        NSDictionary *attr = @{
+            NSFontAttributeName: option.textFont,   //设置字体
+            NSForegroundColorAttributeName: option.textColor, //设置字体颜色
+            NSShadowAttributeName: option.shadow
+        };
+        CGSize size = [option.text sizeWithAttributes:attr];
+        if (textBackground != nil) {
+           CGContextRef context = UIGraphicsGetCurrentContext();
+           CGContextSetFillColorWithColor(context, option.textBackground.colorBg.CGColor);
+           if ([option.textBackground.typeBg isEqualToString:@"stretchX"]) {
+               CGContextFillRect(context, CGRectMake(0, option.y - option.textBackground.paddingY, w, size.height + 2*option.textBackground.paddingY));
+           }else if([textBackground.typeBg isEqualToString:@"stretchY"]) {
+               CGContextFillRect(context, CGRectMake(option.x - option.textBackground.paddingX, 0, size.width + 2*option.textBackground.paddingX, h));
+           }else {
+               CGContextFillRect(context, CGRectMake(option.x - option.textBackground.paddingX, option.y - option.textBackground.paddingY,
+                                                              size.width + 2*option.textBackground.paddingX, size.height + 2*option.textBackground.paddingY));
+           }
+        }
+        CGRect rect = (CGRect){ CGPointMake(option.y, option.y), size };
+        // 绘制(水印)
+        [text drawInRect:rect withAttributes:attr];
+    }
+    UIImage *aimg = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return aimg;
+}
+
 
 /**
  *
@@ -121,10 +164,10 @@ UIImage * markerImgWithText(UIImage *image, NSString* text, CGFloat X, CGFloat Y
 UIImage * markeImageWithImage(UIImage *image, UIImage * waterImage, CGFloat X, CGFloat Y, CGFloat scale,  CGFloat markerScale ){
     int w = image.size.width;
     int h = image.size.height;
-    
+
     int ww = waterImage.size.width * markerScale;
     int wh = waterImage.size.height * markerScale;
-    
+
     UIGraphicsBeginImageContextWithOptions(image.size, NO, scale);
     [image drawInRect:CGRectMake(0, 0, w, h)];
     CGRect position = CGRectMake(X, Y, ww, wh);
@@ -137,17 +180,17 @@ UIImage * markeImageWithImage(UIImage *image, UIImage * waterImage, CGFloat X, C
 UIImage * markeImageWithImageByPostion(UIImage *image, UIImage * waterImage, MarkerPosition position, CGFloat scale, CGFloat markerScale) {
     int w = image.size.width;
     int h = image.size.height;
-    
+
     int ww = waterImage.size.width * markerScale;
     int wh = waterImage.size.height * markerScale;
     UIGraphicsBeginImageContextWithOptions(image.size, NO, scale);
     [image drawInRect:CGRectMake(0, 0, w, h)];
-    
+
     CGSize size = CGSizeMake(ww, wh);
-    
-    
+
+
     CGRect rect;
-    
+
     switch (position) {
         case TopLeft:
             rect = (CGRect){
@@ -198,28 +241,28 @@ UIImage * markeImageWithImageByPostion(UIImage *image, UIImage * waterImage, Mar
             };
             break;
     }
-    
+
     [waterImage drawInRect:rect];
     UIImage * newImage = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
     return newImage;
-    
-    
+
+
 }
 
 
-UIImage * markerImgWithTextByPostion    (UIImage *image, NSString* text, MarkerPosition position, UIColor* color, UIFont* font, CGFloat scale, NSShadow* shadow, TextBackground* textBackground){
+UIImage * markerImgWithTextByPostion (UIImage *image, NSString* text, MarkerPosition position, UIColor* color, UIFont* font, CGFloat scale, NSShadow* shadow, TextBackground* textBackground){
     int w = image.size.width;
     int h = image.size.height;
-      
+
     NSDictionary *attr = @{
                            NSFontAttributeName: font,   //设置字体
-                           NSForegroundColorAttributeName : color,      //设置字体颜色
+                           NSForegroundColorAttributeName : color,  //设置字体颜色
                            NSShadowAttributeName : shadow
                            };
-    
+
     CGSize size = [text sizeWithAttributes:attr];
-    
+
     //    CGSize size = CGSizeMake(fontSize, height);
     UIGraphicsBeginImageContextWithOptions(image.size, NO, scale);
     [image drawInRect:CGRectMake(0, 0, w, h)];
@@ -254,20 +297,20 @@ UIImage * markerImgWithTextByPostion    (UIImage *image, NSString* text, MarkerP
             posX = (w-(size.width))/2;
             posY = (h-size.height)/2;
             break;
-            
+
     }
 
-    if (textBackground != nil) {        
+    if (textBackground != nil) {
         CGContextRef context = UIGraphicsGetCurrentContext();
         CGContextSetFillColorWithColor(context, textBackground.colorBg.CGColor);
         if([textBackground.typeBg isEqualToString:@"stretchX"]) {
-            CGContextFillRect(context, CGRectMake(0, posY - textBackground.paddingY, w, size.height + 2*textBackground.paddingY)); 
+            CGContextFillRect(context, CGRectMake(0, posY - textBackground.paddingY, w, size.height + 2*textBackground.paddingY));
         } else if([textBackground.typeBg isEqualToString:@"stretchY"]) {
-            CGContextFillRect(context, CGRectMake(posX - textBackground.paddingX, 0, size.width + 2*textBackground.paddingX, h));   
+            CGContextFillRect(context, CGRectMake(posX - textBackground.paddingX, 0, size.width + 2*textBackground.paddingX, h));
         } else {
-            CGContextFillRect(context, CGRectMake(posX - textBackground.paddingX, posY - textBackground.paddingY, 
-            size.width + 2*textBackground.paddingX, size.height + 2*textBackground.paddingY)); 
-        }               
+            CGContextFillRect(context, CGRectMake(posX - textBackground.paddingX, posY - textBackground.paddingY,
+            size.width + 2*textBackground.paddingX, size.height + 2*textBackground.paddingY));
+        }
     }
 
     CGRect rect = (CGRect){ CGPointMake(posX, posY), size };
@@ -275,38 +318,38 @@ UIImage * markerImgWithTextByPostion    (UIImage *image, NSString* text, MarkerP
     UIImage *aimg = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
     return aimg;
-    
+
 }
 
 - (UIColor *)getColor:(NSString *)hexColor {
     NSString *string = [hexColor substringFromIndex:1];//去掉#号
     unsigned int red,green,blue;
     NSRange range;
-    
+
     bool hex6 = [string length] == 6? YES : NO;
     if (hex6 == YES) {
         range.length = 2;
     } else {
         range.length = 1;
     }
-    
+
     /* 调用下面的方法处理字符串 */
     range.location = 0;
     NSString* redStr = [string substringWithRange:range];
     red = [self stringToInt:redStr];
-    
+
     range.location = hex6 == YES? 2 : 1;
     NSString* greenStr = [string substringWithRange:range];
     green = [self stringToInt:greenStr];
-    
+
     range.location = hex6 == YES? 4 : 2;
     NSString* blueStr = [string substringWithRange:range];
     blue = [self stringToInt:blueStr];
-    
+
     return [UIColor colorWithRed:(float)(red/255.0f) green:(float)(green / 255.0f) blue:(float)(blue / 255.0f) alpha:1.0f];
 }
 - (int)stringToInt:(NSString *)string {
-    
+
     if ([string length] == 1) {
         unichar hex_char = [string characterAtIndex:0]; /* 两位16进制数中的第一位(高位*16) */
         int int_ch;
@@ -336,8 +379,8 @@ UIImage * markerImgWithTextByPostion    (UIImage *image, NSString* text, MarkerP
             int_ch2 = hex_char2 - 87; /* a 的Ascll - 97 */
         return int_ch1+int_ch2;
     }
-    
-   
+
+
 }
 
 -(NSShadow*)getShadowStyle:(NSDictionary *) shadowStyle
@@ -347,7 +390,7 @@ UIImage * markerImgWithTextByPostion    (UIImage *image, NSString* text, MarkerP
         shadow.shadowBlurRadius = [RCTConvert CGFloat: shadowStyle[@"radius"]];
         shadow.shadowOffset = CGSizeMake([RCTConvert CGFloat: shadowStyle[@"dx"]], [RCTConvert CGFloat: shadowStyle[@"dy"]]);
         UIColor* color = [self getColor:shadowStyle[@"color"]];
-        
+
         NSLog(@"color? %@", color!=nil?@"YES" : @"NO");
         shadow.shadowColor = color != nil? color : [UIColor grayColor];
         return shadow;
@@ -367,7 +410,7 @@ UIImage * markerImgWithTextByPostion    (UIImage *image, NSString* text, MarkerP
             txtBackground.colorBg = [self getColor:textBackground[@"color"]];
         } else {
             txtBackground.colorBg = [UIColor clearColor];
-        }        
+        }
         return txtBackground;
     } else {
         return nil;
@@ -408,18 +451,18 @@ RCT_EXPORT_METHOD(addText: (nonnull NSDictionary *)src
             image = [[UIImage alloc] initWithContentsOfFile:src[@"uri"]];
             if (image == nil) {
                 NSLog(@"Can't retrieve the file from the path");
-                
+
                 reject(@"error", @"Can't retrieve the file from the path.", error);
                 return;
             }
         }
-        
+
         // Do mark
         UIFont* font = [UIFont fontWithName:fontName size:fontSize];
         UIColor* uiColor = [self getColor:color];
         NSShadow* shadow = [self getShadowStyle: shadowStyle];
-        TextBackground* textBackground = [self getTextBackgroundStyle: textBackgroundStyle];       
-        
+        TextBackground* textBackground = [self getTextBackgroundStyle: textBackgroundStyle];
+
         UIImage * scaledImage = markerImgWithText(image, text, X, Y , uiColor, font, scale, shadow, textBackground);
         if (scaledImage == nil) {
             NSLog(@"Can't mark the image");
@@ -427,7 +470,77 @@ RCT_EXPORT_METHOD(addText: (nonnull NSDictionary *)src
             return;
         }
         NSLog(@" file from the path");
-        
+
+        saveImageForMarker(fullPath, scaledImage, quality, [self isPng:saveFormat]);
+        resolve(fullPath);
+    }];
+}
+
+
+RCT_EXPORT_METHOD(addMultipleTexts: (nonnull NSDictionary *)src
+                  text:(nonnull NSString*)text
+                  scale:(CGFloat)scale
+                  textOptions:(nonnull NSSArray*)textOptions
+                  quality:(NSInteger) quality
+                  filename: (NSString *)filename
+                  saveFormat: (NSString *)saveFormat
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    NSString* fullPath = generateCacheFilePathForMarker([self getExt:saveFormat], filename);
+    // 这里之前是loadImageOrDataWithTag
+    [_bridge.imageLoader loadImageWithURLRequest:[RCTConvert NSURLRequest:src] callback:^(NSError *error, UIImage *image) {
+        if (error || image == nil) {
+            image = [[UIImage alloc] initWithContentsOfFile:src[@"uri"]];
+            if (image == nil) {
+                NSLog(@"Can't retrieve the file from the path");
+
+                reject(@"error", @"Can't retrieve the file from the path.", error);
+                return;
+            }
+        }
+
+        // Do mark
+        // 转model对象数组
+        NSMutableArray <TextOption *>*modelOptions = [NSMutableArray array];
+        for (NSDictionary *option in textOptions) {
+            NSString *text     = [RCTConvert NSString: option[@"text"]];
+            // 获取font
+            NSString *fontName = [RCTConvert NSString: option[@"fontName"]];
+            CGFloat fontSize   = [RCTConvert CGFloat: option[@"fontSize"]];
+            UIFont* font = [UIFont fontWithName:fontName size:fontSize];
+            // 获取颜色
+            NSString *color    = [RCTConvert NSString: option[@"color"]];
+            UIColor* uiColor = [self getColor:color];
+            // 获取阴影
+            NSDictionary *shadowStyle = [RCTConvert NSDictionary: option[@"shadowStyle"]];
+            NSShadow* shadow = [self getShadowStyle: shadowStyle];
+            // 获取文字背景
+            NSDictionary *textBackgroundStyle = [RCTConvert NSDictionary: option[@"textBackgroundStyle"]];
+            TextBackground* textBackground = [self getTextBackgroundStyle: textBackgroundStyle];
+            // 获取起始坐标
+            CGFloat x = [RCTConvert CGFloat: option[@"locationX"]];
+            CGFloat y = [RCTConvert CGFloat: option[@"locationY"]];
+            // 创建model对象
+            TextOption *textModel = [TextOption alloc] init];
+            textModel.x = x;
+            textModel.y = y;
+            textModel.textColor = uiColor;
+            textModel.textFont = font;
+            textModel.shadow = shadow;
+            textModel.textBackground = textBackground;
+            // 添加
+            [modelOptions addObject:textModel];
+          }
+
+        UIImage * scaledImage = markerImgWithMultipleTexts(image, text, modelOptions, scale);
+        if (scaledImage == nil) {
+            NSLog(@"Can't mark the image");
+            reject(@"error",@"Can't mark the image.", error);
+            return;
+        }
+        NSLog(@" file from the path");
+
         saveImageForMarker(fullPath, scaledImage, quality, [self isPng:saveFormat]);
         resolve(fullPath);
     }];
@@ -464,7 +577,7 @@ RCT_EXPORT_METHOD(addTextByPostion: (nonnull NSDictionary *)src
                 return;
             }
         }
-        
+
         // Do mark
         UIFont* font = [UIFont fontWithName:fontName size:fontSize];
         UIColor* uiColor = [self getColor:color];
@@ -478,7 +591,7 @@ RCT_EXPORT_METHOD(addTextByPostion: (nonnull NSDictionary *)src
             return;
         }
         NSLog(@" file from the path");
-        
+
         saveImageForMarker(fullPath, scaledImage, quality, [self isPng:saveFormat]);
         resolve(fullPath);
     }];
@@ -505,19 +618,19 @@ RCT_EXPORT_METHOD(markWithImage: (nonnull NSDictionary *)src
             image = [[UIImage alloc] initWithContentsOfFile:path];
             if (image == nil) {
                 NSLog(@"Can't retrieve the file from the path");
-                
+
                 reject(@"error", @"Can't retrieve the file from the path.", error);
                 return;
             }
         }
-        
+
         [_bridge.imageLoader loadImageWithURLRequest:[RCTConvert NSURLRequest:markerSrc] callback:^(NSError *markerError, UIImage *marker) {
             if (markerError || marker == nil) {
                 NSString* path = markerSrc[@"uri"];
                 marker = [[UIImage alloc] initWithContentsOfFile:path];
                 if (marker == nil) {
                     NSLog(@"Can't retrieve the file from the path");
-                    
+
                     reject(@"error", @"Can't retrieve the file from the path.", markerError);
                     return;
                 }
@@ -530,7 +643,7 @@ RCT_EXPORT_METHOD(markWithImage: (nonnull NSDictionary *)src
                 return;
             }
             NSLog(@" file from the path");
-            
+
             saveImageForMarker(fullPath, scaledImage, quality, [self isPng:saveFormat]);
             resolve(fullPath);
         }];
@@ -556,21 +669,21 @@ RCT_EXPORT_METHOD(markWithImageByPosition: (nonnull NSDictionary *)src
             image = [[UIImage alloc] initWithContentsOfFile:path];
             if (image == nil) {
                 NSLog(@"Can't retrieve the file from the path");
-                
+
                 reject(@"error", @"Can't retrieve the file from the path.", error);
                 return;
             }
         }
-        
+
         //        RCTImageSource *imageSource = [RCTConvert RCTImageSource:markerPath];
-        
+
         [_bridge.imageLoader loadImageWithURLRequest:[RCTConvert NSURLRequest:markerSrc] callback:^(NSError *markerError, UIImage *marker) {
             if (markerError || marker == nil) {
                 NSString* path = markerSrc[@"uri"];
                 marker = [[UIImage alloc] initWithContentsOfFile:path];
                 if (marker == nil) {
                     NSLog(@"Can't retrieve the file from the path");
-                    
+
                     reject(@"error", @"Can't retrieve the file from the path.", markerError);
                     return;
                 }
@@ -583,7 +696,7 @@ RCT_EXPORT_METHOD(markWithImageByPosition: (nonnull NSDictionary *)src
                 return;
             }
             NSLog(@" file from the path");
-            
+
             saveImageForMarker(fullPath, scaledImage, quality, [self isPng:saveFormat]);
             resolve(fullPath);
         }];

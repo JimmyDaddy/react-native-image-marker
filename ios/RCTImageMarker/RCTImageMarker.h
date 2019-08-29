@@ -22,3 +22,13 @@
 @property (assign) float paddingX;
 @property (assign) float paddingY;
 @end
+
+@interface TextOption : NSObject
+@property (assign) float x;
+@property (assign) float y;
+@property (copy) NSString * text;
+@property (copy) UIColor * textColor;
+@property (copy) UIFont * textFont;
+@property (copy) NSShadow * shadow;
+@property (copy) TextBackground * textBackground;
+@end

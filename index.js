@@ -67,6 +67,31 @@ type TextMarkOption = {
   saveFormat?: ImageFormat,
 }
 
+type textInfoOption = {
+  text: string,
+  locationX?: number,
+  locationY?: number,
+  color: string,
+  fontName: string,
+  fontSize: number,
+  shadowStyle: ShadowLayerStyle,
+  textBackgroundStyle: TextBackgroundStyle
+}
+
+
+type MultipleTextsMarkOption = {
+  // image src, local image
+  src: string,
+  // scale image
+  scale: number,
+  textOptions: array,
+  // image quality
+  quality: number,
+  filename?: string,
+  saveFormat?: ImageFormat,
+}
+
+
 type ImageMarkOption = {
   // image src, local image
   src: string,
@@ -148,6 +173,42 @@ export default class Marker {
         saveFormat
       )
     }
+  }
+
+  static markMultipleTexts (option: MultipleTextsMarkOption) {
+    const {
+      src,
+      scale,
+      textOptions,
+      quality,
+      filename,
+      saveFormat
+    } = option
+
+    if (!src) {
+      throw new Error('please set image!')
+    }
+
+    if (!textOptions.length) {
+      throw new Error('Please set textOptions')
+    }
+
+    let srcObj = resolveAssetSource(src)
+    if (!srcObj) {
+      srcObj = {
+        uri: src,
+        __packager_asset: false
+      }
+    }
+
+    return ImageMarker.addMultipleTexts(
+      srcObj,
+      scale,
+      textOptions,
+      quality,
+      filename,
+      saveFormat
+    )
   }
 
   static markImage (option: ImageMarkOption) {
