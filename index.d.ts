@@ -14,7 +14,8 @@ export declare enum TextBackgroundType {
 }
 export declare enum ImageFormat {
     png = "png",
-    jpg = "jpg"
+    jpg = "jpg",
+    base64 = "base64"
 }
 export declare type ShadowLayerStyle = {
     'dx': number;

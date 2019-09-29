@@ -65,7 +65,8 @@ export default class MarkerTest extends React.Component {
       base64: false,
       useTextShadow: true,
       useTextBgStyle: true,
-      textBgStretch: 0
+      textBgStretch: 0,
+      saveFormat: ImageFormat.png
     }
   }
 
@@ -85,7 +86,16 @@ export default class MarkerTest extends React.Component {
     })
   }
 
+  _switchBase64Res = () => {
+    this.setState({
+      saveFormat: this.state.saveFormat === ImageFormat.base64 ? ImageFormat.png : ImageFormat.base64
+    })
+  }
+
   render () {
+    console.log('====================================')
+    console.log(this.state.saveFormat, ImageFormat.base64, this.state.uri)
+    console.log('====================================')
     return (
       <ScrollView style={s.container}>
         <View>
@@ -102,6 +112,14 @@ export default class MarkerTest extends React.Component {
             onPress={this._switch}
           >
             <Text style={s.text}>switch to mark {this.state.markImage ? 'text' : 'image'}</Text>
+          </TouchableOpacity>
+        </View>
+        <View>
+          <TouchableOpacity
+            style={[s.btn, { backgroundColor: '#FF7043' }]}
+            onPress={this._switchBase64Res}
+          >
+            <Text style={s.text}>export {this.state.saveFormat === ImageFormat.base64 ? 'base64' : 'png'} result</Text>
           </TouchableOpacity>
         </View>
         <View>
@@ -233,13 +251,10 @@ export default class MarkerTest extends React.Component {
         scale: 1,
         markerScale: 1,
         quality: 100,
-        saveFormat: ImageFormat.jpg
+        saveFormat: this.state.saveFormat
       }).then((path) => {
-        console.log('====================================')
-        console.log(path)
-        console.log('====================================')
         this.setState({
-          uri: Platform.OS === 'android' ? 'file://' + path : path,
+          uri: this.state.saveFormat === ImageFormat.base64 ? path : Platform.OS === 'android' ? 'file://' + path : path,
           show: true
         })
       }).catch((err) => {
@@ -269,15 +284,13 @@ export default class MarkerTest extends React.Component {
           paddingX: 10,
           paddingY: 10,
           color: '#0f0'
-        } : null
+        } : null,
+        saveFormat: this.state.saveFormat
       })
         .then((path) => {
-          console.log('====================================')
-          console.log(path)
-          console.log('====================================')
           this.setState({
             show: true,
-            uri: Platform.OS === 'android' ? 'file://' + path : path
+            uri: this.state.saveFormat === ImageFormat.base64 ? path : Platform.OS === 'android' ? 'file://' + path : path
           })
         }).catch((err) => {
           console.log('====================================')
@@ -296,13 +309,11 @@ export default class MarkerTest extends React.Component {
         Y: 150,
         scale: 1,
         markerScale: 0.5,
-        quality: 100
+        quality: 100,
+        saveFormat: this.state.saveFormat
       }).then((path) => {
-        console.log('====================================')
-        console.log(path)
-        console.log('====================================')
         this.setState({
-          uri: Platform.OS === 'android' ? 'file://' + path : path,
+          uri: this.state.saveFormat === ImageFormat.base64 ? path : Platform.OS === 'android' ? 'file://' + path : path,
           show: true
         })
       }).catch((err) => {
@@ -332,14 +343,12 @@ export default class MarkerTest extends React.Component {
           color: '#0f0'
         } : null,
         scale: 1,
-        quality: 100
+        quality: 100,
+        saveFormat: this.state.saveFormat
       }).then((path) => {
-        console.log('====================================')
-        console.log(path)
-        console.log('====================================')
         this.setState({
           show: true,
-          uri: Platform.OS === 'android' ? 'file://' + path : path
+          uri: this.state.saveFormat === ImageFormat.base64 ? path : Platform.OS === 'android' ? 'file://' + path : path
         })
       }).catch((err) => {
         console.log('====================================')

@@ -12,6 +12,7 @@ import android.text.Layout;
 import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
 
 import com.facebook.common.references.CloseableReference;
@@ -30,6 +31,7 @@ import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.views.text.ReactFontManager;
 
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
@@ -48,6 +50,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
     private ReactApplicationContext context;
     private static final String PROP_ICON_URI = "uri";
     private static final String IMAGE_MARKER_TAG = "[ImageMarker]";
+    private static final String BASE64 = "base64";
 
 
     public ImageMarkerManager(ReactApplicationContext reactContext) {
@@ -229,13 +232,26 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             canvas.save();
             // 存储
             canvas.restore();
-            bos = new BufferedOutputStream(new FileOutputStream(dest));
+            // export base64
+            if (dest.equals(BASE64)) {
+                ByteArrayOutputStream base64Stream = new ByteArrayOutputStream();
+                icon.compress(Bitmap.CompressFormat.PNG, quality, base64Stream);
+                base64Stream.flush();
+                base64Stream.close();
+                byte[] bitmapBytes = base64Stream.toByteArray();
+                String result = Base64.encodeToString(bitmapBytes, Base64.DEFAULT);
+                promise.resolve("data:image/png;base64,".concat(result));
+            } else {
+                bos = new BufferedOutputStream(new FileOutputStream(dest));
 
 //            int quaility = (int) (100 / percent > 80 ? 80 : 100 / percent);
-            icon.compress(getSaveFormat(saveFormat), quality, bos);
-            bos.flush();
-            //保存成功的
-            promise.resolve(dest);
+                icon.compress(getSaveFormat(saveFormat), quality, bos);
+                bos.flush();
+                bos.close();
+                //保存成功的
+                promise.resolve(dest);
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
             promise.reject("error", e.getMessage(), e);
@@ -393,12 +409,24 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             textLayout.draw(canvas);
             canvas.restore();
 
-            bos = new BufferedOutputStream(new FileOutputStream(dest));
+            if (dest.equals(BASE64)) {
+                ByteArrayOutputStream base64Stream = new ByteArrayOutputStream();
+                icon.compress(Bitmap.CompressFormat.PNG, quality, base64Stream);
+                base64Stream.flush();
+                base64Stream.close();
+                byte[] bitmapBytes = base64Stream.toByteArray();
+                String result = Base64.encodeToString(bitmapBytes, Base64.DEFAULT);
+                promise.resolve("data:image/png;base64,".concat(result));
+            } else {
+                bos = new BufferedOutputStream(new FileOutputStream(dest));
+                icon.compress(getSaveFormat(saveFormat) , quality, bos);
+                bos.flush();
+                bos.close();
+                //保存成功的
+                promise.resolve(dest);
+            }
 
-            icon.compress(getSaveFormat(saveFormat) , quality, bos);
-            bos.flush();
-            //保存成功的
-            promise.resolve(dest);
+
         } catch (Exception e) {
             e.printStackTrace();
             promise.reject("error", e.getMessage(), e);
@@ -781,6 +809,9 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
     private String generateCacheFilePathForMarker(String imgSavePath, String filename, String saveFormat){
         String cacheDir = this.getReactApplicationContext().getCacheDir().getAbsolutePath();
 
+        if (saveFormat != null && saveFormat.equals(BASE64)) {
+            return BASE64;
+        }
         String ext = saveFormat != null && (saveFormat.equals("PNG") || saveFormat.equals("png"))? ".png" : ".jpg";
         if (null != filename) {
             if (filename.endsWith(".jpg") || filename.endsWith(".png"))

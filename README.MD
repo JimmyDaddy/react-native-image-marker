@@ -52,10 +52,17 @@ pod 'RNImageMarker', :path => '../node_modules/react-native-image-marker'
 |`scale`| scale image |
 |`quality`| image qulaity |
 |`filename` | set filename for the result |
-|`saveFormat`| `png` or `jpg` |
+|`saveFormat`| `png` `jpg` `base64` |
 |`textBackgroundStyle` | text background style |
 
 ```typescript
+
+export enum ImageFormat {
+  png = 'png',
+  jpg = 'jpg',
+  base64 = 'base64',
+}
+
 export type TextMarkOption = {
   // image src, local image
   src: ImageSourcePropType,
@@ -92,7 +99,7 @@ export type TextMarkOption = {
 |`scale`| scale image |
 |`quality`| image qulaity |
 |`filename` | set filename for the result |
-|`saveFormat`| `png` or `jpg`, default is `jpg` |
+|`saveFormat`| `png`  `jpg` `base54`,  default is `jpg` |
 
 ```typescript
 export type ImageMarkOption = {

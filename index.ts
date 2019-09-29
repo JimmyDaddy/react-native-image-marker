@@ -2,7 +2,7 @@
  * @Author: JimmyDaddy
  * @Date: 2017-09-14 10:40:09
  * @Last Modified by: JimmyDaddy
- * @Last Modified time: 2019-09-29 14:58:39
+ * @Last Modified time: 2019-09-29 15:36:11
  * @Description
  * @flow
  */
@@ -29,6 +29,7 @@ export enum TextBackgroundType {
 export enum ImageFormat {
   png = 'png',
   jpg = 'jpg',
+  base64 = 'base64',
 }
 
 
