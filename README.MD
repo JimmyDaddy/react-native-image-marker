@@ -55,6 +55,30 @@ pod 'RNImageMarker', :path => '../node_modules/react-native-image-marker'
 |`saveFormat`| `png` or `jpg` |
 |`textBackgroundStyle` | text background style |
 
+```typescript
+export type TextMarkOption = {
+  // image src, local image
+  src: ImageSourcePropType,
+  text: string,
+  // if you set position you don't need to set X and Y
+  X?: number,
+  Y?: number,
+  // eg. '#aacc22'
+  color: string,
+  fontName: string,
+  fontSize: number,
+  // scale image
+  scale: number,
+  // image quality
+  quality: number,
+  position?: Position,
+  filename?: string,
+  shadowStyle: ShadowLayerStyle,
+  textBackgroundStyle: TextBackgroundStyle,
+  saveFormat?: ImageFormat,
+}
+```
+
 * `ImageMarkOption`
 
 |name|description|
@@ -70,6 +94,24 @@ pod 'RNImageMarker', :path => '../node_modules/react-native-image-marker'
 |`filename` | set filename for the result |
 |`saveFormat`| `png` or `jpg`, default is `jpg` |
 
+```typescript
+export type ImageMarkOption = {
+  // image src, local image
+  src: ImageSourcePropType,
+  markerSrc: ImageSourcePropType,
+  X?: number,
+  Y?: number,
+  // marker scale
+  markerScale: number,
+  // image scale
+  scale: number,
+  quality: number,
+  position?: Position,
+  filename?: string,
+  saveFormat?: ImageFormat,
+}
+```
+
 * `ShadowStyle`
 
 |name|description|
@@ -78,6 +120,15 @@ pod 'RNImageMarker', :path => '../node_modules/react-native-image-marker'
 |`dx`| x offset|
 |`dy`| y offset|
 |`color`| shadow color |
+
+```typescript
+export type ShadowLayerStyle = {
+  'dx': number,
+  'dy': number,
+  'radius': number,
+  'color': string
+}
+```
 
 * `textBackgroundStyle`
 
@@ -89,6 +140,13 @@ pod 'RNImageMarker', :path => '../node_modules/react-native-image-marker'
 |`paddingY`| padding y|
 |`type`| default is fit the text, `stretchX` stretch to fill width, `stretchY` stretch to fill height |
 |`color`| bg color |
+
+```typescript
+export enum TextBackgroundType {
+  stretchX = 'stretchX',
+  stretchY = 'stretchY'
+}
+```
 
 ## Usage
 

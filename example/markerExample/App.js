@@ -1,6 +1,6 @@
 import React from 'react'
 import { TouchableOpacity, Image, View, Text, Platform, Dimensions, StyleSheet, ScrollView } from 'react-native'
-import Marker from 'react-native-image-marker'
+import Marker, { Position, ImageFormat } from 'react-native-image-marker'
 import Picker from 'react-native-image-picker'
 const icon = require('./icon.jpeg')
 // const iconTP = require('./tpimage.png')
@@ -127,43 +127,43 @@ export default class MarkerTest extends React.Component {
           </TouchableOpacity>
           <TouchableOpacity
             style={s.btn}
-            onPress={() => this._markByPosition('topLeft')}
+            onPress={() => this._markByPosition(Position.topLeft)}
           >
             <Text style={s.text} >TopLeft</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={s.btn}
-            onPress={() => this._markByPosition('topCenter')}
+            onPress={() => this._markByPosition(Position.topCenter)}
           >
             <Text style={s.text} >topCenter</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={s.btn}
-            onPress={() => this._markByPosition('topRight')}
+            onPress={() => this._markByPosition(Position.topRight)}
           >
             <Text style={s.text} >topRight</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={s.btn}
-            onPress={() => this._markByPosition('center')}
+            onPress={() => this._markByPosition(Position.center)}
           >
             <Text style={s.text} >Center</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={s.btn}
-            onPress={() => this._markByPosition('bottomLeft')}
+            onPress={() => this._markByPosition(Position.bottomLeft)}
           >
             <Text style={s.text} >bottomLeft</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={s.btn}
-            onPress={() => this._markByPosition('bottomCenter')}
+            onPress={() => this._markByPosition(Position.bottomCenter)}
           >
             <Text style={s.text} >bottomCenter</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={s.btn}
-            onPress={() => this._markByPosition('bottomRight')}
+            onPress={() => this._markByPosition(Position.bottomRight)}
           >
             <Text style={s.text} >bottomRight</Text>
           </TouchableOpacity>
@@ -233,7 +233,7 @@ export default class MarkerTest extends React.Component {
         scale: 1,
         markerScale: 1,
         quality: 100,
-        saveFormat: 'jpg'
+        saveFormat: ImageFormat.jpg
       }).then((path) => {
         console.log('====================================')
         console.log(path)
