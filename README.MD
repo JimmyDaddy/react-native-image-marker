@@ -60,7 +60,7 @@ pod 'RNImageMarker', :path => '../node_modules/react-native-image-marker'
 export enum ImageFormat {
   png = 'png',
   jpg = 'jpg',
-  base64 = 'base64',
+  base64 = 'base64', // base64 string
 }
 
 export type TextMarkOption = {
@@ -99,7 +99,7 @@ export type TextMarkOption = {
 |`scale`| scale image |
 |`quality`| image qulaity |
 |`filename` | set filename for the result |
-|`saveFormat`| `png`  `jpg` `base54`,  default is `jpg` |
+|`saveFormat`| `png`  `jpg` `base64`,  default is `jpg` |
 
 ```typescript
 export type ImageMarkOption = {
