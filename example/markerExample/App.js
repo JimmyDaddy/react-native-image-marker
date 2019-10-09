@@ -1,5 +1,5 @@
 import React from 'react'
-import { TouchableOpacity, Image, View, Text, Platform, Dimensions, StyleSheet, ScrollView } from 'react-native'
+import { TouchableOpacity, Image, View, Text, Platform, Dimensions, StyleSheet, ScrollView, ActivityIndicator } from 'react-native'
 import Marker, { Position, ImageFormat } from 'react-native-image-marker'
 import Picker from 'react-native-image-picker'
 const icon = require('./icon.jpeg')
@@ -7,7 +7,7 @@ const icon = require('./icon.jpeg')
 const bg = require('./bg.png')
 const base64Bg = require('./bas64bg').default
 
-const { width } = Dimensions.get('window')
+const { width, height } = Dimensions.get('window')
 
 const s = StyleSheet.create({
   container: {
@@ -66,7 +66,8 @@ export default class MarkerTest extends React.Component {
       useTextShadow: true,
       useTextBgStyle: true,
       textBgStretch: 0,
-      saveFormat: ImageFormat.png
+      saveFormat: ImageFormat.png,
+      loading: false
     }
   }
 
@@ -93,156 +94,175 @@ export default class MarkerTest extends React.Component {
   }
 
   render () {
-    console.log('====================================')
-    console.log(this.state.saveFormat, ImageFormat.base64, this.state.uri)
-    console.log('====================================')
     return (
-      <ScrollView style={s.container}>
-        <View>
-          <TouchableOpacity
-            style={[s.btn, { backgroundColor: '#FF7043' }]}
-            onPress={this._switchBg}
-          >
-            <Text style={s.text}> use {this.state.base64 ? 'base64' : 'image'} as background</Text>
-          </TouchableOpacity>
-        </View>
-        <View>
-          <TouchableOpacity
-            style={[s.btn, { backgroundColor: '#FF7043' }]}
-            onPress={this._switch}
-          >
-            <Text style={s.text}>switch to mark {this.state.markImage ? 'text' : 'image'}</Text>
-          </TouchableOpacity>
-        </View>
-        <View>
-          <TouchableOpacity
-            style={[s.btn, { backgroundColor: '#FF7043' }]}
-            onPress={this._switchBase64Res}
-          >
-            <Text style={s.text}>export {this.state.saveFormat === ImageFormat.base64 ? 'base64' : 'png'} result</Text>
-          </TouchableOpacity>
-        </View>
-        <View>
-          <TouchableOpacity
-            style={[s.btn, { backgroundColor: '#2296F3' }]}
-            onPress={() => this._pickImage('image')}
-          >
-            <Text style={s.text}>pick image</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[s.btn, { backgroundColor: '#2296F3' }]}
-            onPress={() => this._pickImage('mark')}
-          >
-            <Text style={s.text}>pick an image for mark</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={s.op}>
-          <TouchableOpacity
-            style={s.btn}
-            onPress={this._mark}
-          >
-            <Text style={s.text} >mark</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={s.btn}
-            onPress={() => this._markByPosition(Position.topLeft)}
-          >
-            <Text style={s.text} >TopLeft</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={s.btn}
-            onPress={() => this._markByPosition(Position.topCenter)}
-          >
-            <Text style={s.text} >topCenter</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={s.btn}
-            onPress={() => this._markByPosition(Position.topRight)}
-          >
-            <Text style={s.text} >topRight</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={s.btn}
-            onPress={() => this._markByPosition(Position.center)}
-          >
-            <Text style={s.text} >Center</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={s.btn}
-            onPress={() => this._markByPosition(Position.bottomLeft)}
-          >
-            <Text style={s.text} >bottomLeft</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={s.btn}
-            onPress={() => this._markByPosition(Position.bottomCenter)}
-          >
-            <Text style={s.text} >bottomCenter</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={s.btn}
-            onPress={() => this._markByPosition(Position.bottomRight)}
-          >
-            <Text style={s.text} >bottomRight</Text>
-          </TouchableOpacity>
-        </View>
-        {
-          !this.state.markImage
-            ? <View style={s.op}>
-              <TouchableOpacity
-                style={s.btnOp}
-                onPress={() => {
-                  this.setState({
-                    useTextShadow: !this.state.useTextShadow
-                  })
-                }}
-              >
-                <Text style={s.text} >textShadow {this.state.useTextShadow ? 'on' : 'off'} </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={s.btnOp}
-                onPress={() => {
-                  this.setState({
-                    useTextBgStyle: !this.state.useTextBgStyle
-                  })
-                }}
-              >
-                <Text style={s.text} >textBg {this.state.useTextBgStyle ? 'on' : 'off'} </Text>
-              </TouchableOpacity>
-              {
-                this.state.useTextBgStyle
-                  ? <TouchableOpacity
-                    style={s.btnOp}
-                    onPress={() => {
-                      this.setState({
-                        textBgStretch: this.state.textBgStretch === 2 ? 0 : this.state.textBgStretch + 1
-                      })
-                    }}
-                  >
-                    <Text style={s.text} >text bg stretch: {this.state.textBgStretch === 0 ? 'fit' : textBgStretch[this.state.textBgStretch]}</Text>
-                  </TouchableOpacity>
-                  : null
-              }
-
-            </View>
-            : null
-        }
-        <View
-          style={{ flex: 1 }}
-        >
+      <View style={{ flex: 1 }}>
+        <ScrollView style={s.container}>
+          <View>
+            <TouchableOpacity
+              style={[s.btn, { backgroundColor: '#FF7043' }]}
+              onPress={this._switchBg}
+            >
+              <Text style={s.text}> use {this.state.base64 ? 'base64' : 'image'} as background</Text>
+            </TouchableOpacity>
+          </View>
+          <View>
+            <TouchableOpacity
+              style={[s.btn, { backgroundColor: '#FF7043' }]}
+              onPress={this._switch}
+            >
+              <Text style={s.text}>switch to mark {this.state.markImage ? 'text' : 'image'}</Text>
+            </TouchableOpacity>
+          </View>
+          <View>
+            <TouchableOpacity
+              style={[s.btn, { backgroundColor: '#FF7043' }]}
+              onPress={this._switchBase64Res}
+            >
+              <Text style={s.text}>export {this.state.saveFormat === ImageFormat.base64 ? 'base64' : 'png'} result</Text>
+            </TouchableOpacity>
+          </View>
+          <View>
+            <TouchableOpacity
+              style={[s.btn, { backgroundColor: '#2296F3' }]}
+              onPress={() => this._pickImage('image')}
+            >
+              <Text style={s.text}>pick image</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[s.btn, { backgroundColor: '#2296F3' }]}
+              onPress={() => this._pickImage('mark')}
+            >
+              <Text style={s.text}>pick an image for mark</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={s.op}>
+            <TouchableOpacity
+              style={s.btn}
+              onPress={this._mark}
+            >
+              <Text style={s.text} >mark</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={s.btn}
+              onPress={() => this._markByPosition(Position.topLeft)}
+            >
+              <Text style={s.text} >TopLeft</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={s.btn}
+              onPress={() => this._markByPosition(Position.topCenter)}
+            >
+              <Text style={s.text} >topCenter</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={s.btn}
+              onPress={() => this._markByPosition(Position.topRight)}
+            >
+              <Text style={s.text} >topRight</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={s.btn}
+              onPress={() => this._markByPosition(Position.center)}
+            >
+              <Text style={s.text} >Center</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={s.btn}
+              onPress={() => this._markByPosition(Position.bottomLeft)}
+            >
+              <Text style={s.text} >bottomLeft</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={s.btn}
+              onPress={() => this._markByPosition(Position.bottomCenter)}
+            >
+              <Text style={s.text} >bottomCenter</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={s.btn}
+              onPress={() => this._markByPosition(Position.bottomRight)}
+            >
+              <Text style={s.text} >bottomRight</Text>
+            </TouchableOpacity>
+          </View>
           {
-            this.state.show
-              ? <Image source={{ uri: this.state.uri }} resizeMode='contain' style={s.preview} />
+            !this.state.markImage
+              ? <View style={s.op}>
+                <TouchableOpacity
+                  style={s.btnOp}
+                  onPress={() => {
+                    this.setState({
+                      useTextShadow: !this.state.useTextShadow
+                    })
+                  }}
+                >
+                  <Text style={s.text} >textShadow {this.state.useTextShadow ? 'on' : 'off'} </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={s.btnOp}
+                  onPress={() => {
+                    this.setState({
+                      useTextBgStyle: !this.state.useTextBgStyle
+                    })
+                  }}
+                >
+                  <Text style={s.text} >textBg {this.state.useTextBgStyle ? 'on' : 'off'} </Text>
+                </TouchableOpacity>
+                {
+                  this.state.useTextBgStyle
+                    ? <TouchableOpacity
+                      style={s.btnOp}
+                      onPress={() => {
+                        this.setState({
+                          textBgStretch: this.state.textBgStretch === 2 ? 0 : this.state.textBgStretch + 1
+                        })
+                      }}
+                    >
+                      <Text style={s.text} >text bg stretch: {this.state.textBgStretch === 0 ? 'fit' : textBgStretch[this.state.textBgStretch]}</Text>
+                    </TouchableOpacity>
+                    : null
+                }
+
+              </View>
               : null
           }
-        </View>
-
-      </ScrollView>
+          <View
+            style={{ flex: 1 }}
+          >
+            {
+              this.state.show
+                ? <Image source={{ uri: this.state.uri }} resizeMode='contain' style={s.preview} />
+                : null
+            }
+          </View>
+        </ScrollView>
+        {
+          this.state.loading &&
+          <View style={{
+            position: 'absolute',
+            width,
+            height,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <ActivityIndicator size='large' />
+            <Text style={{ color: 'white' }}>loading...</Text>
+          </View>
+        }
+      </View>
 
     )
   }
 
+  _showLoading = () => {
+    this.setState({
+      loading: true
+    })
+  }
+
   _markByPosition = (type) => {
+    this._showLoading()
     if (this.state.markImage) {
       Marker.markImage({
         src: this.state.image,
@@ -255,7 +275,8 @@ export default class MarkerTest extends React.Component {
       }).then((path) => {
         this.setState({
           uri: this.state.saveFormat === ImageFormat.base64 ? path : Platform.OS === 'android' ? 'file://' + path : path,
-          show: true
+          show: true,
+          loading: false
         })
       }).catch((err) => {
         console.log('====================================')
@@ -290,7 +311,8 @@ export default class MarkerTest extends React.Component {
         .then((path) => {
           this.setState({
             show: true,
-            uri: this.state.saveFormat === ImageFormat.base64 ? path : Platform.OS === 'android' ? 'file://' + path : path
+            uri: this.state.saveFormat === ImageFormat.base64 ? path : Platform.OS === 'android' ? 'file://' + path : path,
+            loading: false
           })
         }).catch((err) => {
           console.log('====================================')
@@ -301,6 +323,7 @@ export default class MarkerTest extends React.Component {
   }
 
   _mark = () => {
+    this._showLoading()
     if (this.state.markImage) {
       Marker.markImage({
         src: this.state.image,
@@ -314,7 +337,8 @@ export default class MarkerTest extends React.Component {
       }).then((path) => {
         this.setState({
           uri: this.state.saveFormat === ImageFormat.base64 ? path : Platform.OS === 'android' ? 'file://' + path : path,
-          show: true
+          show: true,
+          loading: false
         })
       }).catch((err) => {
         console.log('====================================')
@@ -348,7 +372,8 @@ export default class MarkerTest extends React.Component {
       }).then((path) => {
         this.setState({
           show: true,
-          uri: this.state.saveFormat === ImageFormat.base64 ? path : Platform.OS === 'android' ? 'file://' + path : path
+          uri: this.state.saveFormat === ImageFormat.base64 ? path : Platform.OS === 'android' ? 'file://' + path : path,
+          loading: false
         })
       }).catch((err) => {
         console.log('====================================')

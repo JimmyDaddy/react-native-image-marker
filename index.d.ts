@@ -44,6 +44,7 @@ export declare type TextMarkOption = {
     shadowStyle: ShadowLayerStyle;
     textBackgroundStyle: TextBackgroundStyle;
     saveFormat?: ImageFormat;
+    maxSize?: number;
 };
 export declare type ImageMarkOption = {
     src: ImageSourcePropType;
@@ -56,6 +57,7 @@ export declare type ImageMarkOption = {
     position?: Position;
     filename?: string;
     saveFormat?: ImageFormat;
+    maxSize?: number;
 };
 export default class Marker {
     static markText(option: TextMarkOption): Promise<string>;

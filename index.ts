@@ -2,9 +2,8 @@
  * @Author: JimmyDaddy
  * @Date: 2017-09-14 10:40:09
  * @Last Modified by: JimmyDaddy
- * @Last Modified time: 2019-09-29 15:36:11
+ * @Last Modified time: 2019-10-09 16:59:00
  * @Description
- * @flow
  */
 import { NativeModules, Image, ImageSourcePropType } from 'react-native'
 
@@ -67,6 +66,7 @@ export type TextMarkOption = {
   shadowStyle: ShadowLayerStyle,
   textBackgroundStyle: TextBackgroundStyle,
   saveFormat?: ImageFormat,
+  maxSize?: number, // android only see #49 #42
 }
 
 export type ImageMarkOption = {
@@ -83,6 +83,7 @@ export type ImageMarkOption = {
   position?: Position,
   filename?: string,
   saveFormat?: ImageFormat,
+  maxSize?: number, // android only see #49 #42
 }
 
 export default class Marker {
@@ -101,7 +102,8 @@ export default class Marker {
       quality,
       position,
       filename,
-      saveFormat
+      saveFormat,
+      maxSize = 2048,
     } = option
 
     if (!src) {
@@ -133,7 +135,8 @@ export default class Marker {
         scale,
         quality,
         filename,
-        saveFormat
+        saveFormat,
+        maxSize,
       )
     } else {
       return ImageMarker.addTextByPostion(
@@ -148,7 +151,8 @@ export default class Marker {
         scale,
         quality,
         filename,
-        saveFormat
+        saveFormat,
+        maxSize
       )
     }
   }
@@ -164,7 +168,8 @@ export default class Marker {
       quality,
       position,
       filename,
-      saveFormat
+      saveFormat,
+      maxSize = 2048,
     } = option
 
     if (!src) {
@@ -200,7 +205,8 @@ export default class Marker {
         markerScale,
         quality,
         filename,
-        saveFormat
+        saveFormat,
+        maxSize
       )
     } else {
       return ImageMarker.markWithImageByPosition(
@@ -211,7 +217,8 @@ export default class Marker {
         markerScale,
         quality,
         filename,
-        saveFormat
+        saveFormat,
+        maxSize
       )
     }
   }

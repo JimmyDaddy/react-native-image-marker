@@ -404,6 +404,7 @@ RCT_EXPORT_METHOD(addText: (nonnull NSDictionary *)src
                   quality:(NSInteger) quality
                   filename: (NSString *)filename
                   saveFormat: (NSString *)saveFormat
+                  maxSize:(NSInteger)maxSize
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
@@ -450,6 +451,7 @@ RCT_EXPORT_METHOD(addTextByPostion: (nonnull NSDictionary *)src
                   quality:(NSInteger) quality
                   filename: (NSString *)filename
                   saveFormat: (NSString *)saveFormat
+                  maxSize:(NSInteger)maxSize
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
@@ -498,6 +500,7 @@ RCT_EXPORT_METHOD(markWithImage: (nonnull NSDictionary *)src
                   quality:(NSInteger) quality
                   filename: (NSString *)filename
                   saveFormat: (NSString *)saveFormat
+                  maxSize:(NSInteger)maxSize
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
@@ -548,6 +551,7 @@ RCT_EXPORT_METHOD(markWithImageByPosition: (nonnull NSDictionary *)src
                   quality: (NSInteger) quality
                   filename: (NSString *)filename
                   saveFormat: (NSString *)saveFormat
+                  maxSize:(NSInteger)maxSize
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {

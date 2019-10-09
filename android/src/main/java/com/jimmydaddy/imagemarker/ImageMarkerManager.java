@@ -7,7 +7,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
-import android.support.annotation.Nullable;
 import android.text.Layout;
 import android.text.StaticLayout;
 import android.text.TextPaint;
@@ -22,22 +21,24 @@ import com.facebook.imagepipeline.core.ImagePipelineConfig;
 import com.facebook.imagepipeline.datasource.BaseBitmapDataSubscriber;
 import com.facebook.imagepipeline.image.CloseableImage;
 import com.facebook.imagepipeline.request.ImageRequest;
-import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.views.text.ReactFontManager;
+import com.facebook.react.modules.systeminfo.ReactNativeVersion;
 
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.URI;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+
+import static com.facebook.drawee.backends.pipeline.Fresco.getImagePipeline;
+import static com.jimmydaddy.imagemarker.Utils.getStringSafe;
 import static com.jimmydaddy.imagemarker.Utils.transRGBColor;
 
 
@@ -93,6 +94,16 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
         return saveFormat != null && (saveFormat.equals("png") || saveFormat.equals("PNG"))? Bitmap.CompressFormat.PNG : Bitmap.CompressFormat.JPEG;
     }
 
+    private void setMaxBitmapSize(int maxSize) {
+        String major = getStringSafe("major", ReactNativeVersion.VERSION);
+        String minor = getStringSafe("minor", ReactNativeVersion.VERSION);
+        String patch = getStringSafe("patch", ReactNativeVersion.VERSION);
+        if (Integer.valueOf(major) >= 0 && Integer.valueOf(minor) >= 60 && Integer.valueOf(patch) >= 0 ) {
+            ImagePipelineConfig config = ImagePipelineConfig.newBuilder(this.context).experiment().setMaxBitmapSize(maxSize).build();
+            Fresco.initialize(this.context, config);
+        }
+    }
+
     private void markImage(
             final Bitmap bg,
             ReadableMap source,
@@ -110,17 +121,16 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
 //            String resultFile = generateCacheFilePathForMarker(imgSavePath, filename);
 
             final String uri = source.getString(PROP_ICON_URI);
-
             Log.d(IMAGE_MARKER_TAG, uri);
             Log.d(IMAGE_MARKER_TAG, source.toString());
 
             if (isFrescoImg(uri)) {
                 ImageRequest imageRequest = ImageRequest.fromUri(uri);
-                DataSource<CloseableReference<CloseableImage>> dataSource = Fresco.getImagePipeline().fetchDecodedImage(imageRequest, null);
+                DataSource<CloseableReference<CloseableImage>> dataSource = Fresco.getImagePipeline().fetchDecodedImage(imageRequest, context);
                 Executor executor = Executors.newSingleThreadExecutor();
                 dataSource.subscribe(new BaseBitmapDataSubscriber() {
                     @Override
-                    public void onNewResultImpl(@Nullable Bitmap bitmap) {
+                    public void onNewResultImpl(Bitmap bitmap) {
                         if (bitmap != null) {
                             Bitmap mark = Utils.scaleBitmap(bitmap, markerScale);
 
@@ -473,6 +483,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             final int quality,
             String filename,
             final String saveFormat,
+            Integer maxSize,
             final Promise promise
     ) {
         if (TextUtils.isEmpty(mark)){
@@ -493,11 +504,14 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
 
             if (isFrescoImg(uri)) {
                 ImageRequest imageRequest = ImageRequest.fromUri(uri);
-                DataSource<CloseableReference<CloseableImage>> dataSource = Fresco.getImagePipeline().fetchDecodedImage(imageRequest, null);
+                if (null != maxSize && maxSize > 0) {
+                    setMaxBitmapSize(maxSize);
+                }
+                DataSource<CloseableReference<CloseableImage>> dataSource = getImagePipeline().fetchDecodedImage(imageRequest, null);
                 Executor executor = Executors.newSingleThreadExecutor();
                 dataSource.subscribe(new BaseBitmapDataSubscriber() {
                     @Override
-                    public void onNewResultImpl(@Nullable Bitmap bitmap) {
+                    public void onNewResultImpl(Bitmap bitmap) {
                         if (bitmap != null) {
                             Bitmap bg = Utils.scaleBitmap(bitmap, scale);
                             markImageByText(bg, mark, null, color, fontName, fontSize, myShadowStyle, myTextBackgroundStyle, X, Y, quality, dest, saveFormat, promise);
@@ -565,6 +579,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             final Integer quality,
             String filename,
             final String saveFormat,
+            Integer maxSize,
             final Promise promise
     ) {
         if (TextUtils.isEmpty(mark)){
@@ -585,11 +600,14 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
 
             if (isFrescoImg(uri)) {
                 ImageRequest imageRequest = ImageRequest.fromUri(uri);
-                DataSource<CloseableReference<CloseableImage>> dataSource = Fresco.getImagePipeline().fetchDecodedImage(imageRequest, null);
+                if (null != maxSize && maxSize > 0) {
+                    setMaxBitmapSize(maxSize);
+                }
+                DataSource<CloseableReference<CloseableImage>> dataSource = getImagePipeline().fetchDecodedImage(imageRequest, null);
                 Executor executor = Executors.newSingleThreadExecutor();
                 dataSource.subscribe(new BaseBitmapDataSubscriber() {
                     @Override
-                    public void onNewResultImpl(@Nullable Bitmap bitmap) {
+                    public void onNewResultImpl(Bitmap bitmap) {
                         if (bitmap != null) {
                             Bitmap bg = Utils.scaleBitmap(bitmap, scale);
                             markImageByText(bg, mark, position, color, fontName, fontSize, myShadowStyle, myTextBackgroundStyle, null, null, quality, dest, saveFormat, promise);
@@ -634,7 +652,18 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void markWithImage(ReadableMap src, final ReadableMap marker, final Integer X, final Integer Y, final Float scale, final Float markerScale, final int quality, String filename, final String saveFormat, final Promise promise ) {
+    public void markWithImage(
+            ReadableMap src,
+            final ReadableMap marker,
+            final Integer X,
+            final Integer Y,
+            final Float scale,
+            final Float markerScale,
+            final int quality,
+            String filename,
+            final String saveFormat,
+            Integer maxSize,
+            final Promise promise ) {
 
 
         try {
@@ -651,11 +680,14 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
 
             if (isFrescoImg(uri)) {
                 ImageRequest imageRequest = ImageRequest.fromUri(uri);
-                DataSource<CloseableReference<CloseableImage>> dataSource = Fresco.getImagePipeline().fetchDecodedImage(imageRequest, null);
+                if (null != maxSize && maxSize > 0) {
+                    setMaxBitmapSize(maxSize);
+                }
+                DataSource<CloseableReference<CloseableImage>> dataSource = getImagePipeline().fetchDecodedImage(imageRequest, null);
                 Executor executor = Executors.newSingleThreadExecutor();
                 dataSource.subscribe(new BaseBitmapDataSubscriber() {
                     @Override
-                    public void onNewResultImpl(@Nullable Bitmap bitmap) {
+                    public void onNewResultImpl(Bitmap bitmap) {
                         if (bitmap != null) {
                             Bitmap bg = Utils.scaleBitmap(bitmap, scale);
                             markImage(bg, marker, null, X, Y, markerScale, quality, dest, saveFormat, promise);
@@ -701,7 +733,17 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void markWithImageByPosition(ReadableMap src, final ReadableMap marker, final String position, final Float scale, final Float markerScale, final int quality, final String filename, final String saveFormat, final Promise promise ) {
+    public void markWithImageByPosition(
+            ReadableMap src,
+            final ReadableMap marker,
+            final String position,
+            final Float scale,
+            final Float markerScale,
+            final int quality,
+            final String filename,
+            final String saveFormat,
+            Integer maxSize,
+            final Promise promise ) {
 
         try {
 
@@ -714,11 +756,14 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
 
             if (isFrescoImg(uri)) {
                 ImageRequest imageRequest = ImageRequest.fromUri(uri);
-                DataSource<CloseableReference<CloseableImage>> dataSource = Fresco.getImagePipeline().fetchDecodedImage(imageRequest, null);
+                if (null != maxSize && maxSize > 0) {
+                    setMaxBitmapSize(maxSize);
+                }
+                DataSource<CloseableReference<CloseableImage>> dataSource = getImagePipeline().fetchDecodedImage(imageRequest, null);
                 Executor executor = Executors.newSingleThreadExecutor();
                 dataSource.subscribe(new BaseBitmapDataSubscriber() {
                     @Override
-                    public void onNewResultImpl(@Nullable Bitmap bitmap) {
+                    public void onNewResultImpl(Bitmap bitmap) {
                         if (bitmap != null) {
                             Bitmap bg = Utils.scaleBitmap(bitmap, scale);
                             markImage(bg, marker, position, 0, 0, markerScale, quality, dest, saveFormat, promise);

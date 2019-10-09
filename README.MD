@@ -18,6 +18,8 @@ Add text or icon watermark to your images
 
 ## Installation
 
+**RN version < 0.60.0 please use v0.5.2 or older**
+
 * npm install react-native-image-marker --save
 * react-native link
 
@@ -54,6 +56,7 @@ pod 'RNImageMarker', :path => '../node_modules/react-native-image-marker'
 |`filename` | set filename for the result |
 |`saveFormat`| `png` `jpg` `base64` |
 |`textBackgroundStyle` | text background style |
+|`maxSize`| default value is 2048, **need RN version >= 0.60.0**,  fresco `MaxBitmapSize` [`ImagePipelineConfig.Builder.experiment().setMaxBitmapSize()`](https://github.com/facebook/fresco/blob/08ca5f40cc0b60b4db16d15e45552cafeae39ccb/imagepipeline/src/main/java/com/facebook/imagepipeline/core/ImagePipelineExperiments.java#L282), see [#49](https://github.com/JimmyDaddy/react-native-image-marker/issues/49#issuecomment-535303838)|
 
 ```typescript
 
@@ -83,6 +86,7 @@ export type TextMarkOption = {
   shadowStyle: ShadowLayerStyle,
   textBackgroundStyle: TextBackgroundStyle,
   saveFormat?: ImageFormat,
+  maxSize?: number, // android only see #49 #42
 }
 ```
 
@@ -100,6 +104,7 @@ export type TextMarkOption = {
 |`quality`| image qulaity |
 |`filename` | set filename for the result |
 |`saveFormat`| `png`  `jpg` `base64`,  default is `jpg` |
+|`maxSize`| default value is 2048, **need RN version >= 0.60.0**,  fresco `MaxBitmapSize` [`ImagePipelineConfig.Builder.experiment().setMaxBitmapSize()`](https://github.com/facebook/fresco/blob/08ca5f40cc0b60b4db16d15e45552cafeae39ccb/imagepipeline/src/main/java/com/facebook/imagepipeline/core/ImagePipelineExperiments.java#L282), see [#49](https://github.com/JimmyDaddy/react-native-image-marker/issues/49#issuecomment-535303838)|
 
 ```typescript
 export type ImageMarkOption = {
@@ -116,6 +121,7 @@ export type ImageMarkOption = {
   position?: Position,
   filename?: string,
   saveFormat?: ImageFormat,
+  maxSize?: number, // android only see #49 #42
 }
 ```
 
@@ -324,6 +330,15 @@ AhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcI` },
 })
 
 ```
+
+## Extra about Android decoding image
+
+This library use [Fresco](https://github.com/facebook/fresco) to decode image on Android. You can set your configuration through [Configure Fresco in React Native](https://medium.com/in-the-hudl/configure-fresco-in-react-native-28c2bc7dcc4d)
+
+* RN version < 0.60.0 use fresco v1.10.0
+* RN version >= 0.60.0 use fresco v2.0.0 +
+
+[see](https://github.com/facebook/react-native/blob/8cf9505bd27c5dade33b17cc177fa5ef1613dbcd/ReactAndroid/gradle.properties#L15)
 
 ## Save image to file
 

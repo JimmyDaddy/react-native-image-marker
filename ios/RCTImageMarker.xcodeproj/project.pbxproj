@@ -110,6 +110,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 			);
 			mainGroup = 38E5F5E31D3DCDBF00AA7E71;
@@ -227,6 +228,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				HEADER_SEARCH_PATHS = (
+					"$(BUILT_PRODUCTS_DIR)/usr/local/include",
 					"$(inherited)",
 					"$(SRCROOT)/../../react-native/Libraries/**",
 					"$(SRCROOT)/../../react-native/React/**",
@@ -243,6 +245,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				HEADER_SEARCH_PATHS = (
+					"$(BUILT_PRODUCTS_DIR)/usr/local/include",
 					"$(inherited)",
 					"$(SRCROOT)/../../react-native/Libraries/**",
 					"$(SRCROOT)/../../react-native/React/**",

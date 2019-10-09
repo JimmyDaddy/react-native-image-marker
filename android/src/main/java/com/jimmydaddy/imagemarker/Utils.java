@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Map;
 
 /**
  * Created by jimmydaddy on 2018/4/8.
@@ -184,6 +185,11 @@ public class Utils {
         } else {
             return color;
         }
+    }
+
+    public static String getStringSafe(String key, Map<String, Object> map) {
+        Object obj = map.get(key);
+        return (obj != null) ? obj.toString() : null;
     }
 
 //
