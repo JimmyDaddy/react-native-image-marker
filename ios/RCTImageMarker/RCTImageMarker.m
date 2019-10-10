@@ -409,7 +409,7 @@ RCT_EXPORT_METHOD(addText: (nonnull NSDictionary *)src
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
     //这里之前是loadImageOrDataWithTag
-    [_bridge.imageLoader loadImageWithURLRequest:[RCTConvert NSURLRequest:src] callback:^(NSError *error, UIImage *image) {
+    [[self.bridge moduleForName:@"ImageLoader"] loadImageWithURLRequest:[RCTConvert NSURLRequest:src] callback:^(NSError *error, UIImage *image) {
         if (error || image == nil) {
             image = [[UIImage alloc] initWithContentsOfFile:src[@"uri"]];
             if (image == nil) {
@@ -456,7 +456,7 @@ RCT_EXPORT_METHOD(addTextByPostion: (nonnull NSDictionary *)src
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
     //这里之前是loadImageOrDataWithTag
-    [_bridge.imageLoader loadImageWithURLRequest:[RCTConvert NSURLRequest:src] callback:^(NSError *error, UIImage *image) {
+    [[self.bridge moduleForName:@"ImageLoader"] loadImageWithURLRequest:[RCTConvert NSURLRequest:src] callback:^(NSError *error, UIImage *image) {
         if (error || image == nil) {
             NSString* path = src[@"uri"];
             if ([path hasPrefix:@"data:"] || [path hasPrefix:@"file:"]) {
@@ -505,7 +505,7 @@ RCT_EXPORT_METHOD(markWithImage: (nonnull NSDictionary *)src
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
     //这里之前是loadImageOrDataWithTag
-    [_bridge.imageLoader loadImageWithURLRequest:[RCTConvert NSURLRequest:src] callback:^(NSError *error, UIImage *image) {
+    [[self.bridge moduleForName:@"ImageLoader"] loadImageWithURLRequest:[RCTConvert NSURLRequest:src] callback:^(NSError *error, UIImage *image) {
         if (error || image == nil) {
             NSString* path = src[@"uri"];
             image = [[UIImage alloc] initWithContentsOfFile:path];
@@ -517,7 +517,7 @@ RCT_EXPORT_METHOD(markWithImage: (nonnull NSDictionary *)src
             }
         }
         
-        [_bridge.imageLoader loadImageWithURLRequest:[RCTConvert NSURLRequest:markerSrc] callback:^(NSError *markerError, UIImage *marker) {
+        [[self.bridge moduleForName:@"ImageLoader"] loadImageWithURLRequest:[RCTConvert NSURLRequest:markerSrc] callback:^(NSError *markerError, UIImage *marker) {
             if (markerError || marker == nil) {
                 NSString* path = markerSrc[@"uri"];
                 marker = [[UIImage alloc] initWithContentsOfFile:path];
@@ -556,7 +556,7 @@ RCT_EXPORT_METHOD(markWithImageByPosition: (nonnull NSDictionary *)src
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
     //这里之前是loadImageOrDataWithTag
-    [_bridge.imageLoader loadImageWithURLRequest:[RCTConvert NSURLRequest:src] callback:^(NSError *error, UIImage *image) {
+    [[self.bridge moduleForName:@"ImageLoader"] loadImageWithURLRequest:[RCTConvert NSURLRequest:src] callback:^(NSError *error, UIImage *image) {
         if (error || image == nil) {
             NSString* path = src[@"uri"];
             image = [[UIImage alloc] initWithContentsOfFile:path];
@@ -570,7 +570,7 @@ RCT_EXPORT_METHOD(markWithImageByPosition: (nonnull NSDictionary *)src
         
         //        RCTImageSource *imageSource = [RCTConvert RCTImageSource:markerPath];
         
-        [_bridge.imageLoader loadImageWithURLRequest:[RCTConvert NSURLRequest:markerSrc] callback:^(NSError *markerError, UIImage *marker) {
+        [[self.bridge moduleForName:@"ImageLoader"] loadImageWithURLRequest:[RCTConvert NSURLRequest:markerSrc] callback:^(NSError *markerError, UIImage *marker) {
             if (markerError || marker == nil) {
                 NSString* path = markerSrc[@"uri"];
                 marker = [[UIImage alloc] initWithContentsOfFile:path];
