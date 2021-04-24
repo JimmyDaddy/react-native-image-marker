@@ -15,6 +15,7 @@
 		A11BA555234DC45F00A45936 /* libYoga.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A17EB31A234C8D4100674A06 /* libYoga.a */; };
 		A14A02E622112EFC001E2004 /* libstdc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = A14A02B622112EFC001E2004 /* libstdc++.tbd */; };
 		A14A02E8221131C4001E2004 /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A14A02E7221131C4001E2004 /* JavaScriptCore.framework */; };
+		A1FBECAC2572C6C20000C769 /* File.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1FBECAB2572C6C20000C769 /* File.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -116,13 +117,6 @@
 			remoteGlobalIDString = 2587428C4C747F2446D2DBAC0D994930;
 			remoteInfo = "react-native-image-picker";
 		};
-		A17EB303234C8D4100674A06 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = A17EB2CD234C8D4100674A06 /* Pods.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 572C7FCCEA46AE7429B4EE4D190FBDCC;
-			remoteInfo = "React-RCTActionSheet";
-		};
 		A17EB305234C8D4100674A06 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = A17EB2CD234C8D4100674A06 /* Pods.xcodeproj */;
@@ -200,6 +194,76 @@
 			remoteGlobalIDString = 6D637D7110624C2AE6035C8EBA4ABCBA;
 			remoteInfo = Yoga;
 		};
+		A1FBECD72572C6C30000C769 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A17EB2CD234C8D4100674A06 /* Pods.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 6CBEFE4F9E22AFDC6347A739BB35FF8C;
+			remoteInfo = CocoaAsyncSocket;
+		};
+		A1FBECD92572C6C30000C769 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A17EB2CD234C8D4100674A06 /* Pods.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = E93F701CA8EB196D77AE99E094D873E4;
+			remoteInfo = Flipper;
+		};
+		A1FBECDB2572C6C30000C769 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A17EB2CD234C8D4100674A06 /* Pods.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = AC12C7E29555A7CFDDEF1EDB5BC2F3DA;
+			remoteInfo = "Flipper-DoubleConversion";
+		};
+		A1FBECDD2572C6C30000C769 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A17EB2CD234C8D4100674A06 /* Pods.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 99D5CD245388DC76AAEF6E1E351A90ED;
+			remoteInfo = "Flipper-Folly";
+		};
+		A1FBECDF2572C6C30000C769 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A17EB2CD234C8D4100674A06 /* Pods.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = E00BE2A3146698E81A8F9D00E8F93A6C;
+			remoteInfo = "Flipper-Glog";
+		};
+		A1FBECE12572C6C30000C769 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A17EB2CD234C8D4100674A06 /* Pods.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = ACBB7F62B267CC7C9BBBAE41DE94743B;
+			remoteInfo = "Flipper-PeerTalk";
+		};
+		A1FBECE32572C6C30000C769 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A17EB2CD234C8D4100674A06 /* Pods.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = FFDC7746794AB17CFB7150820479DF40;
+			remoteInfo = "Flipper-RSocket";
+		};
+		A1FBECE52572C6C30000C769 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A17EB2CD234C8D4100674A06 /* Pods.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 65234B3E668A42D9137B2C7AB051EE37;
+			remoteInfo = FlipperKit;
+		};
+		A1FBECE72572C6C30000C769 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A17EB2CD234C8D4100674A06 /* Pods.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = FE6D792B6328AAF68E46924D7F466631;
+			remoteInfo = "React-Core-AccessibilityResources";
+		};
+		A1FBECE92572C6C30000C769 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A17EB2CD234C8D4100674A06 /* Pods.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 5B3357A1CE67C0BF4AE31936A1BE6888;
+			remoteInfo = YogaKit;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -223,6 +287,8 @@
 		A14A02B622112EFC001E2004 /* libstdc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libstdc++.tbd"; path = "usr/lib/libstdc++.tbd"; sourceTree = SDKROOT; };
 		A14A02E7221131C4001E2004 /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		A17EB2CD234C8D4100674A06 /* Pods.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Pods.xcodeproj; path = Pods/Pods.xcodeproj; sourceTree = "<group>"; };
+		A1FBECAA2572C6C20000C769 /* markerExample-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "markerExample-Bridging-Header.h"; sourceTree = "<group>"; };
+		A1FBECAB2572C6C20000C769 /* File.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = File.swift; sourceTree = "<group>"; };
 		C6D82152CCC0428D9D98BCC1 /* libRCTImageMarker.a */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = archive.ar; path = libRCTImageMarker.a; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -268,6 +334,8 @@
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				13B07FB11A68108700A75B9A /* LaunchScreen.xib */,
 				13B07FB71A68108700A75B9A /* main.m */,
+				A1FBECAB2572C6C20000C769 /* File.swift */,
+				A1FBECAA2572C6C20000C769 /* markerExample-Bridging-Header.h */,
 			);
 			name = markerExample;
 			sourceTree = "<group>";
@@ -346,20 +414,28 @@
 		A17EB2CE234C8D4100674A06 /* Products */ = {
 			isa = PBXGroup;
 			children = (
+				A1FBECD82572C6C30000C769 /* libCocoaAsyncSocket.a */,
 				A17EB2EA234C8D4100674A06 /* libDoubleConversion.a */,
 				A17EB2EC234C8D4100674A06 /* libFBReactNativeSpec.a */,
+				A1FBECDA2572C6C30000C769 /* libFlipper.a */,
+				A1FBECDC2572C6C30000C769 /* libFlipper-DoubleConversion.a */,
+				A1FBECDE2572C6C30000C769 /* libFlipper-Folly.a */,
+				A1FBECE02572C6C30000C769 /* libFlipper-Glog.a */,
+				A1FBECE22572C6C30000C769 /* libFlipper-PeerTalk.a */,
+				A1FBECE42572C6C30000C769 /* libFlipper-RSocket.a */,
+				A1FBECE62572C6C30000C769 /* libFlipperKit.a */,
 				A17EB2EE234C8D4100674A06 /* libFolly.a */,
 				A17EB2F0234C8D4100674A06 /* libglog.a */,
 				A17EB2F2234C8D4100674A06 /* libPods-markerExample.a */,
 				A17EB2F4234C8D4100674A06 /* libRCTTypeSafety.a */,
 				A17EB2F6234C8D4100674A06 /* libReact-Core.a */,
+				A1FBECE82572C6C30000C769 /* AccessibilityResources.bundle */,
 				A17EB2F8234C8D4100674A06 /* libReact-CoreModules.a */,
 				A17EB2FA234C8D4100674A06 /* libReact-cxxreact.a */,
 				A17EB2FC234C8D4100674A06 /* libReact-jsi.a */,
 				A17EB2FE234C8D4100674A06 /* libReact-jsiexecutor.a */,
 				A17EB300234C8D4100674A06 /* libReact-jsinspector.a */,
 				A17EB302234C8D4100674A06 /* libreact-native-image-picker.a */,
-				A17EB304234C8D4100674A06 /* libReact-RCTActionSheet.a */,
 				A17EB306234C8D4100674A06 /* libReact-RCTAnimation.a */,
 				A17EB308234C8D4100674A06 /* libReact-RCTBlob.a */,
 				A17EB30A234C8D4100674A06 /* libReact-RCTImage.a */,
@@ -371,6 +447,7 @@
 				A17EB316234C8D4100674A06 /* libReactCommon.a */,
 				A17EB318234C8D4100674A06 /* libRNImageMarker.a */,
 				A17EB31A234C8D4100674A06 /* libYoga.a */,
+				A1FBECEA2572C6C30000C769 /* libYogaKit.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -406,6 +483,11 @@
 			attributes = {
 				LastUpgradeCheck = 940;
 				ORGANIZATIONNAME = Facebook;
+				TargetAttributes = {
+					13B07F861A680F5B00A75B9A = {
+						LastSwiftMigration = 1220;
+					};
+				};
 			};
 			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "markerExample" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -535,13 +617,6 @@
 			remoteRef = A17EB301234C8D4100674A06 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		A17EB304234C8D4100674A06 /* libReact-RCTActionSheet.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = "libReact-RCTActionSheet.a";
-			remoteRef = A17EB303234C8D4100674A06 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
 		A17EB306234C8D4100674A06 /* libReact-RCTAnimation.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
@@ -619,6 +694,76 @@
 			remoteRef = A17EB319234C8D4100674A06 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		A1FBECD82572C6C30000C769 /* libCocoaAsyncSocket.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libCocoaAsyncSocket.a;
+			remoteRef = A1FBECD72572C6C30000C769 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		A1FBECDA2572C6C30000C769 /* libFlipper.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libFlipper.a;
+			remoteRef = A1FBECD92572C6C30000C769 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		A1FBECDC2572C6C30000C769 /* libFlipper-DoubleConversion.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libFlipper-DoubleConversion.a";
+			remoteRef = A1FBECDB2572C6C30000C769 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		A1FBECDE2572C6C30000C769 /* libFlipper-Folly.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libFlipper-Folly.a";
+			remoteRef = A1FBECDD2572C6C30000C769 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		A1FBECE02572C6C30000C769 /* libFlipper-Glog.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libFlipper-Glog.a";
+			remoteRef = A1FBECDF2572C6C30000C769 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		A1FBECE22572C6C30000C769 /* libFlipper-PeerTalk.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libFlipper-PeerTalk.a";
+			remoteRef = A1FBECE12572C6C30000C769 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		A1FBECE42572C6C30000C769 /* libFlipper-RSocket.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libFlipper-RSocket.a";
+			remoteRef = A1FBECE32572C6C30000C769 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		A1FBECE62572C6C30000C769 /* libFlipperKit.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libFlipperKit.a;
+			remoteRef = A1FBECE52572C6C30000C769 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		A1FBECE82572C6C30000C769 /* AccessibilityResources.bundle */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = AccessibilityResources.bundle;
+			remoteRef = A1FBECE72572C6C30000C769 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		A1FBECEA2572C6C30000C769 /* libYogaKit.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libYogaKit.a;
+			remoteRef = A1FBECE92572C6C30000C769 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 /* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
@@ -653,19 +798,17 @@
 			buildActionMask = 2147483647;
 			files = (
 			);
-			inputFileListPaths = (
-			);
 			inputPaths = (
-				"${SRCROOT}/Pods/Target Support Files/Pods-markerExample/Pods-markerExample-resources.sh",
+				"${PODS_ROOT}/Target Support Files/Pods-markerExample/Pods-markerExample-resources.sh",
+				"${PODS_CONFIGURATION_BUILD_DIR}/React-Core/AccessibilityResources.bundle",
 			);
 			name = "[CP] Copy Pods Resources";
-			outputFileListPaths = (
-			);
 			outputPaths = (
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/AccessibilityResources.bundle",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-markerExample/Pods-markerExample-resources.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-markerExample/Pods-markerExample-resources.sh\"\n";
 		};
 		F7D5E5DB590F83303B8EFA58 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -693,6 +836,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				13B07FBC1A68108700A75B9A /* AppDelegate.m in Sources */,
+				A1FBECAC2572C6C20000C769 /* File.swift in Sources */,
 				13B07FC11A68108700A75B9A /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -717,6 +861,7 @@
 			baseConfigurationReference = 1AE380C8E5513ECB91156224 /* Pods-markerExample.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = NO;
 				HEADER_SEARCH_PATHS = (
@@ -733,6 +878,9 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = markerExample;
+				SWIFT_OBJC_BRIDGING_HEADER = "markerExample-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Debug;
@@ -742,6 +890,7 @@
 			baseConfigurationReference = 326C9AEC9E4D7A80C2CC81AB /* Pods-markerExample.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -757,6 +906,8 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = markerExample;
+				SWIFT_OBJC_BRIDGING_HEADER = "markerExample-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Release;
