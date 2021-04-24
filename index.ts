@@ -2,10 +2,10 @@
  * @Author: JimmyDaddy
  * @Date: 2017-09-14 10:40:09
  * @Last Modified by: JimmyDaddy
- * @Last Modified time: 2019-10-09 16:59:00
+ * @Last Modified time: 2021-04-24 18:07:18
  * @Description
  */
-import { NativeModules, Image, ImageSourcePropType } from 'react-native'
+import { NativeModules, Image } from 'react-native'
 
 const { ImageMarker } = NativeModules
 const { resolveAssetSource } = Image
@@ -48,7 +48,8 @@ export type TextBackgroundStyle = {
 
 export type TextMarkOption = {
   // image src, local image
-  src: ImageSourcePropType,
+  // FIXME: ImageSourcePropType type define bug
+  src: any,
   text: string,
   // if you set position you don't need to set X and Y
   X?: number,
@@ -63,16 +64,17 @@ export type TextMarkOption = {
   quality: number,
   position?: Position,
   filename?: string,
-  shadowStyle: ShadowLayerStyle,
-  textBackgroundStyle: TextBackgroundStyle,
+  shadowStyle?: ShadowLayerStyle,
+  textBackgroundStyle?: TextBackgroundStyle,
   saveFormat?: ImageFormat,
   maxSize?: number, // android only see #49 #42
 }
 
 export type ImageMarkOption = {
   // image src, local image
-  src: ImageSourcePropType,
-  markerSrc: ImageSourcePropType,
+  // FIXME: ImageSourcePropType type define bug
+  src: any,
+  markerSrc: any,
   X?: number,
   Y?: number,
   // marker scale
