@@ -10,15 +10,14 @@
     "hermesvm": "^0.1.1",
     "jsc-android": "^241213.1.0",
     "react": "16.8.1",
-    "react-native": "^0.61.0",
+    "react-native": "^0.63.3",
     "react-native-image-marker": "file:../../",
     "react-native-image-picker": "^1.1.0"
   },
   "devDependencies": {
     "babel-jest": "23.6.0",
     "jest": "23.6.0",
-    "metro-react-native-babel-preset": "0.51.1",
-    "react-test-renderer": "16.6.3"
+    "metro-react-native-babel-preset": "0.51.1"
   },
   "jest": {
     "preset": "react-native"

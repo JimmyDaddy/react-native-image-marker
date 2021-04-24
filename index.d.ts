@@ -1,4 +1,3 @@
-import { ImageSourcePropType } from 'react-native';
 export declare enum Position {
     topLeft = "topLeft",
     topCenter = "topCenter",
@@ -30,7 +29,8 @@ export declare type TextBackgroundStyle = {
     'color': string;
 };
 export declare type TextMarkOption = {
-    src: ImageSourcePropType;
+    // FIXME: ImageSourcePropType type define bug
+    src: any;
     text: string;
     X?: number;
     Y?: number;
@@ -47,8 +47,9 @@ export declare type TextMarkOption = {
     maxSize?: number;
 };
 export declare type ImageMarkOption = {
-    src: ImageSourcePropType;
-    markerSrc: ImageSourcePropType;
+    // FIXME: ImageSourcePropType type define bug
+    src: any;
+    markerSrc: any;
     X?: number;
     Y?: number;
     markerScale: number;
