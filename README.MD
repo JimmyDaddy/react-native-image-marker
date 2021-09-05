@@ -47,7 +47,7 @@ pod 'RNImageMarker', :path => '../node_modules/react-native-image-marker'
 |`position`| text position(`topLeft`,`topRight`,`topCenter`, `center`, `bottomLeft`, `bottomCenter`, `bottomRight`)|
 |`X`|distance from the left, **if you have set `position` yet you don't need to set this property again**|
 |`Y`|distance from the top, **if you have set `position` you don't need to set this property again**|
-|`color`| text color |
+|`color`| text color HEX: #rgba |
 |`fontName`| fontName |
 |`fontSize`| fontSize |
 |`shadowStyle`| text's shadow style: iOS's `NSShadowAttributeName`, Android's `textPaint.shadowLayerStyle` |
@@ -73,7 +73,7 @@ export type TextMarkOption = {
   // if you set position you don't need to set X and Y
   X?: number,
   Y?: number,
-  // eg. '#aacc22'
+  // eg. '#aacc22' '#aacc22af' '#acda' '#acd'
   color: string,
   fontName: string,
   fontSize: number,
@@ -132,7 +132,7 @@ export type ImageMarkOption = {
 |`radius`| blur radius |
 |`dx`| x offset|
 |`dy`| y offset|
-|`color`| shadow color |
+|`color`| shadow color #rgba |
 
 ```typescript
 export type ShadowLayerStyle = {
@@ -152,7 +152,7 @@ export type ShadowLayerStyle = {
 |`paddingX`| padding X |
 |`paddingY`| padding y|
 |`type`| default is fit the text, `stretchX` stretch to fill width, `stretchY` stretch to fill height |
-|`color`| bg color |
+|`color`| bg color #rgba |
 
 ```typescript
 export enum TextBackgroundType {
@@ -178,20 +178,20 @@ import ImageMarker from "react-native-image-marker"
     text: 'text marker', 
     X: 30,
     Y: 30, 
-    color: '#FF0000',
+    color: '#FF0000', // '#ff0000aa' '#f0aa'
     fontName: 'Arial-BoldItalicMT',
     fontSize: 44,
     shadowStyle: {
         dx: 10.5,
         dy: 20.8,
         radius: 20.9,
-        color: '#ff00ff'
+        color: '#ff00ff' // '#ff00ffad'
     },
     textBackgroundStyle: {
         type: 'stretchX',
         paddingX: 10,
         paddingY: 10,
-        color: '#0f0'
+        color: '#0f0' // '#0f0a'
     },
     scale: 1, 
     quality: 100

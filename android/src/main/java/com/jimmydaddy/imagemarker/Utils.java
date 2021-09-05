@@ -182,6 +182,19 @@ public class Utils {
                 fullColor += temp + temp;
             }
             return "#"+fullColor;
+        } if (colorStr.length() == 4) {
+            String alpha = colorStr.substring(3, 4);
+            String hexColor = colorStr.substring(0, 3);
+            String fullColor = alpha + alpha;
+            for (int i = 0; i < hexColor.length(); i++) {
+                String temp = colorStr.substring(i, i + 1);
+                fullColor += temp + temp;
+            }
+            return "#"+fullColor;
+        } if(colorStr.length() == 8) {
+            String alpha = colorStr.substring(6, 8);
+            String hexColor = colorStr.substring(0, 6);
+            return "#" + alpha + hexColor;
         } else {
             return color;
         }

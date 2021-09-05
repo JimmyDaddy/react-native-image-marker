@@ -187,43 +187,44 @@ export default class MarkerTest extends React.Component {
           </View>
           {
             !this.state.markImage
-              ? <View style={s.op}>
-                <TouchableOpacity
-                  style={s.btnOp}
-                  onPress={() => {
-                    this.setState({
-                      useTextShadow: !this.state.useTextShadow
-                    })
-                  }}
-                >
-                  <Text style={s.text} >textShadow {this.state.useTextShadow ? 'on' : 'off'} </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={s.btnOp}
-                  onPress={() => {
-                    this.setState({
-                      useTextBgStyle: !this.state.useTextBgStyle
-                    })
-                  }}
-                >
-                  <Text style={s.text} >textBg {this.state.useTextBgStyle ? 'on' : 'off'} </Text>
-                </TouchableOpacity>
-                {
-                  this.state.useTextBgStyle
-                    ? <TouchableOpacity
-                      style={s.btnOp}
-                      onPress={() => {
-                        this.setState({
-                          textBgStretch: this.state.textBgStretch === 2 ? 0 : this.state.textBgStretch + 1
-                        })
-                      }}
-                    >
-                      <Text style={s.text} >text bg stretch: {this.state.textBgStretch === 0 ? 'fit' : textBgStretch[this.state.textBgStretch]}</Text>
-                    </TouchableOpacity>
-                    : null
-                }
-
-              </View>
+              ? (
+                  <View style={s.op}>
+                  <TouchableOpacity
+                    style={s.btnOp}
+                    onPress={() => {
+                      this.setState({
+                        useTextShadow: !this.state.useTextShadow
+                      })
+                    }}
+                  >
+                    <Text style={s.text} >textShadow {this.state.useTextShadow ? 'on' : 'off'} </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={s.btnOp}
+                    onPress={() => {
+                      this.setState({
+                        useTextBgStyle: !this.state.useTextBgStyle
+                      })
+                    }}
+                  >
+                    <Text style={s.text} >textBg {this.state.useTextBgStyle ? 'on' : 'off'} </Text>
+                  </TouchableOpacity>
+                  {
+                    this.state.useTextBgStyle
+                      ? <TouchableOpacity
+                        style={s.btnOp}
+                        onPress={() => {
+                          this.setState({
+                            textBgStretch: this.state.textBgStretch === 2 ? 0 : this.state.textBgStretch + 1
+                          })
+                        }}
+                      >
+                        <Text style={s.text} >text bg stretch: {this.state.textBgStretch === 0 ? 'fit' : textBgStretch[this.state.textBgStretch]}</Text>
+                      </TouchableOpacity>
+                      : null
+                  }
+                </View>
+              )
               : null
           }
           <View
@@ -288,7 +289,7 @@ export default class MarkerTest extends React.Component {
         src: this.state.image,
         text: `text marker \n muiltline text`,
         position: type,
-        color: '#FF0000',
+        color: '#FF0000AA',
         fontName: 'Arial-BoldItalicMT',
         fontSize: 44,
         scale: 1,
@@ -303,7 +304,7 @@ export default class MarkerTest extends React.Component {
           type: textBgStretch[this.state.textBgStretch],
           paddingX: 10,
           paddingY: 10,
-          color: '#0f0'
+          color: '#0f0A'
         } : null,
         saveFormat: this.state.saveFormat
       })

@@ -29,16 +29,20 @@ typedef enum{
 
 @implementation RCTConvert(MarkerPosition)
 
-RCT_ENUM_CONVERTER(MarkerPosition,
-                   (@{
-                      @"topLeft" : @(TopLeft),
-                      @"topCenter" : @(TopCenter),
-                      @"topRight" : @(TopRight),
-                      @"bottomLeft": @(BottomLeft),
-                      @"bottomCenter": @(BottomCenter),
-                      @"bottomRight": @(BottomRight),
-                      @"center": @(Center)
-                      }), BottomRight, integerValue)
+RCT_ENUM_CONVERTER(
+    MarkerPosition,
+    (@{
+        @"topLeft" : @(TopLeft),
+        @"topCenter" : @(TopCenter),
+        @"topRight" : @(TopRight),
+        @"bottomLeft": @(BottomLeft),
+        @"bottomCenter": @(BottomCenter),
+        @"bottomRight": @(BottomRight),
+        @"center": @(Center)
+    }),
+    BottomRight,
+    integerValue
+)
 
 @end
 
@@ -104,10 +108,10 @@ UIImage * markerImgWithText(UIImage *image, NSString* text, CGFloat X, CGFloat Y
     UIGraphicsBeginImageContextWithOptions(image.size, NO, scale);
     [image drawInRect:CGRectMake(0, 0, w, h)];
     NSDictionary *attr = @{
-                           NSFontAttributeName: font,   //设置字体
-                           NSForegroundColorAttributeName : color,      //设置字体颜色
-                           NSShadowAttributeName : shadow
-                           };
+        NSFontAttributeName: font,   //设置字体
+        NSForegroundColorAttributeName : color,      //设置字体颜色
+        NSShadowAttributeName : shadow
+    };
     
     CGSize size = [text sizeWithAttributes:attr];
     if (textBackground != nil) {
@@ -119,7 +123,7 @@ UIImage * markerImgWithText(UIImage *image, NSString* text, CGFloat X, CGFloat Y
             CGContextFillRect(context, CGRectMake(X - textBackground.paddingX, 0, size.width + 2*textBackground.paddingX, h));
         } else {
             CGContextFillRect(context, CGRectMake(X - textBackground.paddingX, Y - textBackground.paddingY,
-                                                  size.width + 2*textBackground.paddingX, size.height + 2*textBackground.paddingY));
+                size.width + 2*textBackground.paddingX, size.height + 2*textBackground.paddingY));
         }
     }
     CGRect rect = (CGRect){ CGPointMake(X, Y), size };
@@ -228,12 +232,12 @@ UIImage * markeImageWithImageByPostion(UIImage *image, UIImage * waterImage, Mar
 UIImage * markerImgWithTextByPostion    (UIImage *image, NSString* text, MarkerPosition position, UIColor* color, UIFont* font, CGFloat scale, NSShadow* shadow, TextBackground* textBackground){
     int w = image.size.width;
     int h = image.size.height;
-      
+
     NSDictionary *attr = @{
-                           NSFontAttributeName: font,   //设置字体
-                           NSForegroundColorAttributeName : color,      //设置字体颜色
-                           NSShadowAttributeName : shadow
-                           };
+        NSFontAttributeName: font,   //设置字体
+        NSForegroundColorAttributeName : color,      //设置字体颜色
+        NSShadowAttributeName : shadow
+        };
     
     CGSize size = [text sizeWithAttributes:attr];
     
@@ -296,32 +300,57 @@ UIImage * markerImgWithTextByPostion    (UIImage *image, NSString* text, MarkerP
 }
 
 - (UIColor *)getColor:(NSString *)hexColor {
-    NSString *string = [hexColor substringFromIndex:1];//去掉#号
+    NSString *cString = [[hexColor stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] uppercaseString];
+
+    if ([cString hasPrefix:@"0X"])
+        cString = [cString substringFromIndex:2];
+    if ([cString hasPrefix:@"#"])
+        cString = [cString substringFromIndex:1];
+    if ([cString length] != 8 && [cString length]!=6 && [cString length] != 3 && [cString length] != 4)
+        return [UIColor clearColor];
+
     unsigned int red,green,blue;
     NSRange range;
-    
-    bool hex6 = [string length] == 6? YES : NO;
+
+    CGFloat alpha = 1.0f;
+    if([cString length] == 8) {
+        NSString *aString = [cString substringWithRange:NSMakeRange(6, 2)];
+        unsigned int a;
+        [[NSScanner scannerWithString:aString] scanHexInt:&a];
+        alpha = (float)a / 255.0f;
+        cString =  [cString substringWithRange:NSMakeRange(0, 6)];
+    } else if([cString length] == 4) {
+        NSString *aString = [cString substringWithRange:NSMakeRange(3, 1)];
+        unsigned int a;
+        [[NSScanner scannerWithString:aString] scanHexInt:&a];
+        alpha = (float)a / 15.0f;
+        cString =  [cString substringWithRange:NSMakeRange(0, 3)];
+    }
+
+    bool hex6 = [cString length] == 6? YES : NO;
     if (hex6 == YES) {
         range.length = 2;
     } else {
         range.length = 1;
     }
-    
+
     /* 调用下面的方法处理字符串 */
     range.location = 0;
-    NSString* redStr = [string substringWithRange:range];
+    NSString* redStr = [cString substringWithRange:range];
     red = [self stringToInt:redStr];
-    
+
     range.location = hex6 == YES? 2 : 1;
-    NSString* greenStr = [string substringWithRange:range];
+    NSString* greenStr = [cString substringWithRange:range];
     green = [self stringToInt:greenStr];
-    
+
     range.location = hex6 == YES? 4 : 2;
-    NSString* blueStr = [string substringWithRange:range];
+    NSString* blueStr = [cString substringWithRange:range];
     blue = [self stringToInt:blueStr];
-    
-    return [UIColor colorWithRed:(float)(red/255.0f) green:(float)(green / 255.0f) blue:(float)(blue / 255.0f) alpha:1.0f];
+
+    return [UIColor colorWithRed:(float)(red/255.0f) green:(float)(green / 255.0f) blue:(float)(blue / 255.0f) alpha: alpha];
 }
+
+
 - (int)stringToInt:(NSString *)string {
     
     if ([string length] == 1) {
@@ -353,8 +382,6 @@ UIImage * markerImgWithTextByPostion    (UIImage *image, NSString* text, MarkerP
             int_ch2 = hex_char2 - 87; /* a 的Ascll - 97 */
         return int_ch1+int_ch2;
     }
-    
-   
 }
 
 -(NSShadow*)getShadowStyle:(NSDictionary *) shadowStyle
@@ -392,21 +419,21 @@ UIImage * markerImgWithTextByPostion    (UIImage *image, NSString* text, MarkerP
 }
 
 RCT_EXPORT_METHOD(addText: (nonnull NSDictionary *)src
-                  text:(nonnull NSString*)text
-                  X:(CGFloat)X
-                  Y:(CGFloat)Y
-                  color:(NSString*)color
-                  fontName:(NSString*)fontName
-                  fontSize:(CGFloat)fontSize
-                  shadowStyle:(nullable NSDictionary *)shadowStyle
-                  textBackgroundStyle:(nullable NSDictionary *)textBackgroundStyle
-                  scale:(CGFloat)scale
-                  quality:(NSInteger) quality
-                  filename: (NSString *)filename
-                  saveFormat: (NSString *)saveFormat
-                  maxSize:(NSInteger)maxSize
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+    text:(nonnull NSString*)text
+    X:(CGFloat)X
+    Y:(CGFloat)Y
+    color:(NSString*)color
+    fontName:(NSString*)fontName
+    fontSize:(CGFloat)fontSize
+    shadowStyle:(nullable NSDictionary *)shadowStyle
+    textBackgroundStyle:(nullable NSDictionary *)textBackgroundStyle
+    scale:(CGFloat)scale
+    quality:(NSInteger) quality
+    filename: (NSString *)filename
+    saveFormat: (NSString *)saveFormat
+    maxSize:(NSInteger)maxSize
+    resolver:(RCTPromiseResolveBlock)resolve
+    rejecter:(RCTPromiseRejectBlock)reject)
 {
     //这里之前是loadImageOrDataWithTag
     [[self.bridge moduleForName:@"ImageLoader"] loadImageWithURLRequest:[RCTConvert NSURLRequest:src] callback:^(NSError *error, UIImage *image) {
@@ -440,21 +467,21 @@ RCT_EXPORT_METHOD(addText: (nonnull NSDictionary *)src
 }
 
 RCT_EXPORT_METHOD(addTextByPostion: (nonnull NSDictionary *)src
-                  text:(nonnull NSString*)text
-                  position:(MarkerPosition)position
-                  color:(NSString*)color
-                  fontName:(NSString*)fontName
-                  fontSize:(CGFloat)fontSize
-                  shadowStyle:(NSDictionary *)shadowStyle
-                  textBackgroundStyle:(NSDictionary *)textBackgroundStyle
-                  scale:(CGFloat)scale
-                  quality:(NSInteger) quality
-                  filename: (NSString *)filename
-                  saveFormat: (NSString *)saveFormat
-                  maxSize:(NSInteger)maxSize
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
-{
+    text:(nonnull NSString*)text
+    position:(MarkerPosition)position
+    color:(NSString*)color
+    fontName:(NSString*)fontName
+    fontSize:(CGFloat)fontSize
+    shadowStyle:(NSDictionary *)shadowStyle
+    textBackgroundStyle:(NSDictionary *)textBackgroundStyle
+    scale:(CGFloat)scale
+    quality:(NSInteger) quality
+    filename: (NSString *)filename
+    saveFormat: (NSString *)saveFormat
+    maxSize:(NSInteger)maxSize
+    resolver:(RCTPromiseResolveBlock)resolve
+    rejecter:(RCTPromiseRejectBlock)reject
+){
     //这里之前是loadImageOrDataWithTag
     [[self.bridge moduleForName:@"ImageLoader"] loadImageWithURLRequest:[RCTConvert NSURLRequest:src] callback:^(NSError *error, UIImage *image) {
         if (error || image == nil) {
@@ -492,17 +519,17 @@ RCT_EXPORT_METHOD(addTextByPostion: (nonnull NSDictionary *)src
 
 
 RCT_EXPORT_METHOD(markWithImage: (nonnull NSDictionary *)src
-                  markImagePath: (nonnull NSDictionary *)markerSrc
-                  X:(CGFloat)X
-                  Y:(CGFloat)Y
-                  scale:(CGFloat)scale
-                  markerScale: (CGFloat) markerScale
-                  quality:(NSInteger) quality
-                  filename: (NSString *)filename
-                  saveFormat: (NSString *)saveFormat
-                  maxSize:(NSInteger)maxSize
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+    markImagePath: (nonnull NSDictionary *)markerSrc
+    X:(CGFloat)X
+    Y:(CGFloat)Y
+    scale:(CGFloat)scale
+    markerScale: (CGFloat) markerScale
+    quality:(NSInteger) quality
+    filename: (NSString *)filename
+    saveFormat: (NSString *)saveFormat
+    maxSize:(NSInteger)maxSize
+    resolver:(RCTPromiseResolveBlock)resolve
+    rejecter:(RCTPromiseRejectBlock)reject)
 {
     //这里之前是loadImageOrDataWithTag
     [[self.bridge moduleForName:@"ImageLoader"] loadImageWithURLRequest:[RCTConvert NSURLRequest:src] callback:^(NSError *error, UIImage *image) {
@@ -544,16 +571,16 @@ RCT_EXPORT_METHOD(markWithImage: (nonnull NSDictionary *)src
 }
 
 RCT_EXPORT_METHOD(markWithImageByPosition: (nonnull NSDictionary *)src
-                  markImagePath: (nonnull NSDictionary *)markerSrc
-                  position:(MarkerPosition)position
-                  scale:(CGFloat)scale
-                  markerScale:(CGFloat)markerScale
-                  quality: (NSInteger) quality
-                  filename: (NSString *)filename
-                  saveFormat: (NSString *)saveFormat
-                  maxSize:(NSInteger)maxSize
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+    markImagePath: (nonnull NSDictionary *)markerSrc
+    position:(MarkerPosition)position
+    scale:(CGFloat)scale
+    markerScale:(CGFloat)markerScale
+    quality: (NSInteger) quality
+    filename: (NSString *)filename
+    saveFormat: (NSString *)saveFormat
+    maxSize:(NSInteger)maxSize
+    resolver:(RCTPromiseResolveBlock)resolve
+    rejecter:(RCTPromiseRejectBlock)reject)
 {
     //这里之前是loadImageOrDataWithTag
     [[self.bridge moduleForName:@"ImageLoader"] loadImageWithURLRequest:[RCTConvert NSURLRequest:src] callback:^(NSError *error, UIImage *image) {
