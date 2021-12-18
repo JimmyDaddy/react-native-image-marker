@@ -42,6 +42,8 @@ pod 'RNImageMarker', :path => '../node_modules/react-native-image-marker'
 |`src`|image url |
 |`text`|the text you want to mark with|
 |`position`| text position(`topLeft`,`topRight`,`topCenter`, `center`, `bottomLeft`, `bottomCenter`, `bottomRight`)|
+|`offsetX`| add offset X in position|
+|`offsetY`| add offset Y in position|
 |`X`|distance from the left, **if you have set `position` yet you don't need to set this property again**|
 |`Y`|distance from the top, **if you have set `position` you don't need to set this property again**|
 |`color`| text color HEX: #rgba |
