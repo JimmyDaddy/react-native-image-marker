@@ -254,7 +254,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             } else {
                 bos = new BufferedOutputStream(new FileOutputStream(dest));
 
-//            int quaility = (int) (100 / percent > 80 ? 80 : 100 / percent);
+//            int quality = (int) (100 / percent > 80 ? 80 : 100 / percent);
                 icon.compress(getSaveFormat(saveFormat), quality, bos);
                 bos.flush();
                 bos.close();
@@ -291,6 +291,8 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
      * @param fontSize
      * @param X
      * @param Y
+     * @param offsetX
+     * @param offsetY
      * @param quality
      * @param dest
      * @param promise
@@ -306,6 +308,8 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             TextBackgroundStyle textBackgroundStyle,
             Integer X,
             Integer Y,
+            Integer offsetX,
+            Integer offsetY,
             int quality,
             String dest,
             String saveFormat,
@@ -371,25 +375,25 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             }
 
             int margin = 20;
-            float x = margin;
-            float y = margin;
+            float x = margin + offsetX;
+            float y = margin + offsetY;
 
             if (position != null) {
                 if("topCenter".equals(position)) {
-                    x = (width - textWidth)/2;
+                    x = (width - textWidth)/2 + offsetX;
                 } else if("topRight".equals(position)) {
-                    x = width - textWidth - margin;
+                    x = width - textWidth - margin + offsetX;
                 } else if("center".equals(position)) {
-                    x = (width - textWidth) / 2;
-                    y = (height - textHeight) / 2;
+                    x = (width - textWidth) / 2 + offsetX;
+                    y = (height - textHeight) / 2 + offsetY;
                 } else if("bottomLeft".equals(position)) {
-                    y = height - textHeight - margin;
+                    y = height - textHeight - margin + offsetY;
                 } else if("bottomCenter".equals(position)) {
-                    x = (width - textWidth) / 2;
-                    y = (height - textHeight);
+                    x = (width - textWidth) / 2 + offsetX;
+                    y = (height - textHeight) + offsetY;
                 } else if("bottomRight".equals(position)) {
-                    x = width - textWidth - margin;
-                    y = height - textHeight - margin;
+                    x = width - textWidth - margin + offsetX;
+                    y = height - textHeight - margin + offsetY;
                 }
             } else {
                 if (null != X) {
@@ -463,6 +467,8 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
      * @param mark
      * @param X
      * @param Y
+     * @param offsetX
+     * @param offsetY
      * @param color
      * @param fontName
      * @param fontSize
@@ -474,6 +480,8 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
             final String mark,
             final Integer X,
             final Integer Y,
+            final Integer offsetX,
+            final Integer offsetY,
             final String color,
             final String fontName,
             final Integer fontSize,
@@ -514,7 +522,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
                     public void onNewResultImpl(Bitmap bitmap) {
                         if (bitmap != null) {
                             Bitmap bg = Utils.scaleBitmap(bitmap, scale);
-                            markImageByText(bg, mark, null, color, fontName, fontSize, myShadowStyle, myTextBackgroundStyle, X, Y, quality, dest, saveFormat, promise);
+                            markImageByText(bg, mark, null, color, fontName, fontSize, myShadowStyle, myTextBackgroundStyle, X, Y, offsetX, offsetY, quality, dest, saveFormat, promise);
                         } else {
                             promise.reject( "marker error","Can't retrieve the file from the src: " + uri);
                         }
@@ -545,7 +553,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
                         bitmap.recycle();
                         System.gc();
                     }
-                    markImageByText(bg, mark, null, color, fontName, fontSize, myShadowStyle, myTextBackgroundStyle, X, Y, quality, dest, saveFormat, promise);
+                    markImageByText(bg, mark, null, color, fontName, fontSize, myShadowStyle, myTextBackgroundStyle, X, Y, offsetX, offsetY, quality, dest, saveFormat, promise);
                 }
             }
         } catch (Exception e) {
@@ -560,16 +568,20 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
      * @param src
      * @param mark
      * @param position
+     * @param offsetX
+     * @param offsetY
      * @param color
      * @param fontName
      * @param fontSize
      * @param promise
      */
     @ReactMethod
-    public void addTextByPostion(
+    public void addTextByPosition(
             ReadableMap src,
             final String mark,
             final String position,
+            final Integer offsetX,
+            final Integer offsetY,
             final String color,
             final String fontName,
             final Integer fontSize,
@@ -610,7 +622,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
                     public void onNewResultImpl(Bitmap bitmap) {
                         if (bitmap != null) {
                             Bitmap bg = Utils.scaleBitmap(bitmap, scale);
-                            markImageByText(bg, mark, position, color, fontName, fontSize, myShadowStyle, myTextBackgroundStyle, null, null, quality, dest, saveFormat, promise);
+                            markImageByText(bg, mark, position, color, fontName, fontSize, myShadowStyle, myTextBackgroundStyle, null, null, offsetX, offsetY, quality, dest, saveFormat, promise);
                         } else {
                             promise.reject( "marker error","Can't retrieve the file from the src: " + uri);
                         }
@@ -641,7 +653,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
                         bitmap.recycle();
                         System.gc();
                     }
-                    markImageByText(bg, mark, position, color, fontName, fontSize, myShadowStyle, myTextBackgroundStyle, null, null, quality, dest, saveFormat, promise);
+                    markImageByText(bg, mark, position, color, fontName, fontSize, myShadowStyle, myTextBackgroundStyle, null, null, offsetX, offsetY, quality, dest, saveFormat, promise);
                 }
             }
         } catch (Exception e) {
@@ -807,8 +819,8 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
         }
     }
 
-    static Position getRectFromPosition(String position, int width, int height, int imageWidth, int imageHeigt){
-        Log.d("marker", "getRectFromPosition: "+position +" width:" +width+" height: "+height + " imageWidth: " + imageHeigt+" imageHeigt:" + imageHeigt);
+    static Position getRectFromPosition(String position, int width, int height, int imageWidth, int imageHeight){
+        Log.d("marker", "getRectFromPosition: "+position +" width:" +width+" height: "+height + " imageWidth: " + imageHeight+" imageHeight:" + imageHeight);
 
         int left = 20;
         int top = 40;
@@ -827,22 +839,22 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
                 break;
             case "center":
                 left = (imageWidth)/2 - width/2;
-                top = (imageHeigt)/2 - height/2;
+                top = (imageHeight)/2 - height/2;
                 pos.setX(left);
                 pos.setY(top);
                 break;
             case "bottomLeft":
-                top = imageHeigt - height;
+                top = imageHeight - height;
                 pos.setY(top-20);
                 break;
             case "bottomRight":
-                top = imageHeigt - height;
+                top = imageHeight - height;
                 left = imageWidth - width - 20;
                 pos.setX(left-20);
                 pos.setY(top-20);
                 break;
             case "bottomCenter":
-                top = imageHeigt - height;
+                top = imageHeight - height;
                 left = (imageWidth)/2 - width/2;
                 pos.setX(left-20);
                 pos.setY(top-20);
