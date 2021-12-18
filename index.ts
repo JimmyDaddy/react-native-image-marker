@@ -134,6 +134,8 @@ export default class Marker {
         text,
         X,
         Y,
+        offsetX,
+        offsetY,
         color,
         fontName,
         fontSize,
