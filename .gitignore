@@ -39,5 +39,5 @@ npm-debug.log
 node_modules
 yarn.lock
 
-index.js
-index.d.ts
+# index.js
+# index.d.ts
