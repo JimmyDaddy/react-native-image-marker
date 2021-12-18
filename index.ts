@@ -5,10 +5,10 @@
  * @Last Modified time: 2021-04-24 18:07:18
  * @Description
  */
-import { NativeModules, Image } from 'react-native'
+import { NativeModules, Image } from 'react-native';
 
-const { ImageMarker } = NativeModules
-const { resolveAssetSource } = Image
+const { ImageMarker } = NativeModules;
+const { resolveAssetSource } = Image;
 
 export enum Position {
   topLeft = 'topLeft',
@@ -17,12 +17,12 @@ export enum Position {
   bottomLeft = 'bottomLeft',
   bottomCenter = 'bottomCenter',
   bottomRight = 'bottomRight',
-  center = 'center'
+  center = 'center',
 }
 
 export enum TextBackgroundType {
   stretchX = 'stretchX',
-  stretchY = 'stretchY'
+  stretchY = 'stretchY',
 }
 
 export enum ImageFormat {
@@ -31,70 +31,75 @@ export enum ImageFormat {
   base64 = 'base64',
 }
 
-
 export type ShadowLayerStyle = {
-  'dx': number,
-  'dy': number,
-  'radius': number,
-  'color': string
-}
+  dx: number;
+  dy: number;
+  radius: number;
+  color: string;
+};
 
 export type TextBackgroundStyle = {
-  'paddingX': number,
-  'paddingY': number,
-  'type': TextBackgroundType,
-  'color': string
-}
+  paddingX: number;
+  paddingY: number;
+  type: TextBackgroundType;
+  color: string;
+};
 
 export type TextMarkOption = {
   // image src, local image
   // FIXME: ImageSourcePropType type define bug
-  src: any,
-  text: string,
+  src: any;
+  text: string;
   // if you set position you don't need to set X and Y
-  X?: number,
-  Y?: number,
+  X?: number;
+  Y?: number;
+  // offset the position from x,y
+  offsetX: number;
+  offsetY: number;
   // eg. '#aacc22'
-  color: string,
-  fontName: string,
-  fontSize: number,
+  color: string;
+  fontName: string;
+  fontSize: number;
   // scale image
-  scale: number,
+  scale: number;
   // image quality
-  quality: number,
-  position?: Position,
-  filename?: string,
-  shadowStyle?: ShadowLayerStyle,
-  textBackgroundStyle?: TextBackgroundStyle,
-  saveFormat?: ImageFormat,
-  maxSize?: number, // android only see #49 #42
-}
+  quality: number;
+  position?: Position;
+  filename?: string;
+  shadowStyle?: ShadowLayerStyle;
+  textBackgroundStyle?: TextBackgroundStyle;
+  saveFormat?: ImageFormat;
+  maxSize?: number; // android only see #49 #42
+};
 
 export type ImageMarkOption = {
   // image src, local image
   // FIXME: ImageSourcePropType type define bug
-  src: any,
-  markerSrc: any,
-  X?: number,
-  Y?: number,
+  src: any;
+  markerSrc: any;
+  X?: number;
+  Y?: number;
+
   // marker scale
-  markerScale: number,
+  markerScale: number;
   // image scale
-  scale: number,
-  quality: number,
-  position?: Position,
-  filename?: string,
-  saveFormat?: ImageFormat,
-  maxSize?: number, // android only see #49 #42
-}
+  scale: number;
+  quality: number;
+  position?: Position;
+  filename?: string;
+  saveFormat?: ImageFormat;
+  maxSize?: number; // android only see #49 #42
+};
 
 export default class Marker {
-  static markText (option: TextMarkOption): Promise<string> {
+  static markText(option: TextMarkOption): Promise<string> {
     const {
       src,
       text,
       X,
       Y,
+      offsetX = 0,
+      offsetY = 0,
       color,
       fontName,
       fontSize,
@@ -106,22 +111,22 @@ export default class Marker {
       filename,
       saveFormat,
       maxSize = 2048,
-    } = option
+    } = option;
 
     if (!src) {
-      throw new Error('please set image!')
+      throw new Error('please set image!');
     }
 
-    let srcObj: any = resolveAssetSource(src)
+    let srcObj: any = resolveAssetSource(src);
     if (!srcObj) {
       srcObj = {
         uri: src,
-        __packager_asset: false
-      }
+        __packager_asset: false,
+      };
     }
 
-    let mShadowStyle = shadowStyle || {}
-    let mTextBackgroundStyle = textBackgroundStyle || {}
+    let mShadowStyle = shadowStyle || {};
+    let mTextBackgroundStyle = textBackgroundStyle || {};
 
     if (!position) {
       return ImageMarker.addText(
@@ -138,13 +143,15 @@ export default class Marker {
         quality,
         filename,
         saveFormat,
-        maxSize,
-      )
+        maxSize
+      );
     } else {
-      return ImageMarker.addTextByPostion(
+      return ImageMarker.addTextByPosition(
         srcObj,
         text,
         position,
+        offsetX,
+        offsetY,
         color,
         fontName,
         fontSize,
@@ -155,11 +162,11 @@ export default class Marker {
         filename,
         saveFormat,
         maxSize
-      )
+      );
     }
   }
 
-  static markImage (option: ImageMarkOption): Promise<string> {
+  static markImage(option: ImageMarkOption): Promise<string> {
     const {
       src,
       markerSrc,
@@ -172,29 +179,29 @@ export default class Marker {
       filename,
       saveFormat,
       maxSize = 2048,
-    } = option
+    } = option;
 
     if (!src) {
-      throw new Error('please set image!')
+      throw new Error('please set image!');
     }
     if (!markerSrc) {
-      throw new Error('please set mark image!')
+      throw new Error('please set mark image!');
     }
 
-    let srcObj: any = resolveAssetSource(src)
+    let srcObj: any = resolveAssetSource(src);
     if (!srcObj) {
       srcObj = {
         uri: src,
-        __packager_asset: false
-      }
+        __packager_asset: false,
+      };
     }
 
-    let markerObj: any = resolveAssetSource(markerSrc)
+    let markerObj: any = resolveAssetSource(markerSrc);
     if (!markerObj) {
       markerObj = {
         uri: markerSrc,
-        __packager_asset: false
-      }
+        __packager_asset: false,
+      };
     }
 
     if (!position) {
@@ -209,7 +216,7 @@ export default class Marker {
         filename,
         saveFormat,
         maxSize
-      )
+      );
     } else {
       return ImageMarker.markWithImageByPosition(
         srcObj,
@@ -221,7 +228,7 @@ export default class Marker {
         filename,
         saveFormat,
         maxSize
-      )
+      );
     }
   }
 }
