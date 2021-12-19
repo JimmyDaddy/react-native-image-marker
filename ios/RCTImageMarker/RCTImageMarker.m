@@ -229,7 +229,7 @@ UIImage * markeImageWithImageByPostion(UIImage *image, UIImage * waterImage, Mar
 }
 
 
-UIImage * markerImgWithTextByPostion    (UIImage *image, NSString* text, MarkerPosition position, UIColor* color, UIFont* font, CGFloat scale, NSShadow* shadow, TextBackground* textBackground){
+UIImage * markerImgWithTextByPosition    (UIImage *image, NSString* text, MarkerPosition position, int offsetX, int OffsetY, UIColor* color, UIFont* font, CGFloat scale, NSShadow* shadow, TextBackground* textBackground){
     int w = image.size.width;
     int h = image.size.height;
 
@@ -278,6 +278,10 @@ UIImage * markerImgWithTextByPostion    (UIImage *image, NSString* text, MarkerP
             
     }
 
+    // add offset
+    posX+= offsetX;
+    posY+= OffsetY;
+    
     if (textBackground != nil) {        
         CGContextRef context = UIGraphicsGetCurrentContext();
         CGContextSetFillColorWithColor(context, textBackground.colorBg.CGColor);
@@ -466,9 +470,11 @@ RCT_EXPORT_METHOD(addText: (nonnull NSDictionary *)src
     }];
 }
 
-RCT_EXPORT_METHOD(addTextByPostion: (nonnull NSDictionary *)src
+RCT_EXPORT_METHOD(addTextByPosition: (nonnull NSDictionary *)src
     text:(nonnull NSString*)text
     position:(MarkerPosition)position
+    offsetX: (NSInteger*)offsetX
+    offsetY: (NSInteger*)offsetY
     color:(NSString*)color
     fontName:(NSString*)fontName
     fontSize:(CGFloat)fontSize
@@ -504,7 +510,7 @@ RCT_EXPORT_METHOD(addTextByPostion: (nonnull NSDictionary *)src
         NSShadow* shadow = [self getShadowStyle: shadowStyle];
         TextBackground* textBackground = [self getTextBackgroundStyle: textBackgroundStyle];
 
-        UIImage * scaledImage = markerImgWithTextByPostion(image, text, position, uiColor, font, scale, shadow, textBackground);
+        UIImage * scaledImage = markerImgWithTextByPosition(image, text, position, offsetX, offsetY, uiColor, font, scale, shadow, textBackground);
         if (scaledImage == nil) {
             NSLog(@"Can't mark the image");
             reject(@"error",@"Can't mark the image.", error);
