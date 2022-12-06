@@ -49,7 +49,7 @@ pod 'RNImageMarker', :path => '../node_modules/react-native-image-marker'
 |`fontSize`| fontSize |
 |`shadowStyle`| text's shadow style: iOS's `NSShadowAttributeName`, Android's `textPaint.shadowLayerStyle` |
 |`scale`| scale image |
-|`quality`| image qulaity |
+|`quality`| image quality |
 |`filename` | set filename for the result |
 |`saveFormat`| `png` `jpg` `base64` |
 |`textBackgroundStyle` | text background style |
