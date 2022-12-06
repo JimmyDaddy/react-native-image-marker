@@ -170,7 +170,7 @@ import ImageMarker from "react-native-image-marker"
  this.setState({
     loading: true
  })
- Marker.markText({
+ ImageMarker.markText({
     src: img.uri,
     text: 'text marker', 
     X: 30,
@@ -210,7 +210,7 @@ import ImageMarker from "react-native-image-marker"
 this.setState({
     loading: true
 })
-Marker.markText({
+ImageMarker.markText({
     src: img.uri,
     text: 'text marker', 
     position: 'topLeft', 
@@ -241,7 +241,7 @@ this.setState({
     loading: true
 })
 
-Marker.markImage({
+ImageMarker.markImage({
     src: backGroundUri, 
     markerSrc: iconUri, // icon uri
     X: 100, // left
@@ -263,7 +263,7 @@ Marker.markImage({
     })
 })
 
-Marker.markImage({
+ImageMarker.markImage({
     src: backGroundUri, 
     markerSrc: iconUri, 
     position: 'topLeft',  // topLeft, topCenter,topRight, bottomLeft, bottomCenter , bottomRight, center
@@ -284,7 +284,7 @@ Marker.markImage({
 })
 
 // you can also add watermark to a photo with static images
-Marker.markImage({
+ImageMarker.markImage({
     src: backGroundUri, 
     markerSrc: require('./icon.png'), 
     position: 'topLeft',  // topLeft, topCenter,topRight, bottomLeft, bottomCenter , bottomRight, center
@@ -304,7 +304,7 @@ Marker.markImage({
     })
 })
 // or base64
-Marker.markImage({
+ImageMarker.markImage({
     src: { uri: `data:img/jpg;base64,/9j/4qqqAQSkZJRgABAQEBLAEsAAD/2wBDAAIBAQEBAQIBAQECAgICAgQDAgICAgUEBAMEBgUGBgYFBgYGBwkIBgcJBwYGCAsICQoKCgoKBggLDAsKDAkKCgr/2wBDAQICAgICAgUDAwUKBwYHCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgr/wAARCAHnAooDASIA
 AhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgddddcI` }, 
     markerSrc: { uri: `data:img/jpg;base64,/9j/4AAQSkZJRgABAQEBLAEsAAD/2wBDAAIBAQEBAQIBAQECAgICAgQDAgICAgUEBAMEBgUGBgYFBgYGBwkIBgcJBwYGCAsICQoKCgoKBggLDAsKDAkKCgr/2wBDAQICAgICAgUDAwUKBwYHCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgr/wAARCAHnAooDASIA
