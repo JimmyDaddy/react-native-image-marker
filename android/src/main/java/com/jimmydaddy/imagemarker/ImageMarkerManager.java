@@ -357,7 +357,8 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
                 fSize = fontSize;
             }
 
-            textPaint.setTextSize(fSize);
+            float scale = this.context.getResources().getDisplayMetrics().density;
+            textPaint.setTextSize(fSize * scale);
             textPaint.setColor(Color.parseColor(transRGBColor(color)));
 
             // ALIGN_CENTER, ALIGN_NORMAL, ALIGN_OPPOSITE
