@@ -48,20 +48,21 @@ import static com.jimmydaddy.imagemarker.Utils.transRGBColor;
 
 
 public class ImageMarkerManager extends ReactContextBaseJavaModule {
-    private ReactApplicationContext context;
-    private static final String PROP_ICON_URI = "uri";
-    private static final String IMAGE_MARKER_TAG = "[ImageMarker]";
-    private static final String BASE64 = "base64";
+  private ReactApplicationContext context;
+  private static final String PROP_ICON_URI = "uri";
+  private static final String IMAGE_MARKER_TAG = "[ImageMarker]";
+  private static final String BASE64 = "base64";
+  public static final String NAME = "ImageMarker";
 
 
-    public ImageMarkerManager(ReactApplicationContext reactContext) {
+  public ImageMarkerManager(ReactApplicationContext reactContext) {
         super(reactContext);
         this.context = reactContext;
     }
 
     @Override
     public String getName() {
-        return "ImageMarker";
+        return NAME;
     }
 
     private Resources getResources() {
@@ -410,7 +411,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
                 } else if("stretchY".equals(textBackgroundStyle.type)) {
                     canvas.drawRect(x - textBackgroundStyle.paddingX, 0, x + textWidth + textBackgroundStyle.paddingX, height, paint);
                 } else {
-                    canvas.drawRect(x - textBackgroundStyle.paddingX, y - textBackgroundStyle.paddingY, 
+                    canvas.drawRect(x - textBackgroundStyle.paddingX, y - textBackgroundStyle.paddingY,
                     x + textWidth + textBackgroundStyle.paddingX, y + textHeight + textBackgroundStyle.paddingY, paint);
                 }
             }

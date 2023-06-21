@@ -1,32 +1,28 @@
 {
-  "compileOnSave": true,
   "compilerOptions": {
-    "declaration": true,
-    "target": "es2015",
-    "module": "commonjs",
-    "strict": true,
-    "moduleResolution": "node",
-    "noImplicitAny": false,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "charset": "utf8",
-    "allowJs": false,
-    "pretty": true,
-    "noEmitOnError": false,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "baseUrl": "./",
+    "paths": {
+      "react-native-image-marker": ["./src/index"]
+    },
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
-    "strictPropertyInitialization": false,
+    "esModuleInterop": true,
+    "importsNotUsedAsValues": "error",
+    "forceConsistentCasingInFileNames": true,
+    "jsx": "react",
+    "lib": ["esnext"],
+    "module": "esnext",
+    "moduleResolution": "node",
     "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noImplicitUseStrict": false,
+    "noStrictGenericChecks": false,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "resolveJsonModule": true,
     "skipLibCheck": true,
-    "skipDefaultLibCheck": true,
-    "inlineSourceMap": true,
-    "importHelpers": true
-  },
-  "include": ["./**/*.ts"],
-  "exclude": [
-    "node_modules*",
-    "test"
-  ]
+    "strict": true,
+    "target": "esnext"
+  }
 }

@@ -1,6 +1,4 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.jimmydaddy.imagemarker">
-
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+          package="com.jimmydaddy.imagemarker">
 
 </manifest>
