@@ -52,13 +52,13 @@ export type TextMarkOption = {
   X?: number;
   Y?: number;
   // eg. '#aacc22'
-  color: string;
-  fontName: string;
-  fontSize: number;
+  color?: string;
+  fontName?: string;
+  fontSize?: number;
   // scale image
-  scale: number;
+  scale?: number;
   // image quality
-  quality: number;
+  quality?: number;
   position?: Position;
   filename?: string;
   shadowStyle?: ShadowLayerStyle | null;
@@ -75,10 +75,10 @@ export type ImageMarkOption = {
   X?: number;
   Y?: number;
   // marker scale
-  markerScale: number;
+  markerScale?: number;
   // image scale
-  scale: number;
-  quality: number;
+  scale?: number;
+  quality?: number;
   position?: Position;
   filename?: string;
   saveFormat?: ImageFormat;
@@ -97,24 +97,8 @@ const ImageMarker = NativeModules.ImageMarker
     );
 
 export default class Marker {
-  static markText(option: TextMarkOption): Promise<string> {
-    const {
-      src,
-      text,
-      X,
-      Y,
-      color,
-      fontName,
-      fontSize,
-      shadowStyle,
-      textBackgroundStyle,
-      scale,
-      quality,
-      position,
-      filename,
-      saveFormat,
-      maxSize = 2048,
-    } = option;
+  static markText(options: TextMarkOption): Promise<string> {
+    const { src, position } = options;
 
     if (!src) {
       throw new Error('please set image!');
@@ -128,59 +112,19 @@ export default class Marker {
       };
     }
 
-    let mShadowStyle = shadowStyle || {};
-    let mTextBackgroundStyle = textBackgroundStyle || {};
-
+    options.src = srcObj;
+    // let mShadowStyle = shadowStyle || {};
+    // let mTextBackgroundStyle = textBackgroundStyle || {};
+    options.maxSize = options.maxSize || 2048;
     if (!position) {
-      return ImageMarker.addText(
-        srcObj,
-        text,
-        X,
-        Y,
-        color,
-        fontName,
-        fontSize,
-        mShadowStyle,
-        mTextBackgroundStyle,
-        scale,
-        quality,
-        filename,
-        saveFormat,
-        maxSize
-      );
+      return ImageMarker.addText(options);
     } else {
-      return ImageMarker.addTextByPostion(
-        srcObj,
-        text,
-        position,
-        color,
-        fontName,
-        fontSize,
-        mShadowStyle,
-        mTextBackgroundStyle,
-        scale,
-        quality,
-        filename,
-        saveFormat,
-        maxSize
-      );
+      return ImageMarker.addTextByPosition(options);
     }
   }
 
-  static markImage(option: ImageMarkOption): Promise<string> {
-    const {
-      src,
-      markerSrc,
-      X,
-      Y,
-      markerScale,
-      scale,
-      quality,
-      position,
-      filename,
-      saveFormat,
-      maxSize = 2048,
-    } = option;
+  static markImage(options: ImageMarkOption): Promise<string> {
+    const { src, markerSrc, position } = options;
 
     if (!src) {
       throw new Error('please set image!');
@@ -205,31 +149,14 @@ export default class Marker {
       };
     }
 
+    options.markerSrc = markerObj;
+    options.src = srcObj;
+    options.maxSize = options.maxSize || 2048;
+
     if (!position) {
-      return ImageMarker.markWithImage(
-        srcObj,
-        markerObj,
-        X,
-        Y,
-        scale,
-        markerScale,
-        quality,
-        filename,
-        saveFormat,
-        maxSize
-      );
+      return ImageMarker.markWithImage(options);
     } else {
-      return ImageMarker.markWithImageByPosition(
-        srcObj,
-        markerObj,
-        position,
-        scale,
-        markerScale,
-        quality,
-        filename,
-        saveFormat,
-        maxSize
-      );
+      return ImageMarker.markWithImageByPosition(options);
     }
   }
 }
