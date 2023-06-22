@@ -354,7 +354,7 @@ This library use [Fresco](https://github.com/facebook/fresco) to decode image on
 
 ## Example
 
-[example](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/example/markerExample)
+[example](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/example)
 
 ## Contributing
 
