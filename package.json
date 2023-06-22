@@ -1,6 +1,6 @@
 {
   "name": "react-native-image-marker",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "test",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
