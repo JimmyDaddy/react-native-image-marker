@@ -36,7 +36,6 @@
     };
 }
 
-
 + (CGRect)CGRect:(id)json offset:(NSUInteger)offset
 {
     NSArray *arr = [self NSArray:json];
@@ -58,5 +57,21 @@
         return NULL;
     }
     return [self CGColor:[arr subarrayWithRange:(NSRange){offset, 4}]];
+}
+
++ (MarkerPosition)MarkerPosition: (id _Nullable)value
+{
+    NSDictionary *MyEnumMap = @{
+        @"topLeft": @(TopLeft),
+        @"topRight": @(TopRight),
+        @"topCenter": @(TopCenter),
+        @"center": @(Center),
+        @"bottomCenter": @(BottomCenter),
+        @"bottomLeft": @(BottomLeft),
+        @"bottomRight": @(BottomRight),
+    };
+    MarkerPosition mv = [MyEnumMap[value] integerValue];
+
+    return mv != nil? mv : TopLeft ;
 }
 @end

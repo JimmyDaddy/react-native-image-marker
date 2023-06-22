@@ -10,6 +10,11 @@
 		38E5F5F01D3DCDBF00AA7E71 /* RCTImageMarker.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 38E5F5EF1D3DCDBF00AA7E71 /* RCTImageMarker.h */; };
 		38E5F5F21D3DCDBF00AA7E71 /* RCTImageMarker.m in Sources */ = {isa = PBXBuildFile; fileRef = 38E5F5F11D3DCDBF00AA7E71 /* RCTImageMarker.m */; };
 		38E5F6301D3DDD7100AA7E71 /* RCTConvert+ImageMarker.m in Sources */ = {isa = PBXBuildFile; fileRef = 38E5F62F1D3DDD7100AA7E71 /* RCTConvert+ImageMarker.m */; };
+		A1261EA42A447F4D0043788B /* MarkImageOptions.m in Sources */ = {isa = PBXBuildFile; fileRef = A1261EA02A447F4D0043788B /* MarkImageOptions.m */; };
+		A1261EA52A447F4D0043788B /* MarkTextOptions.m in Sources */ = {isa = PBXBuildFile; fileRef = A1261EA22A447F4D0043788B /* MarkTextOptions.m */; };
+		A198EF4C2A44270E006D3B9A /* TextBackground.m in Sources */ = {isa = PBXBuildFile; fileRef = A198EF4B2A44270E006D3B9A /* TextBackground.m */; };
+		A198EF552A443425006D3B9A /* Utils.m in Sources */ = {isa = PBXBuildFile; fileRef = A198EF542A443425006D3B9A /* Utils.m */; };
+		A198EF572A44347E006D3B9A /* Options.m in Sources */ = {isa = PBXBuildFile; fileRef = A198EF562A44347E006D3B9A /* Options.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -31,6 +36,16 @@
 		38E5F5F11D3DCDBF00AA7E71 /* RCTImageMarker.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RCTImageMarker.m; sourceTree = "<group>"; };
 		38E5F62E1D3DDD2300AA7E71 /* RCTConvert+ImageMarker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "RCTConvert+ImageMarker.h"; sourceTree = "<group>"; };
 		38E5F62F1D3DDD7100AA7E71 /* RCTConvert+ImageMarker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "RCTConvert+ImageMarker.m"; sourceTree = "<group>"; };
+		A1261EA02A447F4D0043788B /* MarkImageOptions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MarkImageOptions.m; sourceTree = "<group>"; };
+		A1261EA12A447F4D0043788B /* MarkTextOptions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MarkTextOptions.h; sourceTree = "<group>"; };
+		A1261EA22A447F4D0043788B /* MarkTextOptions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MarkTextOptions.m; sourceTree = "<group>"; };
+		A1261EA32A447F4D0043788B /* MarkImageOptions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MarkImageOptions.h; sourceTree = "<group>"; };
+		A198EF492A441F5E006D3B9A /* Options.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Options.h; sourceTree = "<group>"; };
+		A198EF4A2A44208C006D3B9A /* TextBackground.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TextBackground.h; sourceTree = "<group>"; };
+		A198EF4B2A44270E006D3B9A /* TextBackground.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TextBackground.m; sourceTree = "<group>"; };
+		A198EF532A443425006D3B9A /* Utils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Utils.h; sourceTree = "<group>"; };
+		A198EF542A443425006D3B9A /* Utils.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Utils.m; sourceTree = "<group>"; };
+		A198EF562A44347E006D3B9A /* Options.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Options.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -67,6 +82,16 @@
 				38E5F5F11D3DCDBF00AA7E71 /* RCTImageMarker.m */,
 				38E5F62E1D3DDD2300AA7E71 /* RCTConvert+ImageMarker.h */,
 				38E5F62F1D3DDD7100AA7E71 /* RCTConvert+ImageMarker.m */,
+				A198EF4A2A44208C006D3B9A /* TextBackground.h */,
+				A198EF4B2A44270E006D3B9A /* TextBackground.m */,
+				A198EF532A443425006D3B9A /* Utils.h */,
+				A198EF542A443425006D3B9A /* Utils.m */,
+				A1261EA32A447F4D0043788B /* MarkImageOptions.h */,
+				A1261EA02A447F4D0043788B /* MarkImageOptions.m */,
+				A1261EA12A447F4D0043788B /* MarkTextOptions.h */,
+				A1261EA22A447F4D0043788B /* MarkTextOptions.m */,
+				A198EF492A441F5E006D3B9A /* Options.h */,
+				A198EF562A44347E006D3B9A /* Options.m */,
 			);
 			path = RCTImageMarker;
 			sourceTree = "<group>";
@@ -129,7 +154,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				38E5F5F21D3DCDBF00AA7E71 /* RCTImageMarker.m in Sources */,
+				A198EF4C2A44270E006D3B9A /* TextBackground.m in Sources */,
+				A198EF572A44347E006D3B9A /* Options.m in Sources */,
 				38E5F6301D3DDD7100AA7E71 /* RCTConvert+ImageMarker.m in Sources */,
+				A198EF552A443425006D3B9A /* Utils.m in Sources */,
+				A1261EA42A447F4D0043788B /* MarkImageOptions.m in Sources */,
+				A1261EA52A447F4D0043788B /* MarkTextOptions.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
