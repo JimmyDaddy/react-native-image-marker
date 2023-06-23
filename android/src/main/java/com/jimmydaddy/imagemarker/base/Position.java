@@ -63,11 +63,13 @@ public class Position {
       case CENTER:
         return new Position((width - textWidth) / 2, (height - textHeight) / 2);
       case BOTTOM_LEFT:
-        return new Position(0, height - textHeight - margin);
+        return new Position(margin, height - textHeight - margin);
       case BOTTOM_CENTER:
         return new Position((width - textWidth) / 2, height - textHeight);
-      default:
+      case BOTTOM_RIGHT:
         return new Position(width - textWidth - margin, height - textHeight - margin);
+      default:
+        return new Position(margin, margin);
     }
   }
 
