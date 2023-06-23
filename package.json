@@ -1,7 +1,7 @@
 {
   "name": "react-native-image-marker",
-  "version": "0.8.0",
-  "description": "test",
+  "version": "0.9.0",
+  "description": "Add text or icon watermark to your images",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
   "types": "lib/typescript/index.d.ts",
