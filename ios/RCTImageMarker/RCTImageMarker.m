@@ -62,15 +62,18 @@ UIImage * markerImgWithText(UIImage *image, MarkTextOptions* opts){
     int w = image.size.width;
     int h = image.size.height;
     
-    UIGraphicsBeginImageContextWithOptions(image.size, NO, opts.scale);
-    [image drawInRect:CGRectMake(0, 0, w, h)];
-    NSDictionary *attr = @{
+    NSDictionary *attributes = @{
         NSFontAttributeName: opts.font,   //设置字体
         NSForegroundColorAttributeName : opts.color,      //设置字体颜色
         NSShadowAttributeName : opts.shadow
     };
+    NSAttributedString *attributedText = [[NSAttributedString alloc] initWithString:opts.text attributes:attributes];
+    CGSize maxSize = CGSizeMake(w, CGFLOAT_MAX); // 最大宽度和高度
+    CGRect textRect = [attributedText boundingRectWithSize:maxSize options:NSStringDrawingUsesLineFragmentOrigin context:nil];
+    CGSize size = textRect.size;
     
-    CGSize size = [opts.text sizeWithAttributes:attr];
+    UIGraphicsBeginImageContextWithOptions(image.size, NO, opts.scale);
+    [image drawInRect:CGRectMake(0, 0, w, h)];
     TextBackground* textBackground = opts.textBackground;
     if (textBackground != nil) {
         CGContextRef context = UIGraphicsGetCurrentContext();
@@ -87,7 +90,7 @@ UIImage * markerImgWithText(UIImage *image, MarkTextOptions* opts){
     CGRect rect = (CGRect){ CGPointMake(opts.X, opts.Y), size };
     
     //    CGRect position = CGRectMake(X, Y, w, h);
-    [opts.text drawInRect:rect withAttributes:attr];
+    [opts.text drawInRect:rect withAttributes:attributes];
     UIImage *aimg = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
     return aimg;

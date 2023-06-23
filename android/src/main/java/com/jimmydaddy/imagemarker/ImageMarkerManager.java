@@ -10,6 +10,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.text.Layout;
 import android.text.StaticLayout;
@@ -222,7 +223,6 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
         System.gc();
       }
 
-
       // 保存
       // canvas.save(Canvas.ALL_SAVE_FLAG);
       canvas.save();
@@ -239,8 +239,6 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
         promise.resolve("data:image/png;base64,".concat(result));
       } else {
         bos = new BufferedOutputStream(new FileOutputStream(dest));
-
-//            int quaility = (int) (100 / percent > 80 ? 80 : 100 / percent);
         icon.compress(getSaveFormat(opts.saveFormat), opts.quality, bos);
         bos.flush();
         bos.close();
@@ -328,9 +326,17 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
       textPaint.setTextSize(fSize);
       textPaint.setColor(Color.parseColor(transRGBColor(opts.color)));
 
+      StaticLayout textLayout;
       // ALIGN_CENTER, ALIGN_NORMAL, ALIGN_OPPOSITE
-      StaticLayout textLayout = new StaticLayout(opts.text, textPaint, canvas.getWidth(), Layout.Alignment.ALIGN_NORMAL, 1.0f, 0.0f, false);
-
+      if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+        StaticLayout.Builder builder = StaticLayout.Builder.obtain(opts.text, 0, opts.text.length(), textPaint, canvas.getWidth());
+        builder.setAlignment(Layout.Alignment.ALIGN_NORMAL);
+        builder.setLineSpacing(0.0f, 1.0f);
+        builder.setIncludePad(false);
+        textLayout = builder.build();
+      } else {
+        textLayout = new StaticLayout(opts.text, textPaint, canvas.getWidth(), Layout.Alignment.ALIGN_NORMAL, 1.0f, 0.0f, false);
+      }
       int textHeight = textLayout.getHeight();
       int textWidth = 0;
       int count = textLayout.getLineCount();
@@ -351,6 +357,9 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
           position.setX(opts.Y);
         }
       }
+
+      // textPaint.setUnderlineText(true);
+//      textPaint.setTextSkewX(-0.25f);
 
       float x = position.X;
       float y = position.Y;
@@ -495,7 +504,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
     ReadableMap opts,
     final Promise promise
   ) {
-    MarkTextOptions markOpts = (MarkTextOptions) Options.checkParams(opts, promise);
+    MarkTextOptions markOpts = MarkTextOptions.checkParams(opts, promise);
     if (null == markOpts) return;
     try {
 
