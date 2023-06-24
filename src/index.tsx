@@ -40,6 +40,11 @@ export interface TextStyle {
   // eg. '#aacc22'
   color?: string;
   fontName?: string;
+  /**
+   * font size
+   * Android use sp
+   * iOS ios pt
+   */
   fontSize?: number;
   shadowStyle?: ShadowLayerStyle | null;
   textBackgroundStyle?: TextBackgroundStyle | null;

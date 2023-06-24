@@ -9,6 +9,7 @@ import android.graphics.Typeface;
 import android.text.Layout;
 import android.text.StaticLayout;
 import android.text.TextPaint;
+import android.util.TypedValue;
 
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReadableMap;
@@ -48,7 +49,8 @@ public class TextOptions {
       textPaint.setTypeface(Typeface.DEFAULT);
     }
 
-    textPaint.setTextSize(style.fontSize);
+    float textSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, style.fontSize, context.getResources().getDisplayMetrics());
+    textPaint.setTextSize(textSize);
     textPaint.setColor(Color.parseColor(transRGBColor(style.color)));
 
     textPaint.setUnderlineText(style.underline);

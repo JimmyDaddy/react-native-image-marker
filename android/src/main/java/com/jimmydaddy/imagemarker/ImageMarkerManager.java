@@ -280,10 +280,6 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
       Paint photoPaint = new Paint();
       //获取跟清晰的图像采样
       photoPaint.setDither(true);
-      // 过滤一些
-      // if (percent > 1) {
-      //    prePhoto = Bitmap.createScaledBitmap(prePhoto, width, height, true);
-      // }
 
       canvas.drawBitmap(bg, 0, 0, photoPaint);
 
@@ -366,7 +362,6 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
           public void onNewResultImpl(Bitmap bitmap) {
             if (bitmap != null) {
               Bitmap bg = Utils.scaleBitmap(bitmap, markOpts.backgroundImage.scale);
-//              markImageByText(bg, mark, null, color, fontName, fontSize, myShadowStyle, myTextBackgroundStyle, X, Y, quality, dest, saveFormat, promise);
 
               markImageByText(bg, dest, markOpts, promise);
 
