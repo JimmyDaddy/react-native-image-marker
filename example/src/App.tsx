@@ -107,40 +107,85 @@ function useViewModel() {
     try {
       if (markImage) {
         path = await Marker.markImage({
-          src: image,
-          markerSrc: marker,
-          position: positionType,
-          scale: 1,
-          markerScale: 1,
+          backgroundImage: {
+            src: image,
+            scale: 1,
+          },
+          watermarkImage: {
+            src: marker,
+            scale: 1,
+          },
+          watermarkPosition: {
+            position: positionType,
+          },
           quality: 100,
           saveFormat: saveFormat,
         });
       } else {
         path = await Marker.markText({
-          src: image,
-          text: `text marker \n muiltline text`,
-          position: positionType,
-          color: '#FF0000AA',
-          fontName: 'Arial-BoldItalicMT',
-          fontSize: 44,
+          backgroundImage: {
+            src: image,
+            scale: 1,
+          },
+          watermarkTexts: [
+            {
+              text: `text marker \n muiltline text`,
+              positionOptions: {
+                position: positionType,
+              },
+              style: {
+                color: '#FF0000AA',
+                fontName: 'Arial-BoldItalicMT',
+                fontSize: 44,
+                shadowStyle: useTextShadow
+                  ? {
+                      dx: 10.5,
+                      dy: 20.8,
+                      radius: 20.9,
+                      color: '#0000FF',
+                    }
+                  : null,
+                textBackgroundStyle: useTextBgStyle
+                  ? {
+                      type: textBgStretch,
+                      paddingX: 10,
+                      paddingY: 10,
+                      color: '#0f0A',
+                    }
+                  : null,
+              },
+            },
+            {
+              text: `text marker normal`,
+              positionOptions: {
+                position: Position.center,
+              },
+              style: {
+                color: '#FF00AA9F',
+                fontName: 'Arial-BoldItalicMT',
+                fontSize: 44,
+                shadowStyle: useTextShadow
+                  ? {
+                      dx: 10.5,
+                      dy: 20.8,
+                      radius: 20.9,
+                      color: '#00EEFF',
+                    }
+                  : null,
+                textBackgroundStyle: useTextBgStyle
+                  ? {
+                      type: textBgStretch,
+                      paddingX: 10,
+                      paddingY: 10,
+                      color: '#0fA',
+                    }
+                  : null,
+              },
+            },
+          ],
+
           scale: 1,
           quality: 100,
-          shadowStyle: useTextShadow
-            ? {
-                dx: 10.5,
-                dy: 20.8,
-                radius: 20.9,
-                color: '#0000FF',
-              }
-            : null,
-          textBackgroundStyle: useTextBgStyle
-            ? {
-                type: textBgStretch,
-                paddingX: 10,
-                paddingY: 10,
-                color: '#0f0A',
-              }
-            : null,
           saveFormat: saveFormat,
         });
       }
@@ -166,41 +211,57 @@ function useViewModel() {
     try {
       if (markImage) {
         path = await Marker.markImage({
-          src: image,
-          markerSrc: marker,
-          X: 100,
-          Y: 150,
-          scale: 1,
-          markerScale: 0.5,
+          backgroundImage: {
+            src: image,
+            scale: 1,
+          },
+          watermarkImage: {
+            src: marker,
+            scale: 0.5,
+          },
+          watermarkPosition: {
+            X: 100,
+            Y: 150,
+          },
           quality: 100,
           saveFormat: saveFormat,
         });
       } else {
         path = await Marker.markText({
-          src: image,
-          text: 'text marker \n muiltline text',
-          X: 30,
-          Y: 30,
-          color: '#FF0',
-          fontName: 'Arial-BoldItalicMT',
-          fontSize: 44,
-          shadowStyle: useTextShadow
-            ? {
-                dx: 10.5,
-                dy: 20.8,
-                radius: 20.9,
-                color: '#0000FF',
-              }
-            : null,
-          textBackgroundStyle: useTextBgStyle
-            ? {
-                type: textBgStretch,
-                paddingX: 10,
-                paddingY: 10,
-                color: '#0f0',
-              }
-            : null,
-          scale: 1,
+          backgroundImage: {
+            src: image,
+            scale: 1,
+          },
+          watermarkTexts: [
+            {
+              text: 'text marker \n muiltline text',
+              positionOptions: {
+                X: 30,
+                Y: 30,
+              },
+              style: {
+                color: '#FF0',
+                fontName: 'Arial-BoldItalicMT',
+                fontSize: 44,
+                shadowStyle: useTextShadow
+                  ? {
+                      dx: 10.5,
+                      dy: 20.8,
+                      radius: 20.9,
+                      color: '#0000FF',
+                    }
+                  : null,
+                textBackgroundStyle: useTextBgStyle
+                  ? {
+                      type: textBgStretch,
+                      paddingX: 10,
+                      paddingY: 10,
+                      color: '#0f0',
+                    }
+                  : null,
+              },
+            },
+          ],
           quality: 100,
           saveFormat: saveFormat,
         });

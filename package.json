@@ -39,7 +39,12 @@
   "keywords": [
     "react-native",
     "ios",
-    "android"
+    "android",
+    "image",
+    "marker",
+    "text",
+    "watermark",
+    "icon"
   ],
   "repository": "https://github.com/JimmyDaddy/react-native-image-marker",
   "author": "jimmydaddy <heyjimmygo@gmail.com> (https://github.com/JimmyDaddy)",
@@ -102,14 +107,15 @@
       "tagName": "v${version}"
     },
     "npm": {
-      "publish": true
+      "publish": false
     },
     "github": {
       "release": true
     },
     "plugins": {
       "@release-it/conventional-changelog": {
-        "preset": "angular"
+        "preset": "angular",
+        "infile": "CHANGELOG.md"
       }
     }
   },

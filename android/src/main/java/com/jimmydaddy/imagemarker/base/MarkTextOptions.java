@@ -1,16 +1,22 @@
 package com.jimmydaddy.imagemarker.base;
 
 import com.facebook.react.bridge.Promise;
+import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 
+import java.lang.reflect.Array;
+
 public class MarkTextOptions extends Options {
-  public String text;
+  public TextOptions[] watermarkTexts;
 
   public MarkTextOptions(ReadableMap options) {
     super(options);
-    text = options.getString("text");
-    if (text == null) {
-      throw new MarkerError(ErrorCode.PARAMS_REQUIRED, "mark text is required");
+    ReadableArray waterMarkTextsMap = options.getArray("watermarkTexts");
+    if (waterMarkTextsMap.size() <= 0) return;
+    watermarkTexts = new TextOptions[waterMarkTextsMap.size()];
+    for (int i = 0; i < waterMarkTextsMap.size(); i++) {
+      ReadableMap textMap = waterMarkTextsMap.getMap(i);
+      watermarkTexts[i] = new TextOptions(textMap);
     }
   }
 

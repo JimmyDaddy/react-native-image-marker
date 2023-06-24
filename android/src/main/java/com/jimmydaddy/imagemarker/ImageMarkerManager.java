@@ -2,19 +2,12 @@ package com.jimmydaddy.imagemarker;
 
 import static com.facebook.drawee.backends.pipeline.Fresco.getImagePipeline;
 import static com.jimmydaddy.imagemarker.base.Utils.getStringSafe;
-import static com.jimmydaddy.imagemarker.base.Utils.transRGBColor;
 
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Rect;
-import android.graphics.Typeface;
-import android.text.Layout;
-import android.text.StaticLayout;
-import android.text.TextPaint;
 import android.util.Base64;
 import android.util.Log;
 
@@ -31,12 +24,11 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.modules.systeminfo.ReactNativeVersion;
-import com.facebook.react.views.text.ReactFontManager;
 import com.jimmydaddy.imagemarker.base.MarkImageOptions;
 import com.jimmydaddy.imagemarker.base.MarkTextOptions;
-import com.jimmydaddy.imagemarker.base.Options;
 import com.jimmydaddy.imagemarker.base.Position;
 import com.jimmydaddy.imagemarker.base.SaveFormat;
+import com.jimmydaddy.imagemarker.base.TextOptions;
 import com.jimmydaddy.imagemarker.base.Utils;
 
 import java.io.BufferedOutputStream;
@@ -116,7 +108,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
     MarkImageOptions opts,
     final Promise promise) {
     try {
-      final String uri = opts.markImageUri;
+      final String uri = opts.watermarkImage.uri;
       Log.d(IMAGE_MARKER_TAG, uri);
 
       if (isFrescoImg(uri)) {
@@ -127,7 +119,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
           @Override
           public void onNewResultImpl(Bitmap bitmap) {
             if (bitmap != null) {
-              Bitmap mark = Utils.scaleBitmap(bitmap, opts.markerScale);
+              Bitmap mark = Utils.scaleBitmap(bitmap, opts.watermarkImage.scale);
 
               markImageByBitmap(bg, mark, dest, opts, promise);
             } else {
@@ -153,10 +145,10 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
           Bitmap bitmap = BitmapFactory.decodeResource(r, resId);
 //                    Bitmap bitmap = BitmapFactory.decodeStream(is);
           Log.d(IMAGE_MARKER_TAG, bitmap.getHeight() + "");
-          Bitmap mark = Utils.scaleBitmap(bitmap, opts.markerScale);
+          Bitmap mark = Utils.scaleBitmap(bitmap, opts.watermarkImage.scale);
           Log.d(IMAGE_MARKER_TAG, mark.getHeight() + "");
 
-          if (bitmap != null && !bitmap.isRecycled() && opts.markerScale != 1.0f) {
+          if (bitmap != null && !bitmap.isRecycled() && opts.watermarkImage.scale != 1.0f) {
             bitmap.recycle();
             System.gc();
           }
@@ -169,7 +161,6 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
       promise.reject("error", e.getMessage(), e);
     }
   }
-
 
   private void markImageByBitmap(
     Bitmap bg,
@@ -186,14 +177,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
       int height = bg.getHeight();
       int width = bg.getWidth();
 
-
       icon = Utils.getBlankBitmap(width, height);
-
-      //初始化画布 绘制的图像到icon上
-      //建立画笔
-      Paint photoPaint = new Paint();
-      //获取跟清晰的图像采样
-      photoPaint.setDither(true);
       //过滤一些
 
 //            if (percent > 1) {
@@ -201,17 +185,21 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
 //            }
       Canvas canvas = new Canvas(icon);
 
-
-      canvas.drawBitmap(bg, 0, 0, photoPaint);
-
+      canvas.save();
+      canvas.rotate(opts.backgroundImage.rotate);
+      canvas.drawBitmap(bg, 0, 0, opts.backgroundImage.applyStyle());
+      canvas.restore();
       // 原图生成 - end
 
-      if (opts.position != null) {
-        Position pos = Position.getImageRectFromPosition(opts.position, marker.getWidth(), marker.getHeight(), width, height);
-        canvas.drawBitmap(marker, pos.getX(), pos.getY(), photoPaint);
+      canvas.save();
+      canvas.rotate(opts.watermarkImage.rotate);
+      if (opts.positionEnum != null) {
+        Position pos = Position.getImageRectFromPosition(opts.positionEnum, marker.getWidth(), marker.getHeight(), width, height);
+        canvas.drawBitmap(marker, pos.getX(), pos.getY(), opts.watermarkImage.applyStyle());
       } else {
-        canvas.drawBitmap(marker, opts.X, opts.Y, photoPaint);
+        canvas.drawBitmap(marker, opts.X, opts.Y, opts.watermarkImage.applyStyle());
       }
+      canvas.restore();
 
       if (bg != null && !bg.isRecycled()) {
         bg.recycle();
@@ -304,84 +292,12 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
         System.gc();
       }
 
-      //设置画笔
-      //建立画笔
-      TextPaint textPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG | Paint.DEV_KERN_TEXT_FLAG);
-      textPaint.setAntiAlias(true);
-      if (null != opts.shadowLayerStyle) {
-        textPaint.setShadowLayer(opts.shadowLayerStyle.radius, opts.shadowLayerStyle.dx, opts.shadowLayerStyle.dy, opts.shadowLayerStyle.color);
+      Paint textPaint;
+      for (TextOptions text : opts.watermarkTexts) {
+        //建立画笔
+        textPaint = text.applyStyle(this.getReactApplicationContext(), canvas, width, height);
+        textPaint.reset();
       }
-      try {
-        //设置字体失败时使用默认字体
-        textPaint.setTypeface(ReactFontManager.getInstance().getTypeface(opts.fontName, Typeface.NORMAL, this.getReactApplicationContext().getAssets()));
-      } catch (Exception e) {
-        textPaint.setTypeface(Typeface.DEFAULT);
-      }
-
-      Integer fSize = 14;
-      if (opts.fontSize != null) {
-        fSize = opts.fontSize;
-      }
-
-      textPaint.setTextSize(fSize);
-      textPaint.setColor(Color.parseColor(transRGBColor(opts.color)));
-
-      StaticLayout textLayout;
-      // ALIGN_CENTER, ALIGN_NORMAL, ALIGN_OPPOSITE
-      if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-        StaticLayout.Builder builder = StaticLayout.Builder.obtain(opts.text, 0, opts.text.length(), textPaint, canvas.getWidth());
-        builder.setAlignment(Layout.Alignment.ALIGN_NORMAL);
-        builder.setLineSpacing(0.0f, 1.0f);
-        builder.setIncludePad(false);
-        textLayout = builder.build();
-      } else {
-        textLayout = new StaticLayout(opts.text, textPaint, canvas.getWidth(), Layout.Alignment.ALIGN_NORMAL, 1.0f, 0.0f, false);
-      }
-      int textHeight = textLayout.getHeight();
-      int textWidth = 0;
-      int count = textLayout.getLineCount();
-      for (int a = 0; a < count; a++) {
-        textWidth = (int) Math.ceil(Math.max(textWidth, textLayout.getLineWidth(a) + textLayout.getLineLeft(a)));
-      }
-
-      int margin = 20;
-
-      Position position = new Position(margin, margin);
-      if (opts.position != null) {
-        position = Position.getTextPosition(opts.position, width, height, textWidth, textHeight);
-      } else {
-        if (null != opts.X) {
-          position.setX(opts.X);
-        }
-        if (null != opts.Y) {
-          position.setX(opts.Y);
-        }
-      }
-
-      // textPaint.setUnderlineText(true);
-//      textPaint.setTextSkewX(-0.25f);
-
-      float x = position.X;
-      float y = position.Y;
-
-      // Draw text background
-      if (null != opts.textBackgroundStyle) {
-        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.LINEAR_TEXT_FLAG);
-        paint.setStyle(Paint.Style.FILL);
-        paint.setColor(opts.textBackgroundStyle.color);
-        if ("stretchX".equals(opts.textBackgroundStyle.type)) {
-          canvas.drawRect(0, y - opts.textBackgroundStyle.paddingY, width, y + textHeight + opts.textBackgroundStyle.paddingY, paint);
-        } else if ("stretchY".equals(opts.textBackgroundStyle.type)) {
-          canvas.drawRect(x - opts.textBackgroundStyle.paddingX, 0, x + textWidth + opts.textBackgroundStyle.paddingX, height, paint);
-        } else {
-          canvas.drawRect(x - opts.textBackgroundStyle.paddingX, y - opts.textBackgroundStyle.paddingY,
-            x + textWidth + opts.textBackgroundStyle.paddingX, y + textHeight + opts.textBackgroundStyle.paddingY, paint);
-        }
-      }
-      canvas.save();
-      canvas.translate(x, y);
-      textLayout.draw(canvas);
-      canvas.restore();
 
       if (dest.equals(BASE64)) {
         ByteArrayOutputStream base64Stream = new ByteArrayOutputStream();
@@ -420,13 +336,12 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
     }
   }
 
-
   /**
    * @param opts
    * @param promise
    */
   @ReactMethod
-  public void addText(
+  public void markWithText(
     ReadableMap opts,
     final Promise promise
   ) {
@@ -434,13 +349,13 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
     if (null == markOpts) return;
     try {
 
-      final String dest = generateCacheFilePathForMarker(markOpts.uri, markOpts.filename, markOpts.saveFormat);
+      final String dest = generateCacheFilePathForMarker(markOpts.backgroundImage.uri, markOpts.filename, markOpts.saveFormat);
 
-      Log.d(IMAGE_MARKER_TAG, "uri: " + markOpts.uri);
-      Log.d(IMAGE_MARKER_TAG, "src: " + opts.getMap("src").toString());
+      Log.d(IMAGE_MARKER_TAG, "uri: " + markOpts.backgroundImage.uri);
+      Log.d(IMAGE_MARKER_TAG, "src: " + markOpts.backgroundImage.src.toString());
 
-      if (isFrescoImg(markOpts.uri)) {
-        ImageRequest imageRequest = ImageRequest.fromUri(markOpts.uri);
+      if (isFrescoImg(markOpts.backgroundImage.uri)) {
+        ImageRequest imageRequest = ImageRequest.fromUri(markOpts.backgroundImage.uri);
         if (markOpts.maxSize > 0) {
           setMaxBitmapSize(markOpts.maxSize);
         }
@@ -450,26 +365,26 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
           @Override
           public void onNewResultImpl(Bitmap bitmap) {
             if (bitmap != null) {
-              Bitmap bg = Utils.scaleBitmap(bitmap, markOpts.scale);
+              Bitmap bg = Utils.scaleBitmap(bitmap, markOpts.backgroundImage.scale);
 //              markImageByText(bg, mark, null, color, fontName, fontSize, myShadowStyle, myTextBackgroundStyle, X, Y, quality, dest, saveFormat, promise);
 
               markImageByText(bg, dest, markOpts, promise);
 
             } else {
-              promise.reject("marker error", "Can't retrieve the file from the src: " + markOpts.uri);
+              promise.reject("marker error", "Can't retrieve the file from the src: " + markOpts.backgroundImage.uri);
             }
           }
 
           @Override
           public void onFailureImpl(DataSource dataSource) {
-            promise.reject("error", "Can't request the image from the uri: " + markOpts.uri, dataSource.getFailureCause());
+            promise.reject("error", "Can't request the image from the uri: " + markOpts.backgroundImage.uri, dataSource.getFailureCause());
           }
         }, executor);
       } else {
-        int resId = getDrawableResourceByName(markOpts.uri);
+        int resId = getDrawableResourceByName(markOpts.backgroundImage.uri);
         if (resId == 0) {
           Log.d(IMAGE_MARKER_TAG, "cannot find res");
-          promise.reject("error", "Can't get resource by the path: " + markOpts.uri);
+          promise.reject("error", "Can't get resource by the path: " + markOpts.backgroundImage.uri);
         } else {
           Log.d(IMAGE_MARKER_TAG, "res：" + resId);
 
@@ -478,83 +393,10 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
           Bitmap bitmap = BitmapFactory.decodeResource(r, resId);
 //                    Bitmap bitmap = BitmapFactory.decodeStream(is);
           Log.d(IMAGE_MARKER_TAG, bitmap.getHeight() + "");
-          Bitmap bg = Utils.scaleBitmap(bitmap, markOpts.scale);
+          Bitmap bg = Utils.scaleBitmap(bitmap, markOpts.backgroundImage.scale);
           Log.d(IMAGE_MARKER_TAG, bg.getHeight() + "");
 
-          if (bitmap != null && !bitmap.isRecycled() && markOpts.scale != 1) {
-            bitmap.recycle();
-            System.gc();
-          }
-          markImageByText(bg, dest, markOpts, promise);
-        }
-      }
-    } catch (Exception e) {
-      Log.d(IMAGE_MARKER_TAG, "error：" + e.getMessage());
-      e.printStackTrace();
-      promise.reject("error", e.getMessage(), e);
-    }
-  }
-
-  /**
-   * @param opts
-   * @param promise
-   */
-  @ReactMethod
-  public void addTextByPosition(
-    ReadableMap opts,
-    final Promise promise
-  ) {
-    MarkTextOptions markOpts = MarkTextOptions.checkParams(opts, promise);
-    if (null == markOpts) return;
-    try {
-
-      final String uri = markOpts.uri;
-
-      final String dest = generateCacheFilePathForMarker(markOpts.uri, markOpts.filename, markOpts.saveFormat);
-
-      Log.d(IMAGE_MARKER_TAG, "uri: " + uri);
-      Log.d(IMAGE_MARKER_TAG, "src: " + opts.getMap("src").toString());
-
-      if (isFrescoImg(uri)) {
-        ImageRequest imageRequest = ImageRequest.fromUri(uri);
-        if (null != markOpts.maxSize && markOpts.maxSize > 0) {
-          setMaxBitmapSize(markOpts.maxSize);
-        }
-        DataSource<CloseableReference<CloseableImage>> dataSource = getImagePipeline().fetchDecodedImage(imageRequest, null);
-        Executor executor = Executors.newSingleThreadExecutor();
-        dataSource.subscribe(new BaseBitmapDataSubscriber() {
-          @Override
-          public void onNewResultImpl(Bitmap bitmap) {
-            if (bitmap != null) {
-              Bitmap bg = Utils.scaleBitmap(bitmap, markOpts.scale);
-              markImageByText(bg, dest, markOpts, promise);
-            } else {
-              promise.reject("marker error", "Can't retrieve the file from the src: " + uri);
-            }
-          }
-
-          @Override
-          public void onFailureImpl(DataSource dataSource) {
-            promise.reject("error", "Can't request the image from the uri: " + uri, dataSource.getFailureCause());
-          }
-        }, executor);
-      } else {
-        int resId = getDrawableResourceByName(uri);
-        if (resId == 0) {
-          Log.d(IMAGE_MARKER_TAG, "cannot find res");
-          promise.reject("error", "Can't get resource by the path: " + uri);
-        } else {
-          Log.d(IMAGE_MARKER_TAG, "res：" + resId);
-
-          Resources r = this.getResources();
-//                    InputStream is = r.openRawResource(resId);
-          Bitmap bitmap = BitmapFactory.decodeResource(r, resId);
-//                    Bitmap bitmap = BitmapFactory.decodeStream(is);
-          Log.d(IMAGE_MARKER_TAG, bitmap.getHeight() + "");
-          Bitmap bg = Utils.scaleBitmap(bitmap, markOpts.scale);
-          Log.d(IMAGE_MARKER_TAG, bg.getHeight() + "");
-
-          if (bitmap != null && !bitmap.isRecycled() && markOpts.scale != 1) {
+          if (bitmap != null && !bitmap.isRecycled() && markOpts.backgroundImage.scale != 1) {
             bitmap.recycle();
             System.gc();
           }
@@ -576,14 +418,13 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
       MarkImageOptions markOpts = MarkImageOptions.checkParams(opts, promise);
       if (null == markOpts) return;
 
-      final String uri = markOpts.uri;
+      final String uri = markOpts.backgroundImage.uri;
 
       final String dest = generateCacheFilePathForMarker(uri, markOpts.filename, markOpts.saveFormat);
 
       Log.d(IMAGE_MARKER_TAG, uri);
-      Log.d(IMAGE_MARKER_TAG, "src: " + opts.getMap("src").toString());
-      Log.d(IMAGE_MARKER_TAG, "markerSrc: " + opts.getMap("markerSrc").toString());
-
+      Log.d(IMAGE_MARKER_TAG, "src: " + markOpts.backgroundImage.src.toString());
+      Log.d(IMAGE_MARKER_TAG, "markerSrc: " + markOpts.watermarkImage.src.toString());
 
       if (isFrescoImg(uri)) {
         ImageRequest imageRequest = ImageRequest.fromUri(uri);
@@ -596,7 +437,7 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
           @Override
           public void onNewResultImpl(Bitmap bitmap) {
             if (bitmap != null) {
-              Bitmap bg = Utils.scaleBitmap(bitmap, markOpts.scale);
+              Bitmap bg = Utils.scaleBitmap(bitmap, markOpts.backgroundImage.scale);
               markImage(bg, dest, markOpts, promise);
             } else {
               promise.reject("marker error", "Can't retrieve the file from the src: " + uri);
@@ -621,10 +462,10 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
           Bitmap bitmap = BitmapFactory.decodeResource(r, resId);
 //                    Bitmap bitmap = BitmapFactory.decodeStream(is);
           Log.d(IMAGE_MARKER_TAG, bitmap.getHeight() + "");
-          Bitmap bg = Utils.scaleBitmap(bitmap, markOpts.scale);
+          Bitmap bg = Utils.scaleBitmap(bitmap, markOpts.backgroundImage.scale);
           Log.d(IMAGE_MARKER_TAG, bg.getHeight() + "");
 
-          if (bitmap != null && !bitmap.isRecycled() && markOpts.scale != 1) {
+          if (bitmap != null && !bitmap.isRecycled() && markOpts.backgroundImage.scale != 1) {
             bitmap.recycle();
             System.gc();
           }
@@ -637,73 +478,6 @@ public class ImageMarkerManager extends ReactContextBaseJavaModule {
       promise.reject("error", e.getMessage(), e);
     }
 
-  }
-
-  @ReactMethod
-  public void markWithImageByPosition(
-    ReadableMap opts,
-    final Promise promise) {
-    try {
-      MarkImageOptions markOpts = MarkImageOptions.checkParams(opts, promise);
-      if (null == markOpts) return;
-      final String uri = markOpts.uri;
-
-      final String dest = generateCacheFilePathForMarker(uri, markOpts.filename, markOpts.saveFormat);
-
-      Log.d(IMAGE_MARKER_TAG, "uri: " + uri);
-      Log.d(IMAGE_MARKER_TAG, "src: " + opts.getMap("src").toString());
-
-      if (isFrescoImg(uri)) {
-        ImageRequest imageRequest = ImageRequest.fromUri(uri);
-        if (null != markOpts.maxSize && markOpts.maxSize > 0) {
-          setMaxBitmapSize(markOpts.maxSize);
-        }
-        DataSource<CloseableReference<CloseableImage>> dataSource = getImagePipeline().fetchDecodedImage(imageRequest, null);
-        Executor executor = Executors.newSingleThreadExecutor();
-        dataSource.subscribe(new BaseBitmapDataSubscriber() {
-          @Override
-          public void onNewResultImpl(Bitmap bitmap) {
-            if (bitmap != null) {
-              Bitmap bg = Utils.scaleBitmap(bitmap, markOpts.scale);
-              markImage(bg, dest, markOpts, promise);
-            } else {
-              promise.reject("marker error", "Can't retrieve the file from the src: " + uri);
-            }
-          }
-
-          @Override
-          public void onFailureImpl(DataSource dataSource) {
-            promise.reject("error", "Can't request the image from the uri: " + uri, dataSource.getFailureCause());
-          }
-        }, executor);
-      } else {
-        int resId = getDrawableResourceByName(uri);
-        if (resId == 0) {
-          Log.d(IMAGE_MARKER_TAG, "cannot find res");
-          promise.reject("error", "Can't get resource by the path: " + uri);
-        } else {
-          Log.d(IMAGE_MARKER_TAG, "res：" + resId);
-
-          Resources r = this.getResources();
-//                    InputStream is = r.openRawResource(resId);
-          Bitmap bitmap = BitmapFactory.decodeResource(r, resId);
-//                    Bitmap bitmap = BitmapFactory.decodeStream(is);
-          Log.d(IMAGE_MARKER_TAG, bitmap.getHeight() + "");
-          Bitmap bg = Utils.scaleBitmap(bitmap, markOpts.scale);
-          Log.d(IMAGE_MARKER_TAG, bg.getHeight() + "");
-
-          if (bitmap != null && !bitmap.isRecycled() && markOpts.scale != 1) {
-            bitmap.recycle();
-            System.gc();
-          }
-          markImage(bg, dest, markOpts, promise);
-        }
-      }
-    } catch (Exception e) {
-      Log.d(IMAGE_MARKER_TAG, "error：" + e.getMessage());
-      e.printStackTrace();
-      promise.reject("error", e.getMessage(), e);
-    }
   }
 
   private String generateCacheFilePathForMarker(String imgSavePath, String filename, SaveFormat saveFormat) {

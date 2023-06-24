@@ -26,6 +26,9 @@
     _X = [RCTConvert CGFloat:opts[@"X"]];
     _Y = [RCTConvert CGFloat:opts[@"Y"]];
     _font = [UIFont fontWithName:opts[@"fontName"] size: [opts objectForKey: @"fontSize"]? [RCTConvert CGFloat: [opts objectForKey: @"fontSize"]]: 14.0];
+    UIFontDescriptor *fontDescriptor = [_font.fontDescriptor fontDescriptorWithSymbolicTraits:UIFontDescriptorTraitBold];
+    UIFont *boldFont = [UIFont fontWithDescriptor:fontDescriptor size:_font.pointSize];
+    _font = boldFont;
     _scale = [opts objectForKey: @"scale"]? [RCTConvert CGFloat: [opts objectForKey: @"scale"]]: 1.0;
     _quality = [opts objectForKey: @"quality"]? [RCTConvert NSInteger: [opts objectForKey: @"quality"]]: 100;
     _saveFormat = opts[@"saveFormat"];
