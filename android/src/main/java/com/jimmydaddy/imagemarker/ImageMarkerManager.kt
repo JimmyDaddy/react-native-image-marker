@@ -170,12 +170,14 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
 //            }
       val canvas = Canvas(icon!!)
       canvas.save()
-      canvas.rotate(opts.backgroundImage.rotate.toFloat())
+      if (opts.backgroundImage.rotate > 0) {
+        canvas.rotate(opts.backgroundImage.rotate, (width / 2).toFloat(), (height/2).toFloat())
+      }
       canvas.drawBitmap(bg, 0f, 0f, opts.backgroundImage.applyStyle())
       canvas.restore()
       // 原图生成 - end
       canvas.save()
-      canvas.rotate(opts.watermarkImage.rotate.toFloat())
+      canvas.rotate(opts.watermarkImage.rotate, (marker!!.width / 2).toFloat(), (marker.height / 2).toFloat())
       if (opts.positionEnum != null) {
         val pos = getImageRectFromPosition(
           opts.positionEnum,
@@ -265,11 +267,12 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
       icon = getBlankBitmap(width, height)
       //初始化画布 绘制的图像到icon上
       val canvas = Canvas(icon!!)
-      //建立画笔
-      val photoPaint = Paint()
-      //获取跟清晰的图像采样
-      photoPaint.isDither = true
-      canvas.drawBitmap(bg, 0f, 0f, photoPaint)
+      canvas.save()
+      if (opts.backgroundImage.rotate > 0) {
+        canvas.rotate(opts.backgroundImage.rotate, (width / 2).toFloat(), (height/2).toFloat())
+      }
+      canvas.drawBitmap(bg, 0f, 0f, opts.backgroundImage.applyStyle())
+      canvas.restore()
       if (bg != null && !bg.isRecycled) {
         bg.recycle()
         System.gc()

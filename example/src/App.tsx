@@ -214,10 +214,13 @@ function useViewModel() {
           backgroundImage: {
             src: image,
             scale: 1,
+            rotate: 180,
           },
           watermarkImage: {
             src: marker,
             scale: 0.5,
+            alpha: 0.8,
+            rotate: 210,
           },
           watermarkPosition: {
             X: 100,
@@ -231,6 +234,8 @@ function useViewModel() {
           backgroundImage: {
             src: image,
             scale: 1,
+            alpha: 0.5,
+            rotate: 210,
           },
           watermarkTexts: [
             {
@@ -256,7 +261,7 @@ function useViewModel() {
                       type: textBgStretch,
                       paddingX: 10,
                       paddingY: 10,
-                      color: '#0f0',
+                      color: '#0f09',
                     }
                   : null,
               },

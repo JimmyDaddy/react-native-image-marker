@@ -193,7 +193,10 @@ class Position(var x: Float, var y: Float) {
           pos.y = (top - 20).toFloat()
         }
 
-        PositionEnum.TOP_LEFT -> TODO()
+        PositionEnum.TOP_LEFT -> {
+          pos.x = left.toFloat();
+          pos.y = top.toFloat();
+        }
       }
       return pos
     }

@@ -10,7 +10,7 @@ object Constants {
   var DEFAULT_SCALE = 1.0f
 
   @JvmField
-  var DEFAULT_ROTATE = 0
+  var DEFAULT_ROTATE = 0f
 
   @JvmField
   var DEFAULT_ALPHA = 255

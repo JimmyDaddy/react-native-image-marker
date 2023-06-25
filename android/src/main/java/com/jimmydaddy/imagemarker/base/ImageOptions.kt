@@ -17,7 +17,7 @@ class ImageOptions(options: ReadableMap) {
   var scale: Float
 
   @JvmField
-  var rotate: Int
+  var rotate: Float
   var alpha: Int
 
   init {
@@ -27,8 +27,8 @@ class ImageOptions(options: ReadableMap) {
     }
     uri = src!!.getString(PROP_ICON_URI)
     scale = if (options.hasKey("scale")) options.getDouble("scale").toFloat() else DEFAULT_SCALE
-    rotate = if (options.hasKey("rotate")) options.getInt("rotate") else DEFAULT_ROTATE
-    alpha = if (options.hasKey("alpha")) options.getInt("alpha") else DEFAULT_ALPHA
+    rotate = if (options.hasKey("rotate")) options.getInt("rotate").toFloat() else DEFAULT_ROTATE
+    alpha = if (options.hasKey("alpha")) (options.getDouble("alpha") * 255).toInt() else DEFAULT_ALPHA
   }
 
   fun applyStyle(): Paint {

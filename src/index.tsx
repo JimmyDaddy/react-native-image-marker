@@ -110,8 +110,11 @@ export interface TextMarkOptions {
 
 export interface ImageOptions {
   src: any;
+  // 0 - 1
   scale?: number;
+  // 0 - 360
   rotate?: number;
+  // 0 - 1
   alpha?: number;
 }
 
@@ -121,6 +124,7 @@ export interface ImageMarkOptions {
   backgroundImage: ImageOptions;
   watermarkImage: ImageOptions;
   watermarkPosition?: PositionOptions;
+  // 0 - 1
   quality?: number;
   filename?: string;
   saveFormat?: ImageFormat;
