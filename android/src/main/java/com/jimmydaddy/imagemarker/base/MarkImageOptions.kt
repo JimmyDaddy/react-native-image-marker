@@ -7,9 +7,9 @@ class MarkImageOptions(options: ReadableMap) : Options(options) {
     @JvmField
     var watermarkImage: ImageOptions
     @JvmField
-    var X: Int?
+    var x: Int?
     @JvmField
-    var Y: Int?
+    var y: Int?
     @JvmField
     var positionEnum: PositionEnum?
 
@@ -21,8 +21,8 @@ class MarkImageOptions(options: ReadableMap) : Options(options) {
             )
         val positionOptions =
             if (null != options.getMap("watermarkPosition")) options.getMap("watermarkPosition") else null
-        X = if (positionOptions!!.hasKey("X")) positionOptions.getInt("X") else null
-        Y = if (positionOptions.hasKey("Y")) positionOptions.getInt("Y") else null
+        x = if (positionOptions!!.hasKey("X")) positionOptions.getInt("X") else null
+        y = if (positionOptions.hasKey("Y")) positionOptions.getInt("Y") else null
         positionEnum =
             if (null != positionOptions.getString("position")) PositionEnum.Companion.getPosition(
                 positionOptions.getString("position")

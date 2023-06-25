@@ -56,15 +56,6 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
             context.packageName
         )
     }
-
-    //    private Drawable getDrawableByName(String name) {
-    //        int drawableResId = getDrawableResourceByName(name);
-    //        if (drawableResId != 0) {
-    //            return getResources().getDrawable(getDrawableResourceByName(name));
-    //        } else {
-    //            return null;
-    //        }
-    //    }
     private fun isFrescoImg(uri: String?): Boolean {
         val base64Pattern =
             "^data:(image|img)/(bmp|jpg|png|tif|gif|pcx|tga|exif|fpx|svg|psd|cdr|pcd|dxf|ufo|eps|ai|raw|WMF|webp);base64,(([[A-Za-z0-9+/])*\\s\\S*)*"
@@ -265,7 +256,7 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
         promise: Promise
     ) {
         var bos: BufferedOutputStream? = null
-        val isFinished: Boolean
+//        val isFinished: Boolean
         var icon: Bitmap? = null
         try {
             val height = bg!!.height
@@ -308,7 +299,7 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
             e.printStackTrace()
             promise.reject("error", e.message, e)
         } finally {
-            isFinished = true
+//            isFinished = true
             if (bos != null) {
                 try {
                     bos.close()

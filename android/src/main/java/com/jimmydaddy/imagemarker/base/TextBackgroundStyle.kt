@@ -30,7 +30,7 @@ class TextBackgroundStyle {
         }
     }
 
-    fun setColor(color: String?) {
+    private fun setColor(color: String?) {
         try {
             val parsedColor = Color.parseColor(Utils.Companion.transRGBColor(color))
             if (null != parsedColor) {

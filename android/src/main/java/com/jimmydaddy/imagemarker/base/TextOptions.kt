@@ -12,6 +12,7 @@ import android.util.TypedValue
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.views.text.ReactFontManager
+import kotlin.math.ceil
 
 class TextOptions(options: ReadableMap) {
     var text: String?
@@ -79,35 +80,32 @@ class TextOptions(options: ReadableMap) {
         textPaint.isStrikeThruText = style.strikeThrough
         textPaint.typeface = typeface
         textPaint.textAlign = style.textAlign
-        val textLayout: StaticLayout
-        // ALIGN_CENTER, ALIGN_NORMAL, ALIGN_OPPOSITE
-        textLayout = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val builder =
-                StaticLayout.Builder.obtain(text!!, 0, text!!.length, textPaint, canvas.width)
-            builder.setAlignment(Layout.Alignment.ALIGN_NORMAL)
-            builder.setLineSpacing(0.0f, 1.0f)
-            builder.setIncludePad(false)
-            builder.build()
-        } else {
-            StaticLayout(
-                text,
-                textPaint,
-                canvas.width,
-                Layout.Alignment.ALIGN_NORMAL,
-                1.0f,
-                0.0f,
-                false
-            )
-        }
+      // ALIGN_CENTER, ALIGN_NORMAL, ALIGN_OPPOSITE
+      val textLayout: StaticLayout = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+          val builder =
+              StaticLayout.Builder.obtain(text!!, 0, text!!.length, textPaint, canvas.width)
+          builder.setAlignment(Layout.Alignment.ALIGN_NORMAL)
+          builder.setLineSpacing(0.0f, 1.0f)
+          builder.setIncludePad(false)
+          builder.build()
+      } else {
+          StaticLayout(
+              text,
+              textPaint,
+              canvas.width,
+              Layout.Alignment.ALIGN_NORMAL,
+              1.0f,
+              0.0f,
+              false
+          )
+      }
         val textHeight = textLayout.height
         var textWidth = 0
         val count = textLayout.lineCount
         for (a in 0 until count) {
-            textWidth = Math.ceil(
-                Math.max(
-                    textWidth.toFloat(),
-                    textLayout.getLineWidth(a) + textLayout.getLineLeft(a)
-                ).toDouble()
+            textWidth = ceil(
+                textWidth.toFloat()
+                  .coerceAtLeast(textLayout.getLineWidth(a) + textLayout.getLineLeft(a)).toDouble()
             ).toInt()
         }
         val margin = 20
@@ -136,30 +134,34 @@ class TextOptions(options: ReadableMap) {
             val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.LINEAR_TEXT_FLAG)
             paint.style = Paint.Style.FILL
             paint.color = style.textBackgroundStyle!!.color
-            if ("stretchX" == style.textBackgroundStyle!!.type) {
-                canvas.drawRect(
+            when (style.textBackgroundStyle!!.type) {
+                "stretchX" -> {
+                  canvas.drawRect(
                     0f,
                     y - style.textBackgroundStyle!!.paddingY,
                     maxWidth.toFloat(),
                     y + textHeight + style.textBackgroundStyle!!.paddingY,
                     paint
-                )
-            } else if ("stretchY" == style.textBackgroundStyle!!.type) {
-                canvas.drawRect(
+                  )
+                }
+                "stretchY" -> {
+                  canvas.drawRect(
                     x - style.textBackgroundStyle!!.paddingX,
                     0f,
                     x + textWidth + style.textBackgroundStyle!!.paddingX,
                     maxHeight.toFloat(),
                     paint
-                )
-            } else {
-                canvas.drawRect(
+                  )
+                }
+                else -> {
+                  canvas.drawRect(
                     x - style.textBackgroundStyle!!.paddingX,
                     y - style.textBackgroundStyle!!.paddingY,
                     x + textWidth + style.textBackgroundStyle!!.paddingX,
                     y + textHeight + style.textBackgroundStyle!!.paddingY,
                     paint
-                )
+                  )
+                }
             }
         }
         canvas.save()
