@@ -6,13 +6,13 @@ import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.uimanager.ViewManager
 
 class ImageMarkerPackage : ReactPackage {
-    override fun createNativeModules(reactContext: ReactApplicationContext): List<NativeModule> {
-        val modules: MutableList<NativeModule> = ArrayList()
-        modules.add(ImageMarkerManager(reactContext))
-        return modules
-    }
+  override fun createNativeModules(reactContext: ReactApplicationContext): List<NativeModule> {
+    val modules: MutableList<NativeModule> = ArrayList()
+    modules.add(ImageMarkerManager(reactContext))
+    return modules
+  }
 
-    override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> {
-        return emptyList()
-    }
+  override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> {
+    return emptyList()
+  }
 }
