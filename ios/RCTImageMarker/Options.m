@@ -15,26 +15,14 @@
 
 -(id) initWithDicOpts:(NSDictionary *)opts
 {
-    if (![[opts allKeys] containsObject:@"src"] || opts[@"src"] == nil) {
-        @throw [NSException exceptionWithName:@"PARAMS_REQUIRED" reason:@"image is required" userInfo:nil];
+    if (![[opts allKeys] containsObject:@"backgroundImage"] || opts[@"backgroundImage"] == nil) {
+        @throw [NSException exceptionWithName:@"PARAMS_REQUIRED" reason:@"backgroundImage is required" userInfo:nil];
     }
-    _src = opts[@"src"];
-    _uri = _src[@"uri"];
-    _color = [Utils getColor: opts[@"color"]];
-    _shadow = [Utils getShadowStyle: opts[@"shadowStyle"]];
-    _textBackground = [[TextBackground alloc] initWithTextBackgroundStyle: opts[@"textBackgroundStyle"]];
-    _X = [RCTConvert CGFloat:opts[@"X"]];
-    _Y = [RCTConvert CGFloat:opts[@"Y"]];
-    _font = [UIFont fontWithName:opts[@"fontName"] size: [opts objectForKey: @"fontSize"]? [RCTConvert CGFloat: [opts objectForKey: @"fontSize"]]: 14.0];
-    UIFontDescriptor *fontDescriptor = [_font.fontDescriptor fontDescriptorWithSymbolicTraits:UIFontDescriptorTraitBold];
-    UIFont *boldFont = [UIFont fontWithDescriptor:fontDescriptor size:_font.pointSize];
-    _font = boldFont;
-    _scale = [opts objectForKey: @"scale"]? [RCTConvert CGFloat: [opts objectForKey: @"scale"]]: 1.0;
+    _backgroundImage = [[ImageOptions alloc] initWithDicOpts:opts[@"backgroundImage"]];
     _quality = [opts objectForKey: @"quality"]? [RCTConvert NSInteger: [opts objectForKey: @"quality"]]: 100;
     _saveFormat = opts[@"saveFormat"];
     _maxSize = [RCTConvert NSInteger: opts[@"maxSize"]];
     _filename = opts[@"fileName"];
-    _position = [RCTConvert MarkerPosition: opts[@"position"]];
 
     return self;
 }

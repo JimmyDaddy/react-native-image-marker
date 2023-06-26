@@ -11,7 +11,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface MarkTextOptions: Options
-@property (nonatomic, copy) NSString * text;
+@property (nonatomic, copy) NSArray * watermarkTexts;
 @end
 
 NS_ASSUME_NONNULL_END

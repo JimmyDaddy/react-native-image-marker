@@ -6,14 +6,16 @@
 //
 
 #import "Options.h"
+#import "ImageOptions.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface MarkImageOptions: Options
 
-@property (nonatomic, copy) NSDictionary * markerSrc;
-@property (nonatomic, copy) NSString * markerImageUri;
-@property (nonatomic, assign) CGFloat markerScale;
+@property (nonatomic, copy) ImageOptions * watermarkImage;
+@property (nonatomic, assign) CGFloat X;
+@property (nonatomic, assign) CGFloat Y;
+@property (nonatomic, assign) MarkerPosition position;
 
 @end
 

@@ -13,12 +13,20 @@
 -(id)initWithDicOpts:(NSDictionary *)opts
 {
     self = [super initWithDicOpts: opts];
-    if (![[opts allKeys] containsObject:@"markerSrc"] || opts[@"markerSrc"] == nil) {
+    if (![[opts allKeys] containsObject:@"watermarkImage"] || opts[@"watermarkImage"] == nil) {
         @throw [NSException exceptionWithName:@"PARAMS_REQUIRED" reason:@"marker image is required" userInfo:nil];
     }
-    _markerSrc = opts[@"markerSrc"];
-    _markerImageUri = _markerSrc[@"uri"];
-    _markerScale = [opts objectForKey:@"markerScale"]? [RCTConvert CGFloat: opts[@"markerScale"]] : 1;
+    _watermarkImage = [[ImageOptions alloc] initWithDicOpts: opts[@"watermarkImage"]];
+    NSDictionary* positionOpts = [opts objectForKey:@"watermarkPositions"]? opts[@"watermarkPositions"] : nil;
+    if (positionOpts != nil) {
+        _X = [RCTConvert CGFloat:positionOpts[@"X"]];
+        _Y = [RCTConvert CGFloat:positionOpts[@"Y"]];
+        _position = [positionOpts objectForKey: @"position"]? [RCTConvert MarkerPosition: positionOpts[@"position"]] : -1;
+    } else {
+        _X = 20.0f;
+        _Y = 20.0f;
+        _position = 0;
+    }
     return self;
 }
 

@@ -16,7 +16,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (UIColor *)getColor:(NSString *)hexColor;
 + (int)stringToInt:(NSString *)string;
-+(NSShadow*)getShadowStyle:(NSDictionary *) shadowStyle;
++ (NSShadow*)getShadowStyle:(NSDictionary *) shadowStyle;
 + (bool)isPng: (NSString *)saveFormat;
 + (NSString*) getExt: (NSString*) saveFormat;
 

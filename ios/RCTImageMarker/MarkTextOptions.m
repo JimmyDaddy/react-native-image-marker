@@ -7,16 +7,22 @@
 //
 
 #import "MarkTextOptions.h"
+#import "RCTConvert+ImageMarker.h"
+#import "TextOptions.h"
 
 @implementation MarkTextOptions: Options
 
 -(id)initWithDicOpts:(NSDictionary *)opts
 {
     self = [super initWithDicOpts: opts];
-    if (![[opts allKeys] containsObject:@"text"] || opts[@"text"] == nil) {
+    if (![[opts allKeys] containsObject:@"watermarkTexts"] || opts[@"watermarkTexts"] == nil || [[RCTConvert NSArray:opts[@"watermarkTexts"]] count] <= 0) {
         @throw [NSException exceptionWithName:@"PARAMS_REQUIRED" reason:@"text is required" userInfo:nil];
     }
-    _text = opts[@"text"];
+    NSMutableArray *array = [NSMutableArray array];
+    for (NSDictionary *textOpt in [RCTConvert NSArray:opts[@"watermarkTexts"]]) {
+        [array addObject: [[TextOptions alloc] initWithDicOpts:textOpt]];
+    }
+    _watermarkTexts = array;
     return self;
 }
 
