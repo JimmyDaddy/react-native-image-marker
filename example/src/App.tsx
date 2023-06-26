@@ -114,8 +114,9 @@ function useViewModel() {
           watermarkImage: {
             src: marker,
             scale: 1,
+            rotate: 180,
           },
-          watermarkPosition: {
+          watermarkPositions: {
             position: positionType,
           },
           quality: 100,
@@ -220,11 +221,11 @@ function useViewModel() {
             src: marker,
             scale: 0.5,
             alpha: 0.8,
-            rotate: 210,
+            rotate: 180,
           },
-          watermarkPosition: {
-            X: 100,
-            Y: 150,
+          watermarkPositions: {
+            X: 20,
+            Y: 20,
           },
           quality: 100,
           saveFormat: saveFormat,
@@ -235,7 +236,7 @@ function useViewModel() {
             src: image,
             scale: 1,
             alpha: 0.5,
-            rotate: 210,
+            rotate: 180,
           },
           watermarkTexts: [
             {
@@ -245,8 +246,41 @@ function useViewModel() {
                 Y: 30,
               },
               style: {
+                underline: true,
+                strikeThrough: true,
                 color: '#FF0',
                 fontName: 'Arial-BoldItalicMT',
+                fontSize: 44,
+                shadowStyle: useTextShadow
+                  ? {
+                      dx: 10.5,
+                      dy: 20.8,
+                      radius: 20.9,
+                      color: '#0000FF',
+                    }
+                  : null,
+                textBackgroundStyle: useTextBgStyle
+                  ? {
+                      type: textBgStretch,
+                      paddingX: 10,
+                      paddingY: 10,
+                      color: '#0f09',
+                    }
+                  : null,
+              },
+            },
+            {
+              text: 'text2 marker \n muiltline text normal',
+              positionOptions: {
+                X: 1000,
+                Y: 500,
+              },
+              style: {
+                underline: true,
+                strikeThrough: true,
+                bold: true,
+                italic: true,
+                color: '#FF0',
                 fontSize: 44,
                 shadowStyle: useTextShadow
                   ? {

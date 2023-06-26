@@ -123,7 +123,7 @@ export interface ImageMarkOptions {
   // FIXME: ImageSourcePropType type define bug
   backgroundImage: ImageOptions;
   watermarkImage: ImageOptions;
-  watermarkPosition?: PositionOptions;
+  watermarkPositions?: PositionOptions;
   // 0 - 1
   quality?: number;
   filename?: string;

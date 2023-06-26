@@ -1,10 +1,12 @@
 package com.jimmydaddy.imagemarker
 
+import android.R.attr.bitmap
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Bitmap.CompressFormat
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
+import android.graphics.Matrix
 import android.graphics.Paint
 import android.util.Base64
 import android.util.Log
@@ -35,6 +37,7 @@ import java.io.IOException
 import java.util.UUID
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
+
 
 /**
  * Created by jimmydaddy on 2017/3/6.
@@ -171,27 +174,36 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
       val canvas = Canvas(icon!!)
       canvas.save()
       if (opts.backgroundImage.rotate > 0) {
-        canvas.rotate(opts.backgroundImage.rotate, (width / 2).toFloat(), (height/2).toFloat())
+        val matrix = Matrix()
+        matrix.setRotate(opts.backgroundImage.rotate, (width / 2).toFloat(), (height/2).toFloat())
+        val rotatedBitmap = Bitmap.createBitmap(bg, 0, 0, width, height, matrix, true)
+        canvas.drawBitmap(rotatedBitmap, 0f, 0f, opts.backgroundImage.applyStyle())
+      } else {
+        canvas.drawBitmap(bg, 0f, 0f, opts.backgroundImage.applyStyle())
       }
-      canvas.drawBitmap(bg, 0f, 0f, opts.backgroundImage.applyStyle())
       canvas.restore()
       // 原图生成 - end
       canvas.save()
-      canvas.rotate(opts.watermarkImage.rotate, (marker!!.width / 2).toFloat(), (marker.height / 2).toFloat())
+      var markerBitmap = marker;
+      if (opts.watermarkImage.rotate > 0) {
+        val matrix = Matrix()
+        matrix.setRotate(opts.watermarkImage.rotate, (width / 2).toFloat(), (height/2).toFloat())
+        markerBitmap = marker?.let { Bitmap.createBitmap(it, 0, 0, marker.width, marker.height, matrix, true) }
+      }
       if (opts.positionEnum != null) {
         val pos = getImageRectFromPosition(
           opts.positionEnum,
-          marker!!.width,
-          marker.height,
+          markerBitmap!!.width,
+          markerBitmap.height,
           width,
           height
         )
-        canvas.drawBitmap(marker, pos.x, pos.y, opts.watermarkImage.applyStyle())
+        canvas.drawBitmap(markerBitmap, pos.x, pos.y, opts.watermarkImage.applyStyle())
       } else {
         canvas.drawBitmap(
-          marker!!,
-          opts.x!!.toFloat(),
-          opts.y!!.toFloat(),
+          markerBitmap!!,
+          opts.x.toFloat(),
+          opts.y.toFloat(),
           opts.watermarkImage.applyStyle()
         )
       }

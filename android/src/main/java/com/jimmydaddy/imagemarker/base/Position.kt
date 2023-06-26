@@ -154,7 +154,7 @@ class Position(var x: Float, var y: Float) {
       imageHeigt: Int
     ): Position {
       var left = 20
-      var top = 40
+      var top = 20
       val right = imageWidth - width
       val pos = Position(left.toFloat(), top.toFloat())
       if (position == null) {

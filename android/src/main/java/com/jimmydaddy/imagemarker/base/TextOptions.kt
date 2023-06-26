@@ -29,9 +29,9 @@ class TextOptions(options: ReadableMap) {
     val positionOptions =
       if (null != options.getMap("positionOptions")) options.getMap("positionOptions") else null
     X = if (positionOptions!!.hasKey("X")) positionOptions.getInt("X") else null
-    Y = if (positionOptions.hasKey("Y")) positionOptions.getInt("Y") else null
+    Y = if (positionOptions!!.hasKey("Y")) positionOptions.getInt("Y") else null
     positionEnum =
-      if (null != positionOptions.getString("position")) PositionEnum.Companion.getPosition(
+      if (null != positionOptions!!.getString("position")) PositionEnum.getPosition(
         positionOptions.getString("position")
       ) else null
     style = TextStyle(options.getMap("style"))
@@ -65,8 +65,9 @@ class TextOptions(options: ReadableMap) {
       style.fontSize.toFloat(),
       context.resources.displayMetrics
     )
+    textPaint.isAntiAlias = true;
     textPaint.textSize = textSize
-    textPaint.color = Color.parseColor(Utils.Companion.transRGBColor(style.color))
+    textPaint.color = Color.parseColor(Utils.transRGBColor(style.color))
     textPaint.isUnderlineText = style.underline
     textPaint.textSkewX = style.skewX!!
     var typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
@@ -111,7 +112,7 @@ class TextOptions(options: ReadableMap) {
     val margin = 20
     var position = Position(margin.toFloat(), margin.toFloat())
     if (positionEnum != null) {
-      position = Position.Companion.getTextPosition(
+      position = Position.getTextPosition(
         positionEnum,
         maxWidth,
         maxHeight,
@@ -123,7 +124,7 @@ class TextOptions(options: ReadableMap) {
         position.x = X!!.toFloat()
       }
       if (null != Y) {
-        position.x = Y!!.toFloat()
+        position.y = Y!!.toFloat()
       }
     }
     val x = position.x
