@@ -120,4 +120,9 @@
     return ext;
 }
 
++ (bool)isBase64: (NSString*) uri
+{
+    return uri != nil? [uri hasPrefix:@"data:"] : false;
+}
+
 @end

@@ -352,34 +352,57 @@ UIImage * markeImageWithImage(UIImage *image, UIImage * waterImage, MarkImageOpt
     return newImage;
 }
 
+UIImage * transBase64(NSString* base64Str) {
+    NSString *trimmedString = [base64Str stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    NSString *encodedString = [trimmedString stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLQueryAllowedCharacterSet]];
+    NSURL *imgURL  = [NSURL URLWithString: encodedString];
+    NSData *imageData = [NSData dataWithContentsOfURL:imgURL];
+    UIImage *image = [UIImage imageWithData:imageData];
+    return image;
+}
+
 RCT_EXPORT_METHOD(markWithText: (nonnull NSDictionary *) opts
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
     MarkTextOptions* markOpts = [MarkTextOptions checkParams:opts rejecter:reject];
-    //这里之前是loadImageOrDataWithTag
-    [[self.bridge moduleForName:@"ImageLoader"] loadImageWithURLRequest:[RCTConvert NSURLRequest: markOpts.backgroundImage.src] callback:^(NSError *error, UIImage *image) {
-        if (error || image == nil) {
-            image = [[UIImage alloc] initWithContentsOfFile: markOpts.backgroundImage.uri];
-            if (image == nil) {
-                NSLog(@"Can't retrieve the file from the path");
-                
-                reject(@"error", @"Can't retrieve the file from the path.", error);
-                return;
-            }
-        }
-        
+    if([Utils isBase64:markOpts.backgroundImage.uri]) {
+        UIImage *image = transBase64(markOpts.backgroundImage.uri);
         UIImage * scaledImage = markerImgWithText(image, markOpts);
         if (scaledImage == nil) {
             NSLog(@"Can't mark the image");
-            reject(@"error",@"Can't mark the image.", error);
+            reject(@"error",@"Can't mark the image.", nil);
             return;
         }
         NSLog(@" file from the path");
         
         NSString * res = saveImageForMarker(scaledImage, markOpts);
         resolve(res);
-    }];
+    } else {
+        //这里之前是loadImageOrDataWithTag
+        [[self.bridge moduleForName:@"ImageLoader"] loadImageWithURLRequest:[RCTConvert NSURLRequest: markOpts.backgroundImage.src] callback:^(NSError *error, UIImage *image) {
+            if (error || image == nil) {
+                image = [[UIImage alloc] initWithContentsOfFile: markOpts.backgroundImage.uri];
+                if (image == nil) {
+                    NSLog(@"Can't retrieve the file from the path");
+                    
+                    reject(@"error", @"Can't retrieve the file from the path.", error);
+                    return;
+                }
+            }
+            
+            UIImage * scaledImage = markerImgWithText(image, markOpts);
+            if (scaledImage == nil) {
+                NSLog(@"Can't mark the image");
+                reject(@"error",@"Can't mark the image.", error);
+                return;
+            }
+            NSLog(@" file from the path");
+            
+            NSString * res = saveImageForMarker(scaledImage, markOpts);
+            resolve(res);
+        }];
+    }
 }
 
 
@@ -388,41 +411,96 @@ RCT_EXPORT_METHOD(markWithImage: (nonnull NSDictionary *) opts
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
     MarkImageOptions* markOpts = [MarkImageOptions checkParams:opts rejecter:reject];
-    //这里之前是loadImageOrDataWithTag
-    [[self.bridge moduleForName:@"ImageLoader"] loadImageWithURLRequest:[RCTConvert NSURLRequest:markOpts.backgroundImage.src] callback:^(NSError *error, UIImage *image) {
-        if (error || image == nil) {
-            image = [[UIImage alloc] initWithContentsOfFile:markOpts.backgroundImage.uri];
-            if (image == nil) {
-                NSLog(@"Can't retrieve the file from the path");
-                
-                reject(@"error", @"Can't retrieve the file from the path.", error);
-                return;
-            }
-        }
-        
-        [[self.bridge moduleForName:@"ImageLoader"] loadImageWithURLRequest:[RCTConvert NSURLRequest:markOpts.watermarkImage.src] callback:^(NSError *markerError, UIImage *marker) {
-            if (markerError || marker == nil) {
-                marker = [[UIImage alloc] initWithContentsOfFile:markOpts.watermarkImage.uri];
-                if (marker == nil) {
-                    NSLog(@"Can't retrieve the file from the path");
-                    
-                    reject(@"error", @"Can't retrieve the file from the path.", markerError);
-                    return;
-                }
-            }
-            // Do mark
+    if([Utils isBase64:markOpts.backgroundImage.uri]) {
+        UIImage *image = transBase64(markOpts.backgroundImage.uri);
+        if([Utils isBase64:markOpts.watermarkImage.uri]) {
+            UIImage *marker = transBase64(markOpts.watermarkImage.uri);
             UIImage * scaledImage = markeImageWithImage(image, marker, markOpts);
             if (scaledImage == nil) {
                 NSLog(@"Can't mark the image");
-                reject(@"error",@"Can't mark the image.", error);
+                reject(@"error",@"Can't mark the image.", nil);
                 return;
             }
             NSLog(@" file from the path");
             
             NSString* res = saveImageForMarker(scaledImage, markOpts);
             resolve(res);
+        } else {
+            [[self.bridge moduleForName:@"ImageLoader"] loadImageWithURLRequest:[RCTConvert NSURLRequest:markOpts.watermarkImage.src] callback:^(NSError *markerError, UIImage *marker) {
+                if (markerError || marker == nil) {
+                    marker = [[UIImage alloc] initWithContentsOfFile:markOpts.watermarkImage.uri];
+                    if (marker == nil) {
+                        NSLog(@"Can't retrieve the file from the path");
+                        
+                        reject(@"error", @"Can't retrieve the file from the path.", markerError);
+                        return;
+                    }
+                }
+                // Do mark
+                UIImage * scaledImage = markeImageWithImage(image, marker, markOpts);
+                if (scaledImage == nil) {
+                    NSLog(@"Can't mark the image");
+                    reject(@"error",@"Can't mark the image.", markerError);
+                    return;
+                }
+                NSLog(@" file from the path");
+                
+                NSString* res = saveImageForMarker(scaledImage, markOpts);
+                resolve(res);
+            }];
+        }
+    } else {
+        //这里之前是loadImageOrDataWithTag
+        [[self.bridge moduleForName:@"ImageLoader"] loadImageWithURLRequest:[RCTConvert NSURLRequest:markOpts.backgroundImage.src] callback:^(NSError *error, UIImage *image) {
+            if (error || image == nil) {
+                image = [[UIImage alloc] initWithContentsOfFile:markOpts.backgroundImage.uri];
+                if (image == nil) {
+                    NSLog(@"Can't retrieve the file from the path");
+                    
+                    reject(@"error", @"Can't retrieve the file from the path.", error);
+                    return;
+                }
+            }
+            
+            
+            if([Utils isBase64:markOpts.watermarkImage.uri]) {
+                UIImage *marker = transBase64(markOpts.watermarkImage.uri);
+                UIImage * scaledImage = markeImageWithImage(image, marker, markOpts);
+                if (scaledImage == nil) {
+                    NSLog(@"Can't mark the image");
+                    reject(@"error",@"Can't mark the image.", nil);
+                    return;
+                }
+                NSLog(@" file from the path");
+                
+                NSString* res = saveImageForMarker(scaledImage, markOpts);
+                resolve(res);
+            } else {
+                [[self.bridge moduleForName:@"ImageLoader"] loadImageWithURLRequest:[RCTConvert NSURLRequest:markOpts.watermarkImage.src] callback:^(NSError *markerError, UIImage *marker) {
+                    if (markerError || marker == nil) {
+                        marker = [[UIImage alloc] initWithContentsOfFile:markOpts.watermarkImage.uri];
+                        if (marker == nil) {
+                            NSLog(@"Can't retrieve the file from the path");
+                            
+                            reject(@"error", @"Can't retrieve the file from the path.", markerError);
+                            return;
+                        }
+                    }
+                    // Do mark
+                    UIImage * scaledImage = markeImageWithImage(image, marker, markOpts);
+                    if (scaledImage == nil) {
+                        NSLog(@"Can't mark the image");
+                        reject(@"error",@"Can't mark the image.", markerError);
+                        return;
+                    }
+                    NSLog(@" file from the path");
+                    
+                    NSString* res = saveImageForMarker(scaledImage, markOpts);
+                    resolve(res);
+                }];
+            }
         }];
-    }];
+    }
 }
 
 @end
