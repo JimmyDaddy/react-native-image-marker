@@ -192,7 +192,7 @@ UIImage * markerImgWithText(UIImage *image, MarkTextOptions* opts){
             } else if([textBackground.typeBg isEqualToString:@"stretchY"]) {
                 CGContextFillRect(context, CGRectMake(posX - textBackground.paddingX, 0, size.width + 2*textBackground.paddingX, h));
             } else {
-                CGContextFillRect(context, CGRectMake(posX - textBackground.paddingX, [textOpts Y] - textBackground.paddingY,
+                CGContextFillRect(context, CGRectMake(posX - textBackground.paddingX, posY - textBackground.paddingY,
                                                       size.width + 2*textBackground.paddingX, size.height + 2*textBackground.paddingY));
             }
         }
@@ -202,7 +202,6 @@ UIImage * markerImgWithText(UIImage *image, MarkTextOptions* opts){
         }
         
         CGRect rect = (CGRect){ CGPointMake(posX, posY), size };
-        
         //    CGRect position = CGRectMake(X, Y, w, h);
         [textOpts.text drawInRect:rect withAttributes:attributes];
         CGContextRestoreGState(context);
