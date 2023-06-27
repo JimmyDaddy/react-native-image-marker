@@ -20,7 +20,7 @@ export enum Position {
 export enum TextBackgroundType {
   stretchX = 'stretchX',
   stretchY = 'stretchY',
-  none = '',
+  none = 'fit',
 }
 
 export enum ImageFormat {
