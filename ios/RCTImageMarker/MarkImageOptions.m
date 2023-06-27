@@ -7,17 +7,18 @@
 
 #import "MarkImageOptions.h"
 #import <RCTConvert+ImageMarker.h>
+#import "Utils.h"
 
 @implementation MarkImageOptions: Options
 
 -(id)initWithDicOpts:(NSDictionary *)opts
 {
     self = [super initWithDicOpts: opts];
-    if (![[opts allKeys] containsObject:@"watermarkImage"] || opts[@"watermarkImage"] == nil) {
+    if (![[opts allKeys] containsObject:@"watermarkImage"] || opts[@"watermarkImage"] == nil || [Utils isNULL:opts[@"watermarkImage"]]) {
         @throw [NSException exceptionWithName:@"PARAMS_REQUIRED" reason:@"marker image is required" userInfo:nil];
     }
     _watermarkImage = [[ImageOptions alloc] initWithDicOpts: opts[@"watermarkImage"]];
-    NSDictionary* positionOpts = [opts objectForKey:@"watermarkPositions"]? opts[@"watermarkPositions"] : nil;
+    NSDictionary* positionOpts = [opts objectForKey:@"watermarkPositions"] && ![Utils isNULL:opts[@"watermarkPositions"]]? opts[@"watermarkPositions"] : nil;
     if (positionOpts != nil) {
         _X = [RCTConvert CGFloat:positionOpts[@"X"]];
         _Y = [RCTConvert CGFloat:positionOpts[@"Y"]];

@@ -116,9 +116,11 @@ UIImage * markerImgWithText(UIImage *image, MarkTextOptions* opts){
         NSMutableDictionary *attributes = [[NSMutableDictionary alloc] initWithDictionary:@{
             NSFontAttributeName: font,   //设置字体
             NSForegroundColorAttributeName : textOpts.style.color,      //设置字体颜色
-            NSShadowAttributeName : textOpts.style.shadow,
         }];
         
+        if (textOpts.style.shadow != nil) {
+            attributes[NSShadowAttributeName] = textOpts.style.shadow;
+        }
         if (textOpts.style.underline) {
             attributes[NSUnderlineStyleAttributeName] = @(NSUnderlineStyleSingle);
         }

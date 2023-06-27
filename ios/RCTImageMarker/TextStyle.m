@@ -16,7 +16,7 @@
 -(id)initWithDicOpts: (NSDictionary *) opts
 {
     _color = [Utils getColor: opts[@"color"]];
-    _shadow = [Utils getShadowStyle: opts[@"shadowStyle"]];
+    _shadow = [opts objectForKey:@"shadowStyle"]  ? [Utils getShadowStyle: opts[@"shadowStyle"]] : nil;
     _textBackground = [[TextBackground alloc] initWithTextBackgroundStyle: opts[@"textBackgroundStyle"]];
     CGFloat scale = [UIScreen mainScreen].scale;
     _font = [UIFont fontWithName:opts[@"fontName"] size: [opts objectForKey: @"fontSize"]? ([RCTConvert CGFloat: [opts objectForKey: @"fontSize"]]) * scale: 14.0 * scale];

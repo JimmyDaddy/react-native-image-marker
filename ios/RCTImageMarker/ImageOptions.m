@@ -7,12 +7,13 @@
 
 #import "ImageOptions.h"
 #import "RCTConvert+ImageMarker.h"
+#import "Utils.h"
 
 @implementation ImageOptions: NSObject
 
 -(id)initWithDicOpts: (NSDictionary *) opts
 {
-    if (![[opts allKeys] containsObject:@"src"] || opts[@"src"] == nil) {
+    if (![[opts allKeys] containsObject:@"src"] || opts[@"src"] == nil || [Utils isNULL:opts[@"src"]]) {
         @throw [NSException exceptionWithName:@"PARAMS_REQUIRED" reason:@"image is required" userInfo:nil];
     }
     _src = opts[@"src"];

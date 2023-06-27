@@ -95,7 +95,7 @@
 
 +(NSShadow*)getShadowStyle:(NSDictionary *) shadowStyle
 {
-    if (shadowStyle != nil) {
+    if (![Utils isNULL: shadowStyle]) {
         NSShadow *shadow = [[NSShadow alloc]init];
         shadow.shadowBlurRadius = [RCTConvert CGFloat: shadowStyle[@"radius"]];
         shadow.shadowOffset = CGSizeMake([RCTConvert CGFloat: shadowStyle[@"dx"]], [RCTConvert CGFloat: shadowStyle[@"dy"]]);
@@ -124,5 +124,12 @@
 {
     return uri != nil? [uri hasPrefix:@"data:"] : false;
 }
+
++ (bool)isNULL: (NSDictionary*) obj
+{
+    bool f = obj == nil || [obj isKindOfClass:[NSNull class]];
+    return f;
+}
+
 
 @end

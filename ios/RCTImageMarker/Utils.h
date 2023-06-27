@@ -20,6 +20,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (bool)isPng: (NSString *)saveFormat;
 + (NSString*) getExt: (NSString*) saveFormat;
 + (bool)isBase64: (NSString*) uri;
++ (bool)isNULL: (NSDictionary*) obj;
 
 @end
 

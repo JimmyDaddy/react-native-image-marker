@@ -15,7 +15,7 @@
 
 -(id) initWithDicOpts:(NSDictionary *)opts
 {
-    if (![[opts allKeys] containsObject:@"backgroundImage"] || opts[@"backgroundImage"] == nil) {
+    if (![[opts allKeys] containsObject:@"backgroundImage"] || opts[@"backgroundImage"] == nil || [Utils isNULL:opts[@"backgroundImage"]]) {
         @throw [NSException exceptionWithName:@"PARAMS_REQUIRED" reason:@"backgroundImage is required" userInfo:nil];
     }
     _backgroundImage = [[ImageOptions alloc] initWithDicOpts:opts[@"backgroundImage"]];
