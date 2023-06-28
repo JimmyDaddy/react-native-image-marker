@@ -19,7 +19,11 @@
     _shadow = [opts objectForKey:@"shadowStyle"]  ? [Utils getShadowStyle: opts[@"shadowStyle"]] : nil;
     _textBackground = [[TextBackground alloc] initWithTextBackgroundStyle: opts[@"textBackgroundStyle"]];
     CGFloat scale = [UIScreen mainScreen].scale;
-    _font = [UIFont fontWithName:opts[@"fontName"] size: [opts objectForKey: @"fontSize"]? ([RCTConvert CGFloat: [opts objectForKey: @"fontSize"]]) * scale: 14.0 * scale];
+    CGFloat fontSize =  [opts objectForKey: @"fontSize"]? ([RCTConvert CGFloat: [opts objectForKey: @"fontSize"]]) * scale: 14.0 * scale;
+    _font = [UIFont fontWithName:opts[@"fontName"] size: fontSize];
+    if (_font == nil) {
+        _font = [UIFont systemFontOfSize: fontSize];
+    }
     _skewX = [RCTConvert CGFloat:opts[@"skewX"]];
     _underline = [RCTConvert BOOL: opts[@"underline"]];
     _strikeThrough = [RCTConvert BOOL: opts[@"strikeThrough"]];
