@@ -16,7 +16,7 @@
 
 -(id)initWithTextBackgroundStyle:(NSDictionary *) textBackground
 {
-    if (textBackground == nil) return nil;
+    if ([Utils isNULL: textBackground]) return nil;
     _typeBg = textBackground[@"type"];
     _paddingX = [RCTConvert CGFloat: textBackground[@"paddingX"]];
     _paddingY = [RCTConvert CGFloat: textBackground[@"paddingY"]];

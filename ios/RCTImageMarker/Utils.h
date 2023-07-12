@@ -19,6 +19,7 @@ NS_ASSUME_NONNULL_BEGIN
 +(NSShadow*)getShadowStyle:(NSDictionary *) shadowStyle;
 + (bool)isPng: (NSString *)saveFormat;
 + (NSString*) getExt: (NSString*) saveFormat;
++ (bool)isNULL: (NSDictionary*) obj;
 
 @end
 

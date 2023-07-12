@@ -21,8 +21,8 @@
     _src = opts[@"src"];
     _uri = _src[@"uri"];
     _color = [Utils getColor: opts[@"color"]];
-    _shadow = [Utils getShadowStyle: opts[@"shadowStyle"]];
-    _textBackground = [[TextBackground alloc] initWithTextBackgroundStyle: opts[@"textBackgroundStyle"]];
+    _shadow = [opts objectForKey:@"shadowStyle"]  ? [Utils getShadowStyle: opts[@"shadowStyle"]] : nil;
+    _textBackground = [opts objectForKey:@"textBackgroundStyle"]? [[TextBackground alloc] initWithTextBackgroundStyle: opts[@"textBackgroundStyle"]] : nil;
     _X = [RCTConvert CGFloat:opts[@"X"]];
     _Y = [RCTConvert CGFloat:opts[@"Y"]];
     _font = [UIFont fontWithName:opts[@"fontName"] size: [opts objectForKey: @"fontSize"]? [RCTConvert CGFloat: [opts objectForKey: @"fontSize"]]: 14.0];
