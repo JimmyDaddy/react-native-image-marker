@@ -62,11 +62,13 @@ UIImage * markerImgWithText(UIImage *image, MarkTextOptions* opts){
     int w = image.size.width;
     int h = image.size.height;
     
-    NSDictionary *attributes = @{
+    NSMutableDictionary *attributes = [[NSMutableDictionary alloc] initWithDictionary:@{
         NSFontAttributeName: opts.font,   //设置字体
         NSForegroundColorAttributeName : opts.color,      //设置字体颜色
-        NSShadowAttributeName : opts.shadow
-    };
+    }];
+    if (opts.shadow != nil) {
+        attributes[NSShadowAttributeName] = opts.shadow;
+    }
     NSAttributedString *attributedText = [[NSAttributedString alloc] initWithString:opts.text attributes:attributes];
     CGSize maxSize = CGSizeMake(w, CGFLOAT_MAX); // 最大宽度和高度
     CGRect textRect = [attributedText boundingRectWithSize:maxSize options:NSStringDrawingUsesLineFragmentOrigin context:nil];
@@ -191,11 +193,14 @@ UIImage * markerImgWithTextByPosition(UIImage *image, MarkTextOptions* opts){
     int w = image.size.width;
     int h = image.size.height;
     
-    NSDictionary *attr = @{
+    NSMutableDictionary *attr = [[NSMutableDictionary alloc] initWithDictionary:@{
         NSFontAttributeName: opts.font,   //设置字体
         NSForegroundColorAttributeName : opts.color,      //设置字体颜色
-        NSShadowAttributeName : opts.shadow
-    };
+    }];
+    if (opts.shadow != nil) {
+        attr[NSShadowAttributeName] = opts.shadow;
+    }
+
     
     CGSize size = [opts.text sizeWithAttributes:attr];
     
