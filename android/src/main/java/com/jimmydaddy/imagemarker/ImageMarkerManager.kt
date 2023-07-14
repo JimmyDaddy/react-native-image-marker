@@ -1,6 +1,5 @@
 package com.jimmydaddy.imagemarker
 
-import android.R.attr.bitmap
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Bitmap.CompressFormat
@@ -174,19 +173,16 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
       val canvas = Canvas(icon!!)
       canvas.save()
       if (opts.backgroundImage.rotate > 0) {
-        val matrix = Matrix()
-        matrix.setRotate(opts.backgroundImage.rotate, (width / 2).toFloat(), (height/2).toFloat())
-        val rotatedBitmap = Bitmap.createBitmap(bg, 0, 0, width, height, matrix, true)
-        canvas.drawBitmap(rotatedBitmap, 0f, 0f, opts.backgroundImage.applyStyle())
-      } else {
-        canvas.drawBitmap(bg, 0f, 0f, opts.backgroundImage.applyStyle())
+        canvas.rotate(opts.backgroundImage.rotate, (width / 2).toFloat(), (height/2).toFloat())
       }
+      canvas.drawBitmap(bg, 0f, 0f, opts.backgroundImage.applyStyle())
       canvas.restore()
       // 原图生成 - end
       canvas.save()
       var markerBitmap = marker;
       if (opts.watermarkImage.rotate > 0) {
         val matrix = Matrix()
+        Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         matrix.setRotate(opts.watermarkImage.rotate, (width / 2).toFloat(), (height/2).toFloat())
         markerBitmap = marker?.let { Bitmap.createBitmap(it, 0, 0, marker.width, marker.height, matrix, true) }
       }
@@ -198,6 +194,13 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
           width,
           height
         )
+
+        val transparentBitmap =
+          Bitmap.createBitmap(markerBitmap.width, markerBitmap.height, Bitmap.Config.ARGB_8888)
+
+        val watermarkCanvas = Canvas(transparentBitmap)
+        watermarkCanvas.drawARGB(0, 0, 0, 0)
+        watermarkCanvas.drawBitmap(markerBitmap, 0f, 0f, null)
         canvas.drawBitmap(markerBitmap, pos.x, pos.y, opts.watermarkImage.applyStyle())
       } else {
         canvas.drawBitmap(

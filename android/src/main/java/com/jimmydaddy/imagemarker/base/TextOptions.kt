@@ -130,6 +130,8 @@ class TextOptions(options: ReadableMap) {
     val x = position.x
     val y = position.y
 
+    canvas.rotate(style.rotate.toFloat())
+
     // Draw text background
     if (null != style.textBackgroundStyle) {
       val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.LINEAR_TEXT_FLAG)
@@ -169,7 +171,6 @@ class TextOptions(options: ReadableMap) {
     }
     canvas.save()
     canvas.translate(x, y)
-    canvas.rotate(style.rotate.toFloat())
     textLayout.draw(canvas)
     canvas.restore()
     textPaint.reset()
