@@ -77,7 +77,7 @@ const s = StyleSheet.create({
     width,
     height: 300,
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: '#ffffAA',
   },
   picker: {
     backgroundColor: '#00B96B5A',

@@ -23,10 +23,6 @@ class TextBackground: NSObject {
         self.typeBg = textBackground["type"] as? String
         self.paddingX = RCTConvert.cgFloat(textBackground["paddingX"])
         self.paddingY = RCTConvert.cgFloat(textBackground["paddingY"])
-        if let color = textBackground["color"] as? String, color.count > 1 {
-            self.colorBg = Utils.getColor(color)
-        } else {
-            self.colorBg = UIColor.clear
-        }
+        self.colorBg = UIColor(hex: textBackground["color"] as! String) ?? UIColor.clear
     }
 }

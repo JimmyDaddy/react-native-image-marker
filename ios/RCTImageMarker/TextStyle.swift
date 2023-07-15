@@ -23,7 +23,7 @@ class TextStyle: NSObject {
     var textAlign: String?
 
     init(dicOpts opts: [AnyHashable: Any]) {
-        self.color = Utils.getColor((opts["color"] as? String)!)
+        self.color = UIColor(hex: opts["color"] as! String) ?? UIColor.clear
         if let shadowStyle = opts["shadowStyle"] as? [AnyHashable: Any] {
             self.shadow = Utils.getShadowStyle(shadowStyle)
         } else {

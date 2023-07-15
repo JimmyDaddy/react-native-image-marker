@@ -84,18 +84,7 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
             return fullPath
         }
     }
-    
-    func transBase64(_ base64Str: String) -> UIImage? {
-        let trimmedString = base64Str.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let encodedString = trimmedString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-            let imgURL = URL(string: encodedString),
-            let imageData = try? Data(contentsOf: imgURL),
-            let image = UIImage(data: imageData) else {
-            return nil
-        }
-        return image
-    }
-    
+        
     func markerImgWithText(_ image: UIImage, _ opts: MarkTextOptions) -> UIImage? {
         let w = Int(image.size.width)
         let h = Int(image.size.height)
@@ -105,39 +94,25 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         guard let context = UIGraphicsGetCurrentContext() else {
             return nil
         }
-        
         let canvasRect = CGRect(x: 0, y: 0, width: w, height: h)
-        
-        if opts.backgroundImage.alpha != 1.0 || opts.backgroundImage.rotate != 0 {
-            context.saveGState()
-            
-            if opts.backgroundImage.alpha != 1 {
-                context.beginTransparencyLayer(auxiliaryInfo: nil)
-                context.setAlpha(opts.backgroundImage.alpha)
-                context.setBlendMode(.multiply)
-            }
-            context.translateBy(x: 0, y: CGFloat(h))
-            context.scaleBy(x: 1.0, y: -1.0)
-            
-            if opts.backgroundImage.rotate != 0 {
-                context.translateBy(x: canvasRect.midX, y: canvasRect.midY)
-                context.rotate(by: -opts.backgroundImage.rotate * .pi / 180)
-                context.translateBy(x: -canvasRect.midX, y: -canvasRect.midY)
-            }
+
+        context.saveGState()
+
+        let transform = CGAffineTransform(translationX: 0, y: canvasRect.height)
+            .scaledBy(x: 1, y: -1)
+        context.concatenate(transform)
+        if opts.backgroundImage.alpha != 1.0 {
+            context.beginTransparencyLayer(auxiliaryInfo: nil)
+            context.setAlpha(opts.backgroundImage.alpha)
+            context.setBlendMode(.multiply)
             context.draw(image.cgImage!, in: canvasRect)
-            if opts.backgroundImage.alpha != 1 {
-                context.endTransparencyLayer()
-            }
+            context.endTransparencyLayer()
             context.setBlendMode(.normal)
-            context.restoreGState()
         } else {
-            // 在 iOS 中，图像的坐标系原点在左上角，而不是左下角。这意味着，当使用 CGContextDrawImage 函数绘制图像时，它会默认将图像翻转，以使其与坐标系匹配
-            context.saveGState()
-            context.translateBy(x: 0, y: CGFloat(h))
-            context.scaleBy(x: 1.0, y: -1.0)
             context.draw(image.cgImage!, in: canvasRect)
-            context.restoreGState()
         }
+        context.restoreGState()
+
         
         for textOpts in opts.watermarkTexts {
             context.saveGState()
@@ -246,8 +221,9 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
             context.restoreGState()
         }
         
-        let aimg = UIGraphicsGetImageFromCurrentImageContext()
+        var aimg = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()
+        aimg = aimg?.rotatedImageWithTransform(opts.backgroundImage.rotate)
         return aimg
     }
     
@@ -261,44 +237,28 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         let canvasRect = CGRect(x: 0, y: 0, width: CGFloat(w), height: CGFloat(h))
         
         UIGraphicsBeginImageContextWithOptions(image.size, false, options.backgroundImage.scale)
+
+        let transform = CGAffineTransform(translationX: 0, y: canvasRect.height)
+            .scaledBy(x: 1, y: -1)
         var context: CGContext?
-        if options.backgroundImage.alpha != 1.0 || options.backgroundImage.rotate != 0 {
-            if options.backgroundImage.rotate != 0 {
-                let transform = CGAffineTransform(rotationAngle: -options.backgroundImage.rotate * .pi / 180)
-                let rotatedRect = canvasRect.applying(transform)
-                UIGraphicsBeginImageContext(rotatedRect.size)
-                context = UIGraphicsGetCurrentContext()
-                context?.saveGState()
-                context?.translateBy(x: 0, y: CGFloat(h))
-                context?.scaleBy(x: 1.0, y: -1.0)
-                context?.translateBy(x: rotatedRect.size.width / 2, y: rotatedRect.size.height / 2)
-                context?.rotate(by: -options.backgroundImage.rotate * .pi / 180)
-                context?.translateBy(x: -rotatedRect.size.width / 2, y: -rotatedRect.size.height / 2)
-            } else {
-                UIGraphicsBeginImageContextWithOptions(image.size, false, 0)
-                context = UIGraphicsGetCurrentContext()
-                context?.saveGState()
-                context?.translateBy(x: 0, y: CGFloat(h))
-                context?.scaleBy(x: 1.0, y: -1.0)
-            }
+        if options.backgroundImage.alpha != 1.0 {
+            UIGraphicsBeginImageContextWithOptions(image.size, false, 0)
+            context = UIGraphicsGetCurrentContext()
+            context?.saveGState()
+            context?.concatenate(transform)
             
-            if options.backgroundImage.alpha != 1 {
-                context?.beginTransparencyLayer(auxiliaryInfo: nil)
-                context?.setAlpha(options.backgroundImage.alpha)
-                context?.setBlendMode(.multiply)
-            }
-            
+            context?.beginTransparencyLayer(auxiliaryInfo: nil)
+            context?.setAlpha(options.backgroundImage.alpha)
+            context?.setBlendMode(.multiply)
+        
             context?.draw(image.cgImage!, in: canvasRect)
-            if options.backgroundImage.alpha != 1 {
-                context?.endTransparencyLayer()
-            }
+            context?.endTransparencyLayer()
             context?.setBlendMode(.normal)
             context?.restoreGState()
         } else {
             context = UIGraphicsGetCurrentContext()
             context?.saveGState()
-            context?.translateBy(x: 0, y: CGFloat(h))
-            context?.scaleBy(x: 1.0, y: -1.0)
+            context?.concatenate(transform)
             context?.draw(image.cgImage!, in: canvasRect)
             context?.restoreGState()
         }
@@ -329,45 +289,31 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
             rect = CGRect(x: CGFloat(options.X), y: CGFloat(options.Y), width: CGFloat(ww), height: CGFloat(wh))
         }
         
-        if options.watermarkImage.alpha != 1.0 || options.watermarkImage.rotate != 0 {
-            var markerContext: CGContext?
-            
-            if options.watermarkImage.rotate != 0 {
-                let transform = CGAffineTransform(rotationAngle: -options.watermarkImage.rotate * .pi / 180)
-                let rotatedRect = CGRect(x: 0, y: 0, width: CGFloat(ww), height: CGFloat(wh)).applying(transform)
-                UIGraphicsBeginImageContext(rotatedRect.size)
-                markerContext = UIGraphicsGetCurrentContext()
-                markerContext?.translateBy(x: rotatedRect.size.width / 2, y: rotatedRect.size.height / 2)
-                markerContext?.rotate(by: -options.watermarkImage.rotate * .pi / 180)
-                markerContext?.translateBy(x: -waterImage.size.width / 2, y: -waterImage.size.height / 2)
-            } else {
-                UIGraphicsBeginImageContextWithOptions(waterImage.size, false, 0)
-                markerContext = UIGraphicsGetCurrentContext()
-            }
-            
-            if options.watermarkImage.alpha != 1 {
-                markerContext?.beginTransparencyLayer(auxiliaryInfo: nil)
-                markerContext?.setAlpha(options.watermarkImage.alpha)
-                markerContext?.setBlendMode(.multiply)
-            }
-            
-            markerContext?.draw(waterImage.cgImage!, in: CGRect(x: 0, y: 0, width: CGFloat(ww), height: CGFloat(wh)))
-            if options.watermarkImage.alpha != 1 {
-                markerContext?.endTransparencyLayer()
-            }
-            let waterImageRes = UIGraphicsGetImageFromCurrentImageContext()!
-            UIGraphicsEndImageContext()
-            context?.draw(waterImageRes.cgImage!, in: rect)
+        UIGraphicsBeginImageContextWithOptions(waterImage.size, false, 0)
+        let markerContext = UIGraphicsGetCurrentContext()
+        markerContext?.saveGState()
+
+        if options.watermarkImage.alpha != 1.0 {
+            markerContext?.beginTransparencyLayer(auxiliaryInfo: nil)
+            markerContext?.setAlpha(options.watermarkImage.alpha)
+            markerContext?.setBlendMode(.multiply)
+            let markerImage = waterImage.rotatedImageWithTransform(options.watermarkImage.rotate)
+            markerContext?.draw(markerImage.cgImage!, in: rect)
+            markerContext?.endTransparencyLayer()
+
         } else {
-            context?.saveGState()
-            context?.translateBy(x: 0, y: CGFloat(wh))
-            context?.scaleBy(x: 1.0, y: -1.0)
-            context?.draw(waterImage.cgImage!, in: rect)
-            context?.restoreGState()
+            let markerImage = waterImage.rotatedImageWithTransform(options.watermarkImage.rotate)
+            markerContext?.draw(markerImage.cgImage!, in: rect)
         }
-        
-        let newImage = UIGraphicsGetImageFromCurrentImageContext()
+        markerContext?.restoreGState()
+
+        let waterImageRes = UIGraphicsGetImageFromCurrentImageContext()!
+        context?.draw(waterImageRes.cgImage!, in: rect)
         UIGraphicsEndImageContext()
+        
+        var newImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        newImage = newImage?.rotatedImageWithTransform(options.backgroundImage.rotate)
         return newImage
     }
     
@@ -378,7 +324,7 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
             rejecter("OPTS_INVALID", "opts invalid", nil)
         }
         if Utils.isBase64(markOpts!.backgroundImage.uri) {
-            if let image = transBase64(markOpts!.backgroundImage.uri) {
+            if let image = UIImage.transBase64(markOpts!.backgroundImage.uri) {
                 if let scaledImage = markerImgWithText(image, markOpts!) {
                     let res = saveImageForMarker(scaledImage, with: markOpts!)
                     resolver(res)
@@ -422,9 +368,9 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
             rejecter("OPTS_INVALID", "opts invalid", nil)
         }
         if Utils.isBase64(markOpts?.backgroundImage.uri) {
-            if let image = transBase64(markOpts!.backgroundImage.uri) {
+            if let image = UIImage.transBase64(markOpts!.backgroundImage.uri) {
                 if Utils.isBase64(markOpts!.watermarkImage.uri) {
-                    if let marker = transBase64(markOpts!.watermarkImage.uri) {
+                    if let marker = UIImage.transBase64(markOpts!.watermarkImage.uri) {
                         if let scaledImage = markeImage(with: image, waterImage: marker, options: markOpts!) {
                             let res = saveImageForMarker(scaledImage, with: markOpts!)
                             resolver(res)
@@ -465,7 +411,7 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
                 if let error = error {
                     if let image = UIImage(contentsOfFile: markOpts!.backgroundImage.uri) {
                         if Utils.isBase64(markOpts!.watermarkImage.uri) {
-                            if let marker = self.transBase64(markOpts!.watermarkImage.uri) {
+                            if let marker = UIImage.transBase64(markOpts!.watermarkImage.uri) {
                                 if let scaledImage = self.markeImage(with: image, waterImage: marker, options: markOpts!) {
                                     let res = self.saveImageForMarker(scaledImage, with: markOpts!)
                                     resolver(res)
@@ -506,7 +452,7 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
                     }
                 } else if let image = image {
                     if Utils.isBase64(markOpts!.watermarkImage.uri) {
-                        if let marker = self.transBase64(markOpts!.watermarkImage.uri) {
+                        if let marker = UIImage.transBase64(markOpts!.watermarkImage.uri) {
                             if let scaledImage = self.markeImage(with: image, waterImage: marker, options: markOpts!) {
                                 let res = self.saveImageForMarker(scaledImage, with: markOpts!)
                                 resolver(res)
