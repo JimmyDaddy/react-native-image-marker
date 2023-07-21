@@ -19,7 +19,7 @@ class TextStyle: NSObject {
     var strikeThrough: Bool = false
     var italic: Bool = false
     var bold: Bool = false
-    var rotate: Int = 0
+    var rotate: CGFloat = 0
     var textAlign: String?
 
     init(dicOpts opts: [AnyHashable: Any]) {
@@ -41,7 +41,7 @@ class TextStyle: NSObject {
         self.strikeThrough = RCTConvert.bool(opts["strikeThrough"])
         self.italic = RCTConvert.bool(opts["italic"])
         self.bold = RCTConvert.bool(opts["bold"])
-        self.rotate = RCTConvert.nsInteger(opts["rotate"])
+        self.rotate = RCTConvert.cgFloat(opts["rotate"])
         self.textAlign = opts["textAlign"] as? String
 
         super.init()

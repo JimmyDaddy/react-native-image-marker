@@ -9,7 +9,7 @@ import UIKit
 
 extension UIImage {
     func rotatedImageWithTransformAndCorp(_ rotate: CGFloat, croppedToRect rect: CGRect) -> UIImage {
-        let rotation = CGAffineTransform(rotationAngle: -rotate * .pi / 180)
+        let rotation = CGAffineTransform(rotationAngle: rotate * .pi / 180)
         let rotatedImage = rotatedImageWithTransform(rotation)
         
         let scale = rotatedImage.scale
@@ -24,21 +24,22 @@ extension UIImage {
         if rotate == 0 || rotate.isNaN {
             return self;
         }
-        let rotation = CGAffineTransform(rotationAngle: -rotate * .pi / 180)
+        let rotation = CGAffineTransform(rotationAngle: rotate * .pi / 180)
         let rotatedImage = rotatedImageWithTransform(rotation)
         return rotatedImage
     }
     
     fileprivate func rotatedImageWithTransform(_ transform: CGAffineTransform) -> UIImage {
         // draw image with transparent background
-        let renderer = UIGraphicsImageRenderer(size: size, format: UIGraphicsImageRendererFormat())
+        let diagonal = sqrt(pow(size.width, 2) + pow(size.height, 2)) // 计算对角线长度
+        let circleSize = CGSize(width: diagonal, height: diagonal)
+        let renderer = UIGraphicsImageRenderer(size: circleSize, format: UIGraphicsImageRendererFormat())
         let image = renderer.image { context in
-            context.cgContext.setFillColor(UIColor.clear.cgColor)
-            context.cgContext.fill(CGRect(origin: .zero, size: size))
-            context.cgContext.setFillColor(UIColor.clear.cgColor)
-            context.cgContext.translateBy(x: size.width / 2.0, y: size.height / 2.0)
+            context.cgContext.setFillColor(UIColor.red.cgColor)
+            context.cgContext.fill(CGRect(origin: .zero, size: circleSize))
+            context.cgContext.translateBy(x: circleSize.width / 2.0, y: circleSize.height / 2.0)
             context.cgContext.concatenate(transform)
-            context.cgContext.translateBy(x: size.width / -2.0, y: size.height / -2.0)
+            context.cgContext.translateBy(x: circleSize.width / -2.0, y: circleSize.height / -2.0)
             draw(in: CGRect(x: 0.0, y: 0.0, width: size.width, height: size.height))
         }
         return image
@@ -54,21 +55,4 @@ extension UIImage {
         }
         return image
     }
-    
-//    func setAlpha(_ alpha: CGFloat) -> UIImage {
-//        if alpha < 0 || alpha >= 1 || alpha.isNaN {
-//            return self
-//        }
-//        UIGraphicsBeginImageContextWithOptions(size, true, scale)
-//        let markerContext = UIGraphicsGetCurrentContext()
-//        
-//        markerContext?.beginTransparencyLayer(auxiliaryInfo: nil)
-//        markerContext?.setAlpha(alpha)
-//        markerContext?.setBlendMode(.multiply)
-//        draw(in: CGRect(x: 0.0, y: 0.0, width: size.width, height: size.height))
-//        markerContext?.endTransparencyLayer()
-//        let waterImageRes = UIGraphicsGetImageFromCurrentImageContext()!
-//        UIGraphicsEndImageContext()
-//        return waterImageRes
-//    }
 }

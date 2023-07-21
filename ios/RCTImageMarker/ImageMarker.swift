@@ -198,11 +198,10 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
             
             if textOpts.style!.rotate != 0 {
                 context.saveGState()
-                context.translateBy(x: 0, y: textRect.size.height)
-                context.scaleBy(x: 1.0, y: -1.0)
-                context.translateBy(x: textRect.midX, y: textRect.midY)
-                context.rotate(by: CGFloat(textOpts.style!.rotate) * .pi / 180)
-                context.translateBy(x: -textRect.midX, y: -textRect.midY)
+                context.translateBy(x: canvasRect.midX, y: canvasRect.midY)
+                let rotation = CGAffineTransform(rotationAngle: CGFloat(textOpts.style!.rotate) * .pi / 180)
+                context.concatenate(rotation)
+                context.translateBy(x: -canvasRect.midX, y: -canvasRect.midY)
             }
             
             if let textBackground = textOpts.style!.textBackground {
@@ -230,9 +229,11 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
     func markeImage(with image: UIImage, waterImage: UIImage, options: MarkImageOptions) -> UIImage? {
         let w = Int(image.size.width)
         let h = Int(image.size.height)
+                
+        let ww = waterImage.size.width * options.watermarkImage.scale
+        let wh = waterImage.size.height * options.watermarkImage.scale
         
-        let ww = Int(waterImage.size.width * options.watermarkImage.scale)
-        let wh = Int(waterImage.size.height * options.watermarkImage.scale)
+        let diagonal = sqrt(pow(ww, 2) + pow(ww, 2)) // 计算对角线长度
         
         let canvasRect = CGRect(x: 0, y: 0, width: CGFloat(w), height: CGFloat(h))
         
@@ -263,7 +264,7 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
             context?.restoreGState()
         }
         
-        let size = CGSize(width: CGFloat(ww), height: CGFloat(wh))
+        let size = CGSize(width: CGFloat(diagonal), height: CGFloat(diagonal))
         
         var rect: CGRect
         if options.position != .none {
@@ -289,7 +290,7 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
             rect = CGRect(x: CGFloat(options.X), y: CGFloat(options.Y), width: CGFloat(ww), height: CGFloat(wh))
         }
         
-        UIGraphicsBeginImageContextWithOptions(waterImage.size, false, 0)
+        UIGraphicsBeginImageContextWithOptions(CGSize(width: diagonal, height: diagonal), false, 0)
         let markerContext = UIGraphicsGetCurrentContext()
         markerContext?.saveGState()
 
@@ -298,12 +299,12 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
             markerContext?.setAlpha(options.watermarkImage.alpha)
             markerContext?.setBlendMode(.multiply)
             let markerImage = waterImage.rotatedImageWithTransform(options.watermarkImage.rotate)
-            markerContext?.draw(markerImage.cgImage!, in: rect)
+            markerContext?.draw(markerImage.cgImage!, in: CGRect(origin: .zero, size: CGSize(width: diagonal, height: diagonal)))
             markerContext?.endTransparencyLayer()
 
         } else {
             let markerImage = waterImage.rotatedImageWithTransform(options.watermarkImage.rotate)
-            markerContext?.draw(markerImage.cgImage!, in: rect)
+            markerContext?.draw(markerImage.cgImage!, in: CGRect(origin: .zero, size: CGSize(width: diagonal, height: diagonal)))
         }
         markerContext?.restoreGState()
 
