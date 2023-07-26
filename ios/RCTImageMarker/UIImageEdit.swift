@@ -31,16 +31,15 @@ extension UIImage {
     
     fileprivate func rotatedImageWithTransform(_ transform: CGAffineTransform) -> UIImage {
         // draw image with transparent background
-        let diagonal = sqrt(pow(size.width, 2) + pow(size.height, 2)) // 计算对角线长度
-        let circleSize = CGSize(width: diagonal, height: diagonal)
-        let renderer = UIGraphicsImageRenderer(size: circleSize, format: UIGraphicsImageRendererFormat())
+        let rotatedSize = CGRect(origin: .zero, size: size).applying(transform).integral.size
+        let renderer = UIGraphicsImageRenderer(size: rotatedSize, format: UIGraphicsImageRendererFormat())
         let image = renderer.image { context in
-            context.cgContext.setFillColor(UIColor.red.cgColor)
-            context.cgContext.fill(CGRect(origin: .zero, size: circleSize))
-            context.cgContext.translateBy(x: circleSize.width / 2.0, y: circleSize.height / 2.0)
+            context.cgContext.setFillColor(UIColor.clear.cgColor)
+            context.cgContext.fill(CGRect(origin: .zero, size: rotatedSize))
+            context.cgContext.setFillColor(UIColor.clear.cgColor)
+            context.cgContext.translateBy(x: rotatedSize.width / 2, y: rotatedSize.height / 2)
             context.cgContext.concatenate(transform)
-            context.cgContext.translateBy(x: circleSize.width / -2.0, y: circleSize.height / -2.0)
-            draw(in: CGRect(x: 0.0, y: 0.0, width: size.width, height: size.height))
+            draw(in: CGRect(x: -size.width / 2, y: -size.height / 2, width: size.width, height: size.height))
         }
         return image
     }
