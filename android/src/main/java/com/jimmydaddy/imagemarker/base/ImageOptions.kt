@@ -1,6 +1,12 @@
 package com.jimmydaddy.imagemarker.base
 
+import android.graphics.BlendMode
+import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
+import android.os.Build
+import androidx.annotation.RequiresApi
 import com.facebook.react.bridge.ReadableMap
 import com.jimmydaddy.imagemarker.base.Constants.DEFAULT_ALPHA
 import com.jimmydaddy.imagemarker.base.Constants.DEFAULT_ROTATE
@@ -36,6 +42,7 @@ class ImageOptions(options: ReadableMap) {
     paint.alpha = alpha
     //获取更清晰的图像采样
     paint.isDither = true
+    paint.colorFilter = PorterDuffColorFilter(Color.TRANSPARENT, PorterDuff.Mode.OVERLAY)
     return paint
   }
 

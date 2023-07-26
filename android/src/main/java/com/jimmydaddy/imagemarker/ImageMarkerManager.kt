@@ -102,7 +102,7 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
         dataSource.subscribe(object : BaseBitmapDataSubscriber() {
           public override fun onNewResultImpl(bitmap: Bitmap?) {
             if (bitmap != null) {
-              val mark = scaleBitmap(bitmap, opts.watermarkImage.scale)
+              val mark = ImageProcess.scaleBitmap(bitmap, opts.watermarkImage.scale)
               markImageByBitmap(bg, mark, dest, opts, promise)
             } else {
               promise.reject(
@@ -132,9 +132,7 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
           val bitmap = BitmapFactory.decodeResource(r, resId)
           //                    Bitmap bitmap = BitmapFactory.decodeStream(is);
           Log.d(IMAGE_MARKER_TAG, bitmap!!.height.toString() + "")
-          val mark = scaleBitmap(
-            bitmap, opts.watermarkImage.scale
-          )
+          val mark = ImageProcess.scaleBitmap(bitmap, opts.watermarkImage.scale)
           Log.d(IMAGE_MARKER_TAG, mark!!.height.toString() + "")
           if (bitmap != null && !bitmap.isRecycled && opts.watermarkImage.scale != 1.0f) {
             bitmap.recycle()
@@ -165,26 +163,15 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
       val height = bg!!.height
       val width = bg.width
       icon = getBlankBitmap(width, height)
-      //过滤一些
-
-//            if (percent > 1) {
-//                prePhoto = Bitmap.createScaledBitmap(prePhoto, width, height, true);
-//            }
       val canvas = Canvas(icon!!)
       canvas.save()
-      if (opts.backgroundImage.rotate > 0) {
-        canvas.rotate(opts.backgroundImage.rotate, (width / 2).toFloat(), (height/2).toFloat())
-      }
       canvas.drawBitmap(bg, 0f, 0f, opts.backgroundImage.applyStyle())
       canvas.restore()
       // 原图生成 - end
       canvas.save()
       var markerBitmap = marker;
-      if (opts.watermarkImage.rotate > 0) {
-        val matrix = Matrix()
-        Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-        matrix.setRotate(opts.watermarkImage.rotate, (width / 2).toFloat(), (height/2).toFloat())
-        markerBitmap = marker?.let { Bitmap.createBitmap(it, 0, 0, marker.width, marker.height, matrix, true) }
+      if (opts.watermarkImage.rotate != 0f) {
+        markerBitmap = ImageProcess.rotate(marker!!, opts.watermarkImage.rotate)
       }
       if (opts.positionEnum != null) {
         val pos = getImageRectFromPosition(
@@ -194,13 +181,6 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
           width,
           height
         )
-
-        val transparentBitmap =
-          Bitmap.createBitmap(markerBitmap.width, markerBitmap.height, Bitmap.Config.ARGB_8888)
-
-        val watermarkCanvas = Canvas(transparentBitmap)
-        watermarkCanvas.drawARGB(0, 0, 0, 0)
-        watermarkCanvas.drawBitmap(markerBitmap, 0f, 0f, null)
         canvas.drawBitmap(markerBitmap, pos.x, pos.y, opts.watermarkImage.applyStyle())
       } else {
         canvas.drawBitmap(
@@ -211,20 +191,21 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
         )
       }
       canvas.restore()
+
+      // 保存
+      // canvas.save(Canvas.ALL_SAVE_FLAG);
       if (bg != null && !bg.isRecycled) {
         bg.recycle()
         System.gc()
       }
+
       if (marker != null && !marker.isRecycled) {
         marker.recycle()
         System.gc()
       }
-
-      // 保存
-      // canvas.save(Canvas.ALL_SAVE_FLAG);
-      canvas.save()
-      // 存储
-      canvas.restore()
+      if (opts.backgroundImage.rotate != 0f) {
+        icon = ImageProcess.rotate(icon, opts.backgroundImage.rotate)
+      }
       // export base64
       if (dest == BASE64) {
         val base64Stream = ByteArrayOutputStream()
@@ -283,9 +264,6 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
       //初始化画布 绘制的图像到icon上
       val canvas = Canvas(icon!!)
       canvas.save()
-      if (opts.backgroundImage.rotate > 0) {
-        canvas.rotate(opts.backgroundImage.rotate, (width / 2).toFloat(), (height/2).toFloat())
-      }
       canvas.drawBitmap(bg, 0f, 0f, opts.backgroundImage.applyStyle())
       canvas.restore()
       if (bg != null && !bg.isRecycled) {
@@ -297,6 +275,10 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
         //建立画笔
         textPaint = text!!.applyStyle(this.reactApplicationContext, canvas, width, height)
         textPaint.reset()
+      }
+
+      if (opts.backgroundImage.rotate != 0f) {
+        icon = ImageProcess.rotate(icon, opts.backgroundImage.rotate)
       }
       if (dest == BASE64) {
         val base64Stream = ByteArrayOutputStream()
@@ -433,7 +415,7 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
         dataSource.subscribe(object : BaseBitmapDataSubscriber() {
           public override fun onNewResultImpl(bitmap: Bitmap?) {
             if (bitmap != null) {
-              val bg = scaleBitmap(bitmap, markOpts.backgroundImage.scale)
+              val bg = ImageProcess.scaleBitmap(bitmap, markOpts.backgroundImage.scale)
               markImage(bg, dest, markOpts, promise)
             } else {
               promise.reject(
@@ -463,9 +445,7 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
           val bitmap = BitmapFactory.decodeResource(r, resId)
           //                    Bitmap bitmap = BitmapFactory.decodeStream(is);
           Log.d(IMAGE_MARKER_TAG, bitmap!!.height.toString() + "")
-          val bg = scaleBitmap(
-            bitmap, markOpts.backgroundImage.scale
-          )
+          val bg = ImageProcess.scaleBitmap(bitmap, markOpts.backgroundImage.scale)
           Log.d(IMAGE_MARKER_TAG, bg!!.height.toString() + "")
           if (bitmap != null && !bitmap.isRecycled && markOpts.backgroundImage.scale != 1f) {
             bitmap.recycle()
