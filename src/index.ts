@@ -258,7 +258,6 @@ export interface TextBackgroundStyle {
 /**
  * @description Text options for text watermark
  * @example
- * {
  *  text: 'hello world',
  *  positionOptions: {
  *    X: 10,
@@ -290,7 +289,6 @@ export interface TextBackgroundStyle {
  *    bold: true,
  *    rotate: 45
  *  }
- * }
  */
 export interface TextOptions {
   /**
@@ -478,12 +476,10 @@ export interface TextMarkOptions {
 /**
  * @description Image options for background image or watermark image
  * @example
- * {
  *  src: require('./images/logo.png'),
  *  scale: 0.5,
  *  rotate: 45,
  *  alpha: 0.5
- * }
  */
 export interface ImageOptions {
   /**

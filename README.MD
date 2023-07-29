@@ -2,8 +2,24 @@
 
 Add text or icon watermark to your images
 
-## sample
+## Features
 
+* Add **multiple text** watermarks to images
+* Add **icon watermark** to images
+* Support **rotating** background images and image watermarks.
+* Support setting opacity for background images and image watermarks.
+* Support base64
+* flexible text style settings
+  * rotating
+  * text shadow
+  * background color
+  * italic
+  * bold
+  * stroke
+  * text align
+* Compatible with both Android and iOS
+
+## sample
 <p>
  <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/alphabgonly.png" width='200'>
  <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/alphicononly.png" width='200'>
@@ -25,18 +41,18 @@ Add text or icon watermark to your images
 
 ## Installation
 
-**RN version < 0.60.0 please use v0.5.2 or older**
-
 * npm install react-native-image-marker --save
 * link
-    * react-native link (RN version < 0.60.0)
-    * [auto link](https://github.com/react-native-community/cli/blob/main/docs/autolinking.md)(RN version > 0.60.0)
+  * react-native link (RN version < 0.60.0)
+  * [auto link](https://github.com/react-native-community/cli/blob/main/docs/autolinking.md)(RN version > 0.60.0)
 
-### iOS Pod Install (RN version < 0.60.0)
+> **RN version < 0.60.0 please use v0.5.2 or older**
+
+#### iOS Pod Install (RN version < 0.60.0)
 
 You can use `pod` instead of `link`. Add following lines in your `Podfile`:
 
-```shell
+```ruby
 pod 'RNImageMarker', :path => '../node_modules/react-native-image-marker'
 ```
 
@@ -57,8 +73,8 @@ const options = {
   rotate: 20,
   alpha: 0.5,
  },
- watermarkTexts: [
- {
+ // support multiple texts
+ watermarkTexts: [{
    text: 'hello',
    positionOptions: {
      position: Position.center,
@@ -86,8 +102,7 @@ const options = {
      italic: true,
      bold: true,
    },
- },
- {
+ }, {
    text: 'world',
    positionOptions: {
      X: 10,
@@ -112,7 +127,8 @@ const options = {
     },
     textAlign: 'right',
     skewX: 10,
- ],
+   },
+ }],
  scale: 1,
  quality: 100,
  filename: 'test',
@@ -172,7 +188,7 @@ await ImageMarker.markImage(options);
 
 [the latest version](https://jimmydaddy.github.io/react-native-image-marker/classes/Marker.html)
 
-If you are using a version lower than 1.0.0, please go to [v0.9.2](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/README.0.9.2.MD)
+If you are using a version lower than 1.0.0, please go to [v0.9.2](https://github.com/JimmyDaddy/react-native-image-marker/wiki/0.9.2)
 
 ## Extra about Android decoding image
 
@@ -181,7 +197,7 @@ This library use [Fresco](https://github.com/facebook/fresco) to decode image on
 * RN version < 0.60.0 use fresco v1.10.0
 * RN version >= 0.60.0 use fresco v2.0.0 +
 
-[see](https://github.com/facebook/react-native/blob/8cf9505bd27c5dade33b17cc177fa5ef1613dbcd/ReactAndroid/gradle.properties#L15)
+[ref](https://github.com/facebook/react-native/blob/8cf9505bd27c5dade33b17cc177fa5ef1613dbcd/ReactAndroid/gradle.properties#L15)
 
 ## Save image to file
 
