@@ -127,36 +127,6 @@ ImageMarker.markText(options).then((res) => {
 // or
 await ImageMarker.markText(options);
 
-// add icon watermark to a photo
-const options = {
- backgroundImage: {
-   src: require('./images/test.jpg'),
-   scale: 1,
-   rotate: 20,
-   alpha: 0.5,
- },
- watermarkImage: {
-   src: require('./images/watermark.png'),
-   scale: 1,
-   rotate: 20,
-   alpha: 0.5,
- },
- watermarkPositions: {
-   position: Position.center,
- },
- quality: 100,
- filename: 'test',
- saveFormat: ImageFormat.png,
- maxSize: 1000,
-};
-ImageMarker.markImage(options).then((res) => {
- console.log(res);
-}).catch((err) => {
- console.log(err);
-});
-// or
-await ImageMarker.markImage(options);
-
 ```
 
 ### icon watermarks
@@ -200,7 +170,9 @@ await ImageMarker.markImage(options);
 
 ## API
 
-[see](https://jimmydaddy.github.io/react-native-image-marker/classes/Marker.html)
+[the latest version](https://jimmydaddy.github.io/react-native-image-marker/classes/Marker.html)
+
+If you are using a version lower than 1.0.0, please go to [v0.9.2](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/README.0.9.2.MD)
 
 ## Extra about Android decoding image
 

@@ -16,15 +16,18 @@
 <li><a href="ImageOptions.html">ImageOptions</a></li></ul>
 <h1>Interface ImageOptions</h1></div>
 <section class="tsd-panel tsd-comment">
-<div class="tsd-comment tsd-typography"><p>Image options for image watermark</p>
-</div>
-<div class="tsd-comment tsd-typography"></div></section>
+<div class="tsd-comment tsd-typography">
+<h4>Description</h4><p>Image options for background image or watermark image</p>
+
+<h4>Example</h4><pre><code class="language-ts"><span class="hl-1">{</span><br/><span class="hl-1"> *  </span><span class="hl-9">src</span><span class="hl-1">: </span><span class="hl-0">require</span><span class="hl-1">(</span><span class="hl-2">&#39;./images/logo.png&#39;</span><span class="hl-1">),</span><br/><span class="hl-1"> *  </span><span class="hl-9">scale</span><span class="hl-1">: </span><span class="hl-8">0.5</span><span class="hl-1">,</span><br/><span class="hl-1"> *  </span><span class="hl-9">rotate</span><span class="hl-1">: </span><span class="hl-8">45</span><span class="hl-1">,</span><br/><span class="hl-1"> *  </span><span class="hl-9">alpha</span><span class="hl-1">: </span><span class="hl-8">0.5</span><br/><span class="hl-1"> * }</span>
+</code><button>Copy</button></pre>
+</div></section>
 <section class="tsd-panel tsd-hierarchy">
 <h4>Hierarchy</h4>
 <ul class="tsd-hierarchy">
 <li><span class="target">ImageOptions</span></li></ul></section><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/JimmyDaddy/react-native-image-marker/blob/ddb7267/src/index.ts#L199">index.ts:199</a></li></ul></aside>
+<li>Defined in <a href="https://github.com/JimmyDaddy/react-native-image-marker/blob/0e42624/src/index.ts#L488">index.ts:488</a></li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-index-accordion" open><summary class="tsd-accordion-summary tsd-index-summary">
@@ -43,34 +46,52 @@
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <span>alpha</span><a href="#alpha" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><g stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" id="icon-anchor"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5"></path><path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5"></path></g></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">alpha</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">number</span></div>
 <div class="tsd-comment tsd-typography">
-<h4>Default Value</h4><p><code>1</code>
-image alpha 0 - 1</p>
+<h4>Description</h4><p>transparent of background image <code>0 - 1</code></p>
+
+<h4>Default Value</h4><p>1</p>
+
+<h4>Example</h4><pre><code class="language-ts"><span class="hl-9">alpha</span><span class="hl-1">: </span><span class="hl-8">0.5</span>
+</code><button>Copy</button></pre>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/JimmyDaddy/react-native-image-marker/blob/ddb7267/src/index.ts#L215">index.ts:215</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/JimmyDaddy/react-native-image-marker/blob/0e42624/src/index.ts#L515">index.ts:515</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member"><a id="rotate" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <span>rotate</span><a href="#rotate" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">rotate</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">number</span></div>
 <div class="tsd-comment tsd-typography">
-<h4>Default Value</h4><p><code>0</code>
-rotate image with degree 0 - 360</p>
+<h4>Description</h4><p>rotate image rotate <code>0-360</code></p>
+
+<h4>Default Value</h4><p>0</p>
+
+<h4>Example</h4><pre><code class="language-ts"><span class="hl-9">rotate</span><span class="hl-1">: </span><span class="hl-8">45</span>
+</code><button>Copy</button></pre>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/JimmyDaddy/react-native-image-marker/blob/ddb7267/src/index.ts#L210">index.ts:210</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/JimmyDaddy/react-native-image-marker/blob/0e42624/src/index.ts#L508">index.ts:508</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member"><a id="scale" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <span>scale</span><a href="#scale" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">scale</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">number</span></div>
 <div class="tsd-comment tsd-typography">
-<h4>Default Value</h4><p><code>1</code>
-scale image 0 - 1</p>
+<h4>Description</h4><p>image scale <code>0-1</code></p>
+
+<h4>Default Value</h4><p>1</p>
+
+<h4>Example</h4><pre><code class="language-ts"><span class="hl-9">scale</span><span class="hl-1">: </span><span class="hl-8">1</span>
+</code><button>Copy</button></pre>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/JimmyDaddy/react-native-image-marker/blob/ddb7267/src/index.ts#L205">index.ts:205</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/JimmyDaddy/react-native-image-marker/blob/0e42624/src/index.ts#L501">index.ts:501</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member"><a id="src" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>src</span><a href="#src" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">src</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
+<div class="tsd-signature"><span class="tsd-kind-property">src</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div>
+<div class="tsd-comment tsd-typography">
+<h4>Description</h4><p>image src, local image</p>
+
+<h4>Example</h4><pre><code class="language-ts"><span class="hl-9">src</span><span class="hl-1">: </span><span class="hl-0">require</span><span class="hl-1">(</span><span class="hl-2">&#39;./images/logo.png&#39;</span><span class="hl-1">)</span>
+</code><button>Copy</button></pre>
+</div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/JimmyDaddy/react-native-image-marker/blob/ddb7267/src/index.ts#L200">index.ts:200</a></li></ul></aside></section></section></div>
+<li>Defined in <a href="https://github.com/JimmyDaddy/react-native-image-marker/blob/0e42624/src/index.ts#L494">index.ts:494</a></li></ul></aside></section></section></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">

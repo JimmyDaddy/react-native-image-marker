@@ -16,15 +16,18 @@
 <li><a href="TextMarkOptions.html">TextMarkOptions</a></li></ul>
 <h1>Interface TextMarkOptions</h1></div>
 <section class="tsd-panel tsd-comment">
-<div class="tsd-comment tsd-typography"><p>Options for text watermark</p>
-</div>
-<div class="tsd-comment tsd-typography"></div></section>
+<div class="tsd-comment tsd-typography">
+<h4>Description</h4><p>Options for text watermark</p>
+
+<h4>Example</h4><pre><code class="language-ts"><span class="hl-9">backgroundImage</span><span class="hl-1">: {</span><br/><span class="hl-1">   </span><span class="hl-9">src</span><span class="hl-1">: </span><span class="hl-0">require</span><span class="hl-1">(</span><span class="hl-2">&#39;./images/logo.png&#39;</span><span class="hl-1">),</span><br/><span class="hl-1">   </span><span class="hl-9">scale</span><span class="hl-1">: </span><span class="hl-8">0.5</span><span class="hl-1">,</span><br/><span class="hl-1">   </span><span class="hl-9">rotate</span><span class="hl-1">: </span><span class="hl-8">45</span><span class="hl-1">,</span><br/><span class="hl-1">   </span><span class="hl-9">alpha</span><span class="hl-1">: </span><span class="hl-8">0.5</span><br/><span class="hl-1"> },</span><br/><span class="hl-1"> </span><span class="hl-9">watermarkTexts</span><span class="hl-1">: [</span><br/><span class="hl-1"> {</span><br/><span class="hl-1">   </span><span class="hl-4">text:</span><span class="hl-1"> </span><span class="hl-2">&#39;hello world&#39;</span><span class="hl-1">,</span><br/><span class="hl-1">   </span><span class="hl-4">positionOptions:</span><span class="hl-1"> {</span><br/><span class="hl-1">     </span><span class="hl-4">X:</span><span class="hl-1"> </span><span class="hl-8">10</span><span class="hl-1">,</span><br/><span class="hl-1">     </span><span class="hl-4">Y:</span><span class="hl-1"> </span><span class="hl-8">10</span><span class="hl-1">,</span><br/><span class="hl-1">     </span><span class="hl-5">// or</span><br/><span class="hl-1">     </span><span class="hl-5">// position: Position.center</span><br/><span class="hl-1">   },</span><br/><span class="hl-1">   </span><span class="hl-4">style:</span><span class="hl-1"> {</span><br/><span class="hl-1">     </span><span class="hl-4">color:</span><span class="hl-1"> </span><span class="hl-2">&#39;#aacc22&#39;</span><span class="hl-1">,</span><br/><span class="hl-1">     </span><span class="hl-4">fontName:</span><span class="hl-1"> </span><span class="hl-2">&#39;Arial&#39;</span><span class="hl-1">,</span><br/><span class="hl-1">     </span><span class="hl-4">fontSize:</span><span class="hl-1"> </span><span class="hl-8">12</span><span class="hl-1">,</span><br/><span class="hl-1">     </span><span class="hl-4">shadowStyle:</span><span class="hl-1"> {</span><br/><span class="hl-1">       </span><span class="hl-4">dx:</span><span class="hl-1"> </span><span class="hl-8">10</span><span class="hl-1">,</span><br/><span class="hl-1">       </span><span class="hl-4">dy:</span><span class="hl-1"> </span><span class="hl-8">10</span><span class="hl-1">,</span><br/><span class="hl-1">       </span><span class="hl-4">radius:</span><span class="hl-1"> </span><span class="hl-8">10</span><span class="hl-1">,</span><br/><span class="hl-1">       </span><span class="hl-4">color:</span><span class="hl-1"> </span><span class="hl-2">&#39;#aacc22&#39;</span><br/><span class="hl-1">     },</span><br/><span class="hl-1">     </span><span class="hl-4">textBackgroundStyle:</span><span class="hl-1"> {</span><br/><span class="hl-1">       </span><span class="hl-4">paddingX:</span><span class="hl-1"> </span><span class="hl-8">10</span><span class="hl-1">,</span><br/><span class="hl-1">       </span><span class="hl-4">paddingY:</span><span class="hl-1"> </span><span class="hl-8">10</span><span class="hl-1">,</span><br/><span class="hl-1">       </span><span class="hl-4">type:</span><span class="hl-1"> </span><span class="hl-4">TextBackgroundType</span><span class="hl-1">.</span><span class="hl-4">stretchX</span><span class="hl-1">,</span><br/><span class="hl-1">       </span><span class="hl-4">color:</span><span class="hl-1"> </span><span class="hl-2">&#39;#aacc22&#39;</span><br/><span class="hl-1">     },</span><br/><span class="hl-1">     </span><span class="hl-4">underline:</span><span class="hl-1"> </span><span class="hl-6">true</span><span class="hl-1">,</span><br/><span class="hl-1">     </span><span class="hl-4">strikeThrough:</span><span class="hl-1"> </span><span class="hl-6">true</span><span class="hl-1">,</span><br/><span class="hl-1">     </span><span class="hl-4">textAlign:</span><span class="hl-1"> </span><span class="hl-2">&#39;left&#39;</span><span class="hl-1">,</span><br/><span class="hl-1">     </span><span class="hl-4">italic:</span><span class="hl-1"> </span><span class="hl-6">true</span><span class="hl-1">,</span><br/><span class="hl-1">     </span><span class="hl-5">//or</span><br/><span class="hl-1">     </span><span class="hl-5">// skewX: 45,</span><br/><span class="hl-1">     </span><span class="hl-4">bold:</span><span class="hl-1"> </span><span class="hl-6">true</span><span class="hl-1">,</span><br/><span class="hl-1">     </span><span class="hl-4">rotate:</span><span class="hl-1"> </span><span class="hl-8">45</span><br/><span class="hl-1">   }</span><br/><span class="hl-1"> }],</span><br/><span class="hl-1"> </span><span class="hl-9">quality</span><span class="hl-1">: </span><span class="hl-8">1</span><span class="hl-1">,</span><br/><span class="hl-1"> </span><span class="hl-9">filename</span><span class="hl-1">: </span><span class="hl-2">&#39;test&#39;</span><span class="hl-1">,</span><br/><span class="hl-1"> </span><span class="hl-9">saveFormat</span><span class="hl-1">: </span><span class="hl-4">ImageFormat</span><span class="hl-1">.</span><span class="hl-4">jpg</span><span class="hl-1">,</span><br/><span class="hl-1"> </span><span class="hl-9">maxSize</span><span class="hl-1">: </span><span class="hl-8">2048</span>
+</code><button>Copy</button></pre>
+</div></section>
 <section class="tsd-panel tsd-hierarchy">
 <h4>Hierarchy</h4>
 <ul class="tsd-hierarchy">
 <li><span class="target">TextMarkOptions</span></li></ul></section><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/JimmyDaddy/react-native-image-marker/blob/ddb7267/src/index.ts#L167">index.ts:167</a></li></ul></aside>
+<li>Defined in <a href="https://github.com/JimmyDaddy/react-native-image-marker/blob/0e42624/src/index.ts#L394">index.ts:394</a></li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-index-accordion" open><summary class="tsd-accordion-summary tsd-index-summary">
@@ -37,64 +40,86 @@
 <a href="TextMarkOptions.html#maxSize" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>max<wbr/>Size?</span></a>
 <a href="TextMarkOptions.html#quality" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>quality?</span></a>
 <a href="TextMarkOptions.html#saveFormat" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>save<wbr/>Format?</span></a>
-<a href="TextMarkOptions.html#scale" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>scale?</span></a>
 <a href="TextMarkOptions.html#watermarkTexts" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>watermark<wbr/>Texts</span></a>
 </div></section></div></details></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Properties</h2>
 <section class="tsd-panel tsd-member"><a id="backgroundImage" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>background<wbr/>Image</span><a href="#backgroundImage" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><g stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" id="icon-anchor"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5"></path><path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5"></path></g></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">background<wbr/>Image</span><span class="tsd-signature-symbol">:</span> <a href="ImageOptions.html" class="tsd-signature-type tsd-kind-interface">ImageOptions</a></div><aside class="tsd-sources">
+<div class="tsd-signature"><span class="tsd-kind-property">background<wbr/>Image</span><span class="tsd-signature-symbol">:</span> <a href="ImageOptions.html" class="tsd-signature-type tsd-kind-interface">ImageOptions</a></div>
+<div class="tsd-comment tsd-typography"><p>FIXME: ImageSourcePropType type define bug</p>
+</div>
+<div class="tsd-comment tsd-typography">
+<h4>Description</h4><p>background image options</p>
+
+<h4>Example</h4><pre><code class="language-ts"><span class="hl-9">backgroundImage</span><span class="hl-1">: {</span><br/><span class="hl-1"> </span><span class="hl-9">src</span><span class="hl-1">: </span><span class="hl-0">require</span><span class="hl-1">(</span><span class="hl-2">&#39;./images/logo.png&#39;</span><span class="hl-1">),</span><br/><span class="hl-1"> </span><span class="hl-9">scale</span><span class="hl-1">: </span><span class="hl-8">0.5</span><span class="hl-1">,</span><br/><span class="hl-1"> </span><span class="hl-9">rotate</span><span class="hl-1">: </span><span class="hl-8">45</span><span class="hl-1">,</span><br/><span class="hl-1"> </span><span class="hl-9">alpha</span><span class="hl-1">: </span><span class="hl-8">0.5</span><br/><span class="hl-1">}</span>
+</code><button>Copy</button></pre>
+</div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/JimmyDaddy/react-native-image-marker/blob/ddb7267/src/index.ts#L170">index.ts:170</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/JimmyDaddy/react-native-image-marker/blob/0e42624/src/index.ts#L406">index.ts:406</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member"><a id="filename" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <span>filename</span><a href="#filename" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">filename</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span></div><aside class="tsd-sources">
+<div class="tsd-signature"><span class="tsd-kind-property">filename</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span></div>
+<div class="tsd-comment tsd-typography">
+<h4>Description</h4><p>save image name</p>
+
+<h4>Example</h4><pre><code class="language-ts"><span class="hl-9">filename</span><span class="hl-1">: </span><span class="hl-2">&#39;test&#39;</span>
+</code><button>Copy</button></pre>
+</div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/JimmyDaddy/react-native-image-marker/blob/ddb7267/src/index.ts#L182">index.ts:182</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/JimmyDaddy/react-native-image-marker/blob/0e42624/src/index.ts#L459">index.ts:459</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member"><a id="maxSize" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <span>max<wbr/>Size</span><a href="#maxSize" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">max<wbr/>Size</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">number</span></div>
 <div class="tsd-comment tsd-typography">
-<h4>Default Value</h4><p>2048
+<h4>Description</h4><p>max image size see #49 #42
 android only
 <strong>need RN version &gt;= 0.60.0</strong>,  fresco <code>MaxBitmapSize</code> <a href="https://github.com/facebook/fresco/blob/08ca5f40cc0b60b4db16d15e45552cafeae39ccb/imagepipeline/src/main/java/com/facebook/imagepipeline/core/ImagePipelineExperiments.java#L282"><code>ImagePipelineConfig.Builder.experiment().setMaxBitmapSize()</code></a>, see <a href="https://github.com/JimmyDaddy/react-native-image-marker/issues/49#issuecomment-535303838">#49</a></p>
+
+<h4>Default Value</h4><p>2048</p>
+
+<h4>Example</h4><pre><code class="language-ts"><span class="hl-9">maxSize</span><span class="hl-1">: </span><span class="hl-8">2048</span>
+</code><button>Copy</button></pre>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/JimmyDaddy/react-native-image-marker/blob/ddb7267/src/index.ts#L193">index.ts:193</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/JimmyDaddy/react-native-image-marker/blob/0e42624/src/index.ts#L475">index.ts:475</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member"><a id="quality" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <span>quality</span><a href="#quality" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">quality</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">number</span></div>
 <div class="tsd-comment tsd-typography">
-<h4>Default Value</h4><p><code>1</code>
-image quality 0 - 1</p>
+<h4>Description</h4><p>image quality <code>0-1</code></p>
+
+<h4>Default Value</h4><p>1</p>
+
+<h4>Example</h4><pre><code class="language-ts"><span class="hl-9">quality</span><span class="hl-1">: </span><span class="hl-8">1</span>
+</code><button>Copy</button></pre>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/JimmyDaddy/react-native-image-marker/blob/ddb7267/src/index.ts#L181">index.ts:181</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/JimmyDaddy/react-native-image-marker/blob/0e42624/src/index.ts#L453">index.ts:453</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member"><a id="saveFormat" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <span>save<wbr/>Format</span><a href="#saveFormat" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">save<wbr/>Format</span><span class="tsd-signature-symbol">?:</span> <a href="../enums/ImageFormat.html" class="tsd-signature-type tsd-kind-enum">ImageFormat</a></div>
 <div class="tsd-comment tsd-typography">
-<h4>Default Value</h4><p><code>jpg</code>
-save image format see</p>
+<h4>Description</h4><p>save image format</p>
 
-<h4>Image Format</h4></div><aside class="tsd-sources">
-<ul>
-<li>Defined in <a href="https://github.com/JimmyDaddy/react-native-image-marker/blob/ddb7267/src/index.ts#L187">index.ts:187</a></li></ul></aside></section>
-<section class="tsd-panel tsd-member"><a id="scale" class="tsd-anchor"></a>
-<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <span>scale</span><a href="#scale" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">scale</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">number</span></div>
-<div class="tsd-comment tsd-typography">
-<h4>Default Value</h4><p><code>1</code>
-scale image 0 - 1</p>
+<h4>Default Value</h4><p><code>jpg</code></p>
+
+<h4>Example</h4><pre><code class="language-ts"><span class="hl-9">saveFormat</span><span class="hl-1">: </span><span class="hl-4">ImageFormat</span><span class="hl-1">.</span><span class="hl-4">jpg</span>
+</code><button>Copy</button></pre>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/JimmyDaddy/react-native-image-marker/blob/ddb7267/src/index.ts#L176">index.ts:176</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/JimmyDaddy/react-native-image-marker/blob/0e42624/src/index.ts#L466">index.ts:466</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member"><a id="watermarkTexts" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>watermark<wbr/>Texts</span><a href="#watermarkTexts" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">watermark<wbr/>Texts</span><span class="tsd-signature-symbol">:</span> <a href="TextOptions.html" class="tsd-signature-type tsd-kind-interface">TextOptions</a><span class="tsd-signature-symbol">[]</span></div><aside class="tsd-sources">
+<div class="tsd-signature"><span class="tsd-kind-property">watermark<wbr/>Texts</span><span class="tsd-signature-symbol">:</span> <a href="TextOptions.html" class="tsd-signature-type tsd-kind-interface">TextOptions</a><span class="tsd-signature-symbol">[]</span></div>
+<div class="tsd-comment tsd-typography">
+<h4>Description</h4><p>text options</p>
+
+<h4>Example</h4><pre><code class="language-ts"><span class="hl-9">watermarkTexts</span><span class="hl-1">: [</span><br/><span class="hl-1">{</span><br/><span class="hl-1"> </span><span class="hl-4">text:</span><span class="hl-1"> </span><span class="hl-2">&#39;hello world&#39;</span><span class="hl-1">,</span><br/><span class="hl-1"> </span><span class="hl-4">positionOptions:</span><span class="hl-1"> {</span><br/><span class="hl-1">   </span><span class="hl-4">X:</span><span class="hl-1"> </span><span class="hl-8">10</span><span class="hl-1">,</span><br/><span class="hl-1">   </span><span class="hl-4">Y:</span><span class="hl-1"> </span><span class="hl-8">10</span><span class="hl-1">,</span><br/><span class="hl-1">   </span><span class="hl-5">// or</span><br/><span class="hl-1">   </span><span class="hl-5">// position: Position.center</span><br/><span class="hl-1"> },</span><br/><span class="hl-1"> </span><span class="hl-4">style:</span><span class="hl-1"> {</span><br/><span class="hl-1">   </span><span class="hl-4">color:</span><span class="hl-1"> </span><span class="hl-2">&#39;#aacc22&#39;</span><span class="hl-1">,</span><br/><span class="hl-1">   </span><span class="hl-4">fontName:</span><span class="hl-1"> </span><span class="hl-2">&#39;Arial&#39;</span><span class="hl-1">,</span><br/><span class="hl-1">   </span><span class="hl-4">fontSize:</span><span class="hl-1"> </span><span class="hl-8">12</span><span class="hl-1">,</span><br/><span class="hl-1">   </span><span class="hl-4">shadowStyle:</span><span class="hl-1"> {</span><br/><span class="hl-1">     </span><span class="hl-4">dx:</span><span class="hl-1"> </span><span class="hl-8">10</span><span class="hl-1">,</span><br/><span class="hl-1">     </span><span class="hl-4">dy:</span><span class="hl-1"> </span><span class="hl-8">10</span><span class="hl-1">,</span><br/><span class="hl-1">     </span><span class="hl-4">radius:</span><span class="hl-1"> </span><span class="hl-8">10</span><span class="hl-1">,</span><br/><span class="hl-1">     </span><span class="hl-4">color:</span><span class="hl-1"> </span><span class="hl-2">&#39;#aacc22&#39;</span><br/><span class="hl-1">   },</span><br/><span class="hl-1">   </span><span class="hl-4">textBackgroundStyle:</span><span class="hl-1"> {</span><br/><span class="hl-1">     </span><span class="hl-4">paddingX:</span><span class="hl-1"> </span><span class="hl-8">10</span><span class="hl-1">,</span><br/><span class="hl-1">     </span><span class="hl-4">paddingY:</span><span class="hl-1"> </span><span class="hl-8">10</span><span class="hl-1">,</span><br/><span class="hl-1">     </span><span class="hl-4">type:</span><span class="hl-1"> </span><span class="hl-4">TextBackgroundType</span><span class="hl-1">.</span><span class="hl-4">stretchX</span><span class="hl-1">,</span><br/><span class="hl-1">     </span><span class="hl-4">color:</span><span class="hl-1"> </span><span class="hl-2">&#39;#aacc22&#39;</span><br/><span class="hl-1">   },</span><br/><span class="hl-1">   </span><span class="hl-4">underline:</span><span class="hl-1"> </span><span class="hl-6">true</span><span class="hl-1">,</span><br/><span class="hl-1">   </span><span class="hl-4">strikeThrough:</span><span class="hl-1"> </span><span class="hl-6">true</span><span class="hl-1">,</span><br/><span class="hl-1">   </span><span class="hl-4">textAlign:</span><span class="hl-1"> </span><span class="hl-2">&#39;left&#39;</span><span class="hl-1">,</span><br/><span class="hl-1">   </span><span class="hl-4">italic:</span><span class="hl-1"> </span><span class="hl-6">true</span><span class="hl-1">,</span><br/><span class="hl-1">   </span><span class="hl-5">//or</span><br/><span class="hl-1">   </span><span class="hl-5">// skewX: 45,</span><br/><span class="hl-1">   </span><span class="hl-4">bold:</span><span class="hl-1"> </span><span class="hl-6">true</span><span class="hl-1">,</span><br/><span class="hl-1">   </span><span class="hl-4">rotate:</span><span class="hl-1"> </span><span class="hl-8">45</span><br/><span class="hl-1"> }</span><br/><span class="hl-1">}]</span>
+</code><button>Copy</button></pre>
+</div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/JimmyDaddy/react-native-image-marker/blob/ddb7267/src/index.ts#L171">index.ts:171</a></li></ul></aside></section></section></div>
+<li>Defined in <a href="https://github.com/JimmyDaddy/react-native-image-marker/blob/0e42624/src/index.ts#L446">index.ts:446</a></li></ul></aside></section></section></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
@@ -117,7 +142,6 @@ scale image 0 - 1</p>
 <li><a href="#maxSize" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>max<wbr/>Size</span></a></li>
 <li><a href="#quality" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>quality</span></a></li>
 <li><a href="#saveFormat" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>save<wbr/>Format</span></a></li>
-<li><a href="#scale" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>scale</span></a></li>
 <li><a href="#watermarkTexts" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>watermark<wbr/>Texts</span></a></li></ul></div></details></div>
 <div class="site-menu">
 <nav class="tsd-navigation"><a href="../modules.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-4"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-namespace)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6"></rect><path d="M9.33 16V7.24H10.77L13.446 14.74C13.43 14.54 13.41 14.296 13.386 14.008C13.37 13.712 13.354 13.404 13.338 13.084C13.33 12.756 13.326 12.448 13.326 12.16V7.24H14.37V16H12.93L10.266 8.5C10.282 8.692 10.298 8.936 10.314 9.232C10.33 9.52 10.342 9.828 10.35 10.156C10.366 10.476 10.374 10.784 10.374 11.08V16H9.33Z" fill="var(--color-text)"></path></g></svg><span>image marker for rn</span></a>
