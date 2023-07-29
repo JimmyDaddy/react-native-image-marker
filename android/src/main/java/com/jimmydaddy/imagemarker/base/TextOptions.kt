@@ -3,6 +3,8 @@ package com.jimmydaddy.imagemarker.base
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Rect
+import android.graphics.RectF
 import android.graphics.Typeface
 import android.os.Build
 import android.text.Layout
@@ -42,7 +44,7 @@ class TextOptions(options: ReadableMap) {
     canvas: Canvas,
     maxWidth: Int,
     maxHeight: Int
-  ): TextPaint {
+  ) {
     val textPaint = TextPaint(Paint.ANTI_ALIAS_FLAG or Paint.DEV_KERN_TEXT_FLAG)
     textPaint.isAntiAlias = true
     if (null != style.shadowLayerStyle) {
@@ -100,6 +102,7 @@ class TextOptions(options: ReadableMap) {
         false
       )
     }
+
     val textHeight = textLayout.height
     var textWidth = 0
     val count = textLayout.lineCount
@@ -130,7 +133,9 @@ class TextOptions(options: ReadableMap) {
     val x = position.x
     val y = position.y
 
-    canvas.rotate(style.rotate.toFloat())
+    canvas.save()
+    val textRectWithPosition = RectF(x, y , textWidth.toFloat(), textHeight.toFloat())
+    canvas.rotate(style.rotate.toFloat(), textRectWithPosition.centerX(), textRectWithPosition.centerY())
 
     // Draw text background
     if (null != style.textBackgroundStyle) {
@@ -169,11 +174,9 @@ class TextOptions(options: ReadableMap) {
         }
       }
     }
-    canvas.save()
     canvas.translate(x, y)
     textLayout.draw(canvas)
+    canvas.translate(0f, 0f);
     canvas.restore()
-    textPaint.reset()
-    return textPaint
   }
 }

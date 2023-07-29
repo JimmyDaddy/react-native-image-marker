@@ -270,11 +270,9 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
         bg.recycle()
         System.gc()
       }
-      var textPaint: Paint
       for (text in opts.watermarkTexts) {
         //建立画笔
-        textPaint = text!!.applyStyle(this.reactApplicationContext, canvas, width, height)
-        textPaint.reset()
+        text!!.applyStyle(this.reactApplicationContext, canvas, width, height)
       }
 
       if (opts.backgroundImage.rotate != 0f) {
