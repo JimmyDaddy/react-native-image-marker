@@ -8,7 +8,7 @@ const LINKING_ERROR =
   '- You are not using Expo Go\n';
 
 /**
- * Position enum for text watermark and image watermark
+ * @description Position enum for text watermark and image watermark
  * @enum
  */
 export enum Position {
@@ -22,7 +22,7 @@ export enum Position {
 }
 
 /**
- * TextBackgroundType enum for text watermark
+ * @description TextBackgroundType enum for text watermark
  * @enum
  */
 export enum TextBackgroundType {
@@ -32,7 +32,7 @@ export enum TextBackgroundType {
 }
 
 /**
- * ImageFormat enum for save image format
+ * @description ImageFormat enum for save image format
  * @enum
  */
 export enum ImageFormat {
@@ -43,203 +43,568 @@ export enum ImageFormat {
 }
 
 /**
- * PositionOptions for text watermark and image watermark
+ * @description PositionOptions for text watermark and image watermark, if you set position you don't need to set X and Y
+ * @example
+ * positionOptions: {
+ *  X: 10,
+ *  Y: 10,
+ * }
+ * // or
+ * positionOptions: {
+ *  position: Position.topLeft,
+ * }
  */
 export interface PositionOptions {
-  // if you set position you don't need to set X and Y
   X?: number;
   Y?: number;
   position?: Position;
 }
 
 /**
- * TextStyle for text watermark
+ * @description TextStyle for text watermark
+ * @example
+ *  textStyle: {
+ *    color: '#aacc22',
+ *    fontName: 'Arial',
+ *    fontSize: 12,
+ *    shadowStyle: {
+ *      dx: 10,
+ *      dy: 10,
+ *      radius: 10,
+ *      color: '#aacc22'
+ *    },
+ *    textBackgroundStyle: {
+ *      paddingX: 10,
+ *      paddingY: 10,
+ *      type: TextBackgroundType.stretchX,
+ *      color: '#aacc22'
+ *    },
+ *    underline: true,
+ *    skewX: 45,
+ *    strikeThrough: true,
+ *    textAlign: 'left',
+ *    italic: true,
+ *    bold: true,
+ *    rotate: 45
+ *  }
  */
 export interface TextStyle {
   /**
-   * font color
-   * eg. '#aacc22'
+   * @description font color
+   * @example
+   *  color: '#aacc22'
    */
   color?: string;
   /**
-   * font name
-   * Android use Typeface.create
-   * iOS use UIFont
-   * eg. 'Arial'
+   * @description font name
+   * @example
+   *  fontName: 'Arial'
    */
   fontName?: string;
   /**
-   * font size
-   * Android use sp
-   * iOS use pt
-   * eg. 12
+   * @description font size, Android use `sp`, iOS use `pt`
+   * @example
+   *  fontSize: 12
    */
   fontSize?: number;
   /**
-   * text shadow style
+   * @description text shadow style
+   * @example
+   *  shadowStyle: {
+   *    dx: 10,
+   *    dy: 10,
+   *    radius: 10,
+   *    color: '#aacc22'
+   *  }
    */
   shadowStyle?: ShadowLayerStyle | null;
   /**
-   * text background style
+   * @description text background style
+   * @example
+   *  textBackgroundStyle: {
+   *    paddingX: 10,
+   *    paddingY: 10,
+   *    type: TextBackgroundType.stretchX,
+   *    color: '#aacc22'
+   *  }
    */
   textBackgroundStyle?: TextBackgroundStyle | null;
   /**
-   * text underline style
+   * @description text underline style
    * @defaultValue false
-   * Android: Paint.setUnderlineText
-   * iOS: NSUnderlineStyleAttributeName
+   * @example
+   *  underline: true
    */
   underline?: boolean;
   /**
-   * css italic with degree, you can use italic instead
-   * Android: Paint.skewX
-   * iOS: NSObliquenessAttributeName
+   * @description css italic with degree, you can use italic instead
+   * @example
+   *  skewX: 45
    */
   skewX?: number;
   /**
-   * text stroke
+   * @description text stroke
    * @defaultValue false
-   * iOS: NSStrikethroughStyleAttributeName
-   * android: Paint.setStrikeThruText
+   * @example
+   *  strikeThrough: true
    */
   strikeThrough?: boolean;
   /**
-   * text align
+   * @description text align
    * @defaultValue 'left'
-   * iOS: NSTextAlignment: NSTextAlignmentLeft, NSTextAlignmentCenter, NSTextAlignmentRight
-   * android: Paint.setTextAlign
-   * eg. 'left'
+   * @example
+   *  textAlign: 'left'
    */
   textAlign?: 'left' | 'center' | 'right';
   /**
-   * text italic
+   * @description text italic
    * @defaultValue false
+   * @example
+   *  italic: true
    */
   italic?: boolean;
   /**
-   * text bold
+   * @description text bold
    * @defaultValue false
+   * @example
+   *  bold: true
    */
   bold?: boolean;
   /**
-   * rotate text
+   * @description rotate text
    * @defaultValue 0
-   * eg. 45
+   * @example
+   *  rotate: 45
    */
   rotate?: number;
 }
 
 /**
- * ShadowLayer style for text watermark
- * Android: Paint.setShadowLayer
- * iOS: NSAttributedString.shadow
+ * @description ShadowLayer style for text watermark
+ * @example
+ * shadowStyle: {
+ *  dx: 10,
+ *  dy: 10,
+ *  radius: 10,
+ *  color: '#aacc22'
+ * }
  */
 export interface ShadowLayerStyle {
-  dx: number; // shadow offset x
-  dy: number; // shadow offset y
-  radius: number; // shadow radius
-  color: string; // shadow color eg. '#aacc22'
+  /**
+   * @description shadow offset x
+   * @example
+   *  dx: 10
+   */
+  dx: number;
+  /**
+   * @description shadow offset y
+   * @example
+   *  dy: 10
+   **/
+  dy: number;
+  /**
+   * @description shadow radius
+   * @example
+   *  radius: 10
+   **/
+  radius: number;
+  /**
+   * @description shadow color
+   * @example
+   * color: '#aacc22'
+   **/
+  color: string;
 }
 
 /**
- * background style for text watermark
+ * @description background style for text watermark
  * > thanks [@onka13](https://github.com/onka13) for [#38](https://github.com/JimmyDaddy/react-native-image-marker/pull/38)
+ * @example
+ * textBackgroundStyle: {
+ *  paddingX: 10,
+ *  paddingY: 10,
+ *  type: TextBackgroundType.stretchX,
+ *  color: '#aacc22'
+ * }
  */
 export interface TextBackgroundStyle {
-  paddingX: number; // padding x
-  paddingY: number; // padding y
-  type: TextBackgroundType | null; // background type see @TextBackgroundType
-  color: string; // background color eg. '#aacc22'
+  /**
+   * @description padding x
+   * @example
+   * paddingX: 10
+   **/
+  paddingX: number;
+  /**
+   * @description padding y
+   * @example
+   * paddingY: 10
+   **/
+  paddingY: number;
+  /**
+   * @description background type
+   * @defaultValue TextBackgroundType.stretchX
+   * @example
+   *  type: TextBackgroundType.stretchX
+   **/
+  type: TextBackgroundType | null;
+  /**
+   * @description background color
+   * @example
+   * color: '#aacc22'
+   **/
+  color: string;
 }
 
 /**
- * Text options for text watermark
+ * @description Text options for text watermark
+ * @example
+ * {
+ *  text: 'hello world',
+ *  positionOptions: {
+ *    X: 10,
+ *    Y: 10,
+ *    // or
+ *    // position: Position.center
+ *  },
+ *  style: {
+ *    color: '#aacc22',
+ *    fontName: 'Arial',
+ *    fontSize: 12,
+ *    shadowStyle: {
+ *      dx: 10,
+ *      dy: 10,
+ *      radius: 10,
+ *      color: '#aacc22'
+ *    },
+ *    textBackgroundStyle: {
+ *      paddingX: 10,
+ *      paddingY: 10,
+ *      type: TextBackgroundType.stretchX,
+ *      color: '#aacc22'
+ *    },
+ *    underline: true,
+ *    skewX: 45,
+ *    strikeThrough: true,
+ *    textAlign: 'left',
+ *    italic: true,
+ *    bold: true,
+ *    rotate: 45
+ *  }
+ * }
  */
 export interface TextOptions {
-  text: string; // text content
-  positionOptions?: PositionOptions; // position options see @PositionOptions
-  style?: TextStyle; // text style see @TextStyle
+  /**
+   * @description text content
+   * @example
+   * text: 'hello world'
+   **/
+  text: string;
+  /**
+   * @description text position options
+   * @example
+   *  positionOptions: {
+   *   X: 10,
+   *   Y: 10,
+   *   // or
+   *   // position: Position.center
+   * }
+   */
+  positionOptions?: PositionOptions;
+  /**
+   * @description text style
+   * @example
+   * style: {
+   *  color: '#aacc22',
+   *  fontName: 'Arial',
+   *  fontSize: 12,
+   *  shadowStyle: {
+   *    dx: 10,
+   *    dy: 10,
+   *    radius: 10,
+   *    color: '#aacc22'
+   *  },
+   *  textBackgroundStyle: {
+   *    paddingX: 10,
+   *    paddingY: 10,
+   *    type: TextBackgroundType.stretchX,
+   *    color: '#aacc22'
+   *  },
+   *  underline: true,
+   *  strikeThrough: true,
+   *  textAlign: 'left',
+   *  italic: true,
+   *  // or
+   *  // skewX: 45,
+   *  bold: true,
+   *  rotate: 45
+   * }
+   */
+  style?: TextStyle;
 }
 
 /**
- * Options for text watermark
+ * @description Options for text watermark
+ * @example
+ *  backgroundImage: {
+ *    src: require('./images/logo.png'),
+ *    scale: 0.5,
+ *    rotate: 45,
+ *    alpha: 0.5
+ *  },
+ *  watermarkTexts: [
+ *  {
+ *    text: 'hello world',
+ *    positionOptions: {
+ *      X: 10,
+ *      Y: 10,
+ *      // or
+ *      // position: Position.center
+ *    },
+ *    style: {
+ *      color: '#aacc22',
+ *      fontName: 'Arial',
+ *      fontSize: 12,
+ *      shadowStyle: {
+ *        dx: 10,
+ *        dy: 10,
+ *        radius: 10,
+ *        color: '#aacc22'
+ *      },
+ *      textBackgroundStyle: {
+ *        paddingX: 10,
+ *        paddingY: 10,
+ *        type: TextBackgroundType.stretchX,
+ *        color: '#aacc22'
+ *      },
+ *      underline: true,
+ *      strikeThrough: true,
+ *      textAlign: 'left',
+ *      italic: true,
+ *      //or
+ *      // skewX: 45,
+ *      bold: true,
+ *      rotate: 45
+ *    }
+ *  }],
+ *  quality: 1,
+ *  filename: 'test',
+ *  saveFormat: ImageFormat.jpg,
+ *  maxSize: 2048
  */
 export interface TextMarkOptions {
-  // image src, local image
-  // FIXME: ImageSourcePropType type define bug
-  backgroundImage: ImageOptions; // background image options see @ImageOptions
-  watermarkTexts: TextOptions[]; // text options see @TextOptions
   /**
-   * @defaultValue `1`
-   * scale image 0 - 1
-   */
-  scale?: number;
+   * FIXME: ImageSourcePropType type define bug
+   * @description background image options
+   * @example
+   * backgroundImage: {
+   *  src: require('./images/logo.png'),
+   *  scale: 0.5,
+   *  rotate: 45,
+   *  alpha: 0.5
+   * }
+   **/
+  backgroundImage: ImageOptions;
   /**
-   * @defaultValue `1`
-   * image quality 0 - 1
+   * @description text options
+   * @example
+   * watermarkTexts: [
+   * {
+   *  text: 'hello world',
+   *  positionOptions: {
+   *    X: 10,
+   *    Y: 10,
+   *    // or
+   *    // position: Position.center
+   *  },
+   *  style: {
+   *    color: '#aacc22',
+   *    fontName: 'Arial',
+   *    fontSize: 12,
+   *    shadowStyle: {
+   *      dx: 10,
+   *      dy: 10,
+   *      radius: 10,
+   *      color: '#aacc22'
+   *    },
+   *    textBackgroundStyle: {
+   *      paddingX: 10,
+   *      paddingY: 10,
+   *      type: TextBackgroundType.stretchX,
+   *      color: '#aacc22'
+   *    },
+   *    underline: true,
+   *    strikeThrough: true,
+   *    textAlign: 'left',
+   *    italic: true,
+   *    //or
+   *    // skewX: 45,
+   *    bold: true,
+   *    rotate: 45
+   *  }
+   * }]
+   **/
+  watermarkTexts: TextOptions[];
+  /**
+   * @description image quality `0-1`
+   * @defaultValue 1
+   * @example
+   * quality: 1
    */
   quality?: number;
-  filename?: string; // save image name
   /**
+   * @description save image name
+   * @example
+   * filename: 'test'
+   **/
+  filename?: string;
+  /**
+   * @description save image format
    * @defaultValue `jpg`
-   * save image format see @ImageFormat
+   * @example
+   * saveFormat: ImageFormat.jpg
    */
   saveFormat?: ImageFormat;
   /**
-   * @defaultValue 2048
+   * @description max image size see #49 #42
    * android only
    * **need RN version >= 0.60.0**,  fresco `MaxBitmapSize` [`ImagePipelineConfig.Builder.experiment().setMaxBitmapSize()`](https://github.com/facebook/fresco/blob/08ca5f40cc0b60b4db16d15e45552cafeae39ccb/imagepipeline/src/main/java/com/facebook/imagepipeline/core/ImagePipelineExperiments.java#L282), see [#49](https://github.com/JimmyDaddy/react-native-image-marker/issues/49#issuecomment-535303838)
+   * @defaultValue 2048
+   * @example
+   * maxSize: 2048
    */
-  maxSize?: number; // android only see #49 #42
+  maxSize?: number;
 }
 
 /**
- * Image options for image watermark
+ * @description Image options for background image or watermark image
+ * @example
+ * {
+ *  src: require('./images/logo.png'),
+ *  scale: 0.5,
+ *  rotate: 45,
+ *  alpha: 0.5
+ * }
  */
 export interface ImageOptions {
-  src: any; // image src, local image
   /**
-   * @defaultValue `1`
-   * scale image 0 - 1
+   * @description image src, local image
+   * @example
+   * src: require('./images/logo.png')
+   */
+  src: any;
+  /**
+   * @description image scale `0-1`
+   * @defaultValue 1
+   * @example
+   * scale: 1
    */
   scale?: number;
   /**
-   * @defaultValue `0`
-   * rotate image with degree 0 - 360
+   * @description rotate image rotate `0-360`
+   * @defaultValue 0
+   * @example
+   * rotate: 45
    */
   rotate?: number;
   /**
-   * @defaultValue `1`
-   * image alpha 0 - 1
+   * @description transparent of background image `0 - 1`
+   * @defaultValue 1
+   * @example
+   * alpha: 0.5
    */
   alpha?: number;
 }
 
 /**
- * Options for image watermark
+ * @description Text options for image watermark
+ * @example
+ *
+ *  backgroundImage: {
+ *    src: require('./images/bg.png'),
+ *    scale: 0.5,
+ *    rotate: 45,
+ *    alpha: 0.5
+ *  }
+ *  watermarkImage: {
+ *    src: require('./images/logo.png'),
+ *    scale: 0.5,
+ *    rotate: 45,
+ *    alpha: 0.5
+ *  },
+ *  watermarkPositions: {
+ *    X: 10,
+ *    Y: 10,
+ *    // or
+ *    // position: Position.center
+ *  },
+ *  quality: 1,
+ *  filename: 'test',
+ *  saveFormat: ImageFormat.jpg,
+ *  maxSize: 2048
+ *
  */
 export interface ImageMarkOptions {
-  // image src, local image
-  // FIXME: ImageSourcePropType type define bug
-  backgroundImage: ImageOptions; // background image options see @ImageOptions
-  watermarkImage: ImageOptions; // watermark image options see @ImageOptions
+  /**
+   * FIXME: ImageSourcePropType type define bug
+   * @description background image options
+   * @example
+   *  backgroundImage: {
+   *    src: require('./images/bg.png'),
+   *    scale: 0.5,
+   *    rotate: 45,
+   *    alpha: 0.5
+   *  }
+   **/
+  backgroundImage: ImageOptions;
+  /**
+   * @description watermark image options
+   * @example
+   *  watermarkImage: {
+   *    src: require('./images/logo.png'),
+   *    scale: 0.5,
+   *    rotate: 45,
+   *    alpha: 0.5
+   *  }
+   */
+  watermarkImage: ImageOptions;
+  /**
+   * @description watermark position options
+   * @example
+   * watermarkPositions: {
+   *  X: 10,
+   *  Y: 10,
+   *  // or
+   *  // position: Position.center
+   * }
+   */
   watermarkPositions?: PositionOptions; // watermark position options see @PositionOptions
   /**
-   * @defaultValue `1`
-   * image quality 0 - 1
+   * @description image quality `0-1`
+   * @defaultValue 1
+   * @example
+   * quality: 1
    */
   quality?: number;
-  filename?: string; // save image name
   /**
+   * @description save image name
+   * @example
+   * filename: 'test'
+   **/
+  filename?: string;
+  /**
+   * @description save image format
    * @defaultValue `jpg`
-   * save image format see @ImageFormat
-   * eg. 'png'
+   * @example
+   * saveFormat: ImageFormat.jpg
    */
-  saveFormat?: ImageFormat; // save image format see @ImageFormat
+  saveFormat?: ImageFormat;
   /**
-   * @defaultValue 2048
+   * @description max image size see #49 #42
    * android only
    * **need RN version >= 0.60.0**,  fresco `MaxBitmapSize` [`ImagePipelineConfig.Builder.experiment().setMaxBitmapSize()`](https://github.com/facebook/fresco/blob/08ca5f40cc0b60b4db16d15e45552cafeae39ccb/imagepipeline/src/main/java/com/facebook/imagepipeline/core/ImagePipelineExperiments.java#L282), see [#49](https://github.com/JimmyDaddy/react-native-image-marker/issues/49#issuecomment-535303838)
+   * @defaultValue 2048
+   * @example
+   * maxSize: 2048
    */
   maxSize?: number;
 }

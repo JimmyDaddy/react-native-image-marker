@@ -482,8 +482,6 @@ function useViewModel() {
               },
             },
           ],
-
-          scale: 1,
           quality: 100,
           saveFormat: saveFormat,
         });
