@@ -1,0 +1,15 @@
+{
+    "Position": {
+        "comment": {
+            "blockTags": [],
+            "modifierTags": {},
+            "summary": [
+                {
+                    "kind": "text",
+                    "text": "Position enum for text watermark and image watermark"
+                }
+            ]
+        },
+        "members": {}
+    }
+}
