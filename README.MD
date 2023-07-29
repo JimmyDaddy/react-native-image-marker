@@ -30,305 +30,167 @@ You can use `pod` instead of `link`. Add following lines in your `Podfile`:
 pod 'RNImageMarker', :path => '../node_modules/react-native-image-marker'
 ```
 
-## API 
-
-|name|parameter|return|decription|
-|--|--|--|--|
-|`markText`|`TextMarkOption`|`Promise<String>`|mark image with text|
-|`markImage`|`ImageMarkOption`|`Promise<String>`| mark image with icon|
-
-* `TextMarkOption`
-
-|name|description|
-|--|--|
-|`src`|image url |
-|`text`|the text you want to mark with|
-|`position`| text position(`topLeft`,`topRight`,`topCenter`, `center`, `bottomLeft`, `bottomCenter`, `bottomRight`)|
-|`X`|distance from the left, **if you have set `position` yet you don't need to set this property again**|
-|`Y`|distance from the top, **if you have set `position` you don't need to set this property again**|
-|`color`| text color HEX: #rgba |
-|`fontName`| fontName |
-|`fontSize`| fontSize |
-|`shadowStyle`| text's shadow style: iOS's `NSShadowAttributeName`, Android's `textPaint.shadowLayerStyle` |
-|`scale`| scale image |
-|`quality`| image qulaity |
-|`filename` | set filename for the result |
-|`saveFormat`| `png` `jpg` `base64` |
-|`textBackgroundStyle` | text background style |
-|`maxSize`| default value is 2048, **need RN version >= 0.60.0**,  fresco `MaxBitmapSize` [`ImagePipelineConfig.Builder.experiment().setMaxBitmapSize()`](https://github.com/facebook/fresco/blob/08ca5f40cc0b60b4db16d15e45552cafeae39ccb/imagepipeline/src/main/java/com/facebook/imagepipeline/core/ImagePipelineExperiments.java#L282), see [#49](https://github.com/JimmyDaddy/react-native-image-marker/issues/49#issuecomment-535303838)|
-
-```typescript
-
-export enum ImageFormat {
-  png = 'png',
-  jpg = 'jpg',
-  base64 = 'base64', // base64 string
-}
-
-export type TextMarkOption = {
-  // image src, local image
-  src: ImageSourcePropType,
-  text: string,
-  // if you set position you don't need to set X and Y
-  X?: number,
-  Y?: number,
-  // eg. '#aacc22' '#aacc22af' '#acda' '#acd'
-  color: string,
-  fontName: string,
-  fontSize: number,
-  // scale image
-  scale: number,
-  // image quality
-  quality: number,
-  position?: Position,
-  filename?: string,
-  shadowStyle: ShadowLayerStyle,
-  textBackgroundStyle: TextBackgroundStyle,
-  saveFormat?: ImageFormat,
-  maxSize?: number, // android only see #49 #42
-}
-```
-
-* `ImageMarkOption`
-
-|name|description|
-|--|--|
-|`src`|image url |
-|`markerSrc`|the icon you want to mark with |
-|`position`| text position(`topLeft`,`topRight`,`topCenter`, `center`, `bottomLeft`, `bottomCenter`, `bottomRight`)|
-|`X`|distance from the left, **if you have set `position` yet you don't need to set this property again**|
-|`Y`|distance from the top, **if you have set `position` you don't need to set this property again**|
-|`markerScale`| scale icon |
-|`scale`| scale image |
-|`quality`| image qulaity |
-|`filename` | set filename for the result |
-|`saveFormat`| `png`  `jpg` `base64`,  default is `jpg` |
-|`maxSize`| default value is 2048, **need RN version >= 0.60.0**,  fresco `MaxBitmapSize` [`ImagePipelineConfig.Builder.experiment().setMaxBitmapSize()`](https://github.com/facebook/fresco/blob/08ca5f40cc0b60b4db16d15e45552cafeae39ccb/imagepipeline/src/main/java/com/facebook/imagepipeline/core/ImagePipelineExperiments.java#L282), see [#49](https://github.com/JimmyDaddy/react-native-image-marker/issues/49#issuecomment-535303838)|
-
-```typescript
-export type ImageMarkOption = {
-  // image src, local image
-  src: ImageSourcePropType,
-  markerSrc: ImageSourcePropType,
-  X?: number,
-  Y?: number,
-  // marker scale
-  markerScale: number,
-  // image scale
-  scale: number,
-  quality: number,
-  position?: Position,
-  filename?: string,
-  saveFormat?: ImageFormat,
-  maxSize?: number, // android only see #49 #42
-}
-```
-
-* `ShadowStyle`
-
-|name|description|
-|--|--|
-|`radius`| blur radius |
-|`dx`| x offset|
-|`dy`| y offset|
-|`color`| shadow color #rgba |
-
-```typescript
-export type ShadowLayerStyle = {
-  'dx': number,
-  'dy': number,
-  'radius': number,
-  'color': string
-}
-```
-
-* `textBackgroundStyle`
-
-> thanks [@onka13](https://github.com/onka13) for [#38](https://github.com/JimmyDaddy/react-native-image-marker/pull/38)
-
-|name|description|
-|--|--|
-|`paddingX`| padding X |
-|`paddingY`| padding y|
-|`type`| default is fit the text, `stretchX` stretch to fill width, `stretchY` stretch to fill height |
-|`color`| bg color #rgba |
-
-```typescript
-export enum TextBackgroundType {
-  stretchX = 'stretchX',
-  stretchY = 'stretchY'
-}
-```
-
 ## Usage
+
+### text watermarks
 
 ```javascript
 
-import ImageMarker from "react-native-image-marker"
+import Marker from "react-native-image-marker"
 
 ···
 // add text watermark to a photo
-
- this.setState({
-    loading: true
- })
- Marker.markText({
-    src: img.uri,
-    text: 'text marker', 
-    X: 30,
-    Y: 30, 
-    color: '#FF0000', // '#ff0000aa' '#f0aa'
-    fontName: 'Arial-BoldItalicMT',
-    fontSize: 44,
+const options = {
+ backgroundImage: {
+  src: require('./images/test.jpg'),
+  scale: 1,
+  rotate: 20,
+  alpha: 0.5,
+ },
+ watermarkTexts: [
+ {
+   text: 'hello',
+   positionOptions: {
+     position: Position.center,
+   },
+   style: {
+     color: '#ff00ff',
+     fontSize: 30,
+     fontName: 'Arial',
+     rotate: 30,
+     shadowStyle: {
+       dx: 10,
+       dy: 10,
+       radius: 10,
+       color: '#ffaa22',
+     },
+     textBackgroundStyle: {
+       paddingX: 10,
+       paddingY: 10,
+       type: TextBackgroundType.none,
+       color: '#faaaff',
+     },
+     underline: true,
+     strikeThrough: true,
+     textAlign: 'left',
+     italic: true,
+     bold: true,
+   },
+ },
+ {
+   text: 'world',
+   positionOptions: {
+     X: 10,
+     Y: 10,
+   },
+   style: {
+    color: '#AAFFDD',
+    fontSize: 30,
+    fontName: 'Arial',
+    rotate: 170,
     shadowStyle: {
-        dx: 10.5,
-        dy: 20.8,
-        radius: 20.9,
-        color: '#ff00ff' // '#ff00ffad'
+     dx: 10,
+     dy: 10,
+     radius: 10,
+     color: '#ffaa22',
     },
     textBackgroundStyle: {
-        type: 'stretchX',
-        paddingX: 10,
-        paddingY: 10,
-        color: '#0f0' // '#0f0a'
+     paddingX: 10,
+     paddingY: 10,
+     type: TextBackgroundType.stretchX,
+     color: '#faaaff',
     },
-    scale: 1, 
-    quality: 100
- }).then((res) => {
-     this.setState({
-        loading: false,
-        markResult: res
-     })
-    console.log("the path is"+res)
- }).catch((err) => {
-    console.log(err)
-    this.setState({
-        loading: false,
-        err
-    })
- })
-
-···
-this.setState({
-    loading: true
-})
-Marker.markText({
-    src: img.uri,
-    text: 'text marker', 
-    position: 'topLeft', 
-    color: '#FF0000',
-    fontName: 'Arial-BoldItalicMT', 
-    fontSize: 44, 
-    scale: 1, 
-    quality: 100
-}).then((res) => {
-    console.log("the path is"+res)
-    this.setState({
-        loading: false,
-        markResult: res
-    })
+    textAlign: 'right',
+    skewX: 10,
+ ],
+ scale: 1,
+ quality: 100,
+ filename: 'test',
+ saveFormat: ImageFormat.png,
+ maxSize: 1000,
+};
+ImageMarker.markText(options).then((res) => {
+ console.log(res);
 }).catch((err) => {
-    console.log(err)
-    this.setState({
-        loading: false,
-        err
-    })
-})
+ console.log(err);
+});
+// or
+await ImageMarker.markText(options);
 
 // add icon watermark to a photo
-
-const iconUri = icon.uri
-const backGroundUri = img.uri
-this.setState({
-    loading: true
-})
-
-Marker.markImage({
-    src: backGroundUri, 
-    markerSrc: iconUri, // icon uri
-    X: 100, // left
-    Y: 150, // top
-    scale: 1, // scale of bg
-    markerScale: 0.5, // scale of icon
-    quality: 100, // quality of image
-    saveFormat: 'png', 
-}).then((path) => {
-    this.setState({
-        uri: Platform.OS === 'android' ? 'file://' + path : path,
-        loading: false
-    })
+const options = {
+ backgroundImage: {
+   src: require('./images/test.jpg'),
+   scale: 1,
+   rotate: 20,
+   alpha: 0.5,
+ },
+ watermarkImage: {
+   src: require('./images/watermark.png'),
+   scale: 1,
+   rotate: 20,
+   alpha: 0.5,
+ },
+ watermarkPositions: {
+   position: Position.center,
+ },
+ quality: 100,
+ filename: 'test',
+ saveFormat: ImageFormat.png,
+ maxSize: 1000,
+};
+ImageMarker.markImage(options).then((res) => {
+ console.log(res);
 }).catch((err) => {
-    console.log(err, 'err')
-    this.setState({
-        loading: false,
-        err
-    })
-})
-
-Marker.markImage({
-    src: backGroundUri, 
-    markerSrc: iconUri, 
-    position: 'topLeft',  // topLeft, topCenter,topRight, bottomLeft, bottomCenter , bottomRight, center
-    scale: 1, 
-    markerScale: 0.5, 
-    quality: 100
-}).then((path) => {
-    this.setState({
-        uri: Platform.OS === 'android' ? 'file://' + path : path,
-        loading: false
-    })
-}).catch((err) => {
-    console.log(err, 'err')
-     this.setState({
-        loading: false,
-        err
-    })
-})
-
-// you can also add watermark to a photo with static images
-Marker.markImage({
-    src: backGroundUri, 
-    markerSrc: require('./icon.png'), 
-    position: 'topLeft',  // topLeft, topCenter,topRight, bottomLeft, bottomCenter , bottomRight, center
-    scale: 1, 
-    markerScale: 0.5, 
-    quality: 100
-}).then((path) => {
-    this.setState({
-        uri: Platform.OS === 'android' ? 'file://' + path : path,
-        loading: false
-    })
-}).catch((err) => {
-    console.log(err, 'err')
-     this.setState({
-        loading: false,
-        err
-    })
-})
-// or base64
-Marker.markImage({
-    src: { uri: `data:img/jpg;base64,/9j/4qqqAQSkZJRgABAQEBLAEsAAD/2wBDAAIBAQEBAQIBAQECAgICAgQDAgICAgUEBAMEBgUGBgYFBgYGBwkIBgcJBwYGCAsICQoKCgoKBggLDAsKDAkKCgr/2wBDAQICAgICAgUDAwUKBwYHCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgr/wAARCAHnAooDASIA
-AhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgddddcI` }, 
-    markerSrc: { uri: `data:img/jpg;base64,/9j/4AAQSkZJRgABAQEBLAEsAAD/2wBDAAIBAQEBAQIBAQECAgICAgQDAgICAgUEBAMEBgUGBgYFBgYGBwkIBgcJBwYGCAsICQoKCgoKBggLDAsKDAkKCgr/2wBDAQICAgICAgUDAwUKBwYHCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgr/wAARCAHnAooDASIA
-AhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcI` }, 
-    position: 'topLeft',  // topLeft, topCenter,topRight, bottomLeft, bottomCenter , bottomRight, center
-    scale: 1, 
-    markerScale: 0.5, 
-    quality: 100
-}).then((path) => {
-    this.setState({
-        uri: Platform.OS === 'android' ? 'file://' + path : path,
-        loading: false
-    })
-}).catch((err) => {
-    console.log(err, 'err')
-     this.setState({
-        loading: false,
-        err
-    })
-})
+ console.log(err);
+});
+// or
+await ImageMarker.markImage(options);
 
 ```
+
+### icon watermarks
+
+```javascript
+
+import Marker from "react-native-image-marker"
+
+···
+// add icon watermark to a background image
+const options = {
+ backgroundImage: {
+   src: require('./images/test.jpg'),
+   scale: 1,
+   rotate: 20,
+   alpha: 0.5,
+ },
+ watermarkImage: {
+   src: require('./images/watermark.png'),
+   scale: 1,
+   rotate: 20,
+   alpha: 0.5,
+ },
+ watermarkPositions: {
+   position: Position.center,
+ },
+ quality: 100,
+ filename: 'test',
+ saveFormat: ImageFormat.png,
+ maxSize: 1000,
+};
+ImageMarker.markImage(options).then((res) => {
+ console.log(res);
+}).catch((err) => {
+ console.log(err);
+});
+// or
+await ImageMarker.markImage(options);
+
+```
+
+## API
+
+[see](/docs/index.html)
 
 ## Extra about Android decoding image
 

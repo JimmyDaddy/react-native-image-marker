@@ -7,6 +7,7 @@
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "esModuleInterop": true,
+    "ignoreDeprecations": "5.0",
     "importsNotUsedAsValues": "error",
     "forceConsistentCasingInFileNames": true,
     "jsx": "react",
@@ -24,5 +25,15 @@
     "skipLibCheck": true,
     "strict": true,
     "target": "esnext"
-  }
+  },
+  "typedocOptions": {
+    "exclude": "**/node_modules/**/*.*",
+    "entryPoints": ["src/index.ts"],
+    "readme": "./README.MD",
+    "name": "react-native-image-marker",
+    "out": "./docs",
+    "excludeExternals": true,
+    "excludePrivate": true,
+    "plugin": ["typedoc-plugin-rename-defaults", "typedoc-plugin-localization"],
+  },
 }

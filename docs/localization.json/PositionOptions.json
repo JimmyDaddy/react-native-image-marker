@@ -1,0 +1,16 @@
+{
+    "PositionOptions": {
+        "comment": {
+            "blockTags": [],
+            "modifierTags": {},
+            "summary": [
+                {
+                    "kind": "text",
+                    "text": "PositionOptions for text watermark and image watermark"
+                }
+            ]
+        },
+        "properties": {},
+        "methods": {}
+    }
+}

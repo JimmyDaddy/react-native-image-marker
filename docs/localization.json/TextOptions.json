@@ -1,0 +1,16 @@
+{
+    "TextOptions": {
+        "comment": {
+            "blockTags": [],
+            "modifierTags": {},
+            "summary": [
+                {
+                    "kind": "text",
+                    "text": "Text options for text watermark"
+                }
+            ]
+        },
+        "properties": {},
+        "methods": {}
+    }
+}

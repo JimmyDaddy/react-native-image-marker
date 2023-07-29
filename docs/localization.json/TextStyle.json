@@ -1,0 +1,221 @@
+{
+    "TextStyle": {
+        "comment": {
+            "blockTags": [],
+            "modifierTags": {},
+            "summary": [
+                {
+                    "kind": "text",
+                    "text": "TextStyle for text watermark"
+                }
+            ]
+        },
+        "properties": {
+            "color": {
+                "comment": {
+                    "blockTags": [],
+                    "modifierTags": {},
+                    "summary": [
+                        {
+                            "kind": "text",
+                            "text": "font color\neg. '#aacc22'"
+                        }
+                    ]
+                }
+            },
+            "fontName": {
+                "comment": {
+                    "blockTags": [],
+                    "modifierTags": {},
+                    "summary": [
+                        {
+                            "kind": "text",
+                            "text": "font name\nAndroid use Typeface.create\niOS use UIFont\neg. 'Arial'"
+                        }
+                    ]
+                }
+            },
+            "fontSize": {
+                "comment": {
+                    "blockTags": [],
+                    "modifierTags": {},
+                    "summary": [
+                        {
+                            "kind": "text",
+                            "text": "font size\nAndroid use sp\niOS use pt\neg. 12"
+                        }
+                    ]
+                }
+            },
+            "shadowStyle": {
+                "comment": {
+                    "blockTags": [],
+                    "modifierTags": {},
+                    "summary": [
+                        {
+                            "kind": "text",
+                            "text": "text shadow style"
+                        }
+                    ]
+                }
+            },
+            "textBackgroundStyle": {
+                "comment": {
+                    "blockTags": [],
+                    "modifierTags": {},
+                    "summary": [
+                        {
+                            "kind": "text",
+                            "text": "text background style"
+                        }
+                    ]
+                }
+            },
+            "underline": {
+                "comment": {
+                    "blockTags": [
+                        {
+                            "tag": "@defaultValue",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "false\nAndroid: Paint.setUnderlineText\niOS: NSUnderlineStyleAttributeName"
+                                }
+                            ]
+                        }
+                    ],
+                    "modifierTags": {},
+                    "summary": [
+                        {
+                            "kind": "text",
+                            "text": "text underline style"
+                        }
+                    ]
+                }
+            },
+            "skewX": {
+                "comment": {
+                    "blockTags": [],
+                    "modifierTags": {},
+                    "summary": [
+                        {
+                            "kind": "text",
+                            "text": "css italic with degree, you can use italic instead\nAndroid: Paint.skewX\niOS: NSObliquenessAttributeName"
+                        }
+                    ]
+                }
+            },
+            "strikeThrough": {
+                "comment": {
+                    "blockTags": [
+                        {
+                            "tag": "@defaultValue",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "false\niOS: NSStrikethroughStyleAttributeName\nandroid: Paint.setStrikeThruText"
+                                }
+                            ]
+                        }
+                    ],
+                    "modifierTags": {},
+                    "summary": [
+                        {
+                            "kind": "text",
+                            "text": "text stroke"
+                        }
+                    ]
+                }
+            },
+            "textAlign": {
+                "comment": {
+                    "blockTags": [
+                        {
+                            "tag": "@defaultValue",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "'left'\niOS: NSTextAlignment: NSTextAlignmentLeft, NSTextAlignmentCenter, NSTextAlignmentRight\nandroid: Paint.setTextAlign\neg. 'left'"
+                                }
+                            ]
+                        }
+                    ],
+                    "modifierTags": {},
+                    "summary": [
+                        {
+                            "kind": "text",
+                            "text": "text align"
+                        }
+                    ]
+                }
+            },
+            "italic": {
+                "comment": {
+                    "blockTags": [
+                        {
+                            "tag": "@defaultValue",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "false"
+                                }
+                            ]
+                        }
+                    ],
+                    "modifierTags": {},
+                    "summary": [
+                        {
+                            "kind": "text",
+                            "text": "text italic"
+                        }
+                    ]
+                }
+            },
+            "bold": {
+                "comment": {
+                    "blockTags": [
+                        {
+                            "tag": "@defaultValue",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "false"
+                                }
+                            ]
+                        }
+                    ],
+                    "modifierTags": {},
+                    "summary": [
+                        {
+                            "kind": "text",
+                            "text": "text bold"
+                        }
+                    ]
+                }
+            },
+            "rotate": {
+                "comment": {
+                    "blockTags": [
+                        {
+                            "tag": "@defaultValue",
+                            "content": [
+                                {
+                                    "kind": "text",
+                                    "text": "0\neg. 45"
+                                }
+                            ]
+                        }
+                    ],
+                    "modifierTags": {},
+                    "summary": [
+                        {
+                            "kind": "text",
+                            "text": "rotate text"
+                        }
+                    ]
+                }
+            }
+        },
+        "methods": {}
+    }
+}

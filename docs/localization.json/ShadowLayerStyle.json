@@ -1,0 +1,16 @@
+{
+    "ShadowLayerStyle": {
+        "comment": {
+            "blockTags": [],
+            "modifierTags": {},
+            "summary": [
+                {
+                    "kind": "text",
+                    "text": "ShadowLayer style for text watermark\nAndroid: Paint.setShadowLayer\niOS: NSAttributedString.shadow"
+                }
+            ]
+        },
+        "properties": {},
+        "methods": {}
+    }
+}

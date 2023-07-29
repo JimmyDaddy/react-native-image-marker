@@ -1,0 +1,15 @@
+{
+    "TextBackgroundType": {
+        "comment": {
+            "blockTags": [],
+            "modifierTags": {},
+            "summary": [
+                {
+                    "kind": "text",
+                    "text": "TextBackgroundType enum for text watermark"
+                }
+            ]
+        },
+        "members": {}
+    }
+}

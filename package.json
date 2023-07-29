@@ -34,7 +34,8 @@
     "release": "release-it",
     "example": "yarn --cwd example",
     "bootstrap": "yarn example && yarn install && yarn example pods",
-    "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build"
+    "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build",
+    "docs": "typedoc --excludePrivate --generate-json docs/localization.json"
   },
   "keywords": [
     "react-native",
@@ -76,6 +77,9 @@
     "react-native": "0.71.11",
     "react-native-builder-bob": "^0.20.0",
     "release-it": "^15.0.0",
+    "typedoc": "^0.24.8",
+    "typedoc-plugin-localization": "^3.0.1",
+    "typedoc-plugin-rename-defaults": "^0.6.5",
     "typescript": "^4.5.2"
   },
   "resolutions": {
