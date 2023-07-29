@@ -198,10 +198,11 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
             
             if textOpts.style!.rotate != 0 {
                 context.saveGState()
-                context.translateBy(x: canvasRect.midX, y: canvasRect.midY)
                 let rotation = CGAffineTransform(rotationAngle: CGFloat(textOpts.style!.rotate) * .pi / 180)
+                let textRectWithPos = CGRect(x: CGFloat(posX), y: CGFloat(posY), width: size.width, height: size.height)
+                context.translateBy(x: textRectWithPos.midX, y: textRectWithPos.midY)
                 context.concatenate(rotation)
-                context.translateBy(x: -canvasRect.midX, y: -canvasRect.midY)
+                context.translateBy(x: -( textRectWithPos.midX), y: -(textRectWithPos.midY))
             }
             
             if let textBackground = textOpts.style!.textBackground {
