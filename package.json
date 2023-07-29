@@ -1,6 +1,6 @@
 {
   "name": "react-native-image-marker",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Add text or icon watermark to your images",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -35,7 +35,7 @@
     "example": "yarn --cwd example",
     "bootstrap": "yarn example && yarn install && yarn example pods",
     "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build",
-    "docs": "typedoc --excludePrivate --generate-json docs/localization.json"
+    "docs": "typedoc --excludePrivate"
   },
   "keywords": [
     "react-native",
@@ -53,7 +53,7 @@
   "bugs": {
     "url": "https://github.com/JimmyDaddy/react-native-image-marker/issues"
   },
-  "homepage": "https://github.com/JimmyDaddy/react-native-image-marker#readme",
+  "homepage": "https://jimmydaddy.github.io/react-native-image-marker",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },

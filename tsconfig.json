@@ -30,10 +30,10 @@
     "exclude": "**/node_modules/**/*.*",
     "entryPoints": ["src/index.ts"],
     "readme": "./README.MD",
-    "name": "react-native-image-marker",
+    "name": "image marker for rn",
     "out": "./docs",
     "excludeExternals": true,
     "excludePrivate": true,
-    "plugin": ["typedoc-plugin-rename-defaults", "typedoc-plugin-localization"],
+    "plugin": ["typedoc-plugin-rename-defaults"],
   },
 }
