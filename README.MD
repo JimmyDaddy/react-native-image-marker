@@ -5,6 +5,16 @@ Add text or icon watermark to your images
 ## sample
 
 <p>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/alphabgonly.png" width='200'>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/alphicononly.png" width='200'>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/imagewatermark.png" width='200'>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/multipletexts.png" width='200'>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/rotatebg.png" width='200'>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/rotateicon.png" width='200'>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/rotateimageicon.png" width='200'>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/rotatetexts_1.png" width='200'>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/rotatetexts.png" width='200'>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/textswihoutbg.png" width='200'>
  <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/IOSMarker.gif" width='200'>
  <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/AndroidMarker.gif" width='200'>
  <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/shadow_bg_fit.png" width='200'>
@@ -190,7 +200,7 @@ await ImageMarker.markImage(options);
 
 ## API
 
-[see](/docs/index.html)
+[see](https://jimmydaddy.github.io/react-native-image-marker/classes/Marker.html)
 
 ## Extra about Android decoding image
 
