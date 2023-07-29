@@ -7,14 +7,18 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		38E5F5F01D3DCDBF00AA7E71 /* RCTImageMarker.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 38E5F5EF1D3DCDBF00AA7E71 /* RCTImageMarker.h */; };
-		38E5F5F21D3DCDBF00AA7E71 /* RCTImageMarker.m in Sources */ = {isa = PBXBuildFile; fileRef = 38E5F5F11D3DCDBF00AA7E71 /* RCTImageMarker.m */; };
-		38E5F6301D3DDD7100AA7E71 /* RCTConvert+ImageMarker.m in Sources */ = {isa = PBXBuildFile; fileRef = 38E5F62F1D3DDD7100AA7E71 /* RCTConvert+ImageMarker.m */; };
-		A1261EA42A447F4D0043788B /* MarkImageOptions.m in Sources */ = {isa = PBXBuildFile; fileRef = A1261EA02A447F4D0043788B /* MarkImageOptions.m */; };
-		A1261EA52A447F4D0043788B /* MarkTextOptions.m in Sources */ = {isa = PBXBuildFile; fileRef = A1261EA22A447F4D0043788B /* MarkTextOptions.m */; };
-		A198EF4C2A44270E006D3B9A /* TextBackground.m in Sources */ = {isa = PBXBuildFile; fileRef = A198EF4B2A44270E006D3B9A /* TextBackground.m */; };
-		A198EF552A443425006D3B9A /* Utils.m in Sources */ = {isa = PBXBuildFile; fileRef = A198EF542A443425006D3B9A /* Utils.m */; };
-		A198EF572A44347E006D3B9A /* Options.m in Sources */ = {isa = PBXBuildFile; fileRef = A198EF562A44347E006D3B9A /* Options.m */; };
+		A1DEE1E42A60061200469A87 /* RCTConvert+ImageMarker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1DEE1D72A60061200469A87 /* RCTConvert+ImageMarker.swift */; };
+		A1DEE1E52A60061200469A87 /* TextStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1DEE1D82A60061200469A87 /* TextStyle.swift */; };
+		A1DEE1E62A60061200469A87 /* Options.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1DEE1D92A60061200469A87 /* Options.swift */; };
+		A1DEE1E72A60061200469A87 /* ImageOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1DEE1DA2A60061200469A87 /* ImageOptions.swift */; };
+		A1DEE1E82A60061200469A87 /* TextBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1DEE1DC2A60061200469A87 /* TextBackground.swift */; };
+		A1DEE1E92A60061200469A87 /* MarkerImageLoader.m in Sources */ = {isa = PBXBuildFile; fileRef = A1DEE1DD2A60061200469A87 /* MarkerImageLoader.m */; };
+		A1DEE1EA2A60061200469A87 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1DEE1DE2A60061200469A87 /* Utils.swift */; };
+		A1DEE1EB2A60061200469A87 /* MarkTextOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1DEE1DF2A60061200469A87 /* MarkTextOptions.swift */; };
+		A1DEE1EC2A60061200469A87 /* MarkImageOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1DEE1E02A60061200469A87 /* MarkImageOptions.swift */; };
+		A1DEE1ED2A60061200469A87 /* RCTImageMarker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1DEE1E22A60061200469A87 /* RCTImageMarker.swift */; };
+		A1DEE1EE2A60061200469A87 /* TextOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1DEE1E32A60061200469A87 /* TextOptions.swift */; };
+		A1DEE1F02A60068100469A87 /* MarkPosition.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1DEE1EF2A60068100469A87 /* MarkPosition.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -24,7 +28,6 @@
 			dstPath = "include/$(PRODUCT_NAME)";
 			dstSubfolderSpec = 16;
 			files = (
-				38E5F5F01D3DCDBF00AA7E71 /* RCTImageMarker.h in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -32,20 +35,20 @@
 
 /* Begin PBXFileReference section */
 		38E5F5EC1D3DCDBF00AA7E71 /* libRCTImageMarker.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libRCTImageMarker.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		38E5F5EF1D3DCDBF00AA7E71 /* RCTImageMarker.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RCTImageMarker.h; sourceTree = "<group>"; };
-		38E5F5F11D3DCDBF00AA7E71 /* RCTImageMarker.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RCTImageMarker.m; sourceTree = "<group>"; };
-		38E5F62E1D3DDD2300AA7E71 /* RCTConvert+ImageMarker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "RCTConvert+ImageMarker.h"; sourceTree = "<group>"; };
-		38E5F62F1D3DDD7100AA7E71 /* RCTConvert+ImageMarker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "RCTConvert+ImageMarker.m"; sourceTree = "<group>"; };
-		A1261EA02A447F4D0043788B /* MarkImageOptions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MarkImageOptions.m; sourceTree = "<group>"; };
-		A1261EA12A447F4D0043788B /* MarkTextOptions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MarkTextOptions.h; sourceTree = "<group>"; };
-		A1261EA22A447F4D0043788B /* MarkTextOptions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MarkTextOptions.m; sourceTree = "<group>"; };
-		A1261EA32A447F4D0043788B /* MarkImageOptions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MarkImageOptions.h; sourceTree = "<group>"; };
-		A198EF492A441F5E006D3B9A /* Options.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Options.h; sourceTree = "<group>"; };
-		A198EF4A2A44208C006D3B9A /* TextBackground.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TextBackground.h; sourceTree = "<group>"; };
-		A198EF4B2A44270E006D3B9A /* TextBackground.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TextBackground.m; sourceTree = "<group>"; };
-		A198EF532A443425006D3B9A /* Utils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Utils.h; sourceTree = "<group>"; };
-		A198EF542A443425006D3B9A /* Utils.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Utils.m; sourceTree = "<group>"; };
-		A198EF562A44347E006D3B9A /* Options.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Options.m; sourceTree = "<group>"; };
+		A1DEE1D72A60061200469A87 /* RCTConvert+ImageMarker.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "RCTConvert+ImageMarker.swift"; path = "RCTImageMarker/RCTConvert+ImageMarker.swift"; sourceTree = "<group>"; };
+		A1DEE1D82A60061200469A87 /* TextStyle.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = TextStyle.swift; path = RCTImageMarker/TextStyle.swift; sourceTree = "<group>"; };
+		A1DEE1D92A60061200469A87 /* Options.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Options.swift; path = RCTImageMarker/Options.swift; sourceTree = "<group>"; };
+		A1DEE1DA2A60061200469A87 /* ImageOptions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ImageOptions.swift; path = RCTImageMarker/ImageOptions.swift; sourceTree = "<group>"; };
+		A1DEE1DB2A60061200469A87 /* MarkerImageLoader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MarkerImageLoader.h; path = RCTImageMarker/MarkerImageLoader.h; sourceTree = "<group>"; };
+		A1DEE1DC2A60061200469A87 /* TextBackground.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = TextBackground.swift; path = RCTImageMarker/TextBackground.swift; sourceTree = "<group>"; };
+		A1DEE1DD2A60061200469A87 /* MarkerImageLoader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MarkerImageLoader.m; path = RCTImageMarker/MarkerImageLoader.m; sourceTree = "<group>"; };
+		A1DEE1DE2A60061200469A87 /* Utils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Utils.swift; path = RCTImageMarker/Utils.swift; sourceTree = "<group>"; };
+		A1DEE1DF2A60061200469A87 /* MarkTextOptions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MarkTextOptions.swift; path = RCTImageMarker/MarkTextOptions.swift; sourceTree = "<group>"; };
+		A1DEE1E02A60061200469A87 /* MarkImageOptions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MarkImageOptions.swift; path = RCTImageMarker/MarkImageOptions.swift; sourceTree = "<group>"; };
+		A1DEE1E12A60061200469A87 /* ImageMarker-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "ImageMarker-Bridging-Header.h"; path = "RCTImageMarker/ImageMarker-Bridging-Header.h"; sourceTree = "<group>"; };
+		A1DEE1E22A60061200469A87 /* RCTImageMarker.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RCTImageMarker.swift; path = RCTImageMarker/RCTImageMarker.swift; sourceTree = "<group>"; };
+		A1DEE1E32A60061200469A87 /* TextOptions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = TextOptions.swift; path = RCTImageMarker/TextOptions.swift; sourceTree = "<group>"; };
+		A1DEE1EF2A60068100469A87 /* MarkPosition.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MarkPosition.swift; path = RCTImageMarker/MarkPosition.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -62,7 +65,7 @@
 		38E5F5E31D3DCDBF00AA7E71 = {
 			isa = PBXGroup;
 			children = (
-				38E5F5EE1D3DCDBF00AA7E71 /* RCTImageMarker */,
+				A1DEE1D62A6005FF00469A87 /* RCTImageMarker */,
 				38E5F5ED1D3DCDBF00AA7E71 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -75,25 +78,25 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		38E5F5EE1D3DCDBF00AA7E71 /* RCTImageMarker */ = {
+		A1DEE1D62A6005FF00469A87 /* RCTImageMarker */ = {
 			isa = PBXGroup;
 			children = (
-				38E5F5EF1D3DCDBF00AA7E71 /* RCTImageMarker.h */,
-				38E5F5F11D3DCDBF00AA7E71 /* RCTImageMarker.m */,
-				38E5F62E1D3DDD2300AA7E71 /* RCTConvert+ImageMarker.h */,
-				38E5F62F1D3DDD7100AA7E71 /* RCTConvert+ImageMarker.m */,
-				A198EF4A2A44208C006D3B9A /* TextBackground.h */,
-				A198EF4B2A44270E006D3B9A /* TextBackground.m */,
-				A198EF532A443425006D3B9A /* Utils.h */,
-				A198EF542A443425006D3B9A /* Utils.m */,
-				A1261EA32A447F4D0043788B /* MarkImageOptions.h */,
-				A1261EA02A447F4D0043788B /* MarkImageOptions.m */,
-				A1261EA12A447F4D0043788B /* MarkTextOptions.h */,
-				A1261EA22A447F4D0043788B /* MarkTextOptions.m */,
-				A198EF492A441F5E006D3B9A /* Options.h */,
-				A198EF562A44347E006D3B9A /* Options.m */,
+				A1DEE1EF2A60068100469A87 /* MarkPosition.swift */,
+				A1DEE1E12A60061200469A87 /* ImageMarker-Bridging-Header.h */,
+				A1DEE1DA2A60061200469A87 /* ImageOptions.swift */,
+				A1DEE1DB2A60061200469A87 /* MarkerImageLoader.h */,
+				A1DEE1DD2A60061200469A87 /* MarkerImageLoader.m */,
+				A1DEE1E02A60061200469A87 /* MarkImageOptions.swift */,
+				A1DEE1DF2A60061200469A87 /* MarkTextOptions.swift */,
+				A1DEE1D92A60061200469A87 /* Options.swift */,
+				A1DEE1D72A60061200469A87 /* RCTConvert+ImageMarker.swift */,
+				A1DEE1E22A60061200469A87 /* RCTImageMarker.swift */,
+				A1DEE1DC2A60061200469A87 /* TextBackground.swift */,
+				A1DEE1E32A60061200469A87 /* TextOptions.swift */,
+				A1DEE1D82A60061200469A87 /* TextStyle.swift */,
+				A1DEE1DE2A60061200469A87 /* Utils.swift */,
 			);
-			path = RCTImageMarker;
+			name = RCTImageMarker;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -127,6 +130,7 @@
 				TargetAttributes = {
 					38E5F5EB1D3DCDBF00AA7E71 = {
 						CreatedOnToolsVersion = 7.3;
+						LastSwiftMigration = 1430;
 					};
 				};
 			};
@@ -153,13 +157,18 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				38E5F5F21D3DCDBF00AA7E71 /* RCTImageMarker.m in Sources */,
-				A198EF4C2A44270E006D3B9A /* TextBackground.m in Sources */,
-				A198EF572A44347E006D3B9A /* Options.m in Sources */,
-				38E5F6301D3DDD7100AA7E71 /* RCTConvert+ImageMarker.m in Sources */,
-				A198EF552A443425006D3B9A /* Utils.m in Sources */,
-				A1261EA42A447F4D0043788B /* MarkImageOptions.m in Sources */,
-				A1261EA52A447F4D0043788B /* MarkTextOptions.m in Sources */,
+				A1DEE1E72A60061200469A87 /* ImageOptions.swift in Sources */,
+				A1DEE1EC2A60061200469A87 /* MarkImageOptions.swift in Sources */,
+				A1DEE1E52A60061200469A87 /* TextStyle.swift in Sources */,
+				A1DEE1EE2A60061200469A87 /* TextOptions.swift in Sources */,
+				A1DEE1ED2A60061200469A87 /* RCTImageMarker.swift in Sources */,
+				A1DEE1F02A60068100469A87 /* MarkPosition.swift in Sources */,
+				A1DEE1E62A60061200469A87 /* Options.swift in Sources */,
+				A1DEE1EA2A60061200469A87 /* Utils.swift in Sources */,
+				A1DEE1EB2A60061200469A87 /* MarkTextOptions.swift in Sources */,
+				A1DEE1E42A60061200469A87 /* RCTConvert+ImageMarker.swift in Sources */,
+				A1DEE1E92A60061200469A87 /* MarkerImageLoader.m in Sources */,
+				A1DEE1E82A60061200469A87 /* TextBackground.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -257,6 +266,7 @@
 		38E5F5F61D3DCDBF00AA7E71 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(BUILT_PRODUCTS_DIR)/usr/local/include",
 					"$(inherited)",
@@ -268,12 +278,16 @@
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "RCTImageMarker/RCTImageMarker-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
 		};
 		38E5F5F71D3DCDBF00AA7E71 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(BUILT_PRODUCTS_DIR)/usr/local/include",
 					"$(inherited)",
@@ -285,6 +299,8 @@
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "RCTImageMarker/RCTImageMarker-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
 		};

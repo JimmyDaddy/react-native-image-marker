@@ -20,7 +20,7 @@ export enum Position {
 export enum TextBackgroundType {
   stretchX = 'stretchX',
   stretchY = 'stretchY',
-  none = '',
+  none = 'fit',
 }
 
 export enum ImageFormat {
@@ -29,61 +29,107 @@ export enum ImageFormat {
   base64 = 'base64',
 }
 
-export type ShadowLayerStyle = {
+export interface PositionOptions {
+  // if you set position you don't need to set X and Y
+  X?: number;
+  Y?: number;
+  position?: Position;
+}
+
+export interface TextStyle {
+  // eg. '#aacc22'
+  color?: string;
+  fontName?: string;
+  /**
+   * font size
+   * Android use sp
+   * iOS ios pt
+   */
+  fontSize?: number;
+  shadowStyle?: ShadowLayerStyle | null;
+  textBackgroundStyle?: TextBackgroundStyle | null;
+  /**
+   * Android: Paint.setUnderlineText
+   * iOS: NSUnderlineStyleAttributeName
+   */
+  underline?: boolean;
+  /**
+   * css italic with degree, you can use italic instead
+   * Android: Paint.skewX
+   * iOS: NSObliquenessAttributeName
+   */
+  skewX?: number;
+  /**
+   * iOS: NSStrikethroughStyleAttributeName
+   * android: Paint.setStrikeThruText
+   */
+  strikeThrough?: boolean;
+  /**
+   * iOS: NSTextAlignment: NSTextAlignmentLeft, NSTextAlignmentCenter, NSTextAlignmentRight
+   * android: Paint.setTextAlign
+   */
+  textAlign?: 'left' | 'center' | 'right';
+  italic?: boolean;
+  bold?: boolean;
+  rotate?: number;
+}
+
+export interface ShadowLayerStyle {
   dx: number;
   dy: number;
   radius: number;
   color: string;
-};
+}
 
-export type TextBackgroundStyle = {
+export interface TextBackgroundStyle {
   paddingX: number;
   paddingY: number;
   type: TextBackgroundType | null;
   color: string;
-};
+}
 
-export type TextMarkOption = {
+export interface TextOptions {
+  text: string;
+  positionOptions?: PositionOptions;
+  style?: TextStyle;
+}
+
+export interface TextMarkOptions {
   // image src, local image
   // FIXME: ImageSourcePropType type define bug
-  src: any;
-  text: string;
-  // if you set position you don't need to set X and Y
-  X?: number;
-  Y?: number;
-  // eg. '#aacc22'
-  color?: string;
-  fontName?: string;
-  fontSize?: number;
+  backgroundImage: ImageOptions;
+  watermarkTexts: TextOptions[];
   // scale image
   scale?: number;
   // image quality
   quality?: number;
-  position?: Position;
   filename?: string;
-  shadowStyle?: ShadowLayerStyle | null;
-  textBackgroundStyle?: TextBackgroundStyle | null;
   saveFormat?: ImageFormat;
   maxSize?: number; // android only see #49 #42
-};
+}
 
-export type ImageMarkOption = {
+export interface ImageOptions {
+  src: any;
+  // 0 - 1
+  scale?: number;
+  // 0 - 360
+  rotate?: number;
+  // 0 - 1
+  alpha?: number;
+}
+
+export interface ImageMarkOptions {
   // image src, local image
   // FIXME: ImageSourcePropType type define bug
-  src: any;
-  markerSrc: any;
-  X?: number;
-  Y?: number;
-  // marker scale
-  markerScale?: number;
-  // image scale
-  scale?: number;
+  backgroundImage: ImageOptions;
+  watermarkImage: ImageOptions;
+  watermarkPositions?: PositionOptions;
+  // 0 - 1
   quality?: number;
-  position?: Position;
   filename?: string;
   saveFormat?: ImageFormat;
   maxSize?: number; // android only see #49 #42
-};
+}
 
 const ImageMarker = NativeModules.ImageMarker
   ? NativeModules.ImageMarker
@@ -97,66 +143,58 @@ const ImageMarker = NativeModules.ImageMarker
     );
 
 export default class Marker {
-  static markText(options: TextMarkOption): Promise<string> {
-    const { src, position } = options;
+  static markText(options: TextMarkOptions): Promise<string> {
+    const { backgroundImage } = options;
 
-    if (!src) {
+    if (!backgroundImage || !backgroundImage.src) {
       throw new Error('please set image!');
     }
 
-    let srcObj: any = resolveAssetSource(src);
+    let srcObj: any = resolveAssetSource(backgroundImage.src);
     if (!srcObj) {
       srcObj = {
-        uri: src,
+        uri: backgroundImage.src,
         __packager_asset: false,
       };
     }
 
-    options.src = srcObj;
+    options.backgroundImage.src = srcObj;
     // let mShadowStyle = shadowStyle || {};
     // let mTextBackgroundStyle = textBackgroundStyle || {};
     options.maxSize = options.maxSize || 2048;
-    if (!position) {
-      return ImageMarker.addText(options);
-    } else {
-      return ImageMarker.addTextByPosition(options);
-    }
+    return ImageMarker.markWithText(options);
   }
 
-  static markImage(options: ImageMarkOption): Promise<string> {
-    const { src, markerSrc, position } = options;
+  static markImage(options: ImageMarkOptions): Promise<string> {
+    const { backgroundImage, watermarkImage } = options;
 
-    if (!src) {
+    if (!backgroundImage || !backgroundImage.src) {
       throw new Error('please set image!');
     }
-    if (!markerSrc) {
+    if (!watermarkImage || !watermarkImage.src) {
       throw new Error('please set mark image!');
     }
 
-    let srcObj: any = resolveAssetSource(src);
+    let srcObj: any = resolveAssetSource(backgroundImage.src);
     if (!srcObj) {
       srcObj = {
-        uri: src,
+        uri: backgroundImage.src,
         __packager_asset: false,
       };
     }
 
-    let markerObj: any = resolveAssetSource(markerSrc);
+    let markerObj: any = resolveAssetSource(watermarkImage.src);
     if (!markerObj) {
       markerObj = {
-        uri: markerSrc,
+        uri: watermarkImage.src,
         __packager_asset: false,
       };
     }
 
-    options.markerSrc = markerObj;
-    options.src = srcObj;
+    options.watermarkImage.src = markerObj;
+    options.backgroundImage.src = srcObj;
     options.maxSize = options.maxSize || 2048;
 
-    if (!position) {
-      return ImageMarker.markWithImage(options);
-    } else {
-      return ImageMarker.markWithImageByPosition(options);
-    }
+    return ImageMarker.markWithImage(options);
   }
 }

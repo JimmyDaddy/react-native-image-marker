@@ -1,3 +1,4 @@
 theme: jekyll-theme-cayman
 title: react native image marker
 description: Add text or icon watermark to your images
+baseurl: /react-native-image-marker

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -9,6 +9,9 @@ import {
   ActivityIndicator,
   Platform,
   Image,
+  TextInput,
+  Switch,
+  Modal,
 } from 'react-native';
 import Marker, {
   Position,
@@ -16,6 +19,11 @@ import Marker, {
   TextBackgroundType,
 } from 'react-native-image-marker';
 import { launchImageLibrary } from 'react-native-image-picker';
+import {
+  ActionSheetProvider,
+  useActionSheet,
+} from '@expo/react-native-action-sheet';
+import Toast from 'react-native-toast-message';
 
 const icon = require('./icon.jpeg');
 const bg = require('./bg.png');
@@ -26,22 +34,31 @@ const { width, height } = Dimensions.get('window');
 const s = StyleSheet.create({
   container: {
     flex: 1,
-    marginTop: 20,
+    marginTop: 50,
   },
   op: {
-    marginTop: 20,
+    marginTop: 10,
     justifyContent: 'center',
-    flexDirection: 'row',
     flexWrap: 'wrap',
     backgroundColor: '#f1f1f1',
-    padding: 10,
+    alignItems: 'flex-start',
+    paddingLeft: 10,
+    paddingRight: 10,
+    paddingBottom: 5,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    marginTop: 5,
+    flex: 1,
   },
   btn: {
     padding: 10,
+    paddingTop: 5,
+    paddingBottom: 5,
     borderRadius: 3,
     backgroundColor: '#00BF00',
-    margin: 5,
-    marginTop: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -49,8 +66,6 @@ const s = StyleSheet.create({
     padding: 10,
     borderRadius: 3,
     backgroundColor: '#1A1AA1',
-    margin: 5,
-    marginTop: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -62,85 +77,414 @@ const s = StyleSheet.create({
     width,
     height: 300,
     flex: 1,
-    backgroundColor: 'red',
+    backgroundColor: '#ffffAA',
+  },
+  picker: {
+    backgroundColor: '#00B96B5A',
+    width: width - 20,
+    height: 50,
+  },
+  textInput: {
+    width: 110,
+    height: 50,
+    backgroundColor: '#ffA',
+    borderColor: '#00B96B5A',
+    borderWidth: 1,
+  },
+  loading: {
+    position: 'absolute',
+    width,
+    height,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: height,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    width: width - 40,
+    height: 300,
+    backgroundColor: '#fff',
+    borderRadius: 5,
+    padding: 10,
+  },
+  shortTextInput: {
+    width: 20,
+    height: 30,
+    backgroundColor: '#ffA',
+    borderColor: '#00B96B5A',
+    borderWidth: 1,
+    textAlign: 'center',
+  },
+  label: {
+    marginRight: 2,
+    textAlign: 'left',
+  },
+  rowSplit: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    flexDirection: 'row',
   },
 });
 
+function RowSplit(props: any) {
+  return <View style={[s.rowSplit, props.style]}>{props.children}</View>;
+}
+
+function ImageOptions(props: {
+  alpha: any;
+  scale: any;
+  rotate: any;
+  setAlpha: (alpha: any) => void;
+  setScale: (scale: any) => void;
+  setRotate: (rotate: any) => void;
+}) {
+  const { alpha, scale, rotate, setAlpha, setScale, setRotate } = props;
+  return (
+    <View style={s.row}>
+      <Text style={s.label}>scale:</Text>
+      <TextInput
+        style={s.shortTextInput}
+        defaultValue={String(scale)}
+        onChangeText={(v) => {
+          const value = Number(v);
+          if (value < 0 || value > 1) {
+            Toast.show({
+              type: 'error',
+              text1: 'scale range error',
+              text2: 'scale must be between 0 and 1',
+            });
+            return;
+          }
+          setScale(value);
+        }}
+      />
+      <Text style={s.label}>alpha:</Text>
+      <TextInput
+        style={s.shortTextInput}
+        defaultValue={String(alpha)}
+        onChangeText={(v) => {
+          const value = Number(v);
+          if (value < 0 || value > 1) {
+            Toast.show({
+              type: 'error',
+              text1: 'alpha range error',
+              text2: 'alpha must be between 0 and 1',
+            });
+            return;
+          }
+          setAlpha(value);
+        }}
+      />
+      <Text style={s.label}>rotate:</Text>
+      <TextInput
+        style={s.shortTextInput}
+        defaultValue={String(rotate)}
+        onChangeText={(v) => {
+          const value = Number(v);
+          if (value < -360 || value > 360) {
+            Toast.show({
+              type: 'error',
+              text1: 'rotate range error',
+              text2: 'rotate must be between -360 and 360',
+            });
+            return;
+          }
+          setRotate(value);
+        }}
+      />
+    </View>
+  );
+}
+
 function useViewModel() {
-  const [base64, setBase64] = useState(false);
-  const [markImage, setMarkImage] = useState(true);
-  const [saveFormat, setSaveFormat] = useState(ImageFormat.png);
+  const { showActionSheetWithOptions } = useActionSheet();
+  const [backgroundFormat, setBackgroundFormat] = useState<
+    'normal image' | 'base64'
+  >('normal image');
+  const [waterMarkType, setWaterMarkType] = useState<'text' | 'image'>('text');
+  const [saveFormat, setSaveFormat] = useState<ImageFormat>(ImageFormat.png);
   const [image, setImage] = useState(bg);
   const [uri, setUri] = useState('');
   const [marker, setMarker] = useState(icon);
+  const [text, setText] = useState('hello world \n 你好');
   const [useTextShadow, setUseTextShadow] = useState(true);
   const [useTextBgStyle, setUseTextBgStyle] = useState(true);
   const [textBgStretch, setTextBgStretch] = useState<TextBackgroundType>(
     TextBackgroundType.none
   );
+  const [position, setPosition] = useState<Position>(Position.topLeft);
+  const [X, setX] = useState<number>(20);
+  const [Y, setY] = useState<number>(20);
   const [loading, setLoading] = useState(false);
   const [show, setShow] = useState(false);
+  const [underline, setUnderline] = useState(false);
+  const [italic, setItalic] = useState(false);
+  const [bold, setBold] = useState(false);
+  const [strikeThrough, setStrikeThrough] = useState(false);
+  const [textAlign, setTextAlign] = useState<'left' | 'right' | 'center'>(
+    'left'
+  );
 
-  function switchMarkType() {
-    setMarkImage(!markImage);
-  }
+  const [textRotate, setTextRotate] = useState(0);
 
-  function switchBg() {
-    setBase64(!base64);
-    setImage(base64 ? base64Bg : bg);
-  }
+  const [textOptionsVisible, setTextOptionsVisible] = useState(false);
 
-  function switchBase64Res() {
-    setSaveFormat(
-      saveFormat === ImageFormat.base64 ? ImageFormat.png : ImageFormat.base64
+  const [backgroundScale, setBackgroundScale] = useState(1);
+  const [backgroundRotate, setBackgroundRotate] = useState(0);
+  const [backgroundAlpha, setBackgroundAlpha] = useState(1);
+  const [watermarkScale, setWatermarkScale] = useState(1);
+  const [watermarkRotate, setWatermarkRotate] = useState(0);
+  const [watermarkAlpha, setWatermarkAlpha] = useState(1);
+
+  function showBackgroundFormatSelector() {
+    const options = ['normal image', 'base64', 'cancel'];
+    const cancelButtonIndex = 2;
+
+    showActionSheetWithOptions(
+      {
+        options,
+        title: 'select background format',
+        cancelButtonIndex,
+      },
+      (buttonIndex) => {
+        if (buttonIndex === cancelButtonIndex || buttonIndex == null) return;
+        else setBackgroundFormat(options[buttonIndex] as any);
+      }
     );
   }
+
+  function showWatermarkTypeSelector() {
+    const options = ['image', 'text', 'cancel'];
+    const cancelButtonIndex = 2;
+
+    showActionSheetWithOptions(
+      {
+        options,
+        title: 'select watermark type',
+        cancelButtonIndex,
+      },
+      (buttonIndex) => {
+        if (buttonIndex === cancelButtonIndex || buttonIndex == null) return;
+        else setWaterMarkType(options[buttonIndex] as any);
+      }
+    );
+  }
+
+  function showExportResultTypeSelector() {
+    const options = [
+      ImageFormat.png,
+      ImageFormat.jpg,
+      ImageFormat.base64,
+      'cancel',
+    ];
+    const cancelButtonIndex = 3;
+
+    showActionSheetWithOptions(
+      {
+        options,
+        title: 'select export result format type',
+        cancelButtonIndex,
+      },
+      (buttonIndex) => {
+        if (buttonIndex === cancelButtonIndex || buttonIndex == null) return;
+        else setSaveFormat(options[buttonIndex] as any);
+      }
+    );
+  }
+
+  function showPositionSelector() {
+    const options = [
+      Position.topLeft,
+      Position.topCenter,
+      Position.topRight,
+      Position.center,
+      Position.bottomLeft,
+      Position.bottomCenter,
+      Position.bottomRight,
+      'cancel',
+    ];
+    const cancelButtonIndex = 7;
+
+    showActionSheetWithOptions(
+      {
+        options,
+        title: 'select export result format type',
+        cancelButtonIndex,
+      },
+      (buttonIndex) => {
+        if (buttonIndex === cancelButtonIndex || buttonIndex == null) return;
+        else {
+          setPosition(options[buttonIndex] as any);
+        }
+      }
+    );
+  }
+
+  function showTextBgStretchSelector() {
+    const options = [
+      TextBackgroundType.none,
+      TextBackgroundType.stretchX,
+      TextBackgroundType.stretchY,
+      'cancel',
+    ];
+    const cancelButtonIndex = 3;
+
+    showActionSheetWithOptions(
+      {
+        options,
+        title: 'select text bg stretch type',
+        cancelButtonIndex,
+      },
+      (buttonIndex) => {
+        if (buttonIndex === cancelButtonIndex || buttonIndex == null) return;
+        else {
+          setTextBgStretch(options[buttonIndex] as any);
+        }
+      }
+    );
+  }
+
+  function showTextAlignSelector() {
+    const options = ['left', 'right', 'center', 'cancel'];
+    const cancelButtonIndex = 3;
+
+    showActionSheetWithOptions(
+      {
+        options,
+        title: 'select text align type',
+        cancelButtonIndex,
+      },
+      (buttonIndex) => {
+        if (buttonIndex === cancelButtonIndex || buttonIndex == null) return;
+        else {
+          setTextAlign(options[buttonIndex] as any);
+        }
+      }
+    );
+  }
+
+  useEffect(() => {
+    if (backgroundFormat === 'normal image') {
+      setImage(bg);
+    } else {
+      setImage(base64Bg);
+    }
+  }, [backgroundFormat]);
 
   function showLoading() {
     setLoading(true);
   }
 
-  async function markByPosition(positionType: Position) {
+  async function markByPosition() {
     showLoading();
     let path = '';
 
     try {
-      if (markImage) {
+      if (waterMarkType === 'image') {
         path = await Marker.markImage({
-          src: image,
-          markerSrc: marker,
-          position: positionType,
-          scale: 1,
-          markerScale: 1,
+          backgroundImage: {
+            src: image,
+            scale: backgroundScale,
+            alpha: backgroundAlpha,
+            rotate: backgroundRotate,
+          },
+          watermarkImage: {
+            src: marker,
+            scale: watermarkScale,
+            alpha: watermarkAlpha,
+            rotate: watermarkRotate,
+          },
+          watermarkPositions: {
+            position,
+          },
           quality: 100,
           saveFormat: saveFormat,
         });
       } else {
         path = await Marker.markText({
-          src: image,
-          text: `text marker \n muiltline text`,
-          position: positionType,
-          color: '#FF0000AA',
-          fontName: 'Arial-BoldItalicMT',
-          fontSize: 44,
+          backgroundImage: {
+            src: image,
+            scale: backgroundScale,
+            alpha: backgroundAlpha,
+            rotate: backgroundRotate,
+          },
+          watermarkTexts: [
+            {
+              text,
+              positionOptions: {
+                position,
+              },
+              style: {
+                color: '#FF0000AA',
+                fontName: 'Arial',
+                fontSize: 44,
+                underline,
+                bold,
+                italic,
+                strikeThrough,
+                textAlign: textAlign,
+                rotate: textRotate,
+                shadowStyle: useTextShadow
+                  ? {
+                      dx: 10.5,
+                      dy: 20.8,
+                      radius: 20.9,
+                      color: '#0000FF',
+                    }
+                  : null,
+                textBackgroundStyle: useTextBgStyle
+                  ? {
+                      type: textBgStretch,
+                      paddingX: 10,
+                      paddingY: 10,
+                      color: '#0f0A',
+                    }
+                  : null,
+              },
+            },
+            {
+              text: `text marker normal`,
+              positionOptions: {
+                position: Position.center,
+              },
+              style: {
+                color: '#FF00AA9F',
+                fontName: 'STSongti-SC-Regular',
+                fontSize: 44,
+                underline,
+                bold,
+                italic,
+                strikeThrough,
+                textAlign: textAlign,
+                rotate: textRotate,
+                shadowStyle: useTextShadow
+                  ? {
+                      dx: 10.5,
+                      dy: 20.8,
+                      radius: 20.9,
+                      color: '#00EEFF',
+                    }
+                  : null,
+                textBackgroundStyle: useTextBgStyle
+                  ? {
+                      type: textBgStretch,
+                      paddingX: 10,
+                      paddingY: 10,
+                      color: '#0fA',
+                    }
+                  : null,
+              },
+            },
+          ],
+
           scale: 1,
           quality: 100,
-          shadowStyle: useTextShadow
-            ? {
-                dx: 10.5,
-                dy: 20.8,
-                radius: 20.9,
-                color: '#0000FF',
-              }
-            : null,
-          textBackgroundStyle: useTextBgStyle
-            ? {
-                type: textBgStretch,
-                paddingX: 10,
-                paddingY: 10,
-                color: '#0f0A',
-              }
-            : null,
           saveFormat: saveFormat,
         });
       }
@@ -160,47 +504,115 @@ function useViewModel() {
     }
   }
 
+  useEffect(() => {
+    if (position) {
+      markByPosition();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [position]);
+
   async function mark() {
     showLoading();
     let path = '';
     try {
-      if (markImage) {
+      if (waterMarkType === 'image') {
         path = await Marker.markImage({
-          src: image,
-          markerSrc: marker,
-          X: 100,
-          Y: 150,
-          scale: 1,
-          markerScale: 0.5,
+          backgroundImage: {
+            src: image,
+            scale: backgroundScale,
+            rotate: backgroundRotate,
+            alpha: backgroundAlpha,
+          },
+          watermarkImage: {
+            src: marker,
+            scale: watermarkScale,
+            alpha: watermarkAlpha,
+            rotate: watermarkRotate,
+          },
+          watermarkPositions: {
+            X,
+            Y,
+          },
           quality: 100,
           saveFormat: saveFormat,
         });
       } else {
         path = await Marker.markText({
-          src: image,
-          text: 'text marker \n muiltline text',
-          X: 30,
-          Y: 30,
-          color: '#FF0',
-          fontName: 'Arial-BoldItalicMT',
-          fontSize: 44,
-          shadowStyle: useTextShadow
-            ? {
-                dx: 10.5,
-                dy: 20.8,
-                radius: 20.9,
-                color: '#0000FF',
-              }
-            : null,
-          textBackgroundStyle: useTextBgStyle
-            ? {
-                type: textBgStretch,
-                paddingX: 10,
-                paddingY: 10,
-                color: '#0f0',
-              }
-            : null,
-          scale: 1,
+          backgroundImage: {
+            src: image,
+            scale: backgroundScale,
+            alpha: backgroundAlpha,
+            rotate: backgroundRotate,
+          },
+          watermarkTexts: [
+            {
+              text,
+              positionOptions: {
+                X,
+                Y,
+              },
+              style: {
+                underline,
+                strikeThrough,
+                color: '#FF0',
+                fontName: 'STSongti-SC-Regular',
+                fontSize: 44,
+                bold,
+                italic,
+                textAlign: textAlign,
+                rotate: textRotate,
+                shadowStyle: useTextShadow
+                  ? {
+                      dx: 10.5,
+                      dy: 20.8,
+                      radius: 20.9,
+                      color: '#0000FF',
+                    }
+                  : null,
+                textBackgroundStyle: useTextBgStyle
+                  ? {
+                      type: textBgStretch,
+                      paddingX: 10,
+                      paddingY: 10,
+                      color: '#00B96B',
+                    }
+                  : null,
+              },
+            },
+            {
+              text,
+              positionOptions: {
+                X: X + 500,
+                Y: Y + 600,
+              },
+              style: {
+                underline: true,
+                strikeThrough: true,
+                bold: true,
+                italic: true,
+                color: '#FF0',
+                fontSize: 44,
+                textAlign: textAlign,
+                rotate: textRotate,
+                shadowStyle: useTextShadow
+                  ? {
+                      dx: 10.5,
+                      dy: 20.8,
+                      radius: 20.9,
+                      color: '#0000FF',
+                    }
+                  : null,
+                textBackgroundStyle: useTextBgStyle
+                  ? {
+                      type: textBgStretch,
+                      paddingX: 10,
+                      paddingY: 10,
+                      color: '#0f09',
+                    }
+                  : null,
+              },
+            },
+          ],
           quality: 100,
           saveFormat: saveFormat,
         });
@@ -253,20 +665,35 @@ function useViewModel() {
       marker,
       loading,
       show,
-      markImage,
-      base64,
+      backgroundFormat,
       saveFormat,
       useTextShadow,
       useTextBgStyle,
       textBgStretch,
+      waterMarkType,
+      text,
+      position,
+      underline,
+      strikeThrough,
+      bold,
+      italic,
+      X,
+      Y,
+      backgroundScale,
+      backgroundAlpha,
+      backgroundRotate,
+      watermarkScale,
+      watermarkAlpha,
+      watermarkRotate,
+      textOptionsVisible,
+      textAlign,
+      textRotate,
     },
-    setBase64,
     setLoading,
     setImage,
     setMarker,
     setShow,
     setUri,
-    setMarkImage,
     setSaveFormat,
     setUseTextShadow,
     setUseTextBgStyle,
@@ -274,163 +701,335 @@ function useViewModel() {
     mark,
     markByPosition,
     pickImage,
-    switchBg,
-    switchMarkType,
-    switchBase64Res,
+    showBackgroundFormatSelector,
+    showWatermarkTypeSelector,
+    showExportResultTypeSelector,
+    setText,
+    showPositionSelector,
+    showTextBgStretchSelector,
+    setItalic,
+    setBold,
+    setStrikeThrough,
+    setUnderline,
+    setX,
+    setY,
+    setBackgroundAlpha,
+    setBackgroundScale,
+    setBackgroundRotate,
+    setWatermarkAlpha,
+    setWatermarkRotate,
+    setWatermarkScale,
+    setTextOptionsVisible,
+    setTextAlign,
+    setTextRotate,
+    showTextAlignSelector,
   };
 }
 
-export default function App() {
+function App() {
   const {
     state,
-    switchBg,
-    switchMarkType,
-    switchBase64Res,
     pickImage,
     mark,
-    markByPosition,
     setUseTextShadow,
     setUseTextBgStyle,
-    setTextBgStretch,
+    showBackgroundFormatSelector,
+    showWatermarkTypeSelector,
+    showExportResultTypeSelector,
+    setText,
+    showPositionSelector,
+    showTextBgStretchSelector,
+    setItalic,
+    setBold,
+    setStrikeThrough,
+    setUnderline,
+    setX,
+    setY,
+    setBackgroundAlpha,
+    setBackgroundScale,
+    setBackgroundRotate,
+    setWatermarkAlpha,
+    setWatermarkRotate,
+    setWatermarkScale,
+    setTextOptionsVisible,
+    showTextAlignSelector,
+    setTextRotate,
   } = useViewModel();
   return (
     <View style={{ flex: 1 }}>
       <ScrollView style={s.container}>
-        <View>
-          <TouchableOpacity
-            style={[s.btn, { backgroundColor: '#FF7043' }]}
-            onPress={switchBg}
-          >
-            <Text style={s.text}>
-              {' '}
-              use {state.base64 ? 'base64' : 'image'} as background
-            </Text>
-          </TouchableOpacity>
-        </View>
-        <View>
-          <TouchableOpacity
-            style={[s.btn, { backgroundColor: '#FF7043' }]}
-            onPress={switchMarkType}
-          >
-            <Text style={s.text}>
-              switch to mark {state.markImage ? 'text' : 'image'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-        <View>
-          <TouchableOpacity
-            style={[s.btn, { backgroundColor: '#FF7043' }]}
-            onPress={switchBase64Res}
-          >
-            <Text style={s.text}>
-              export{' '}
-              {state.saveFormat === ImageFormat.base64 ? 'base64' : 'png'}{' '}
-              result
-            </Text>
-          </TouchableOpacity>
-        </View>
-        <View>
-          <TouchableOpacity
-            style={[s.btn, { backgroundColor: '#2296F3' }]}
-            onPress={() => pickImage('image')}
-          >
-            <Text style={s.text}>pick image</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[s.btn, { backgroundColor: '#2296F3' }]}
-            onPress={() => pickImage('mark')}
-          >
-            <Text style={s.text}>pick an image for mark</Text>
-          </TouchableOpacity>
+        <View style={s.op}>
+          <View style={s.row}>
+            <RowSplit>
+              <Text style={s.label}>background image format:</Text>
+            </RowSplit>
+            <RowSplit>
+              <TouchableOpacity
+                style={[s.btn, { backgroundColor: '#FF7043' }]}
+                onPress={showBackgroundFormatSelector}
+              >
+                <Text style={s.text}>{state.backgroundFormat}</Text>
+              </TouchableOpacity>
+            </RowSplit>
+          </View>
+          <View style={s.row}>
+            <RowSplit>
+              <Text style={s.label}>watermark type:</Text>
+            </RowSplit>
+            <RowSplit>
+              <TouchableOpacity
+                style={[s.btn, { backgroundColor: '#FF7043' }]}
+                onPress={showWatermarkTypeSelector}
+              >
+                <Text style={s.text}>{state.waterMarkType}</Text>
+              </TouchableOpacity>
+            </RowSplit>
+          </View>
+          <View style={s.row}>
+            <RowSplit>
+              <Text style={s.label}>export result format:</Text>
+            </RowSplit>
+            <RowSplit>
+              <TouchableOpacity
+                style={[s.btn, { backgroundColor: '#FF7043' }]}
+                onPress={showExportResultTypeSelector}
+              >
+                <Text style={s.text}>{state.saveFormat}</Text>
+              </TouchableOpacity>
+            </RowSplit>
+          </View>
         </View>
         <View style={s.op}>
-          <TouchableOpacity style={s.btn} onPress={mark}>
-            <Text style={s.text}>mark</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={s.btn}
-            onPress={() => markByPosition(Position.topLeft)}
-          >
-            <Text style={s.text}>TopLeft</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={s.btn}
-            onPress={() => markByPosition(Position.topCenter)}
-          >
-            <Text style={s.text}>topCenter</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={s.btn}
-            onPress={() => markByPosition(Position.topRight)}
-          >
-            <Text style={s.text}>topRight</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={s.btn}
-            onPress={() => markByPosition(Position.center)}
-          >
-            <Text style={s.text}>Center</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={s.btn}
-            onPress={() => markByPosition(Position.bottomLeft)}
-          >
-            <Text style={s.text}>bottomLeft</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={s.btn}
-            onPress={() => markByPosition(Position.bottomCenter)}
-          >
-            <Text style={s.text}>bottomCenter</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={s.btn}
-            onPress={() => markByPosition(Position.bottomRight)}
-          >
-            <Text style={s.text}>bottomRight</Text>
-          </TouchableOpacity>
-        </View>
-        {!state.markImage ? (
-          <View style={s.op}>
-            <TouchableOpacity
-              style={s.btnOp}
-              onPress={() => {
-                setUseTextShadow(!state.useTextShadow);
-              }}
-            >
-              <Text style={s.text}>
-                textShadow {state.useTextShadow ? 'on' : 'off'}{' '}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={s.btnOp}
-              onPress={() => {
-                setUseTextBgStyle(!state.useTextBgStyle);
-              }}
-            >
-              <Text style={s.text}>
-                textBg {state.useTextBgStyle ? 'on' : 'off'}{' '}
-              </Text>
-            </TouchableOpacity>
-            {state.useTextBgStyle ? (
+          <View style={s.row}>
+            <RowSplit>
               <TouchableOpacity
-                style={s.btnOp}
-                onPress={() => {
-                  setTextBgStretch(
-                    state.textBgStretch === TextBackgroundType.stretchY
-                      ? TextBackgroundType.none
-                      : TextBackgroundType.stretchX
-                  );
-                }}
+                style={[s.btn, { backgroundColor: '#2296F3' }]}
+                onPress={() => pickImage('image')}
               >
-                <Text style={s.text}>
-                  text bg stretch:{' '}
-                  {state.textBgStretch == null ? 'fit' : state.textBgStretch}
-                </Text>
+                <Text style={s.text}>select background</Text>
               </TouchableOpacity>
-            ) : null}
+            </RowSplit>
+            <RowSplit>
+              <ImageOptions
+                rotate={state.backgroundRotate}
+                scale={state.backgroundScale}
+                alpha={state.backgroundAlpha}
+                setAlpha={setBackgroundAlpha}
+                setRotate={setBackgroundRotate}
+                setScale={setBackgroundScale}
+              />
+            </RowSplit>
           </View>
-        ) : null}
+          <View style={s.row}>
+            {state.waterMarkType === 'image' ? (
+              <View style={s.row}>
+                <RowSplit>
+                  <TouchableOpacity
+                    style={[s.btn, { backgroundColor: '#2296F3' }]}
+                    onPress={() => pickImage('mark')}
+                  >
+                    <Text style={s.text}>select watermark icon</Text>
+                  </TouchableOpacity>
+                </RowSplit>
+                <RowSplit>
+                  <ImageOptions
+                    rotate={state.watermarkScale}
+                    scale={state.watermarkScale}
+                    alpha={state.watermarkAlpha}
+                    setAlpha={setWatermarkAlpha}
+                    setRotate={setWatermarkRotate}
+                    setScale={setWatermarkScale}
+                  />
+                </RowSplit>
+              </View>
+            ) : (
+              <View style={s.row}>
+                <RowSplit>
+                  <Text style={s.label}>text watermark:</Text>
+                </RowSplit>
+                <RowSplit>
+                  <TextInput
+                    placeholder="input text for watermark"
+                    style={s.textInput}
+                    onChangeText={setText}
+                    value={state.text}
+                    multiline
+                  />
+                  <TouchableOpacity
+                    style={[s.btn, { marginLeft: 5 }]}
+                    onPress={() => setTextOptionsVisible(true)}
+                  >
+                    <Text style={s.text}>options</Text>
+                  </TouchableOpacity>
+                </RowSplit>
+              </View>
+            )}
+          </View>
+        </View>
+        <View style={s.op}>
+          <View style={s.row}>
+            <RowSplit>
+              <Text style={s.label}>with given position:</Text>
+            </RowSplit>
+            <RowSplit>
+              <TouchableOpacity style={s.btn} onPress={showPositionSelector}>
+                <Text style={s.text}>{state.position}</Text>
+              </TouchableOpacity>
+            </RowSplit>
+          </View>
+          <View style={s.row}>
+            <RowSplit>
+              <Text style={s.label}>with custom x/y:</Text>
+            </RowSplit>
+            <RowSplit>
+              <Text style={[s.label, { marginLeft: 5 }]}>X: </Text>
+              <TextInput
+                style={s.shortTextInput}
+                keyboardType="numeric"
+                value={String(state.X)}
+                onChangeText={(v) => setX(Number(v))}
+              />
+              <Text style={[s.label, { marginLeft: 5 }]}>Y: </Text>
+              <TextInput
+                style={s.shortTextInput}
+                keyboardType="numeric"
+                value={String(state.Y)}
+                onChangeText={(v) => setY(Number(v))}
+              />
+              <TouchableOpacity
+                style={[s.btn, { marginLeft: 5 }]}
+                onPress={mark}
+              >
+                <Text style={s.text}>mark</Text>
+              </TouchableOpacity>
+            </RowSplit>
+          </View>
+        </View>
+        <Modal
+          animationType="slide"
+          transparent
+          visible={state.textOptionsVisible}
+          statusBarTranslucent
+        >
+          <View style={s.modalContainer}>
+            <View style={s.modalContent}>
+              <View style={s.row}>
+                <RowSplit>
+                  <Text style={s.label}>text shadow:</Text>
+                  <Switch
+                    value={state.useTextShadow}
+                    onValueChange={setUseTextShadow}
+                  />
+                </RowSplit>
+                <RowSplit>
+                  <Text style={s.label}>text background:</Text>
+                  <Switch
+                    value={state.useTextBgStyle}
+                    onValueChange={setUseTextBgStyle}
+                  />
+                </RowSplit>
+              </View>
+              {state.useTextBgStyle ? (
+                <View style={s.row}>
+                  <RowSplit>
+                    <Text style={s.label}>text bg stretch:</Text>
+                    <TouchableOpacity
+                      style={s.btn}
+                      onPress={showTextBgStretchSelector}
+                    >
+                      <Text style={s.text}>
+                        {state.textBgStretch == null ||
+                        state.textBgStretch === TextBackgroundType.none
+                          ? 'fit'
+                          : state.textBgStretch}
+                      </Text>
+                    </TouchableOpacity>
+                  </RowSplit>
+                  <RowSplit>
+                    <Text style={s.label}>text align:</Text>
+                    <TouchableOpacity
+                      style={s.btn}
+                      onPress={showTextAlignSelector}
+                    >
+                      <Text style={s.text}>{state.textAlign}</Text>
+                    </TouchableOpacity>
+                  </RowSplit>
+                </View>
+              ) : null}
+              <View style={s.row}>
+                <RowSplit>
+                  <RowSplit style={{ flex: 2 }}>
+                    <Text style={s.label}>underline:</Text>
+                  </RowSplit>
+                  <RowSplit>
+                    <Switch
+                      value={state.underline}
+                      onValueChange={setUnderline}
+                    />
+                  </RowSplit>
+                </RowSplit>
+                <RowSplit>
+                  <RowSplit style={{ flex: 2 }}>
+                    <Text style={s.label}>italic:</Text>
+                  </RowSplit>
+                  <RowSplit>
+                    <Switch value={state.italic} onValueChange={setItalic} />
+                  </RowSplit>
+                </RowSplit>
+              </View>
+              <View style={s.row}>
+                <RowSplit>
+                  <RowSplit style={{ flex: 2 }}>
+                    <Text style={s.label}>bold:</Text>
+                  </RowSplit>
+                  <RowSplit>
+                    <Switch value={state.bold} onValueChange={setBold} />
+                  </RowSplit>
+                </RowSplit>
+                <RowSplit>
+                  <RowSplit style={{ flex: 2 }}>
+                    <Text style={s.label}>strikeThrough:</Text>
+                  </RowSplit>
+                  <RowSplit>
+                    <Switch
+                      value={state.strikeThrough}
+                      onValueChange={setStrikeThrough}
+                    />
+                  </RowSplit>
+                </RowSplit>
+              </View>
+              <View style={[s.row, { justifyContent: 'flex-end' }]}>
+                <RowSplit>
+                  <Text style={s.label}>rotate:</Text>
+                  <TextInput
+                    style={s.shortTextInput}
+                    defaultValue={String(state.textRotate)}
+                    onChangeText={(v) => {
+                      const value = Number(v);
+                      if (value < -360 || value > 360) {
+                        Toast.show({
+                          type: 'error',
+                          text1: 'rotate range error',
+                          text2: 'rotate must be between -360 and 360',
+                        });
+                        return;
+                      }
+                      setTextRotate(value);
+                    }}
+                  />
+                </RowSplit>
+                <TouchableOpacity
+                  style={[s.btn, { height: 40 }]}
+                  onPress={() => {
+                    setTextOptionsVisible(false);
+                  }}
+                >
+                  <Text style={s.text}>Confirm</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
         <View style={{ flex: 1 }}>
           {state.show ? (
             <Image
@@ -442,20 +1041,22 @@ export default function App() {
         </View>
       </ScrollView>
       {state.loading && (
-        <View
-          style={{
-            position: 'absolute',
-            width,
-            height,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
+        <View style={s.loading}>
           <ActivityIndicator size="large" />
           <Text style={{ color: 'white' }}>loading...</Text>
         </View>
       )}
     </View>
+  );
+}
+
+export default function AppContainer() {
+  return (
+    <ActionSheetProvider>
+      <>
+        <App />
+        <Toast />
+      </>
+    </ActionSheetProvider>
   );
 }
