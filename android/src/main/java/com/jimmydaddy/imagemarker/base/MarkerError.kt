@@ -1,13 +1,13 @@
 package com.jimmydaddy.imagemarker.base
 
-class MarkerError internal constructor(var errorCode: ErrorCode, var errMsg: String) : Error() {
+class MarkerError internal constructor(private var errorCode: ErrorCode, private var errMsg: String) : Error() {
 
   fun getErrorCode(): String {
     return errorCode.value
   }
 
   @JvmName("functionOfKotlin")
-  fun getErrMsg(): String? {
+  fun getErrMsg(): String {
     return errMsg
   }
 }

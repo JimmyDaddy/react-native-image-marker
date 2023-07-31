@@ -14,4 +14,8 @@ object Constants {
 
   @JvmField
   var DEFAULT_ALPHA = 255
+
+  var IMAGE_MARKER_TAG = "[ImageMarker]"
+
+  var BASE64 = "base64"
 }

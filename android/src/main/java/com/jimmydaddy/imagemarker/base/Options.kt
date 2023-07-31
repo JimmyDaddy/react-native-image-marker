@@ -29,7 +29,7 @@ open class Options(options: ReadableMap) {
     quality = if (options.hasKey("quality")) options.getInt("quality") else 100
     maxSize = if (options.hasKey("maxSize")) options.getInt("maxSize") else 2048
     filename = options.getString("filename")
-    saveFormat = SaveFormat.Companion.getFormat(options.getString("saveFormat"))
+    saveFormat = SaveFormat.getFormat(options.getString("saveFormat"))
   }
 
   companion object {

@@ -25,9 +25,9 @@ class MarkImageOptions(options: ReadableMap) : Options(options) {
     val positionOptions =
       if (null != options.getMap("watermarkPositions")) options.getMap("watermarkPositions") else null
     x = if (positionOptions!!.hasKey("X")) positionOptions.getInt("X") else 0
-    y = if (positionOptions!!.hasKey("Y")) positionOptions.getInt("Y") else 0
+    y = if (positionOptions.hasKey("Y")) positionOptions.getInt("Y") else 0
     positionEnum =
-      if (null != positionOptions.getString("position")) PositionEnum.Companion.getPosition(
+      if (null != positionOptions.getString("position")) PositionEnum.getPosition(
         positionOptions.getString("position")
       ) else null
     watermarkImage = ImageOptions(markerImageOpts)
