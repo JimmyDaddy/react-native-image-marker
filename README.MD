@@ -7,7 +7,8 @@ Add text or icon watermark to your images
 
 ## Features
 
-* Add **multiple text** watermarks to images
+* Add **multiple texts** watermarks to images
+* add **multiple icons** watermarks to images *(Android >= N, iOS >= iOS 13)*
 * Add **icon watermark** to images
 * Support **rotating** background images and image watermarks.
 * Support setting opacity for background images and image watermarks.
@@ -22,8 +23,10 @@ Add text or icon watermark to your images
   * text align
 * Compatible with both Android and iOS
 
-## sample
+## Samples
+
 <p>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/multiple_icon_markers.png" width='200'>
  <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/alphabgonly.png" width='200'>
  <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/alphicononly.png" width='200'>
  <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/imagewatermark.png" width='200'>
@@ -41,6 +44,16 @@ Add text or icon watermark to your images
  <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/shadow.png" width='200'>
  <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/shadow_bg_sy.png" width='200'>
 </p>
+
+## Version Compatibility
+
+| React Native Version | react-native-image-marker Version |
+| ---------------------| --------------------------------- |
+| < 0.60.0             | v0.5.2 or earlier                 |
+| >= 0.60.0, iOS < 13, Android < N | v1.0.1 |
+| >= 0.60.0, other cases | v1.1.0 or later |
+
+> Note: This table is only applicable to major versions of react-native-image-marker. Patch versions should be backwards compatible.
 
 ## Installation
 
@@ -163,15 +176,24 @@ const options = {
    rotate: 20,
    alpha: 0.5,
  },
- watermarkImage: {
+ watermarkImages: [{
    src: require('./images/watermark.png'),
    scale: 1,
    rotate: 20,
    alpha: 0.5,
- },
- watermarkPositions: {
-   position: Position.center,
- },
+   position: {
+    position: Position.center,
+   }
+ }, {
+  src: require('./images/watermark1.png'),
+   scale: 1,
+   rotate: 20,
+   alpha: 0.5,
+   position: {
+    X: 20,
+    Y: 20,
+   }
+ }],
  quality: 100,
  filename: 'test',
  saveFormat: ImageFormat.png,
@@ -189,9 +211,9 @@ await ImageMarker.markImage(options);
 
 ## API
 
-[the latest version](https://jimmydaddy.github.io/react-native-image-marker/classes/Marker.html)
-
-If you are using a version lower than 1.0.0, please go to [v0.9.2](https://github.com/JimmyDaddy/react-native-image-marker/wiki/0.9.2)
+* [the latest version](https://jimmydaddy.github.io/react-native-image-marker/classes/Marker.html)
+* [v1.0.1](https://jimmydaddy.github.io/react-native-image-marker/v1.0.1/classes/Marker.html)
+* If you are using a version lower than 1.0.0, please go to [v0.9.2](https://github.com/JimmyDaddy/react-native-image-marker/wiki/0.9.2)
 
 ## Extra about Android decoding image
 

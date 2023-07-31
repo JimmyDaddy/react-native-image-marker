@@ -100,7 +100,7 @@ class Position(var x: Float, var y: Float) {
       width: Int,
       height: Int,
       imageWidth: Int,
-      imageHeigt: Int
+      imageHeight: Int
     ): Position {
       var left = 20
       var top = 40
@@ -118,25 +118,25 @@ class Position(var x: Float, var y: Float) {
         "topRight" -> pos.x = (right - 20).toFloat()
         "center" -> {
           left = imageWidth / 2 - width / 2
-          top = imageHeigt / 2 - height / 2
+          top = imageHeight / 2 - height / 2
           pos.x = left.toFloat()
           pos.y = top.toFloat()
         }
 
         "bottomLeft" -> {
-          top = imageHeigt - height
+          top = imageHeight - height
           pos.y = (top - 20).toFloat()
         }
 
         "bottomRight" -> {
-          top = imageHeigt - height
+          top = imageHeight - height
           left = imageWidth - width - 20
           pos.x = (left - 20).toFloat()
           pos.y = (top - 20).toFloat()
         }
 
         "bottomCenter" -> {
-          top = imageHeigt - height
+          top = imageHeight - height
           left = imageWidth / 2 - width / 2
           pos.x = (left - 20).toFloat()
           pos.y = (top - 20).toFloat()
@@ -151,7 +151,7 @@ class Position(var x: Float, var y: Float) {
       width: Int,
       height: Int,
       imageWidth: Int,
-      imageHeigt: Int
+      imageHeight: Int
     ): Position {
       var left = 20
       var top = 20
@@ -169,33 +169,33 @@ class Position(var x: Float, var y: Float) {
         PositionEnum.TOP_RIGHT -> pos.x = (right - 20).toFloat()
         PositionEnum.CENTER -> {
           left = imageWidth / 2 - width / 2
-          top = imageHeigt / 2 - height / 2
+          top = imageHeight / 2 - height / 2
           pos.x = left.toFloat()
           pos.y = top.toFloat()
         }
 
         PositionEnum.BOTTOM_LEFT -> {
-          top = imageHeigt - height
+          top = imageHeight - height
           pos.y = (top - 20).toFloat()
         }
 
         PositionEnum.BOTTOM_RIGHT -> {
-          top = imageHeigt - height
+          top = imageHeight - height
           left = imageWidth - width - 20
           pos.x = (left - 20).toFloat()
           pos.y = (top - 20).toFloat()
         }
 
         PositionEnum.BOTTOM_CENTER -> {
-          top = imageHeigt - height
+          top = imageHeight - height
           left = imageWidth / 2 - width / 2
           pos.x = (left - 20).toFloat()
           pos.y = (top - 20).toFloat()
         }
 
         PositionEnum.TOP_LEFT -> {
-          pos.x = left.toFloat();
-          pos.y = top.toFloat();
+          pos.x = left.toFloat()
+          pos.y = top.toFloat()
         }
       }
       return pos

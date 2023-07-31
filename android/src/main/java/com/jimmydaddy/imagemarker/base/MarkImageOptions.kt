@@ -4,33 +4,37 @@ import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReadableMap
 
 class MarkImageOptions(options: ReadableMap) : Options(options) {
-  @JvmField
-  var watermarkImage: ImageOptions
-
-  @JvmField
-  var x: Int
-
-  @JvmField
-  var y: Int
-
-  @JvmField
-  var positionEnum: PositionEnum?
-
+  lateinit var watermarkImages: Array<WatermarkImageOptions>
   init {
     val markerImageOpts = options.getMap("watermarkImage")
-      ?: throw MarkerError(
+    val markerImagesOpts = options.getArray("watermarkImages")
+    if ((markerImagesOpts == null || markerImagesOpts!!.size() <= 0) && markerImageOpts == null) {
+      throw MarkerError(
         ErrorCode.PARAMS_REQUIRED,
         "marker image is required"
       )
-    val positionOptions =
-      if (null != options.getMap("watermarkPositions")) options.getMap("watermarkPositions") else null
-    x = if (positionOptions!!.hasKey("X")) positionOptions.getInt("X") else 0
-    y = if (positionOptions!!.hasKey("Y")) positionOptions.getInt("Y") else 0
-    positionEnum =
-      if (null != positionOptions.getString("position")) PositionEnum.Companion.getPosition(
-        positionOptions.getString("position")
-      ) else null
-    watermarkImage = ImageOptions(markerImageOpts)
+    }
+    val myMarkerList = arrayListOf<WatermarkImageOptions>()
+    if (markerImagesOpts != null && markerImagesOpts.size() > 0) {
+      for (i in 0 until markerImagesOpts.size()) {
+        val marker = WatermarkImageOptions(markerImagesOpts.getMap(i))
+        myMarkerList.add(marker)
+      }
+    }
+    if (markerImageOpts != null) {
+      val marker = ImageOptions(markerImageOpts)
+      val positionOptions =
+        if (null != options.getMap("watermarkPositions")) options.getMap("watermarkPositions") else null
+      val x = if (positionOptions!!.hasKey("X")) positionOptions.getInt("X") else 0
+      val y = if (positionOptions.hasKey("Y")) positionOptions.getInt("Y") else 0
+      val positionEnum =
+        if (null != positionOptions.getString("position")) PositionEnum.getPosition(
+          positionOptions.getString("position")
+        ) else null
+      val markerOpts = WatermarkImageOptions(marker, x, y, positionEnum)
+      myMarkerList.add(markerOpts)
+    }
+    watermarkImages = myMarkerList.toTypedArray()
   }
 
   companion object {

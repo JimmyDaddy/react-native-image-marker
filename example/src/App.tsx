@@ -26,6 +26,7 @@ import {
 import Toast from 'react-native-toast-message';
 
 const icon = require('./icon.jpeg');
+const icon1 = require('./yahaha.jpeg');
 const bg = require('./bg.png');
 const base64Bg = require('./bas64bg').default;
 
@@ -405,6 +406,26 @@ function useViewModel() {
           },
           quality: 100,
           saveFormat: saveFormat,
+          watermarkImages: [
+            {
+              src: icon1,
+              scale: watermarkScale,
+              alpha: watermarkAlpha,
+              rotate: watermarkRotate,
+              position: {
+                position: Position.topLeft,
+              },
+            },
+            {
+              src: marker,
+              scale: watermarkScale,
+              alpha: watermarkAlpha,
+              rotate: watermarkRotate,
+              position: {
+                position: Position.topRight,
+              },
+            },
+          ],
         });
       } else {
         path = await Marker.markText({
@@ -521,16 +542,22 @@ function useViewModel() {
             rotate: backgroundRotate,
             alpha: backgroundAlpha,
           },
-          watermarkImage: {
-            src: marker,
-            scale: watermarkScale,
-            alpha: watermarkAlpha,
-            rotate: watermarkRotate,
-          },
-          watermarkPositions: {
-            X,
-            Y,
-          },
+          watermarkImages: [
+            {
+              src: marker,
+              scale: watermarkScale,
+              alpha: watermarkAlpha,
+              rotate: watermarkRotate,
+              position: { X, Y },
+            },
+            {
+              src: icon1,
+              scale: watermarkScale,
+              alpha: watermarkAlpha,
+              rotate: watermarkRotate,
+              position: { X: X + 200, Y: Y + 100 },
+            },
+          ],
           quality: 100,
           saveFormat: saveFormat,
         });

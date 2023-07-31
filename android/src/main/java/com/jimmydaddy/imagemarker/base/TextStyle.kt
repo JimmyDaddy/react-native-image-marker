@@ -23,7 +23,7 @@ class TextStyle(options: ReadableMap?) {
     fontSize = if (options.hasKey("fontSize")) options.getInt("fontSize") else DEFAULT_FONT_SIZE
     fontName =
       if (null != options.getString("fontName")) options.getString("fontName") else null
-    skewX = if (options.hasKey("skewX")) options.getDouble("skewX").toFloat() else 0f;
+    skewX = if (options.hasKey("skewX")) options.getDouble("skewX").toFloat() else 0f
     rotate = if (options.hasKey("rotate")) options.getInt("rotate") else 0
     underline = if (options.hasKey("underline")) options.getBoolean("underline") else false
     strikeThrough =

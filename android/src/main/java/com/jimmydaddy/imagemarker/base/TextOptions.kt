@@ -3,7 +3,6 @@ package com.jimmydaddy.imagemarker.base
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.os.Build
@@ -16,12 +15,13 @@ import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.views.text.ReactFontManager
 import kotlin.math.ceil
 
+@Suppress("DEPRECATION")
 class TextOptions(options: ReadableMap) {
-  var text: String?
-  var X: Int?
-  var Y: Int?
-  var positionEnum: PositionEnum?
-  var style: TextStyle
+  private var text: String?
+  private var x: Int?
+  private var y: Int?
+  private var positionEnum: PositionEnum?
+  private var style: TextStyle
 
   init {
     text = options.getString("text")
@@ -30,10 +30,10 @@ class TextOptions(options: ReadableMap) {
     }
     val positionOptions =
       if (null != options.getMap("positionOptions")) options.getMap("positionOptions") else null
-    X = if (positionOptions!!.hasKey("X")) positionOptions.getInt("X") else null
-    Y = if (positionOptions!!.hasKey("Y")) positionOptions.getInt("Y") else null
+    x = if (positionOptions!!.hasKey("X")) positionOptions.getInt("X") else null
+    y = if (positionOptions.hasKey("Y")) positionOptions.getInt("Y") else null
     positionEnum =
-      if (null != positionOptions!!.getString("position")) PositionEnum.getPosition(
+      if (null != positionOptions.getString("position")) PositionEnum.getPosition(
         positionOptions.getString("position")
       ) else null
     style = TextStyle(options.getMap("style"))
@@ -67,7 +67,7 @@ class TextOptions(options: ReadableMap) {
       style.fontSize.toFloat(),
       context.resources.displayMetrics
     )
-    textPaint.isAntiAlias = true;
+    textPaint.isAntiAlias = true
     textPaint.textSize = textSize
     textPaint.color = Color.parseColor(Utils.transRGBColor(style.color))
     textPaint.isUnderlineText = style.underline
@@ -123,11 +123,11 @@ class TextOptions(options: ReadableMap) {
         textHeight
       )
     } else {
-      if (null != X) {
-        position.x = X!!.toFloat()
+      if (null != x) {
+        position.x = x!!.toFloat()
       }
-      if (null != Y) {
-        position.y = Y!!.toFloat()
+      if (null != y) {
+        position.y = y!!.toFloat()
       }
     }
     val x = position.x
@@ -176,7 +176,7 @@ class TextOptions(options: ReadableMap) {
     }
     canvas.translate(x, y)
     textLayout.draw(canvas)
-    canvas.translate(0f, 0f);
+    canvas.translate(0f, 0f)
     canvas.restore()
   }
 }

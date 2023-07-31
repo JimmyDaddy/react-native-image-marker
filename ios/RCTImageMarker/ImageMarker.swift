@@ -11,41 +11,55 @@ import CoreGraphics
 import UIKit
 import React
 
+@available(iOS 13.0, *)
 @objc(ImageMarker)
 public final class ImageMarker: NSObject, RCTBridgeModule {
     public var bridge: RCTBridge!
-        
-    func loadImage(
-        with src: [AnyHashable: Any],
-        callback: @escaping RCTImageLoaderCompletionBlock
-    ) {
+    
+    func loadImages(with imageOptions: [ImageOptions]) async throws -> [UIImage] {
         let className = "RCTImageLoader"
         let classType: AnyClass? = NSClassFromString(className)
-        guard let imageLoader = bridge.module(for: classType) as? RCTImageLoader else {
-            NSLog("Failed to get ImageLoader module")
-            let errorDomain = "com.jimmydaddy.imagemarker"
-            let errorCode = 1
-            let errorUserInfo = [NSLocalizedDescriptionKey: "Failed to get ImageLoader module"]
-            let error = NSError(domain: errorDomain, code: errorCode, userInfo: errorUserInfo)
-            callback(error, nil)
-            return
+        guard let imageLoader = self.bridge.module(for: classType) as? RCTImageLoader else {
+            throw NSError(domain: "com.jimmydaddy.imagemarker", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to get ImageLoader module"])
         }
-        imageLoader.loadImage(
-            with: RCTConvert.nsurlRequest(src),
-            callback: { error, loadedImage in
-                if let error = error {
-                    NSLog("LOAD_IMAGE_ERROR: %@", error.localizedDescription)
-                    let errorDomain = "com.jimmydaddy.imagemarker"
-                    let errorCode = 2
-                    let errorUserInfo = [NSLocalizedDescriptionKey: "LOAD_IMAGE_ERROR Failed to get load image"]
-                    let error = NSError(domain: errorDomain, code: errorCode, userInfo: errorUserInfo)
-                    callback(error, nil)
+        let images = try await withThrowingTaskGroup(of: (Int, UIImage).self) { group in
+            for (index, img) in imageOptions.enumerated() {
+                group.addTask {
+                    try await withUnsafeThrowingContinuation { continuation in
+                        if Utils.isBase64(img.uri) {
+                            if let image = UIImage.transBase64(img.uri) {
+                                continuation.resume(returning: (index, image))
+                            } else {
+                                let error = NSError(domain: "com.jimmydaddy.imagemarker", code: 3, userInfo: [NSLocalizedDescriptionKey: "Failed to load image"])
+                                continuation.resume(throwing: error)
+                            }
+                        } else {
+                            let request = RCTConvert.nsurlRequest(img.src)
+                            imageLoader.loadImage(with: request!) { error, loadedImage in
+                                if let loadedImage = loadedImage {
+                                    continuation.resume(returning: (index, loadedImage))
+                                } else if let error = error {
+                                    continuation.resume(throwing: error)
+                                } else {
+                                    let error = NSError(domain: "com.jimmydaddy.imagemarker", code: 3, userInfo: [NSLocalizedDescriptionKey: "Failed to load image"])
+                                    continuation.resume(throwing: error)
+                                }
+                            }
+                        }
+                    }
                 }
-                callback(error, loadedImage)
             }
-        )
+            var imagesWithIndex: [(Int, UIImage)] = []
+            for try await image in group {
+                imagesWithIndex.append(image)
+            }
+            let sortedImagesWithIndex = imagesWithIndex.sorted { $0.0 < $1.0 }
+            let images = sortedImagesWithIndex.map { $0.1 }
+            return images
+        }
+        return images
     }
-    
+
     @objc
     public static func requiresMainQueueSetup() -> Bool {
         return false
@@ -227,14 +241,9 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         return aimg
     }
     
-    func markeImage(with image: UIImage, waterImage: UIImage, options: MarkImageOptions) -> UIImage? {
+    func markeImage(with image: UIImage, waterImages: [UIImage], options: MarkImageOptions) -> UIImage? {
         let w = Int(image.size.width)
         let h = Int(image.size.height)
-                
-        let ww = waterImage.size.width * options.watermarkImage.scale
-        let wh = waterImage.size.height * options.watermarkImage.scale
-        
-        let diagonal = sqrt(pow(ww, 2) + pow(ww, 2)) // 计算对角线长度
         
         let canvasRect = CGRect(x: 0, y: 0, width: CGFloat(w), height: CGFloat(h))
         
@@ -265,53 +274,61 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
             context?.restoreGState()
         }
         
-        let size = CGSize(width: CGFloat(diagonal), height: CGFloat(diagonal))
-        
-        var rect: CGRect
-        if options.position != .none {
-            switch options.position {
-                case .topLeft:
-                    rect = CGRect(origin: CGPoint(x: 20, y: 20), size: size)
-                case .topCenter:
-                    rect = CGRect(origin: CGPoint(x: (w - Int(size.width)) / 2, y: 20), size: size)
-                case .topRight:
-                    rect = CGRect(origin: CGPoint(x: w - Int(size.width) - 20, y: 20), size: size)
-                case .bottomLeft:
-                    rect = CGRect(origin: CGPoint(x: 20, y: h - Int(size.height) - 20), size: size)
-                case .bottomCenter:
-                    rect = CGRect(origin: CGPoint(x: (w - Int(size.width)) / 2, y: h - Int(size.height) - 20), size: size)
-                case .bottomRight:
-                    rect = CGRect(origin: CGPoint(x: w - Int(size.width) - 20, y: h - Int(size.height) - 20), size: size)
-                case .center:
-                    rect = CGRect(origin: CGPoint(x: (w - Int(size.width)) / 2, y: (h - Int(size.height)) / 2), size: size)
-                default:
-                    rect = CGRect(origin: CGPoint(x: 20, y: 20), size: size)
-                }
-        } else {
-            rect = CGRect(x: CGFloat(options.X), y: CGFloat(options.Y), width: CGFloat(ww), height: CGFloat(wh))
+        for (index, waterImage) in waterImages.enumerated() {
+            context?.saveGState()
+            let watermarkOptions = options.watermarkImages[index];
+            let ww = waterImage.size.width * watermarkOptions.imageOption.scale
+            let wh = waterImage.size.height * watermarkOptions.imageOption.scale
+            
+            let diagonal = sqrt(pow(ww, 2) + pow(ww, 2)) // 计算对角线长度
+            let size = CGSize(width: CGFloat(diagonal), height: CGFloat(diagonal))
+            var rect: CGRect
+            if watermarkOptions.position != .none {
+                switch watermarkOptions.position {
+                    case .topLeft:
+                        rect = CGRect(origin: CGPoint(x: 20, y: 20), size: size)
+                    case .topCenter:
+                        rect = CGRect(origin: CGPoint(x: (w - Int(size.width)) / 2, y: 20), size: size)
+                    case .topRight:
+                        rect = CGRect(origin: CGPoint(x: w - Int(size.width) - 20, y: 20), size: size)
+                    case .bottomLeft:
+                        rect = CGRect(origin: CGPoint(x: 20, y: h - Int(size.height) - 20), size: size)
+                    case .bottomCenter:
+                        rect = CGRect(origin: CGPoint(x: (w - Int(size.width)) / 2, y: h - Int(size.height) - 20), size: size)
+                    case .bottomRight:
+                        rect = CGRect(origin: CGPoint(x: w - Int(size.width) - 20, y: h - Int(size.height) - 20), size: size)
+                    case .center:
+                        rect = CGRect(origin: CGPoint(x: (w - Int(size.width)) / 2, y: (h - Int(size.height)) / 2), size: size)
+                    default:
+                        rect = CGRect(origin: CGPoint(x: 20, y: 20), size: size)
+                    }
+            } else {
+                rect = CGRect(x: CGFloat(watermarkOptions.X), y: CGFloat(watermarkOptions.Y), width: CGFloat(ww), height: CGFloat(wh))
+            }
+            
+            UIGraphicsBeginImageContextWithOptions(CGSize(width: diagonal, height: diagonal), false, 0)
+            let markerContext = UIGraphicsGetCurrentContext()
+            markerContext?.saveGState()
+
+            if watermarkOptions.imageOption.alpha != 1.0 {
+                markerContext?.beginTransparencyLayer(auxiliaryInfo: nil)
+                markerContext?.setAlpha(watermarkOptions.imageOption.alpha)
+                markerContext?.setBlendMode(.multiply)
+                let markerImage = waterImage.rotatedImageWithTransform(watermarkOptions.imageOption.rotate)
+                markerContext?.draw(markerImage.cgImage!, in: CGRect(origin: .zero, size: CGSize(width: diagonal, height: diagonal)))
+                markerContext?.endTransparencyLayer()
+
+            } else {
+                let markerImage = waterImage.rotatedImageWithTransform(watermarkOptions.imageOption.rotate)
+                markerContext?.draw(markerImage.cgImage!, in: CGRect(origin: .zero, size: CGSize(width: diagonal, height: diagonal)))
+            }
+            markerContext?.restoreGState()
+
+            let waterImageRes = UIGraphicsGetImageFromCurrentImageContext()!
+            context?.draw(waterImageRes.cgImage!, in: rect)
+            UIGraphicsEndImageContext()
+            context?.restoreGState()
         }
-        
-        UIGraphicsBeginImageContextWithOptions(CGSize(width: diagonal, height: diagonal), false, 0)
-        let markerContext = UIGraphicsGetCurrentContext()
-        markerContext?.saveGState()
-
-        if options.watermarkImage.alpha != 1.0 {
-            markerContext?.beginTransparencyLayer(auxiliaryInfo: nil)
-            markerContext?.setAlpha(options.watermarkImage.alpha)
-            markerContext?.setBlendMode(.multiply)
-            let markerImage = waterImage.rotatedImageWithTransform(options.watermarkImage.rotate)
-            markerContext?.draw(markerImage.cgImage!, in: CGRect(origin: .zero, size: CGSize(width: diagonal, height: diagonal)))
-            markerContext?.endTransparencyLayer()
-
-        } else {
-            let markerImage = waterImage.rotatedImageWithTransform(options.watermarkImage.rotate)
-            markerContext?.draw(markerImage.cgImage!, in: CGRect(origin: .zero, size: CGSize(width: diagonal, height: diagonal)))
-        }
-        markerContext?.restoreGState()
-
-        let waterImageRes = UIGraphicsGetImageFromCurrentImageContext()!
-        context?.draw(waterImageRes.cgImage!, in: rect)
-        UIGraphicsEndImageContext()
         
         var newImage = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()
@@ -325,41 +342,16 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         if markOpts === nil {
             rejecter("OPTS_INVALID", "opts invalid", nil)
         }
-        if Utils.isBase64(markOpts!.backgroundImage.uri) {
-            if let image = UIImage.transBase64(markOpts!.backgroundImage.uri) {
-                if let scaledImage = markerImgWithText(image, markOpts!) {
-                    let res = saveImageForMarker(scaledImage, with: markOpts!)
-                    resolver(res)
-                } else {
-                    print("Can't mark the image")
-                    rejecter("error", "Can't mark the image.", nil)
-                }
+        Task(priority: .userInitiated) {
+            do {
+                let images = try await loadImages(with: [(markOpts?.backgroundImage)!])
+                let scaledImage = self.markerImgWithText(images[0], markOpts!)
+                let res = self.saveImageForMarker(scaledImage!, with: markOpts!)
+                resolver(res)
+                print("Loaded images:", images)
+            } catch {
+                print("Failed to load images:", error)
             }
-        } else {
-            loadImage(with: markOpts!.backgroundImage.src, callback: { (error, image) in
-                if let error = error {
-                    if let image = UIImage(contentsOfFile: markOpts!.backgroundImage.uri) {
-                        if let scaledImage = self.markerImgWithText(image, markOpts!) {
-                            let res = self.saveImageForMarker(scaledImage, with: markOpts!)
-                            resolver(res)
-                        } else {
-                            print("Can't mark the image")
-                            rejecter("error", "Can't mark the image.", error)
-                        }
-                    } else {
-                        print("Can't retrieve the file from the path")
-                        rejecter("error", "Can't retrieve the file from the path.", error)
-                    }
-                } else if let image = image {
-                    if let scaledImage = self.markerImgWithText(image, markOpts!) {
-                        let res = self.saveImageForMarker(scaledImage, with: markOpts!)
-                        resolver(res)
-                    } else {
-                        print("Can't mark the image")
-                        rejecter("error", "Can't mark the image.", error)
-                    }
-                }
-            })
         }
     }
     
@@ -369,128 +361,17 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         if markOpts === nil {
             rejecter("OPTS_INVALID", "opts invalid", nil)
         }
-        if Utils.isBase64(markOpts?.backgroundImage.uri) {
-            if let image = UIImage.transBase64(markOpts!.backgroundImage.uri) {
-                if Utils.isBase64(markOpts!.watermarkImage.uri) {
-                    if let marker = UIImage.transBase64(markOpts!.watermarkImage.uri) {
-                        if let scaledImage = markeImage(with: image, waterImage: marker, options: markOpts!) {
-                            let res = saveImageForMarker(scaledImage, with: markOpts!)
-                            resolver(res)
-                        } else {
-                            print("Can't mark the image")
-                            rejecter("error", "Can't mark the image.", nil)
-                        }
-                    }
-                } else {
-                    self.loadImage(with: markOpts!.watermarkImage.src, callback: { (error, marker) in
-                        if let error = error {
-                            if let marker = UIImage(contentsOfFile: markOpts!.watermarkImage.uri) {
-                                if let scaledImage = self.markeImage(with: image, waterImage: marker, options: markOpts!) {
-                                    let res = self.saveImageForMarker(scaledImage, with: markOpts!)
-                                    resolver(res)
-                                } else {
-                                    print("Can't mark the image")
-                                    rejecter("error", "Can't mark the image.", error)
-                                }
-                            } else {
-                                print("Can't retrieve the file from the path")
-                                rejecter("error", "Can't retrieve the file from the path.", error)
-                            }
-                        } else if let marker = marker {
-                            if let scaledImage = self.markeImage(with: image, waterImage: marker, options: markOpts!) {
-                                let res = self.saveImageForMarker(scaledImage, with: markOpts!)
-                                resolver(res)
-                            } else {
-                                print("Can't mark the image")
-                                rejecter("error", "Can't mark the image.", error)
-                            }
-                        }
-                    })
-                }
+        Task(priority: .userInitiated) {
+            do {
+                let waterImages = markOpts?.watermarkImages.map { $0.imageOption }
+                var images = try await loadImages(with: [(markOpts?.backgroundImage)!] + waterImages!)
+                let scaledImage = self.markeImage(with: images.remove(at: 0), waterImages: images, options: markOpts!)
+                let res = self.saveImageForMarker(scaledImage!, with: markOpts!)
+                resolver(res)
+                print("Loaded images:", images)
+            } catch {
+                print("Failed to load images:", error)
             }
-        } else {
-            self.loadImage(with: markOpts!.backgroundImage.src, callback: { (error, image) in
-                if let error = error {
-                    if let image = UIImage(contentsOfFile: markOpts!.backgroundImage.uri) {
-                        if Utils.isBase64(markOpts!.watermarkImage.uri) {
-                            if let marker = UIImage.transBase64(markOpts!.watermarkImage.uri) {
-                                if let scaledImage = self.markeImage(with: image, waterImage: marker, options: markOpts!) {
-                                    let res = self.saveImageForMarker(scaledImage, with: markOpts!)
-                                    resolver(res)
-                                } else {
-                                    print("Can't mark the image")
-                                    rejecter("error", "Can't mark the image.", error)
-                                }
-                            }
-                        } else {
-                            self.loadImage(with: markOpts!.watermarkImage.src, callback: { (error, marker) in
-                                if let error = error {
-                                    if let marker = UIImage(contentsOfFile: markOpts!.watermarkImage.uri) {
-                                        if let scaledImage = self.markeImage(with: image, waterImage: marker, options: markOpts!) {
-                                            let res = self.saveImageForMarker(scaledImage, with: markOpts!)
-                                            resolver(res)
-                                        } else {
-                                            print("Can't mark the image")
-                                            rejecter("error", "Can't mark the image.", error)
-                                        }
-                                    } else {
-                                        print("Can't retrieve the file from the path")
-                                        rejecter("error", "Can't retrieve the file from the path.", error)
-                                    }
-                                } else if let marker = marker {
-                                    if let scaledImage = self.markeImage(with: image, waterImage: marker, options: markOpts!) {
-                                        let res = self.saveImageForMarker(scaledImage, with: markOpts!)
-                                        resolver(res)
-                                    } else {
-                                        print("Can't mark the image")
-                                        rejecter("error", "Can't mark the image.", error)
-                                    }
-                                }
-                            })
-                        }
-                    } else {
-                        print("Can't retrieve the file from the path")
-                        rejecter("error", "Can't retrieve the file from the path.", error)
-                    }
-                } else if let image = image {
-                    if Utils.isBase64(markOpts!.watermarkImage.uri) {
-                        if let marker = UIImage.transBase64(markOpts!.watermarkImage.uri) {
-                            if let scaledImage = self.markeImage(with: image, waterImage: marker, options: markOpts!) {
-                                let res = self.saveImageForMarker(scaledImage, with: markOpts!)
-                                resolver(res)
-                            } else {
-                                print("Can't mark the image")
-                                rejecter("error", "Can't mark the image.", error)
-                            }
-                        }
-                    } else {
-                        self.loadImage(with: markOpts!.watermarkImage.src, callback: { (error, marker) in
-                            if let error = error {
-                                if let marker = UIImage(contentsOfFile: markOpts!.watermarkImage.uri) {
-                                    if let scaledImage = self.markeImage(with: image, waterImage: marker, options: markOpts!) {
-                                        let res = self.saveImageForMarker(scaledImage, with: markOpts!)
-                                        resolver(res)
-                                    } else {
-                                        print("Can't mark the image")
-                                        rejecter("error", "Can't mark the image.", error)
-                                    }
-                                } else {
-                                    print("Can't retrieve the file from the path")
-                                    rejecter("error", "Can't retrieve the file from the path.", error)
-                                }
-                            } else if let marker = marker {
-                                if let scaledImage = self.markeImage(with: image, waterImage: marker, options: markOpts!) {
-                                    let res = self.saveImageForMarker(scaledImage, with: markOpts!)
-                                    resolver(res)
-                                } else {
-                                    print("Can't mark the image")
-                                    rejecter("error", "Can't mark the image.", error)
-                                }
-                            }
-                        })
-                    }
-                }
-            })
         }
     }
 }

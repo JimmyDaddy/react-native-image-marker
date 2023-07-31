@@ -6,6 +6,7 @@ buildscript {
   }
 
   dependencies {
+    classpath "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.0"
     classpath "com.android.tools.build:gradle:7.2.1"
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
   }
@@ -69,6 +70,7 @@ dependencies {
   // For < 0.71, this will be from the local maven repo
   // For > 0.71, this will be replaced by `com.facebook.react:react-android:$version` by react gradle plugin
   //noinspection GradleDynamicVersion
+  implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.0"
   implementation "com.facebook.react:react-native:+"
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }
@@ -80,3 +82,4 @@ if (isNewArchitectureEnabled()) {
     codegenJavaPackageName = "com.jimmydaddy.imagemarker"
   }
 }
+

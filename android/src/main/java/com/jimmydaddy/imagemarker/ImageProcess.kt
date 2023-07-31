@@ -6,7 +6,7 @@ import android.graphics.Matrix
 class ImageProcess {
   companion object {
     fun rotate(bitmap: Bitmap, rotation: Number): Bitmap {
-      var rotationMatrix = Matrix().apply { postRotate(rotation.toFloat()) }
+      val rotationMatrix = Matrix().apply { postRotate(rotation.toFloat()) }
       return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, rotationMatrix, true)
     }
 
