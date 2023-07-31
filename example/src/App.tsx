@@ -154,11 +154,11 @@ function ImageOptions(props: {
         defaultValue={String(scale)}
         onChangeText={(v) => {
           const value = Number(v);
-          if (value < 0 || value > 1) {
+          if (value < 0) {
             Toast.show({
               type: 'error',
               text1: 'scale range error',
-              text2: 'scale must be between 0 and 1',
+              text2: 'scale must greater than or equal to 1',
             });
             return;
           }
@@ -858,7 +858,7 @@ function App() {
                 </RowSplit>
                 <RowSplit>
                   <ImageOptions
-                    rotate={state.watermarkScale}
+                    rotate={state.watermarkRotate}
                     scale={state.watermarkScale}
                     alpha={state.watermarkAlpha}
                     setAlpha={setWatermarkAlpha}
