@@ -33,8 +33,15 @@ jobs:
       - name: Build with Jekyll
         uses: actions/jekyll-build-pages@v1
         with:
-          source: ./docs
+          source: ./docs/latest
           destination: ./_site
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
+      - name: Build with Jekyll v1.0.1
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./docs/v1.0.1
+          destination: ./_site/v1.0.1
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
 
