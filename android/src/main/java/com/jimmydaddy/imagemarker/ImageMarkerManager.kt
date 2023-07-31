@@ -25,6 +25,7 @@ import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.modules.systeminfo.ReactNativeVersion
 import com.jimmydaddy.imagemarker.base.Constants.BASE64
 import com.jimmydaddy.imagemarker.base.Constants.IMAGE_MARKER_TAG
+import com.jimmydaddy.imagemarker.base.ImageOptions
 import com.jimmydaddy.imagemarker.base.MarkImageOptions
 import com.jimmydaddy.imagemarker.base.MarkTextOptions
 import com.jimmydaddy.imagemarker.base.Position.Companion.getImageRectFromPosition
@@ -95,7 +96,7 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
 
   private fun markImageByBitmap(
     bg: Bitmap?,
-    marker: Bitmap?,
+    markers: List<Bitmap?>,
     dest: String,
     opts: MarkImageOptions,
     promise: Promise
@@ -113,29 +114,37 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
       canvas.drawBitmap(bg, 0f, 0f, opts.backgroundImage.applyStyle())
       canvas.restore()
       // 原图生成 - end
-      canvas.save()
-      var markerBitmap = marker
-      if (opts.watermarkImage.rotate != 0f) {
-        markerBitmap = ImageProcess.rotate(marker!!, opts.watermarkImage.rotate)
+      for (i in opts.watermarkImages.indices) {
+        canvas.save()
+        val markOpts = opts.watermarkImages[i]
+        var markerBitmap = markers[i]
+        if (markOpts.imageOption.rotate != 0f) {
+          markerBitmap = ImageProcess.rotate(markerBitmap!!, markOpts.imageOption.rotate)
+        }
+        if (markOpts.positionEnum != null) {
+          val pos = getImageRectFromPosition(
+            markOpts.positionEnum,
+            markerBitmap!!.width,
+            markerBitmap.height,
+            width,
+            height
+          )
+          canvas.drawBitmap(markerBitmap, pos.x, pos.y, markOpts.imageOption.applyStyle())
+        } else {
+          canvas.drawBitmap(
+            markerBitmap!!,
+            markOpts.x.toFloat(),
+            markOpts.y.toFloat(),
+            markOpts.imageOption.applyStyle()
+          )
+        }
+        canvas.restore()
+
+        if (markerBitmap != null && !markerBitmap.isRecycled) {
+          markerBitmap.recycle()
+          System.gc()
+        }
       }
-      if (opts.positionEnum != null) {
-        val pos = getImageRectFromPosition(
-          opts.positionEnum,
-          markerBitmap!!.width,
-          markerBitmap.height,
-          width,
-          height
-        )
-        canvas.drawBitmap(markerBitmap, pos.x, pos.y, opts.watermarkImage.applyStyle())
-      } else {
-        canvas.drawBitmap(
-          markerBitmap!!,
-          opts.x.toFloat(),
-          opts.y.toFloat(),
-          opts.watermarkImage.applyStyle()
-        )
-      }
-      canvas.restore()
 
       // 保存
       // canvas.save(Canvas.ALL_SAVE_FLAG);
@@ -144,10 +153,6 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
         System.gc()
       }
 
-      if (marker != null && !marker.isRecycled) {
-        marker.recycle()
-        System.gc()
-      }
       if (opts.backgroundImage.rotate != 0f) {
         icon = ImageProcess.rotate(icon, opts.backgroundImage.rotate)
       }
@@ -344,16 +349,18 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
     val markOpts = MarkImageOptions.checkParams(opts!!, promise) ?: return
     GlobalScope.launch(Dispatchers.Main) {
       try {
+
+        val markers = markOpts.watermarkImages.map { it.imageOption }
+        val concatenatedArray = listOf(
+          markOpts.backgroundImage,
+        ).plus(markers)
         val bitmaps = ImageLoader(context, markOpts.maxSize).loadImages(
-          arrayOf(
-            markOpts.backgroundImage,
-            markOpts.watermarkImage
-          )
+          concatenatedArray
         )
         val bg = bitmaps[0]
-        val marker = bitmaps[1]
+        val markerBitmaps = bitmaps.subList(1, bitmaps.lastIndex + 1)
         val dest = generateCacheFilePathForMarker(markOpts.filename, markOpts.saveFormat)
-        markImageByBitmap(bg, marker, dest, markOpts, promise)
+        markImageByBitmap(bg, markerBitmaps, dest, markOpts, promise)
       } catch (e: Exception) {
         Log.d(IMAGE_MARKER_TAG, "error：" + e.message)
         e.printStackTrace()

@@ -35,7 +35,7 @@ class ImageLoader(private val context: ReactApplicationContext, private val maxS
     get() = context.resources
 
   @RequiresApi(Build.VERSION_CODES.N)
-  suspend fun loadImages(images: Array<ImageOptions>): List<Bitmap?> = withContext(Dispatchers.IO) {
+  suspend fun loadImages(images: List<ImageOptions>): List<Bitmap?> = withContext(Dispatchers.IO) {
     val deferredList = images.map { img ->
       async {
         try {

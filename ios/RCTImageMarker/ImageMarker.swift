@@ -241,14 +241,9 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         return aimg
     }
     
-    func markeImage(with image: UIImage, waterImage: UIImage, options: MarkImageOptions) -> UIImage? {
+    func markeImage(with image: UIImage, waterImages: [UIImage], options: MarkImageOptions) -> UIImage? {
         let w = Int(image.size.width)
         let h = Int(image.size.height)
-                
-        let ww = waterImage.size.width * options.watermarkImage.scale
-        let wh = waterImage.size.height * options.watermarkImage.scale
-        
-        let diagonal = sqrt(pow(ww, 2) + pow(ww, 2)) // 计算对角线长度
         
         let canvasRect = CGRect(x: 0, y: 0, width: CGFloat(w), height: CGFloat(h))
         
@@ -279,53 +274,61 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
             context?.restoreGState()
         }
         
-        let size = CGSize(width: CGFloat(diagonal), height: CGFloat(diagonal))
-        
-        var rect: CGRect
-        if options.position != .none {
-            switch options.position {
-                case .topLeft:
-                    rect = CGRect(origin: CGPoint(x: 20, y: 20), size: size)
-                case .topCenter:
-                    rect = CGRect(origin: CGPoint(x: (w - Int(size.width)) / 2, y: 20), size: size)
-                case .topRight:
-                    rect = CGRect(origin: CGPoint(x: w - Int(size.width) - 20, y: 20), size: size)
-                case .bottomLeft:
-                    rect = CGRect(origin: CGPoint(x: 20, y: h - Int(size.height) - 20), size: size)
-                case .bottomCenter:
-                    rect = CGRect(origin: CGPoint(x: (w - Int(size.width)) / 2, y: h - Int(size.height) - 20), size: size)
-                case .bottomRight:
-                    rect = CGRect(origin: CGPoint(x: w - Int(size.width) - 20, y: h - Int(size.height) - 20), size: size)
-                case .center:
-                    rect = CGRect(origin: CGPoint(x: (w - Int(size.width)) / 2, y: (h - Int(size.height)) / 2), size: size)
-                default:
-                    rect = CGRect(origin: CGPoint(x: 20, y: 20), size: size)
-                }
-        } else {
-            rect = CGRect(x: CGFloat(options.X), y: CGFloat(options.Y), width: CGFloat(ww), height: CGFloat(wh))
+        for (index, waterImage) in waterImages.enumerated() {
+            context?.saveGState()
+            let watermarkOptions = options.watermarkImages[index];
+            let ww = waterImage.size.width * watermarkOptions.imageOption.scale
+            let wh = waterImage.size.height * watermarkOptions.imageOption.scale
+            
+            let diagonal = sqrt(pow(ww, 2) + pow(ww, 2)) // 计算对角线长度
+            let size = CGSize(width: CGFloat(diagonal), height: CGFloat(diagonal))
+            var rect: CGRect
+            if watermarkOptions.position != .none {
+                switch watermarkOptions.position {
+                    case .topLeft:
+                        rect = CGRect(origin: CGPoint(x: 20, y: 20), size: size)
+                    case .topCenter:
+                        rect = CGRect(origin: CGPoint(x: (w - Int(size.width)) / 2, y: 20), size: size)
+                    case .topRight:
+                        rect = CGRect(origin: CGPoint(x: w - Int(size.width) - 20, y: 20), size: size)
+                    case .bottomLeft:
+                        rect = CGRect(origin: CGPoint(x: 20, y: h - Int(size.height) - 20), size: size)
+                    case .bottomCenter:
+                        rect = CGRect(origin: CGPoint(x: (w - Int(size.width)) / 2, y: h - Int(size.height) - 20), size: size)
+                    case .bottomRight:
+                        rect = CGRect(origin: CGPoint(x: w - Int(size.width) - 20, y: h - Int(size.height) - 20), size: size)
+                    case .center:
+                        rect = CGRect(origin: CGPoint(x: (w - Int(size.width)) / 2, y: (h - Int(size.height)) / 2), size: size)
+                    default:
+                        rect = CGRect(origin: CGPoint(x: 20, y: 20), size: size)
+                    }
+            } else {
+                rect = CGRect(x: CGFloat(watermarkOptions.X), y: CGFloat(watermarkOptions.Y), width: CGFloat(ww), height: CGFloat(wh))
+            }
+            
+            UIGraphicsBeginImageContextWithOptions(CGSize(width: diagonal, height: diagonal), false, 0)
+            let markerContext = UIGraphicsGetCurrentContext()
+            markerContext?.saveGState()
+
+            if watermarkOptions.imageOption.alpha != 1.0 {
+                markerContext?.beginTransparencyLayer(auxiliaryInfo: nil)
+                markerContext?.setAlpha(watermarkOptions.imageOption.alpha)
+                markerContext?.setBlendMode(.multiply)
+                let markerImage = waterImage.rotatedImageWithTransform(watermarkOptions.imageOption.rotate)
+                markerContext?.draw(markerImage.cgImage!, in: CGRect(origin: .zero, size: CGSize(width: diagonal, height: diagonal)))
+                markerContext?.endTransparencyLayer()
+
+            } else {
+                let markerImage = waterImage.rotatedImageWithTransform(watermarkOptions.imageOption.rotate)
+                markerContext?.draw(markerImage.cgImage!, in: CGRect(origin: .zero, size: CGSize(width: diagonal, height: diagonal)))
+            }
+            markerContext?.restoreGState()
+
+            let waterImageRes = UIGraphicsGetImageFromCurrentImageContext()!
+            context?.draw(waterImageRes.cgImage!, in: rect)
+            UIGraphicsEndImageContext()
+            context?.restoreGState()
         }
-        
-        UIGraphicsBeginImageContextWithOptions(CGSize(width: diagonal, height: diagonal), false, 0)
-        let markerContext = UIGraphicsGetCurrentContext()
-        markerContext?.saveGState()
-
-        if options.watermarkImage.alpha != 1.0 {
-            markerContext?.beginTransparencyLayer(auxiliaryInfo: nil)
-            markerContext?.setAlpha(options.watermarkImage.alpha)
-            markerContext?.setBlendMode(.multiply)
-            let markerImage = waterImage.rotatedImageWithTransform(options.watermarkImage.rotate)
-            markerContext?.draw(markerImage.cgImage!, in: CGRect(origin: .zero, size: CGSize(width: diagonal, height: diagonal)))
-            markerContext?.endTransparencyLayer()
-
-        } else {
-            let markerImage = waterImage.rotatedImageWithTransform(options.watermarkImage.rotate)
-            markerContext?.draw(markerImage.cgImage!, in: CGRect(origin: .zero, size: CGSize(width: diagonal, height: diagonal)))
-        }
-        markerContext?.restoreGState()
-
-        let waterImageRes = UIGraphicsGetImageFromCurrentImageContext()!
-        context?.draw(waterImageRes.cgImage!, in: rect)
-        UIGraphicsEndImageContext()
         
         var newImage = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()
@@ -360,8 +363,9 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         }
         Task(priority: .userInitiated) {
             do {
-                let images = try await loadImages(with: [(markOpts?.backgroundImage)!, (markOpts?.watermarkImage)! ])
-                let scaledImage = self.markeImage(with: images[0], waterImage: images[1], options: markOpts!)
+                let waterImages = markOpts?.watermarkImages.map { $0.imageOption }
+                var images = try await loadImages(with: [(markOpts?.backgroundImage)!] + waterImages!)
+                let scaledImage = self.markeImage(with: images.remove(at: 0), waterImages: images, options: markOpts!)
                 let res = self.saveImageForMarker(scaledImage!, with: markOpts!)
                 resolver(res)
                 print("Loaded images:", images)

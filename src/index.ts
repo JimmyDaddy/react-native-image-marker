@@ -514,25 +514,66 @@ export interface ImageOptions {
 /**
  * @description Text options for image watermark
  * @example
+ *  src: require('./images/logo.png'),
+ *  scale: 0.5,
+ *  rotate: 45,
+ *  alpha: 0.5
+ *  position: {
+ *   X: 10,
+ *   Y: 10,
+ *   // or
+ *   // position: Position.center
+ * }
+ **/
+export interface WatermarkImageOptions extends ImageOptions {
+  position?: PositionOptions;
+}
+
+/**
+ * @description Text options for image watermark
+ * @example
  *
  *  backgroundImage: {
  *    src: require('./images/bg.png'),
  *    scale: 0.5,
  *    rotate: 45,
  *    alpha: 0.5
- *  }
+ *  },
+ *  // @deprecated since v1.1.0 use watermarkImages instead
  *  watermarkImage: {
  *    src: require('./images/logo.png'),
  *    scale: 0.5,
  *    rotate: 45,
  *    alpha: 0.5
  *  },
+ *  // @deprecated since v1.1.0 use watermarkImages instead
  *  watermarkPositions: {
  *    X: 10,
  *    Y: 10,
  *    // or
  *    // position: Position.center
  *  },
+ *  watermarkImages: [
+ *    {
+ *      src: require('./images/logo.png'),
+ *      scale: 0.5,
+ *      rotate: 45,
+ *      alpha: 0.5,
+ *      position: {
+ *        X: 10,
+ *        Y: 10,
+ *      },
+ *    },
+ *    {
+ *      src: require('./images/logo1.png'),
+ *      scale: 0.5,
+ *      rotate: 45,
+ *      alpha: 0.5,
+ *      position: {
+ *        position: Position.center,
+ *     },
+ *    },
+ *  ],
  *  quality: 1,
  *  filename: 'test',
  *  saveFormat: ImageFormat.jpg,
@@ -553,6 +594,8 @@ export interface ImageMarkOptions {
    **/
   backgroundImage: ImageOptions;
   /**
+   * @since 1.1.0
+   * @deprecated use watermarkImages instead
    * @description watermark image options
    * @example
    *  watermarkImage: {
@@ -562,8 +605,10 @@ export interface ImageMarkOptions {
    *    alpha: 0.5
    *  }
    */
-  watermarkImage: ImageOptions;
+  watermarkImage?: ImageOptions;
   /**
+   * @since 1.1.0
+   * @deprecated use watermarkImages instead
    * @description watermark position options
    * @example
    * watermarkPositions: {
@@ -603,6 +648,24 @@ export interface ImageMarkOptions {
    * maxSize: 2048
    */
   maxSize?: number;
+  /**
+   * @description watermark images
+   * @example
+   * watermarkImages: [
+   * {
+   *  src: require('./images/logo.png'),
+   *  scale: 0.5,
+   *  rotate: 45,
+   *  alpha: 0.5,
+   *  position: {
+   *    X: 10,
+   *    Y: 10,
+   *    // or
+   *    // position: Position.center
+   *  }
+   * }]
+   **/
+  watermarkImages: Array<WatermarkImageOptions>;
 }
 
 const ImageMarker = NativeModules.ImageMarker
@@ -735,19 +798,31 @@ class Marker {
    *    rotate: 20,
    *    alpha: 0.5,
    *  },
-   *  watermarkImage: {
-   *    src: require('./images/watermark.png'),
-   *    scale: 1,
-   *    rotate: 20,
-   *    alpha: 0.5,
-   *  },
-   *  watermarkPositions: {
-   *    position: Position.center,
-   *  },
    *  quality: 100,
    *  filename: 'test',
    *  saveFormat: ImageFormat.png,
    *  maxSize: 1000,
+   *  watermarkImages: [
+   *    {
+   *      src: require('./images/logo.png'),
+   *      scale: 0.5,
+   *      rotate: 45,
+   *      alpha: 0.5,
+   *      position: {
+   *        X: 10,
+   *        Y: 10,
+   *      },
+   *    },
+   *    {
+   *      src: require('./images/logo1.png'),
+   *      scale: 0.5,
+   *      rotate: 45,
+   *      alpha: 0.5,
+   *      position: {
+   *        position: Position.center,
+   *     },
+   *    },
+   *  ],
    * };
    * ImageMarker.markImage(options).then((res) => {
    *  console.log(res);
@@ -758,12 +833,19 @@ class Marker {
    * await ImageMarker.markImage(options);
    */
   static markImage(options: ImageMarkOptions): Promise<string> {
-    const { backgroundImage, watermarkImage } = options;
+    const {
+      backgroundImage,
+      watermarkImage = {} as any,
+      watermarkImages = [],
+    } = options;
 
     if (!backgroundImage || !backgroundImage.src) {
       throw new Error('please set image!');
     }
-    if (!watermarkImage || !watermarkImage.src) {
+    if (
+      (!watermarkImage || !watermarkImage.src) &&
+      watermarkImages.some((item) => !item.src)
+    ) {
       throw new Error('please set mark image!');
     }
 
@@ -775,15 +857,33 @@ class Marker {
       };
     }
 
-    let markerObj: any = resolveAssetSource(watermarkImage.src);
-    if (!markerObj) {
-      markerObj = {
-        uri: watermarkImage.src,
-        __packager_asset: false,
-      };
+    if (watermarkImage && options.watermarkImage) {
+      let markerObj: any = resolveAssetSource(watermarkImage.src);
+      if (!markerObj) {
+        markerObj = {
+          uri: watermarkImage.src,
+          __packager_asset: false,
+        };
+      }
+
+      options.watermarkImage.src = markerObj;
     }
 
-    options.watermarkImage.src = markerObj;
+    if (watermarkImages.length > 0) {
+      for (const myWi of watermarkImages) {
+        let markerObj: any = resolveAssetSource(myWi.src);
+        if (!markerObj) {
+          markerObj = {
+            uri: myWi.src,
+            __packager_asset: false,
+          };
+        }
+        myWi.src = markerObj;
+      }
+    } else {
+      options.watermarkImages = [];
+    }
+
     options.backgroundImage.src = srcObj;
     options.maxSize = options.maxSize || 2048;
 
