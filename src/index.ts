@@ -489,7 +489,7 @@ export interface ImageOptions {
    */
   src: any;
   /**
-   * @description image scale `0-1`
+   * @description image scale `>0`
    * @defaultValue 1
    * @example
    * scale: 1

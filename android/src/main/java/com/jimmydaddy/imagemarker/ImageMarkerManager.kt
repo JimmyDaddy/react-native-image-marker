@@ -1,38 +1,25 @@
 package com.jimmydaddy.imagemarker
 
-import android.annotation.SuppressLint
-import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Bitmap.CompressFormat
-import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.os.Build
 import android.util.Base64
 import android.util.Log
 import androidx.annotation.RequiresApi
-import com.facebook.common.references.CloseableReference
-import com.facebook.datasource.DataSource
-import com.facebook.drawee.backends.pipeline.Fresco
-import com.facebook.imagepipeline.core.ImagePipelineConfig
-import com.facebook.imagepipeline.datasource.BaseBitmapDataSubscriber
-import com.facebook.imagepipeline.image.CloseableImage
-import com.facebook.imagepipeline.request.ImageRequest
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
-import com.facebook.react.modules.systeminfo.ReactNativeVersion
 import com.jimmydaddy.imagemarker.base.Constants.BASE64
 import com.jimmydaddy.imagemarker.base.Constants.IMAGE_MARKER_TAG
-import com.jimmydaddy.imagemarker.base.ImageOptions
 import com.jimmydaddy.imagemarker.base.MarkImageOptions
 import com.jimmydaddy.imagemarker.base.MarkTextOptions
 import com.jimmydaddy.imagemarker.base.Position.Companion.getImageRectFromPosition
 import com.jimmydaddy.imagemarker.base.SaveFormat
 import com.jimmydaddy.imagemarker.base.Utils.Companion.getBlankBitmap
-import com.jimmydaddy.imagemarker.base.Utils.Companion.getStringSafe
-import com.jimmydaddy.imagemarker.base.Utils.Companion.scaleBitmap
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -41,9 +28,6 @@ import java.io.ByteArrayOutputStream
 import java.io.FileOutputStream
 import java.io.IOException
 import java.util.UUID
-import java.util.concurrent.Executor
-import java.util.concurrent.Executors
-
 
 /**
  * Created by jimmydaddy on 2017/3/6.
@@ -55,43 +39,8 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
     return NAME
   }
 
-  private val resources: Resources
-    get() = context.resources
-
-  @SuppressLint("DiscouragedApi")
-  private fun getDrawableResourceByName(name: String?): Int {
-    return resources.getIdentifier(
-      name,
-      "drawable",
-      context.packageName
-    )
-  }
-
-  private fun isFrescoImg(uri: String?): Boolean {
-    // val base64Pattern =
-      // "^data:(image|img)/(bmp|jpg|png|tif|gif|pcx|tga|exif|fpx|svg|psd|cdr|pcd|dxf|ufo|eps|ai|raw|WMF|webp);base64,(([[A-Za-z0-9+/])*\\s\\S*)*"
-    return uri!!.startsWith("http://") || uri.startsWith("https://") || uri.startsWith("file://") || uri.startsWith(
-      "data:"
-    ) && uri.contains("base64") && (uri.contains("img") || uri.contains("image"))
-  }
-
   private fun getSaveFormat(saveFormat: SaveFormat?): CompressFormat {
     return if (saveFormat != null && saveFormat === SaveFormat.PNG) CompressFormat.PNG else CompressFormat.JPEG
-  }
-
-  private fun setMaxBitmapSize(maxSize: Int) {
-    val major = getStringSafe("major", ReactNativeVersion.VERSION)
-    val minor = getStringSafe("minor", ReactNativeVersion.VERSION)
-    val patch = getStringSafe("patch", ReactNativeVersion.VERSION)
-    if (Integer.valueOf(major.toString()) >= 0 && Integer.valueOf(minor.toString()) >= 60 && Integer.valueOf(
-        patch.toString()
-      ) >= 0
-    ) {
-      val config =
-        ImagePipelineConfig.newBuilder(context).experiment().setMaxBitmapSize(maxSize)
-          .build()
-      Fresco.initialize(context, config)
-    }
   }
 
   private fun markImageByBitmap(
@@ -140,7 +89,7 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
         }
         canvas.restore()
 
-        if (markerBitmap != null && !markerBitmap.isRecycled) {
+        if (!markerBitmap.isRecycled) {
           markerBitmap.recycle()
           System.gc()
         }
@@ -266,80 +215,35 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
    * @param opts
    * @param promise
    */
+  @OptIn(DelicateCoroutinesApi::class)
+  @RequiresApi(Build.VERSION_CODES.N)
   @ReactMethod
   fun markWithText(
     opts: ReadableMap?,
     promise: Promise
   ) {
     val markOpts = MarkTextOptions.checkParams(opts!!, promise) ?: return
-    try {
-      val dest = generateCacheFilePathForMarker(
-        markOpts.filename,
-        markOpts.saveFormat
-      )
-      Log.d(IMAGE_MARKER_TAG, "uri: " + markOpts.backgroundImage.uri)
-      Log.d(IMAGE_MARKER_TAG, "src: " + markOpts.backgroundImage.src.toString())
-      if (isFrescoImg(markOpts.backgroundImage.uri)) {
-        val imageRequest = ImageRequest.fromUri(markOpts.backgroundImage.uri)
-        if (markOpts.maxSize > 0) {
-          setMaxBitmapSize(markOpts.maxSize)
-        }
-        val dataSource = Fresco.getImagePipeline().fetchDecodedImage(imageRequest, null)
-        val executor: Executor = Executors.newSingleThreadExecutor()
-        dataSource.subscribe(object : BaseBitmapDataSubscriber() {
-          public override fun onNewResultImpl(bitmap: Bitmap?) {
-            if (bitmap != null) {
-              val bg = scaleBitmap(bitmap, markOpts.backgroundImage.scale)
-              markImageByText(bg, dest, markOpts, promise)
-            } else {
-              promise.reject(
-                "marker error",
-                "Can't retrieve the file from the src: " + markOpts.backgroundImage.uri
-              )
-            }
-          }
-
-          override fun onFailureImpl(dataSource: DataSource<CloseableReference<CloseableImage>>) {
-            promise.reject(
-              "error",
-              "Can't request the image from the uri: " + markOpts.backgroundImage.uri,
-              dataSource.failureCause
-            )
-          }
-        }, executor)
-      } else {
-        val resId = getDrawableResourceByName(markOpts.backgroundImage.uri)
-        if (resId == 0) {
-          Log.d(IMAGE_MARKER_TAG, "cannot find res")
-          promise.reject(
-            "error",
-            "Can't get resource by the path: " + markOpts.backgroundImage.uri
+    Log.d(IMAGE_MARKER_TAG, "uri: " + markOpts.backgroundImage.uri)
+    Log.d(IMAGE_MARKER_TAG, "src: " + markOpts.backgroundImage.src.toString())
+    GlobalScope.launch(Dispatchers.Main) {
+      try {
+        val bitmaps = ImageLoader(context, markOpts.maxSize).loadImages(
+          listOf(
+            markOpts.backgroundImage,
           )
-        } else {
-          Log.d(IMAGE_MARKER_TAG, "res：$resId")
-          val r = resources
-          //                    InputStream is = r.openRawResource(resId);
-          val bitmap = BitmapFactory.decodeResource(r, resId)
-          //                    Bitmap bitmap = BitmapFactory.decodeStream(is);
-          Log.d(IMAGE_MARKER_TAG, bitmap!!.height.toString() + "")
-          val bg = scaleBitmap(
-            bitmap, markOpts.backgroundImage.scale
-          )
-          Log.d(IMAGE_MARKER_TAG, bg!!.height.toString() + "")
-          if (!bitmap.isRecycled && markOpts.backgroundImage.scale != 1f) {
-            bitmap.recycle()
-            System.gc()
-          }
-          markImageByText(bg, dest, markOpts, promise)
-        }
+        )
+        val bg = bitmaps[0]
+        val dest = generateCacheFilePathForMarker(markOpts.filename, markOpts.saveFormat)
+        markImageByText(bg, dest, markOpts, promise)
+      } catch (e: Exception) {
+        Log.d(IMAGE_MARKER_TAG, "error：" + e.message)
+        e.printStackTrace()
+        promise.reject("error", e.message, e)
       }
-    } catch (e: Exception) {
-      Log.d(IMAGE_MARKER_TAG, "error：" + e.message)
-      e.printStackTrace()
-      promise.reject("error", e.message, e)
     }
   }
 
+  @OptIn(DelicateCoroutinesApi::class)
   @RequiresApi(Build.VERSION_CODES.N)
   @ReactMethod
   fun markWithImage(
@@ -349,7 +253,6 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
     val markOpts = MarkImageOptions.checkParams(opts!!, promise) ?: return
     GlobalScope.launch(Dispatchers.Main) {
       try {
-
         val markers = markOpts.watermarkImages.map { it.imageOption }
         val concatenatedArray = listOf(
           markOpts.backgroundImage,
