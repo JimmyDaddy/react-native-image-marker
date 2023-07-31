@@ -40,8 +40,8 @@ jobs:
       - name: Build with Jekyll v1.0.1
         uses: actions/jekyll-build-pages@v1
         with:
-          source: ./docs/v1.0.1
-          destination: ./_site/v1.0.1
+          source: ./docs/v1.0.x
+          destination: ./_site/v1.0.x
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
 
