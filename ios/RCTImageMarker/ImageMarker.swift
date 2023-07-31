@@ -86,10 +86,14 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
     }
         
     func markerImgWithText(_ image: UIImage, _ opts: MarkTextOptions) -> UIImage? {
-        let w = Int(image.size.width)
-        let h = Int(image.size.height)
+        var bg = image;
+        if (opts.backgroundImage.scale > 0) {
+            bg = UIImage(cgImage: image.cgImage!, scale: 1 / opts.backgroundImage.scale, orientation: image.imageOrientation)
+        }
         
-        UIGraphicsBeginImageContextWithOptions(image.size, false, opts.backgroundImage.scale)
+        let w = Int(bg.size.width)
+        let h = Int(bg.size.height)
+        UIGraphicsBeginImageContextWithOptions(bg.size, false, 1 / opts.backgroundImage.scale)
         
         guard let context = UIGraphicsGetCurrentContext() else {
             return nil
@@ -105,11 +109,11 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
             context.beginTransparencyLayer(auxiliaryInfo: nil)
             context.setAlpha(opts.backgroundImage.alpha)
             context.setBlendMode(.multiply)
-            context.draw(image.cgImage!, in: canvasRect)
+            context.draw(bg.cgImage!, in: canvasRect)
             context.endTransparencyLayer()
             context.setBlendMode(.normal)
         } else {
-            context.draw(image.cgImage!, in: canvasRect)
+            context.draw(bg.cgImage!, in: canvasRect)
         }
         context.restoreGState()
 
@@ -228,17 +232,29 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
     }
     
     func markeImage(with image: UIImage, waterImage: UIImage, options: MarkImageOptions) -> UIImage? {
-        let w = Int(image.size.width)
-        let h = Int(image.size.height)
+        
+        var bg = image;
+        if (options.backgroundImage.scale > 0) {
+            bg = UIImage(cgImage: image.cgImage!, scale: 1 / options.backgroundImage.scale, orientation: image.imageOrientation)
+        }
+        
+        let w = Int(bg.size.width)
+        let h = Int(bg.size.height)
+        UIGraphicsBeginImageContextWithOptions(bg.size, false, 1 / options.backgroundImage.scale)
+        
+        var marker = waterImage;
+        if (options.watermarkImage.scale > 0) {
+            marker = UIImage(cgImage: waterImage.cgImage!, scale: 1 / options.watermarkImage.scale, orientation: waterImage.imageOrientation)
+        }
                 
-        let ww = waterImage.size.width * options.watermarkImage.scale
-        let wh = waterImage.size.height * options.watermarkImage.scale
+        let ww = marker.size.width
+        let wh = marker.size.height
         
         let diagonal = sqrt(pow(ww, 2) + pow(ww, 2)) // 计算对角线长度
         
         let canvasRect = CGRect(x: 0, y: 0, width: CGFloat(w), height: CGFloat(h))
         
-        UIGraphicsBeginImageContextWithOptions(image.size, false, options.backgroundImage.scale)
+        UIGraphicsBeginImageContextWithOptions(bg.size, false, options.backgroundImage.scale)
 
         let transform = CGAffineTransform(translationX: 0, y: canvasRect.height)
             .scaledBy(x: 1, y: -1)
@@ -253,7 +269,7 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
             context?.setAlpha(options.backgroundImage.alpha)
             context?.setBlendMode(.multiply)
         
-            context?.draw(image.cgImage!, in: canvasRect)
+            context?.draw(bg.cgImage!, in: canvasRect)
             context?.endTransparencyLayer()
             context?.setBlendMode(.normal)
             context?.restoreGState()
@@ -261,7 +277,7 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
             context = UIGraphicsGetCurrentContext()
             context?.saveGState()
             context?.concatenate(transform)
-            context?.draw(image.cgImage!, in: canvasRect)
+            context?.draw(bg.cgImage!, in: canvasRect)
             context?.restoreGState()
         }
         
