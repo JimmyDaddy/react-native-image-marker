@@ -7,7 +7,8 @@ Add text or icon watermark to your images
 
 ## Features
 
-* Add **multiple text** watermarks to images
+* Add **multiple texts** watermarks to images
+* add **multiple icons** watermarks to images *(Android >= N, iOS >= iOS 13)*
 * Add **icon watermark** to images
 * Support **rotating** background images and image watermarks.
 * Support setting opacity for background images and image watermarks.
@@ -24,6 +25,7 @@ Add text or icon watermark to your images
 
 ## sample
 <p>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/multiple_icon_markers.png" width='200'>
  <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/alphabgonly.png" width='200'>
  <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/alphicononly.png" width='200'>
  <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/imagewatermark.png" width='200'>
@@ -163,15 +165,24 @@ const options = {
    rotate: 20,
    alpha: 0.5,
  },
- watermarkImage: {
+ watermarkImages: [{
    src: require('./images/watermark.png'),
    scale: 1,
    rotate: 20,
    alpha: 0.5,
- },
- watermarkPositions: {
-   position: Position.center,
- },
+   position: {
+    position: Position.center,
+   }
+ }, {
+  src: require('./images/watermark1.png'),
+   scale: 1,
+   rotate: 20,
+   alpha: 0.5,
+   position: {
+    X: 20,
+    Y: 20,
+   }
+ }],
  quality: 100,
  filename: 'test',
  saveFormat: ImageFormat.png,
