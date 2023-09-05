@@ -50,7 +50,7 @@ Add text or icon watermark to your images
 | React Native Version | react-native-image-marker Version |
 | ---------------------| --------------------------------- |
 | < 0.60.0             | v0.5.2 or earlier                 |
-| >= 0.60.0, iOS < 13, Android < N | v1.0.x |
+| >= 0.60.0, iOS < 13, Android < N(API Level 24) | v1.0.x |
 | >= 0.60.0, other cases | v1.1.0 or later |
 
 > Note: This table is only applicable to major versions of react-native-image-marker. Patch versions should be backwards compatible.
