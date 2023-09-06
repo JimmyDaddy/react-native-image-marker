@@ -43,6 +43,8 @@ jobs:
           ./gradlew assembleRelease
           mv app/build/outputs/apk/release/app-release.apk app-release-$GITHUB_SHA.apk
           ls
+          pwd
+          echo ${{ github.workspace }}
 
       - name: Upload APK
         uses: actions/upload-artifact@v3
