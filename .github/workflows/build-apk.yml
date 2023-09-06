@@ -50,4 +50,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: app-release-$GITHUB_SHA.apk
-          path: example/android/app-release-$GITHUB_SHA.apk
+          path: ${{ github.workspace }}/example/android/app-release-$GITHUB_SHA.apk
