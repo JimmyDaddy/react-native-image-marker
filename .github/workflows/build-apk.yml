@@ -41,7 +41,7 @@ jobs:
           npm run prepack
           cd example/android
           ./gradlew assembleRelease
-          mv app/build/outputs/apk/release/app-release.apk app-release-$GITHUB_SHA.apk
+          mv app/build/outputs/apk/release/app-release.apk app-release-${{ github.sha }}.apk
           ls
           pwd
           echo ${{ github.workspace }}
@@ -49,5 +49,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v3
         with:
-          name: app-release-$GITHUB_SHA.apk
-          path: ${{ github.workspace }}/example/android/app-release-$GITHUB_SHA.apk
+          name: app-release-${{ github.sha }}.apk
+          path: example/android/app-release-${{ github.sha }}.apk
