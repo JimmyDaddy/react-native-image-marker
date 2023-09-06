@@ -12,7 +12,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Setup node 16
         uses: actions/setup-node@v3
@@ -42,9 +42,10 @@ jobs:
           cd example/android
           ./gradlew assembleRelease
           mv app/build/outputs/apk/release/app-release.apk app-release-$GITHUB_SHA.apk
+          ls
 
       - name: Upload APK
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: app-release-$GITHUB_SHA.apk
           path: example/android/app-release-$GITHUB_SHA.apk
