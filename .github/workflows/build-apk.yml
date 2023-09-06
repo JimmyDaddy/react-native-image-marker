@@ -32,11 +32,13 @@ jobs:
 
       - name: Install dependencies
         run: |
+          npm install
           cd example
           npm install
 
       - name: Build APK
         run: |
+          npm run prepack
           cd example/android
           ./gradlew assembleRelease
           mv app/build/outputs/apk/release/app-release.apk app-release-$GITHUB_SHA.apk
