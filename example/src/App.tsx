@@ -444,7 +444,7 @@ function useViewModel() {
               style: {
                 color: '#FF0000AA',
                 fontName: 'Arial',
-                fontSize: 44,
+                fontSize: 20,
                 underline,
                 bold,
                 italic,
