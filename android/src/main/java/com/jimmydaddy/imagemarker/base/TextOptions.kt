@@ -174,9 +174,15 @@ class TextOptions(options: ReadableMap) {
         }
       }
     }
-    canvas.translate(x, y)
+    canvas.restore()
+    canvas.save()
+    val textX = when(textPaint.textAlign) {
+      Paint.Align.RIGHT -> x + textWidth
+      Paint.Align.CENTER -> x + textWidth / 2
+      Paint.Align.LEFT -> x
+    }
+    canvas.translate(textX, y)
     textLayout.draw(canvas)
-    canvas.translate(0f, 0f)
     canvas.restore()
   }
 }
