@@ -1,5 +1,12 @@
 
 
+## [1.1.2](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.1.1...v1.1.2) (2023-09-20)
+
+
+### Bug Fixes
+
+*  textAlignment not uniform in android-ios,  fixed [#119](https://github.com/JimmyDaddy/react-native-image-marker/issues/119) ([f86f7a0](https://github.com/JimmyDaddy/react-native-image-marker/commit/f86f7a0dcea16b555ddf8107c498daa21d8727cb))
+
 ## [1.1.1](https://github.com/JimmyDaddy/react-native-image-marker/compare/v0.9.2...v1.1.1) (2023-09-05)
 
 
