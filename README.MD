@@ -1,13 +1,16 @@
-# [react-native-image-marker](https://jimmydaddy.github.io/react-native-image-marker/)
+<div align="center">
+    <a href="https://jimmydaddy.github.io/react-native-image-marker/" title="react native image marker">
+        <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/icon.png" alt="react native image marker Logo" width="200" />
+    </a>
+    <a href="https://jimmydaddy.github.io/react-native-image-marker/"><h1 style="color: #424E6D">react native image marker</h1></a>
+    <h6>Add text or icon watermarks to images</h6>
+</div>
 
-<p style='display:flex; align-items: center; justify-content: center '>
-<img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/icon.png" width='100'>
-</p>
+<div align="center">
 
-[![npm version](https://img.shields.io/npm/v/react-native-image-marker.svg?logo=npm)](https://www.npmjs.com/package/react-native-image-marker) [![npm](https://img.shields.io/npm/dm/react-native-image-marker?logo=npm)](https://www.npmjs.com/package/react-native-image-marker) [![stars](https://img.shields.io/github/stars/jimmydaddy/react-native-image-marker?style=social)](https://github.com/JimmyDaddy/react-native-image-marker) [![forks](https://img.shields.io/github/forks/jimmydaddy/react-native-image-marker?style=social)](https://github.com/JimmyDaddy/react-native-image-marker/fork)
-[![github](https://img.shields.io/badge/github-repo-blue?logo=github)](https://github.com/JimmyDaddy/react-native-image-marker) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?logo=github)](https://github.com/JimmyDaddy/react-native-image-marker/pulls) ![license](https://img.shields.io/npm/l/react-native-image-marker) 
+[![npm version](https://img.shields.io/npm/v/react-native-image-marker.svg?logo=npm)](https://www.npmjs.com/package/react-native-image-marker) [![npm](https://img.shields.io/npm/dm/react-native-image-marker?logo=npm)](https://www.npmjs.com/package/react-native-image-marker) [![stars](https://img.shields.io/github/stars/jimmydaddy/react-native-image-marker?style=social)](https://github.com/JimmyDaddy/react-native-image-marker) [![forks](https://img.shields.io/github/forks/jimmydaddy/react-native-image-marker?style=social)](https://github.com/JimmyDaddy/react-native-image-marker/fork)[![github](https://img.shields.io/badge/github-repo-blue?logo=github)](https://github.com/JimmyDaddy/react-native-image-marker) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?logo=github)](https://github.com/JimmyDaddy/react-native-image-marker/pulls) ![license](https://img.shields.io/npm/l/react-native-image-marker) 
 
-Add text or icon watermarks to images
+</div>
 
 ## Features
 
@@ -28,7 +31,7 @@ Add text or icon watermarks to images
 
 ## Samples
 
-<p>
+<p align="center">
  <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/multiple_icon_markers.png" width='200'>
  <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/alphabgonly.png" width='200'>
  <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/alphicononly.png" width='200'>

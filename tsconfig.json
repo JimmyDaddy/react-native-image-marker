@@ -35,6 +35,7 @@
     "out": "./docs/latest",
     "excludeExternals": true,
     "excludePrivate": true,
-    "plugin": ["typedoc-plugin-rename-defaults"]
+    "plugin": ["typedoc-plugin-rename-defaults"],
+    "customCss": "./docs/custom.css",
   },
 }
