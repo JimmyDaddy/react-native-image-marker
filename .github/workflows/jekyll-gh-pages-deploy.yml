@@ -8,10 +8,6 @@ on:
       - "docs/**"
     tags:
       - 'v*' # Push events to matching v* tags
-  pull_request:
-    branches: ["master"]
-    paths:
-      - "docs/**"
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
