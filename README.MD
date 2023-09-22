@@ -1,5 +1,9 @@
 # [react-native-image-marker](https://jimmydaddy.github.io/react-native-image-marker/)
 
+<p style='display:flex; align-items: center; justify-content: center '>
+<img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/icon.png" width='100'>
+</p>
+
 [![npm version](https://img.shields.io/npm/v/react-native-image-marker.svg?logo=npm)](https://www.npmjs.com/package/react-native-image-marker) [![npm](https://img.shields.io/npm/dm/react-native-image-marker?logo=npm)](https://www.npmjs.com/package/react-native-image-marker) [![stars](https://img.shields.io/github/stars/jimmydaddy/react-native-image-marker?style=social)](https://github.com/JimmyDaddy/react-native-image-marker) [![forks](https://img.shields.io/github/forks/jimmydaddy/react-native-image-marker?style=social)](https://github.com/JimmyDaddy/react-native-image-marker/fork)
 [![github](https://img.shields.io/badge/github-repo-blue?logo=github)](https://github.com/JimmyDaddy/react-native-image-marker) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?logo=github)](https://github.com/JimmyDaddy/react-native-image-marker/pulls) ![license](https://img.shields.io/npm/l/react-native-image-marker) 
 
@@ -49,7 +53,7 @@ Add text or icon watermarks to images
 | React Native Version | react-native-image-marker Version |
 | ---------------------| --------------------------------- |
 | < 0.60.0             | v0.5.2 or earlier                 |
-| >= 0.60.0, iOS < 13, Android < N(API Level 24) | v1.0.x |
+| >= 0.60.0, ***iOS < 13, Android < N(API Level 24)*** | v1.0.x |
 | >= 0.60.0, other cases | v1.1.0 or later |
 
 > Note: This table is only applicable to major versions of react-native-image-marker. Patch versions should be backwards compatible.
@@ -175,6 +179,7 @@ const options = {
    rotate: 20,
    alpha: 0.5,
  },
+ // support multiple icons, iOS >= 13, Android >= N(API Level 24)
  watermarkImages: [{
    src: require('./images/watermark.png'),
    scale: 1,
@@ -238,9 +243,21 @@ This library use [Fresco](https://github.com/facebook/fresco) to decode image on
 [@onka13](https://github.com/onka13)
 [@OrangeFlavoredColdCoffee](https://github.com/OrangeFlavoredColdCoffee)
 
-## Example
+## Examples
 
-[example](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/example)
+[examples](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/example)
+
+If you want to run the example locally, you can do the following:
+
+```bash
+# Android
+# Open an android emulator or connect a real device at first
+yarn example android
+
+# iOS
+yarn example ios
+
+```
 
 ## Contributing
 
@@ -248,7 +265,7 @@ See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the 
 
 ## License
 
-MIT
+[MIT](LICENSE)
 
 ---
 
