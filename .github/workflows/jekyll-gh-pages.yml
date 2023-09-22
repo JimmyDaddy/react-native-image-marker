@@ -5,15 +5,19 @@ on:
   # Runs on pushes targeting the default branch
   push:
     branches: ["master"]
+    tags:
+      - 'v*' # Push events to matching v* tags
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
+  issues: write
+  pull-requests: write
 
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 # However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
@@ -28,6 +32,23 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 16
+      - name: Install dependencies
+        run: npm install
+      - name: Build docs
+        run: npm run docs
+      - name: Commit changes
+        run: |
+          git config --global user.email "heyjimmygo@gmail.com"
+          git config --global user.name "JimmyDaddy"
+          git add .
+          git commit -m "chore: update docs"
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.DEPLOY_SITE }}
       - name: Setup Pages
         uses: actions/configure-pages@v3
       - name: Build with Jekyll
