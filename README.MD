@@ -3,17 +3,16 @@
 [![npm version](https://img.shields.io/npm/v/react-native-image-marker.svg?logo=npm)](https://www.npmjs.com/package/react-native-image-marker) [![npm](https://img.shields.io/npm/dm/react-native-image-marker?logo=npm)](https://www.npmjs.com/package/react-native-image-marker) [![stars](https://img.shields.io/github/stars/jimmydaddy/react-native-image-marker?style=social)](https://github.com/JimmyDaddy/react-native-image-marker) [![forks](https://img.shields.io/github/forks/jimmydaddy/react-native-image-marker?style=social)](https://github.com/JimmyDaddy/react-native-image-marker/fork)
 [![github](https://img.shields.io/badge/github-repo-blue?logo=github)](https://github.com/JimmyDaddy/react-native-image-marker) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?logo=github)](https://github.com/JimmyDaddy/react-native-image-marker/pulls) ![license](https://img.shields.io/npm/l/react-native-image-marker) 
 
-Add text or icon watermark to your images
+Add text or icon watermarks to images
 
 ## Features
 
-* Add **multiple texts** watermarks to images
-* add **multiple icons** watermarks to images *(Android >= N, iOS >= iOS 13)*
-* Add **icon watermark** to images
-* Support **rotating** background images and image watermarks.
-* Support setting opacity for background images and image watermarks.
-* Support base64
-* flexible text style settings
+* Add **multiple text** watermarks to images
+* Add **multiple icon** watermarks to images *(Android >= N, iOS >= iOS 13)*
+* Support **rotating** background image and icon watermarks.
+* Support setting opacity for background image and icon watermarks.
+* Support base64 format
+* Flexible text style settings
   * rotating
   * text shadow
   * background color
@@ -45,7 +44,7 @@ Add text or icon watermark to your images
  <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/shadow_bg_sy.png" width='200'>
 </p>
 
-## Version Compatibility
+## Compatibility
 
 | React Native Version | react-native-image-marker Version |
 | ---------------------| --------------------------------- |
@@ -74,7 +73,7 @@ pod 'RNImageMarker', :path => '../node_modules/react-native-image-marker'
 
 ## Usage
 
-### text watermarks
+### Text watermarks
 
 ```javascript
 
@@ -161,7 +160,7 @@ await ImageMarker.markText(options);
 
 ```
 
-### icon watermarks
+### Icon watermarks
 
 ```javascript
 
