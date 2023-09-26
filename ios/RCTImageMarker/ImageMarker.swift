@@ -106,8 +106,8 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
             bg = UIImage(cgImage: image.cgImage!, scale: 1 / opts.backgroundImage.scale, orientation: image.imageOrientation)
         }
 
-        let w = Int(bg.size.width)
-        let h = Int(bg.size.height)
+        let w = bg.size.width
+        let h = bg.size.height
         UIGraphicsBeginImageContextWithOptions(bg.size, false, 1 / opts.backgroundImage.scale)
         
         guard let context = UIGraphicsGetCurrentContext() else {
@@ -183,7 +183,7 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
             let textRect = attributedText.boundingRect(with: maxSize, options: .usesLineFragmentOrigin, context: nil)
             let size = textRect.size
             
-            let margin = 20
+            let margin = CGFloat(20)
             var posX = margin
             var posY = margin
             if textOpts.position != .none {
@@ -192,27 +192,27 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
                         posX = margin
                         posY = margin
                     case .topCenter:
-                        posX = (w - Int(size.width)) / 2
+                        posX = CGFloat((w - size.width) / 2)
                     case .topRight:
-                        posX = w - Int(size.width) - margin
+                        posX = CGFloat(w - size.width - margin)
                     case .bottomLeft:
-                        posY = h - Int(size.height) - margin
+                        posY = CGFloat(h - size.height - margin)
                     case .bottomCenter:
-                        posX = (w - Int(size.width)) / 2
-                        posY = h - Int(size.height) - margin
+                        posX = CGFloat((w - size.width) / 2)
+                        posY = CGFloat(h - size.height - margin)
                     case .bottomRight:
-                        posX = w - Int(size.width) - margin
-                        posY = h - Int(size.height) - margin
+                        posX = CGFloat(w - size.width - margin)
+                        posY = CGFloat(h - size.height - margin)
                     case .center:
-                        posX = (w - Int(size.width)) / 2
-                        posY = (h - Int(size.height)) / 2
+                        posX = CGFloat((w - size.width) / 2)
+                        posY = CGFloat((h - size.height) / 2)
                     case .none:
                         posX = margin
                         posY = margin
                 }
             } else {
-                posX = Int(textOpts.X)
-                posY = Int(textOpts.Y)
+                posX = Utils.parseSpreadValue(v: textOpts.X, relativeTo: CGFloat(w)) ?? margin
+                posY = Utils.parseSpreadValue(v: textOpts.Y, relativeTo: CGFloat(h)) ?? margin
             }
             
             if textOpts.style!.rotate != 0 {
@@ -258,8 +258,8 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
             bg = UIImage(cgImage: image.cgImage!, scale: 1 / options.backgroundImage.scale, orientation: image.imageOrientation)
         }
         
-        let w = Int(bg.size.width)
-        let h = Int(bg.size.height)
+        let w = bg.size.width
+        let h = bg.size.height
         UIGraphicsBeginImageContextWithOptions(bg.size, false, 1 / options.backgroundImage.scale)
         
         let canvasRect = CGRect(x: 0, y: 0, width: CGFloat(w), height: CGFloat(h))
@@ -306,22 +306,22 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
                     case .topLeft:
                         rect = CGRect(origin: CGPoint(x: 20, y: 20), size: size)
                     case .topCenter:
-                        rect = CGRect(origin: CGPoint(x: (w - Int(size.width)) / 2, y: 20), size: size)
+                        rect = CGRect(origin: CGPoint(x: (w - size.width) / 2, y: 20), size: size)
                     case .topRight:
-                        rect = CGRect(origin: CGPoint(x: w - Int(size.width) - 20, y: 20), size: size)
+                        rect = CGRect(origin: CGPoint(x: w - size.width - 20, y: 20), size: size)
                     case .bottomLeft:
-                        rect = CGRect(origin: CGPoint(x: 20, y: h - Int(size.height) - 20), size: size)
+                        rect = CGRect(origin: CGPoint(x: 20, y: h - size.height - 20), size: size)
                     case .bottomCenter:
-                        rect = CGRect(origin: CGPoint(x: (w - Int(size.width)) / 2, y: h - Int(size.height) - 20), size: size)
+                        rect = CGRect(origin: CGPoint(x: (w - size.width) / 2, y: h - size.height - 20), size: size)
                     case .bottomRight:
-                        rect = CGRect(origin: CGPoint(x: w - Int(size.width) - 20, y: h - Int(size.height) - 20), size: size)
+                        rect = CGRect(origin: CGPoint(x: w - size.width - 20, y: h - size.height - 20), size: size)
                     case .center:
-                        rect = CGRect(origin: CGPoint(x: (w - Int(size.width)) / 2, y: (h - Int(size.height)) / 2), size: size)
+                        rect = CGRect(origin: CGPoint(x: (w - size.width) / 2, y: (h - size.height) / 2), size: size)
                     default:
                         rect = CGRect(origin: CGPoint(x: 20, y: 20), size: size)
                     }
             } else {
-                rect = CGRect(x: CGFloat(watermarkOptions.X), y: CGFloat(watermarkOptions.Y), width: CGFloat(ww), height: CGFloat(wh))
+                rect = CGRect(x: Utils.parseSpreadValue(v: watermarkOptions.X, relativeTo: w) ?? 20, y: Utils.parseSpreadValue(v: watermarkOptions.Y, relativeTo: h) ?? 20, width: CGFloat(ww), height: CGFloat(wh))
             }
             
             UIGraphicsBeginImageContextWithOptions(CGSize(width: diagonal, height: diagonal), false, watermarkOptions.imageOption.scale)

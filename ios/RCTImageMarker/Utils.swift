@@ -146,4 +146,15 @@ class Utils: NSObject {
             return CGFloat(Double(v!) ?? 0)
         }
     }
+    
+    static func handleDynamicToString(v: Any?) -> String {
+        if (isNULL(v)) { return "0" }
+        else {
+            switch v {
+                case is NSString: return RCTConvert.nsString(v)
+                case is NSNumber: return RCTConvert.nsNumber(v).stringValue
+                default: return "0"
+            }
+        }
+    }
 }

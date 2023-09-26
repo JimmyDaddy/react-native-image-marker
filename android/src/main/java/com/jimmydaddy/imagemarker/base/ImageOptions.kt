@@ -10,16 +10,12 @@ import com.jimmydaddy.imagemarker.base.Constants.DEFAULT_ROTATE
 import com.jimmydaddy.imagemarker.base.Constants.DEFAULT_SCALE
 
 class ImageOptions(options: ReadableMap) {
-  @JvmField
   var src: ReadableMap?
 
-  @JvmField
   var uri: String?
 
-  @JvmField
   var scale: Float
 
-  @JvmField
   var rotate: Float
   private var alpha: Int
 

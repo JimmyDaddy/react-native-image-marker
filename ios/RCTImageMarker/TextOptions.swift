@@ -10,8 +10,8 @@ import UIKit
 import React
 
 class TextOptions: NSObject {
-    var X: CGFloat = 20.0
-    var Y: CGFloat = 20.0
+    var X: String?
+    var Y: String?
     var position: MarkerPositionEnum = .none
     var text: String
     var style: TextStyle?
@@ -22,8 +22,9 @@ class TextOptions: NSObject {
         }
 
         if let positionOpts = opts["positionOptions"] as? [AnyHashable: Any] {
-            self.X = RCTConvert.cgFloat(positionOpts["X"])
-            self.Y = RCTConvert.cgFloat(positionOpts["Y"])
+            var a = positionOpts["X"]
+            self.X = Utils.handleDynamicToString(v: positionOpts["X"])
+            self.Y = Utils.handleDynamicToString(v: positionOpts["Y"])
             self.position = positionOpts["position"] != nil ? RCTConvert.MarkerPosition(positionOpts["position"]) : .none
         }
 

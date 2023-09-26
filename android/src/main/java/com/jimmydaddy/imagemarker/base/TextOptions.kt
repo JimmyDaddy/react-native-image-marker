@@ -14,13 +14,14 @@ import android.util.TypedValue
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.views.text.ReactFontManager
+import com.jimmydaddy.imagemarker.base.Constants.DEFAULT_MARGIN
 import kotlin.math.ceil
 
 @Suppress("DEPRECATION")
 class TextOptions(options: ReadableMap) {
   private var text: String?
-  private var x: Int?
-  private var y: Int?
+  private var x: String?
+  private var y: String?
   private var positionEnum: PositionEnum?
   private var style: TextStyle
 
@@ -31,8 +32,8 @@ class TextOptions(options: ReadableMap) {
     }
     val positionOptions =
       if (null != options.getMap("positionOptions")) options.getMap("positionOptions") else null
-    x = if (positionOptions!!.hasKey("X")) positionOptions.getInt("X") else null
-    y = if (positionOptions.hasKey("Y")) positionOptions.getInt("Y") else null
+    x = if (positionOptions!!.hasKey("X")) Utils.handleDynamicToString(positionOptions.getDynamic("X")) else null
+    y = if (positionOptions.hasKey("Y")) Utils.handleDynamicToString(positionOptions.getDynamic("Y")) else null
     positionEnum =
       if (null != positionOptions.getString("position")) PositionEnum.getPosition(
         positionOptions.getString("position")
@@ -113,7 +114,7 @@ class TextOptions(options: ReadableMap) {
           .coerceAtLeast(textLayout.getLineWidth(a) + textLayout.getLineLeft(a)).toDouble()
       ).toInt()
     }
-    val margin = 20
+    val margin = DEFAULT_MARGIN
     var position = Position(margin.toFloat(), margin.toFloat())
     if (positionEnum != null) {
       position = Position.getTextPosition(
@@ -125,10 +126,10 @@ class TextOptions(options: ReadableMap) {
       )
     } else {
       if (null != x) {
-        position.x = x!!.toFloat()
+        position.x = (Utils.parseSpreadValue(x, maxWidth) ?: margin) as Float
       }
       if (null != y) {
-        position.y = y!!.toFloat()
+        position.y = (Utils.parseSpreadValue(y, maxHeight) ?: margin) as Float
       }
     }
     val x = position.x

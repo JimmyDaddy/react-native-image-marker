@@ -159,13 +159,13 @@ interface Padding {
  * }
  * // or
  * positionOptions: {
- *  offsetX: 10,
- *  offsetY: 10,
+ *  X: '10%',
+ *  Y: '10%',
  * }
  */
 export interface PositionOptions {
-  X?: number;
-  Y?: number;
+  X?: number | string;
+  Y?: number | string;
   position?: Position;
 }
 

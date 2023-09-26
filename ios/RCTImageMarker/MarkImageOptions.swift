@@ -24,13 +24,13 @@ class MarkImageOptions: Options {
         }
         if (!Utils.isNULL(watermarkImageOpts)){
             let singleImageOptions = try ImageOptions(dicOpts: watermarkImageOpts as! [AnyHashable : Any])
-            var singleX = 20.0
-            var singleY = 20.0
+            var singleX = "20.0"
+            var singleY = "20.0"
             var singlePosition: MarkerPositionEnum = .none
             let singleImagePositionOpts = opts["watermarkPositions"] as? [AnyHashable: Any]
             if let positionOpts = singleImagePositionOpts, !Utils.isNULL(singleImagePositionOpts) {
-                singleX = CGFloat(RCTConvert.cgFloat(positionOpts["X"]))
-                singleY = CGFloat(RCTConvert.cgFloat(positionOpts["Y"]))
+                singleX = Utils.handleDynamicToString(v: positionOpts["X"])
+                singleY = Utils.handleDynamicToString(v: positionOpts["Y"])
                 singlePosition = positionOpts["position"] != nil ? RCTConvert.MarkerPosition(positionOpts["position"]) : .none
             }
             let watermarkImageOptions = WatermarkImageOptions(watermarkImage: singleImageOptions, X: singleX, Y: singleY, position: singlePosition)

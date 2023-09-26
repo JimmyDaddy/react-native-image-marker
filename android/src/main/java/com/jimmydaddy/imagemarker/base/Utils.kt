@@ -5,6 +5,8 @@ import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.media.ExifInterface
 import android.util.Log
+import com.facebook.react.bridge.Dynamic
+import com.facebook.react.bridge.ReadableType
 import java.io.IOException
 import java.io.InputStream
 import java.net.HttpURLConnection
@@ -155,6 +157,18 @@ class Utils {
       } else {
         v.toFloatOrNull() ?: 0f
       }
+    }
+
+    fun handleDynamicToString(d: Dynamic?): String {
+      return if (d == null) "0"
+      else
+          when (d.type) {
+            ReadableType.String -> d.asString()
+            ReadableType.Number -> d.asDouble().toString()
+            else -> {
+              "0"
+            }
+          }
     }
   }
 

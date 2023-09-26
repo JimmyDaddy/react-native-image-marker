@@ -13,11 +13,13 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
 import com.jimmydaddy.imagemarker.base.Constants.BASE64
+import com.jimmydaddy.imagemarker.base.Constants.DEFAULT_MARGIN
 import com.jimmydaddy.imagemarker.base.Constants.IMAGE_MARKER_TAG
 import com.jimmydaddy.imagemarker.base.MarkImageOptions
 import com.jimmydaddy.imagemarker.base.MarkTextOptions
 import com.jimmydaddy.imagemarker.base.Position.Companion.getImageRectFromPosition
 import com.jimmydaddy.imagemarker.base.SaveFormat
+import com.jimmydaddy.imagemarker.base.Utils
 import com.jimmydaddy.imagemarker.base.Utils.Companion.getBlankBitmap
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -82,8 +84,8 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
         } else {
           canvas.drawBitmap(
             markerBitmap!!,
-            markOpts.x.toFloat(),
-            markOpts.y.toFloat(),
+            (Utils.parseSpreadValue(markOpts.x, width) ?: DEFAULT_MARGIN).toFloat(),
+            (Utils.parseSpreadValue(markOpts.y, height) ?: DEFAULT_MARGIN).toFloat(),
             markOpts.imageOption.applyStyle()
           )
         }
