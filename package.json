@@ -35,7 +35,7 @@
     "example": "yarn --cwd example",
     "bootstrap": "yarn example && yarn install && yarn example pods",
     "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build",
-    "docs": "typedoc --excludePrivate --tsconfig tsconfig.build.json"
+    "docs": "typedoc --excludePrivate --tsconfig tsconfig.doc.json"
   },
   "keywords": [
     "react-native",
