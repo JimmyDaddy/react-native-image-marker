@@ -25,16 +25,5 @@
     "skipLibCheck": true,
     "strict": true,
     "target": "esnext"
-  },
-  "typedocOptions": {
-    "exclude": [ "**/node_modules/**/*.*", "example/" ],
-    "entryPoints": ["src/index.ts"],
-    "readme": "./README.MD",
-    "name": "image marker for rn",
-    "out": "./docs/latest",
-    "excludeExternals": true,
-    "excludePrivate": true,
-    "plugin": ["typedoc-plugin-rename-defaults"],
-    "customCss": "./docs/custom.css",
-  },
+  }
 }

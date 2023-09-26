@@ -1,6 +1,6 @@
 {
   "name": "react-native-image-marker",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "Add text or icon watermark to your images",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -35,7 +35,7 @@
     "example": "yarn --cwd example",
     "bootstrap": "yarn example && yarn install && yarn example pods",
     "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build",
-    "docs": "typedoc --excludePrivate --tsconfig tsconfig.build.json"
+    "docs": "typedoc --excludePrivate --tsconfig tsconfig.doc.json"
   },
   "keywords": [
     "react-native",
