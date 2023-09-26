@@ -48,15 +48,15 @@ class Utils: NSObject {
         var range = NSRange(location: 0, length: hex6 ? 2 : 1)
 
         /* 调用下面的方法处理字符串 */
-        var redStr = (cString as NSString).substring(with: range)
+        let redStr = (cString as NSString).substring(with: range)
         red = stringToInt(redStr)
 
         range.location = hex6 ? 2 : 1
-        var greenStr = (cString as NSString).substring(with: range)
+        let greenStr = (cString as NSString).substring(with: range)
         green = stringToInt(greenStr)
 
         range.location = hex6 ? 4 : 2
-        var blueStr = (cString as NSString).substring(with: range)
+        let blueStr = (cString as NSString).substring(with: range)
         blue = stringToInt(blueStr)
 
         return UIColor(red: CGFloat(red) / 255.0, green: CGFloat(green) / 255.0, blue: CGFloat(blue) / 255.0, alpha: alpha)

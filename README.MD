@@ -113,8 +113,7 @@ const options = {
        color: '#ffaa22',
      },
      textBackgroundStyle: {
-       paddingX: 10,
-       paddingY: 10,
+       padding: '10% 50 5% 12',
        type: TextBackgroundType.none,
        color: '#faaaff',
      },

@@ -4,7 +4,7 @@ import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReadableMap
 
 class MarkImageOptions(options: ReadableMap) : Options(options) {
-  lateinit var watermarkImages: Array<WatermarkImageOptions>
+  var watermarkImages: Array<WatermarkImageOptions>
   init {
     val markerImageOpts = options.getMap("watermarkImage")
     val markerImagesOpts = options.getArray("watermarkImages")

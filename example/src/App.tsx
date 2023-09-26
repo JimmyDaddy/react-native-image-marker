@@ -464,6 +464,8 @@ function useViewModel() {
                       type: textBgStretch,
                       paddingBottom: '15%',
                       paddingRight: '10%',
+                      paddingTop: '15%',
+                      paddingLeft: '100',
                       color: '#0f0A',
                     }
                   : null,
@@ -629,8 +631,9 @@ function useViewModel() {
                 textBackgroundStyle: useTextBgStyle
                   ? {
                       type: textBgStretch,
-                      paddingX: 10,
-                      paddingY: 10,
+                      // paddingX: 10,
+                      // paddingY: 10,
+                      padding: '10%',
                       color: '#0f09',
                     }
                   : null,

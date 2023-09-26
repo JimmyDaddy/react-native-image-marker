@@ -3,6 +3,7 @@ package com.jimmydaddy.imagemarker.base
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.os.Build
@@ -142,37 +143,22 @@ class TextOptions(options: ReadableMap) {
       val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.LINEAR_TEXT_FLAG)
       paint.style = Paint.Style.FILL
       paint.color = style.textBackgroundStyle!!.color
+      val bgInsets = style.textBackgroundStyle!!.toEdgeInsets(maxWidth, maxHeight)
+      var bgRect = Rect((x - bgInsets.left).toInt(), (y - bgInsets.top).toInt(), (x + textWidth + bgInsets.right).toInt(), (y + textHeight + bgInsets.bottom).toInt())
       when (style.textBackgroundStyle!!.type) {
         "stretchX" -> {
-          canvas.drawRect(
-            0f,
-            y - style.textBackgroundStyle!!.paddingY,
-            maxWidth.toFloat(),
-            y + textHeight + style.textBackgroundStyle!!.paddingY,
-            paint
+          bgRect = Rect(0, (y - bgInsets.top).toInt(), maxWidth,
+            (y + textHeight + bgInsets.bottom).toInt()
           )
         }
 
         "stretchY" -> {
-          canvas.drawRect(
-            x - style.textBackgroundStyle!!.paddingX,
-            0f,
-            x + textWidth + style.textBackgroundStyle!!.paddingX,
-            maxHeight.toFloat(),
-            paint
-          )
-        }
-
-        else -> {
-          canvas.drawRect(
-            x - style.textBackgroundStyle!!.paddingX,
-            y - style.textBackgroundStyle!!.paddingY,
-            x + textWidth + style.textBackgroundStyle!!.paddingX,
-            y + textHeight + style.textBackgroundStyle!!.paddingY,
-            paint
-          )
+          bgRect = Rect((x - bgInsets.left).toInt(), 0,
+            (x + textWidth + bgInsets.right).toInt(), maxHeight)
         }
       }
+
+      canvas.drawRect(bgRect, paint)
     }
     canvas.restore()
     canvas.save()

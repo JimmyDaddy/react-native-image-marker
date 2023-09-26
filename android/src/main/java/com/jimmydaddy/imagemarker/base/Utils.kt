@@ -139,6 +139,23 @@ class Utils {
       }
       return null
     }
+
+
+    fun checkSpreadValue(str: String?, maxLength: Int = 1): Boolean {
+      if (str == null) return false
+      val pattern = """^((\d+|\d+%)\s?){1,$maxLength}$""".toRegex()
+      return pattern.containsMatchIn(str)
+    }
+
+    fun parseSpreadValue(v: String?, relativeTo: Int): Float? {
+      if (v == null) return null
+      return if (v.endsWith("%")) {
+        val percent = v.dropLast(1).toFloatOrNull()?.div(100) ?: 0f
+        relativeTo * percent
+      } else {
+        v.toFloatOrNull() ?: 0f
+      }
+    }
   }
 
   /**
