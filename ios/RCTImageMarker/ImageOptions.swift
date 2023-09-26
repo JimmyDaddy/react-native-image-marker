@@ -17,7 +17,7 @@ class ImageOptions: NSObject {
 
     init(dicOpts opts: [AnyHashable: Any]) throws {
         guard let src = opts["src"] as? [AnyHashable: Any], !Utils.isNULL(src) else {
-            throw NSError(domain: "PARAMS_REQUIRED", code: 0, userInfo: [NSLocalizedDescriptionKey: "image is required"])
+            throw NSError(domain: ErrorDomainEnum.PARAMS_REQUIRED.rawValue, code: 0, userInfo: [NSLocalizedDescriptionKey: "image is required"])
         }
         self.src = src
         self.uri = src["uri"] as! String

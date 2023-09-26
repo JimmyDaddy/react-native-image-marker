@@ -4,7 +4,7 @@ import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReadableMap
 
 class MarkImageOptions(options: ReadableMap) : Options(options) {
-  lateinit var watermarkImages: Array<WatermarkImageOptions>
+  var watermarkImages: Array<WatermarkImageOptions>
   init {
     val markerImageOpts = options.getMap("watermarkImage")
     val markerImagesOpts = options.getArray("watermarkImages")
@@ -25,8 +25,8 @@ class MarkImageOptions(options: ReadableMap) : Options(options) {
       val marker = ImageOptions(markerImageOpts)
       val positionOptions =
         if (null != options.getMap("watermarkPositions")) options.getMap("watermarkPositions") else null
-      val x = if (positionOptions!!.hasKey("X")) positionOptions.getInt("X") else 0
-      val y = if (positionOptions.hasKey("Y")) positionOptions.getInt("Y") else 0
+      val x = if (positionOptions!!.hasKey("X")) Utils.handleDynamicToString(positionOptions.getDynamic("X")) else null
+      val y = if (positionOptions.hasKey("Y")) Utils.handleDynamicToString(positionOptions.getDynamic("Y")) else null
       val positionEnum =
         if (null != positionOptions.getString("position")) PositionEnum.getPosition(
           positionOptions.getString("position")

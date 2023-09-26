@@ -14,7 +14,7 @@ class MarkTextOptions: Options {
     override init(dicOpts opts: [AnyHashable: Any]) throws {
         try super.init(dicOpts: opts)
         guard let watermarkTextsOpts = opts["watermarkTexts"] as? [[AnyHashable: Any]], watermarkTextsOpts.count > 0 else {
-            throw NSError(domain: "PARAMS_REQUIRED", code: 0, userInfo: [NSLocalizedDescriptionKey: "text is required"])
+            throw NSError(domain: ErrorDomainEnum.PARAMS_REQUIRED.rawValue, code: 0, userInfo: [NSLocalizedDescriptionKey: "text is required"])
         }
         self.watermarkTexts = try watermarkTextsOpts.map { try TextOptions(dicOpts: $0) }
     }

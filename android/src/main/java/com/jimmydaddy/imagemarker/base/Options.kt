@@ -4,19 +4,14 @@ import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReadableMap
 
 open class Options(options: ReadableMap) {
-  @JvmField
   var backgroundImage: ImageOptions
 
-  @JvmField
   var quality: Int
 
-  @JvmField
   var filename: String?
 
-  @JvmField
   var saveFormat: SaveFormat
 
-  @JvmField
   var maxSize: Int
 
   init {

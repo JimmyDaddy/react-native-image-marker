@@ -48,15 +48,15 @@ class Utils: NSObject {
         var range = NSRange(location: 0, length: hex6 ? 2 : 1)
 
         /* 调用下面的方法处理字符串 */
-        var redStr = (cString as NSString).substring(with: range)
+        let redStr = (cString as NSString).substring(with: range)
         red = stringToInt(redStr)
 
         range.location = hex6 ? 2 : 1
-        var greenStr = (cString as NSString).substring(with: range)
+        let greenStr = (cString as NSString).substring(with: range)
         green = stringToInt(greenStr)
 
         range.location = hex6 ? 4 : 2
-        var blueStr = (cString as NSString).substring(with: range)
+        let blueStr = (cString as NSString).substring(with: range)
         blue = stringToInt(blueStr)
 
         return UIColor(red: CGFloat(red) / 255.0, green: CGFloat(green) / 255.0, blue: CGFloat(blue) / 255.0, alpha: alpha)
@@ -125,5 +125,36 @@ class Utils: NSObject {
 
     static func isNULL(_ obj: Any?) -> Bool {
         return obj == nil || obj is NSNull
+    }
+    
+    static func checkSpreadValue(str: String?, maxLength: Int = 1) -> Bool {
+        if str == nil { return false }
+        let pattern = #"^((\d+|\d+%)\s?){1,\#(maxLength)}$"#
+        if (str?.range(of: pattern, options: .regularExpression)) != nil {
+            return true
+        } else {
+            return false
+        }
+    }
+
+    static func parseSpreadValue(v: String?, relativeTo length: CGFloat) -> CGFloat? {
+        if v == nil { return nil }
+        if v?.hasSuffix(String(describing: "%")) ?? false {
+            let percent = CGFloat(Double(v!.dropLast()) ?? 0) / 100
+            return length * percent
+        } else {
+            return CGFloat(Double(v!) ?? 0)
+        }
+    }
+    
+    static func handleDynamicToString(v: Any?) -> String {
+        if (isNULL(v)) { return "0" }
+        else {
+            switch v {
+                case is NSString: return RCTConvert.nsString(v)
+                case is NSNumber: return RCTConvert.nsNumber(v).stringValue
+                default: return "0"
+            }
+        }
     }
 }

@@ -220,8 +220,8 @@ function useViewModel() {
     TextBackgroundType.none
   );
   const [position, setPosition] = useState<Position>(Position.topLeft);
-  const [X, setX] = useState<number>(20);
-  const [Y, setY] = useState<number>(20);
+  const [X, setX] = useState<number | string>(20);
+  const [Y, setY] = useState<number | string>(20);
   const [loading, setLoading] = useState(false);
   const [show, setShow] = useState(false);
   const [underline, setUnderline] = useState(false);
@@ -462,8 +462,10 @@ function useViewModel() {
                 textBackgroundStyle: useTextBgStyle
                   ? {
                       type: textBgStretch,
-                      paddingX: 10,
-                      paddingY: 10,
+                      paddingBottom: '15%',
+                      paddingRight: '10%',
+                      paddingTop: '15%',
+                      paddingLeft: '100',
                       color: '#0f0A',
                     }
                   : null,
@@ -495,8 +497,7 @@ function useViewModel() {
                 textBackgroundStyle: useTextBgStyle
                   ? {
                       type: textBgStretch,
-                      paddingX: 10,
-                      paddingY: 10,
+                      padding: '10%',
                       color: '#0fA',
                     }
                   : null,
@@ -555,7 +556,7 @@ function useViewModel() {
               scale: watermarkScale,
               alpha: watermarkAlpha,
               rotate: watermarkRotate,
-              position: { X: X + 200, Y: Y + 100 },
+              position: { X: 200, Y: 100 },
             },
           ],
           quality: 100,
@@ -607,8 +608,8 @@ function useViewModel() {
             {
               text,
               positionOptions: {
-                X: X + 500,
-                Y: Y + 600,
+                X: 500,
+                Y: 600,
               },
               style: {
                 underline: true,
@@ -630,8 +631,9 @@ function useViewModel() {
                 textBackgroundStyle: useTextBgStyle
                   ? {
                       type: textBgStretch,
-                      paddingX: 10,
-                      paddingY: 10,
+                      // paddingX: 10,
+                      // paddingY: 10,
+                      padding: '10%',
                       color: '#0f09',
                     }
                   : null,
@@ -910,16 +912,16 @@ function App() {
               <Text style={[s.label, { marginLeft: 5 }]}>X: </Text>
               <TextInput
                 style={s.shortTextInput}
-                keyboardType="numeric"
                 value={String(state.X)}
-                onChangeText={(v) => setX(Number(v))}
+                keyboardType="decimal-pad"
+                onChangeText={(v) => setX(v)}
               />
               <Text style={[s.label, { marginLeft: 5 }]}>Y: </Text>
               <TextInput
                 style={s.shortTextInput}
-                keyboardType="numeric"
+                keyboardType="decimal-pad"
                 value={String(state.Y)}
-                onChangeText={(v) => setY(Number(v))}
+                onChangeText={(v) => setY(v)}
               />
               <TouchableOpacity
                 style={[s.btn, { marginLeft: 5 }]}

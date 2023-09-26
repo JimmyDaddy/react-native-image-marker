@@ -11,21 +11,21 @@ import React
 
 class WatermarkImageOptions: NSObject {
     var imageOption: ImageOptions
-    var X: CGFloat = 20.0
-    var Y: CGFloat = 20.0
+    var X: String?
+    var Y: String?
     var position: MarkerPositionEnum = .none
 
     init(dicOpts opts: [AnyHashable: Any]) throws {
         self.imageOption = try ImageOptions(dicOpts: opts)
         let positionOpts = opts["position"] as? [AnyHashable: Any]
         if let positionOpts = positionOpts, !Utils.isNULL(positionOpts) {
-            self.X = CGFloat(RCTConvert.cgFloat(positionOpts["X"]))
-            self.Y = CGFloat(RCTConvert.cgFloat(positionOpts["Y"]))
+            self.X = RCTConvert.nsString(positionOpts["X"])
+            self.Y = RCTConvert.nsString(positionOpts["Y"])
             self.position = positionOpts["position"] != nil ? RCTConvert.MarkerPosition(positionOpts["position"]) : .none
         }
     }
     
-    init(watermarkImage: ImageOptions, X: CGFloat, Y: CGFloat, position: MarkerPositionEnum) {
+    init(watermarkImage: ImageOptions, X: String?, Y: String?, position: MarkerPositionEnum) {
         self.imageOption = watermarkImage;
         self.X = X;
         self.Y = Y;

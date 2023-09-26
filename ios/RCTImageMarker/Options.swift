@@ -17,7 +17,7 @@ class Options: NSObject {
 
     init(dicOpts opts: [AnyHashable: Any]) throws {
         guard let backgroundImageOpts = opts["backgroundImage"] as? [AnyHashable: Any], !Utils.isNULL(backgroundImageOpts) else {
-            throw NSError(domain: "PARAMS_REQUIRED", code: 0, userInfo: [NSLocalizedDescriptionKey: "backgroundImage is required"])
+            throw NSError(domain: ErrorDomainEnum.PARAMS_REQUIRED.rawValue, code: 0, userInfo: [NSLocalizedDescriptionKey: "backgroundImage is required"])
         }
         self.backgroundImage = try ImageOptions(dicOpts: backgroundImageOpts)
         self.quality = opts["quality"] as? Int ?? 100

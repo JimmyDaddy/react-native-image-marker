@@ -5,6 +5,8 @@ import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.media.ExifInterface
 import android.util.Log
+import com.facebook.react.bridge.Dynamic
+import com.facebook.react.bridge.ReadableType
 import java.io.IOException
 import java.io.InputStream
 import java.net.HttpURLConnection
@@ -138,6 +140,35 @@ class Utils {
         connection?.disconnect()
       }
       return null
+    }
+
+
+    fun checkSpreadValue(str: String?, maxLength: Int = 1): Boolean {
+      if (str == null) return false
+      val pattern = """^((\d+|\d+%)\s?){1,$maxLength}$""".toRegex()
+      return pattern.containsMatchIn(str)
+    }
+
+    fun parseSpreadValue(v: String?, relativeTo: Int): Float? {
+      if (v == null) return null
+      return if (v.endsWith("%")) {
+        val percent = v.dropLast(1).toFloatOrNull()?.div(100) ?: 0f
+        relativeTo * percent
+      } else {
+        v.toFloatOrNull() ?: 0f
+      }
+    }
+
+    fun handleDynamicToString(d: Dynamic?): String {
+      return if (d == null) "0"
+      else
+          when (d.type) {
+            ReadableType.String -> d.asString()
+            ReadableType.Number -> d.asDouble().toString()
+            else -> {
+              "0"
+            }
+          }
     }
   }
 

@@ -22,14 +22,14 @@ class TextStyle: NSObject {
     var rotate: CGFloat = 0
     var textAlign: String?
 
-    init(dicOpts opts: [AnyHashable: Any]) {
+    init(dicOpts opts: [AnyHashable: Any]) throws {
         self.color = UIColor(hex: opts["color"] as! String) ?? UIColor.clear
         if let shadowStyle = opts["shadowStyle"] as? [AnyHashable: Any] {
             self.shadow = Utils.getShadowStyle(shadowStyle)
         } else {
             self.shadow = nil
         }
-        self.textBackground = TextBackground(textBackgroundStyle: (opts["textBackgroundStyle"] as? [AnyHashable : Any]))
+        self.textBackground = try TextBackground(textBackgroundStyle: (opts["textBackgroundStyle"] as? [AnyHashable : Any]))
         let scale = UIScreen.main.scale
         let fontSize = opts["fontSize"] != nil ? (RCTConvert.cgFloat(opts["fontSize"]) * scale) : (14.0 * scale)
         self.font = UIFont(name: opts["fontName"] as? String ?? "", size: fontSize)

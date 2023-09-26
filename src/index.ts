@@ -43,6 +43,110 @@ export enum ImageFormat {
 }
 
 /**
+ * @description Padding style for text background
+ * @example
+ * padding: 10
+ * // or
+ * padding: '10%'
+ * // or
+ * padding: '10% 20%'
+ * // or
+ * padding: '10% 20% 30%'
+ * // or
+ * paddingLeft: '10%'
+ * // or
+ * paddingVertical: '10%'
+ */
+interface Padding {
+  /**
+   * @description padding for text background
+   * @example
+   * padding: 10
+   * // or
+   * padding: '10%'
+   * // or
+   * padding: '10% 20%'
+   * // or
+   * padding: '10% 20% 30%'
+   * // or
+   * padding: '10% 20% 30% 40%'
+   * // or
+   * padding: '10 20% 30 40%'
+   * // or
+   * padding: '10 20 30'
+   */
+  padding?: number | string;
+  /**
+   * @description padding left for text background
+   * @example
+   * paddingLeft: 10
+   * // or
+   * paddingLeft: '10%'
+   */
+  paddingLeft?: number | string;
+  /**
+   * @description padding top for text background
+   * @example
+   * paddingTop: 10
+   * // or
+   * paddingTop: '10%'
+   */
+  paddingRight?: number | string;
+  /**
+   * @description padding right for text background
+   * @example
+   * paddingRight: 10
+   * // or
+   * paddingRight: '10%'
+   */
+  paddingTop?: number | string;
+  /**
+   * @description padding bottom for text background
+   * @example
+   * paddingBottom: 10
+   * // or
+   * paddingBottom: '10%'
+   */
+  paddingBottom?: number | string;
+  /**
+   * @description padding left and right (horizontal) for text background
+   * @example
+   * paddingHorizontal: 10
+   * // or
+   * paddingHorizontal: '10%'
+   * @since 2.0.0
+   **/
+  paddingHorizontal?: number | string;
+  /**
+   * @description padding top and bottom (vertical) for text background
+   * @example
+   * paddingVertical: 10
+   * // or
+   * paddingVertical: '10%'
+   * @since 2.0.0
+   */
+  paddingVertical?: number | string;
+
+  /**
+   * @description padding x, alias of paddingHorizontal
+   * @example
+   * paddingX: 10
+   * // or
+   * paddingX: '10%'
+   **/
+  paddingX?: number | string;
+
+  /**
+   * @description padding y, alias of paddingVertical
+   * @example
+   * paddingY: 10
+   * // or
+   * paddingY: '10%'
+   **/
+  paddingY?: number | string;
+}
+
+/**
  * @description PositionOptions for text watermark and image watermark, if you set position you don't need to set X and Y
  * @example
  * positionOptions: {
@@ -53,10 +157,15 @@ export enum ImageFormat {
  * positionOptions: {
  *  position: Position.topLeft,
  * }
+ * // or
+ * positionOptions: {
+ *  X: '10%',
+ *  Y: '10%',
+ * }
  */
 export interface PositionOptions {
-  X?: number;
-  Y?: number;
+  X?: number | string;
+  Y?: number | string;
   position?: Position;
 }
 
@@ -227,19 +336,7 @@ export interface ShadowLayerStyle {
  *  color: '#aacc22'
  * }
  */
-export interface TextBackgroundStyle {
-  /**
-   * @description padding x
-   * @example
-   * paddingX: 10
-   **/
-  paddingX: number;
-  /**
-   * @description padding y
-   * @example
-   * paddingY: 10
-   **/
-  paddingY: number;
+export interface TextBackgroundStyle extends Padding {
   /**
    * @description background type
    * @defaultValue TextBackgroundType.stretchX

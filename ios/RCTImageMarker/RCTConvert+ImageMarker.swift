@@ -60,6 +60,6 @@ extension RCTConvert {
         guard let value = value as? String, let mv = MyEnumMap[value] else {
             return MarkerPositionEnum.topLeft
         }
-        return mv ?? MarkerPositionEnum.none
+        return mv
     }
 }
