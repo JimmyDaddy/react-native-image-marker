@@ -18,7 +18,7 @@ class TextOptions: NSObject {
 
     init(dicOpts opts: [AnyHashable: Any]) throws {
         guard let text = opts["text"] as? String else {
-            throw NSError(domain: "PARAMS_REQUIRED", code: 0, userInfo: [NSLocalizedDescriptionKey: "text is required"])
+            throw NSError(domain: ErrorDomainEnum.PARAMS_REQUIRED.rawValue, code: 0, userInfo: [NSLocalizedDescriptionKey: "text is required"])
         }
 
         if let positionOpts = opts["positionOptions"] as? [AnyHashable: Any] {

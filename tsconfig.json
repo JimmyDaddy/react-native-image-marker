@@ -26,7 +26,6 @@
     "strict": true,
     "target": "esnext"
   },
-  "exclude": [ "example" ],
   "typedocOptions": {
     "exclude": [ "**/node_modules/**/*.*", "example/" ],
     "entryPoints": ["src/index.ts"],

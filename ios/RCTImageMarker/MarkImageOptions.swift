@@ -17,7 +17,7 @@ class MarkImageOptions: Options {
         let watermarkImageOpts = opts["watermarkImage"]
         let watermarkImagesOpts = opts["watermarkImages"] as? [[AnyHashable: Any]]
         if Utils.isNULL(watermarkImageOpts) && (Utils.isNULL(watermarkImagesOpts) || watermarkImagesOpts!.count <= 0)  {
-            throw NSError(domain: "PARAMS_REQUIRED", code: 0, userInfo: [NSLocalizedDescriptionKey: "marker image is required"])
+            throw NSError(domain: ErrorDomainEnum.PARAMS_REQUIRED.rawValue, code: 0, userInfo: [NSLocalizedDescriptionKey: "marker image is required"])
         }
         if watermarkImagesOpts!.count > 0 {
             self.watermarkImages = try watermarkImagesOpts!.map { try WatermarkImageOptions(dicOpts: $0) }

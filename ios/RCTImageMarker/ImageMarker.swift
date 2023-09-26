@@ -20,7 +20,7 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         let className = "RCTImageLoader"
         let classType: AnyClass? = NSClassFromString(className)
         guard let imageLoader = self.bridge.module(for: classType) as? RCTImageLoader else {
-            throw NSError(domain: "com.jimmydaddy.imagemarker", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to get ImageLoader module"])
+            throw NSError(domain: ErrorDomainEnum.BASE.rawValue, code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to get ImageLoader module"])
         }
         let images = try await withThrowingTaskGroup(of: (Int, UIImage).self) { group in
             for (index, img) in imageOptions.enumerated() {
@@ -30,7 +30,7 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
                             if let image = UIImage.transBase64(img.uri) {
                                 continuation.resume(returning: (index, image))
                             } else {
-                                let error = NSError(domain: "com.jimmydaddy.imagemarker", code: 3, userInfo: [NSLocalizedDescriptionKey: "Failed to load image"])
+                                let error = NSError(domain: ErrorDomainEnum.BASE.rawValue, code: 3, userInfo: [NSLocalizedDescriptionKey: "Failed to load image"])
                                 continuation.resume(throwing: error)
                             }
                         } else {
@@ -41,7 +41,7 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
                                 } else if let error = error {
                                     continuation.resume(throwing: error)
                                 } else {
-                                    let error = NSError(domain: "com.jimmydaddy.imagemarker", code: 3, userInfo: [NSLocalizedDescriptionKey: "Failed to load image"])
+                                    let error = NSError(domain: ErrorDomainEnum.BASE.rawValue, code: 3, userInfo: [NSLocalizedDescriptionKey: "Failed to load image"])
                                     continuation.resume(throwing: error)
                                 }
                             }
@@ -225,14 +225,19 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
             }
             
             if let textBackground = textOpts.style!.textBackground {
+                let bgEdgeInsets = textOpts.style?.textBackground?.toEdgeInsets(width: CGFloat(w), height: CGFloat(h))
                 context.setFillColor(textBackground.colorBg!.cgColor)
+                let stretchX = (bgEdgeInsets?.left ?? 0) + (bgEdgeInsets?.right ?? 0);
+                let stretchY = (bgEdgeInsets?.top ?? 0) + (bgEdgeInsets?.bottom ?? 0);
+                var bgRect = CGRect(x: CGFloat(CGFloat(posX) - (bgEdgeInsets?.left ?? 0)), y: CGFloat(CGFloat(posY) - (bgEdgeInsets?.top ?? 0)), width: size.width + stretchX, height: size.height + stretchY)
                 if textBackground.typeBg == "stretchX" {
-                    context.fill(CGRect(x: 0, y: CGFloat(posY) - textBackground.paddingY, width: CGFloat(w), height: size.height + 2 * textBackground.paddingY))
+                    bgRect = CGRect(x: 0, y: CGFloat(posY) - (bgEdgeInsets?.top ?? 0), width: CGFloat(w), height: size.height + stretchY)
                 } else if textBackground.typeBg == "stretchY" {
-                    context.fill(CGRect(x: CGFloat(CGFloat(posX) - textBackground.paddingX), y: 0, width: size.width + 2 * textBackground.paddingX, height: CGFloat(h)))
-                } else {
-                    context.fill(CGRect(x: CGFloat(CGFloat(posX) - textBackground.paddingX), y: CGFloat(CGFloat(posY) - textBackground.paddingY), width: size.width + 2 * textBackground.paddingX, height: size.height + 2 * textBackground.paddingY))
+                    bgRect = CGRect(x: CGFloat(CGFloat(posX) - (bgEdgeInsets?.left ?? 0)), y: 0, width: size.width + stretchX, height: CGFloat(h))
                 }
+                
+                bgRect.inset(by: bgEdgeInsets!)
+                context.fill(bgRect)
             }
             
             let rect = CGRect(origin: CGPoint(x: posX, y: posY), size: size)
@@ -353,7 +358,7 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
     func mark(withText opts: [AnyHashable: Any], resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) -> Void {
         let markOpts = MarkTextOptions.checkTextParams(opts, rejecter: rejecter)
         if markOpts === nil {
-            rejecter("OPTS_INVALID", "opts invalid", nil)
+            rejecter(ErrorDomainEnum.PARAMS_INVALID.rawValue, "opts invalid", nil)
         }
         Task(priority: .userInitiated) {
             do {
@@ -372,7 +377,7 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
     func mark(withImage opts: [AnyHashable: Any], resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) -> Void {
         let markOpts = MarkImageOptions.checkImageParams(opts, rejecter: rejecter)
         if markOpts === nil {
-            rejecter("OPTS_INVALID", "opts invalid", nil)
+            rejecter(ErrorDomainEnum.PARAMS_INVALID.rawValue, "opts invalid", nil)
         }
         Task(priority: .userInitiated) {
             do {

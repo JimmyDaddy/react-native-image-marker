@@ -10,19 +10,16 @@ import Foundation
 import UIKit
 import React
 
-class TextBackground: NSObject {
+class TextBackground: Padding {
     var typeBg: String?
-    var paddingX: CGFloat = 0.0
-    var paddingY: CGFloat = 0.0
     var colorBg: UIColor?
 
-    init?(textBackgroundStyle textBackground: [AnyHashable: Any]?) {
+    init?(textBackgroundStyle textBackground: [AnyHashable: Any]?) throws {
         guard let textBackground = textBackground, !Utils.isNULL(textBackground) else {
             return nil
         }
+        try super.init(paddingData: textBackground)
         self.typeBg = textBackground["type"] as? String
-        self.paddingX = RCTConvert.cgFloat(textBackground["paddingX"])
-        self.paddingY = RCTConvert.cgFloat(textBackground["paddingY"])
         self.colorBg = UIColor(hex: textBackground["color"] as! String) ?? UIColor.clear
     }
 }

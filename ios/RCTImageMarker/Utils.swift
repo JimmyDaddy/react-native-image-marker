@@ -126,4 +126,24 @@ class Utils: NSObject {
     static func isNULL(_ obj: Any?) -> Bool {
         return obj == nil || obj is NSNull
     }
+    
+    static func checkSpreadValue(str: String?, maxLength: Int = 1) -> Bool {
+        if str == nil { return false }
+        let pattern = #"^((\d+|\d+%)\s?){1,\#(maxLength)}$"#
+        if (str?.range(of: pattern, options: .regularExpression)) != nil {
+            return true
+        } else {
+            return false
+        }
+    }
+
+    static func parseSpreadValue(v: String?, relativeTo length: CGFloat) -> CGFloat? {
+        if v == nil { return nil }
+        if v?.hasSuffix(String(describing: "%")) ?? false {
+            let percent = CGFloat(Double(v!.dropLast()) ?? 0) / 100
+            return length * percent
+        } else {
+            return CGFloat(Double(v!) ?? 0)
+        }
+    }
 }
