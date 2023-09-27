@@ -1,6 +1,6 @@
 <div align="center">
     <a href="https://jimmydaddy.github.io/react-native-image-marker/" title="react native image marker">
-        <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/icon.png" alt="react native image marker Logo" width="200" />
+        <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/icon.png" alt="react native image marker Logo" width="150" />
     </a>
     <a href="https://jimmydaddy.github.io/react-native-image-marker/"><h1 style="color: #424E6D">react native image marker</h1></a>
     <h6>Add text or icon watermarks to images</h6>
@@ -27,29 +27,600 @@
   * bold
   * stroke
   * text align
+  * padding
+  * relative position
 * Compatible with both Android and iOS
 
-## Samples
+## Sample
 
-<p align="center">
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/multiple_icon_markers.png" width='200'>
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/alphabgonly.png" width='200'>
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/alphicononly.png" width='200'>
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/imagewatermark.png" width='200'>
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/multipletexts.png" width='200'>
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/rotatebg.png" width='200'>
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/rotateicon.png" width='200'>
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/rotateimageicon.png" width='200'>
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/rotatetexts_1.png" width='200'>
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/rotatetexts.png" width='200'>
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/textswihoutbg.png" width='200'>
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/IOSMarker.gif" width='200'>
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/AndroidMarker.gif" width='200'>
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/shadow_bg_fit.png" width='200'>
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/shadow_bg_sx.png" width='200'>
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/shadow.png" width='200'>
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/shadow_bg_sy.png" width='200'>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/IOSMarker.gif" width='150'>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/AndroidMarker.gif" width='150'>
+
+
+## Usage
+
+### Text background
+
+* [TextBackgroundType](https://jimmydaddy.github.io/react-native-image-marker/enums/TextBackgroundType.html)
+* [TextBackgroundStyle](https://jimmydaddy.github.io/react-native-image-marker/interfaces/TextBackgroundStyle.html)
+
+#### Text background fit
+
+##### API
+
+[TextBackgroundType.none](https://jimmydaddy.github.io/react-native-image-marker/enums/TextBackgroundType.html#none)
+
+##### Sample
+
+
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/shadow_bg_fit.png" width='150'>
+
+
+##### Example
+
+
+```typescript
+import Marker, { Position, TextBackgroundType } from "react-native-image-marker"
+···
+const options = {
+  // background image
+  backgroundImage: {
+    src: require('./images/test.jpg'),
+    scale: 1,
+  },
+  watermarkTexts: [{
+    text: 'text marker \n multline text',
+    positionOptions: {
+      position: Position.topLeft,
+    },
+    style: {
+      color: '#ff00ff',
+      fontSize: 30,
+      fontName: 'Arial',
+      shadowStyle: {
+        dx: 10,
+        dy: 10,
+        radius: 10,
+        color: '#008F6D',
+      },
+      textBackgroundStyle: {
+        padding: '10% 10%',
+        type: TextBackgroundType.none,
+        color: '#0FFF00',
+      },
+    },
+  }],
+  scale: 1,
+  quality: 100,
+  filename: 'test',
+  saveFormat: ImageFormat.png,
+  maxSize: 1000,
+};
+Marker.markText(options);
+
+```
+
+#### Text background stretchX
+
+##### API
+
+
+[TextBackgroundType.stretchX](https://jimmydaddy.github.io/react-native-image-marker/enums/TextBackgroundType.html#stretchX)
+
+##### Sample
+
+
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/shadow_bg_sx.png" width='150'>
+
+##### Example
+
+
+```typescript
+import Marker, { Position, TextBackgroundType } from "react-native-image-marker"
+···
+const options = {
+  // background image
+  backgroundImage: {
+    src: require('./images/test.jpg'),
+    scale: 1,
+  },
+  watermarkTexts: [{
+    text: 'text marker \n multline text',
+    positionOptions: {
+      position: Position.topLeft,
+    },
+    style: {
+      color: '#FC0700',
+      fontSize: 30,
+      fontName: 'Arial',
+      shadowStyle: {
+        dx: 10,
+        dy: 10,
+        radius: 10,
+        color: '#008F6D',
+      },
+      textBackgroundStyle: {
+        padding: '10% 10%',
+        type: TextBackgroundType.stretchX,
+        color: '#0FFF00',
+      },
+    },
+  }],
+  scale: 1,
+  quality: 100,
+  filename: 'test',
+  saveFormat: ImageFormat.png,
+  maxSize: 1000,
+};
+Marker.markText(options);
+```
+
+#### Text background stretchY
+
+##### API
+
+
+[TextBackgroundType.stretchY](https://jimmydaddy.github.io/react-native-image-marker/enums/TextBackgroundType.html#stretchY)
+
+##### Sample
+
+
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/shadow_bg_sy.png" width='150'>
+
+##### Example
+
+
+```typescript
+import Marker, { Position, TextBackgroundType } from "react-native-image-marker"
+···
+const options = {
+  // background image
+  backgroundImage: {
+    src: require('./images/test.jpg'),
+    scale: 1,
+  },
+  watermarkTexts: [{
+    text: 'text marker \n multline text',
+    positionOptions: {
+      position: Position.topLeft,
+    },
+    style: {
+      color: '#FC0700',
+      fontSize: 30,
+      fontName: 'Arial',
+      shadowStyle: {
+        dx: 10,
+        dy: 10,
+        radius: 10,
+        color: '#008F6D',
+      },
+      textBackgroundStyle: {
+        padding: '10% 10%',
+        type: TextBackgroundType.stretchY,
+        color: '#0FFF00',
+      },
+    },
+  }],
+  scale: 1,
+  quality: 100,
+  filename: 'test',
+  saveFormat: ImageFormat.png,
+  maxSize: 1000,
+};
+ImageMarker.markText(options);
+
+```
+
+#### Text with shadow
+
+##### API
+
+
+[ShadowLayerStyle](https://jimmydaddy.github.io/react-native-image-marker/interfaces/ShadowLayerStyle.html)
+
+##### Sample
+
+
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/shadow.png" width='150'>
+
+##### Example
+
+
+
+```typescript
+import Marker, { Position, TextBackgroundType } from "react-native-image-marker"
+···
+const options = {
+  // background image
+  backgroundImage: {
+    src: require('./images/test.jpg'),
+    scale: 1,
+  },
+  watermarkTexts: [{
+    text: 'text marker \n multline text',
+    positionOptions: {
+      position: Position.topLeft,
+    },
+    style: {
+      color: '#F4F50A',
+      fontSize: 30,
+      fontName: 'Arial',
+      shadowStyle: {
+        dx: 10,
+        dy: 10,
+        radius: 10,
+        color: '#6450B0',
+      },
+    },
+  }],
+  scale: 1,
+  quality: 100,
+  filename: 'test',
+  saveFormat: ImageFormat.png,
+  maxSize: 1000,
+};
+Marker.markText(options);
+
+```
+
+#### Multiple text watermarks
+
+##### API
+
+
+[markImage](https://jimmydaddy.github.io/react-native-image-marker/classes/Marker.html#markImage)
+
+##### Sample
+
+
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/multipletexts.png" width='150'>
+
+##### Example
+
+
+
+```typescript
+import Marker, { Position, TextBackgroundType } from "react-native-image-marker"
+···
+Marker.markText({
+  backgroundImage: {
+    src: require('./images/test.jpg'),
+    scale: 1,
+  },
+  waterMarkTexts: [{
+    text: 'hello world \n 你好',
+    positionOptions: {
+      position: Position.topLeft,
+    },
+    style: {
+      color: '#BB3B20',
+      fontSize: 30,
+      fontName: 'Arial',
+      textBackgroundStyle: {
+        padding: '10% 10%',
+        color: '#0FFF00',
+      },
+    },
+  }, {
+    text: 'text marker normal',
+    positionOptions: {
+      position: Position.topRight,
+    },
+    style: {
+      color: '#6450B0',
+      fontSize: 30,
+      fontName: 'Arial',
+      textBackgroundStyle: {
+        padding: '10% 10%',
+        color: '#02FBBE',
+      },
+    },
+  }],
+})
+
+```
+
+#### Text rotation
+
+##### Sample
+
+
+<p>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/rotatetexts_1.png" width='150'>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/textswihoutbg.png" width='150'>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/rotatetexts.png" width='150'>
 </p>
+
+##### Example
+
+
+
+```typescript
+import Marker, { Position, TextBackgroundType } from "react-native-image-marker"
+···
+Marker.markText({
+  backgroundImage: {
+    src: require('./images/test.jpg'),
+    scale: 1,
+    rotate: 30,
+  },
+  waterMarkTexts: [{
+    text: 'hello world \n 你好',
+    positionOptions: {
+      position: Position.topLeft,
+    },
+    style: {
+      color: '#FFFF00',
+      fontSize: 30,
+      fontName: 'Arial',
+      rotate: 30,
+      textBackgroundStyle: {
+        padding: '10% 10%',
+        color: '#02B96B',
+      },
+      strikeThrough: true,
+      underline: true,
+    },
+  }, {
+    text: 'text marker normal',
+    positionOptions: {
+      position: Position.center,
+    },
+    style: {
+      color: '#FFFF00',
+      fontSize: 30,
+      fontName: 'Arial',
+      rotate: 30,
+      textBackgroundStyle: {
+        padding: '10% 10%',
+        color: '#0FFF00',
+      },
+      strikeThrough: true,
+      underline: true,
+    },
+  }],
+})
+
+```
+
+#### Icon watermarks
+
+##### Sample
+
+
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/imagewatermark.png" width='150'>
+
+##### Example
+
+
+
+```typescript
+import Marker, { Position, TextBackgroundType } from "react-native-image-marker"
+···
+Marker.markImage({
+  backgroundImage: {
+    src: require('./images/test.jpg'),
+    scale: 1,
+  },
+  watermarkImages: [{
+    src: require('./images/watermark.png'),
+    position: {
+      position: Position.topLeft,
+    },
+  }],
+})
+
+```
+
+
+#### Multiple icon watermarks
+
+> Note: ***require Android >= N, iOS >= iOS 13***
+
+##### Sample
+
+
+
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/multiple_icon_markers.png" width='150'>
+
+
+##### Example
+
+
+
+```typescript
+import Marker, { Position, TextBackgroundType } from "react-native-image-marker"
+···
+Marker.markImage({
+  backgroundImage: {
+    src: require('./images/test.jpg'),
+    scale: 1,
+  },
+  watermarkImages: [{
+    src: require('./images/watermark.png'),
+    position: {
+      position: Position.topLeft,
+    },
+  }, {
+    src: require('./images/watermark1.png'),
+    position: {
+      position: Position.topRight,
+    },
+  }, {
+    src: require('./images/watermark2.png'),
+    position: {
+      position: Position.bottomCenter,
+    },
+  }],
+})
+
+```
+#### Background rotation
+
+##### Sample
+
+
+<p>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/rotatebg.png" width='150'>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/rotateimageicon.png" width='150'>
+</p>
+
+##### Example
+
+
+```typescript
+import Marker, { Position, TextBackgroundType } from "react-native-image-marker"
+···
+Marker.markImage({
+  backgroundImage: {
+    src: require('./images/test.jpg'),
+    scale: 1,
+    rotate: 30,
+  },
+  watermarkImages: [{
+    src: require('./images/watermark.png'),
+    position: {
+      position: Position.topLeft,
+    },
+  }],
+});
+
+Marker.markText({
+  backgroundImage: {
+    src: require('./images/test.jpg'),
+    scale: 1,
+    rotate: 30,
+  },
+  watermarkTexts: [{
+    text: 'hello world \n 你好',
+    positionOptions: {
+      position: Position.topLeft,
+    },
+    style: {
+      color: '#FFFF00',
+      fontSize: 30,
+      fontName: 'Arial',
+      rotate: 30,
+      textBackgroundStyle: {
+        padding: '10% 10%',
+        color: '#02B96B',
+      },
+      shadowStyle: {
+        dx: 10,
+        dy: 10,
+        radius: 10,
+        color: '#008F6D',
+      },
+      strikeThrough: true,
+      underline: true,
+    },
+  }, {
+    text: 'hello world \n 你好',
+    positionOptions: {
+      position: Position.center,
+    },
+    style: {
+      color: '#FFFF00',
+      fontSize: 30,
+      fontName: 'Arial',
+      textBackgroundStyle: {
+        padding: '10% 10%',
+        color: '#0FFF00',
+      },
+      strikeThrough: true,
+      underline: true,
+    },
+  }],
+})
+
+```
+
+#### Icon rotation
+
+##### Sample
+
+
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/rotateicon.png" width='150'>
+
+##### Example
+
+
+
+```typescript
+import Marker, { Position, TextBackgroundType } from "react-native-image-marker"
+···
+Marker.markImage({
+  backgroundImage: {
+    src: require('./images/test.jpg'),
+    scale: 1,
+  },
+  watermarkImages: [{
+    src: require('./images/watermark.png'),
+    position: {
+      position: Position.topLeft,
+    },
+    rotate: 30,
+  }],
+});
+```
+
+#### Transparent background
+
+##### Sample
+
+
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/alphabgonly.png" width='150'>
+
+##### Example
+
+
+
+```typescript
+import Marker, { Position, TextBackgroundType } from "react-native-image-marker"
+···
+Marker.markImage({
+  backgroundImage: {
+    src: require('./images/test.jpg'),
+    scale: 1,
+    alpha: 0.5,
+  },
+  watermarkImages: [{
+    src: require('./images/watermark.png'),
+    position: {
+      position: Position.topLeft,
+    },
+  }],
+});
+```
+
+#### Transparent icon
+
+##### Sample
+
+
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/asset/alphicononly.png" width='150'>
+
+##### Example
+
+
+
+```typescript
+import Marker, { Position, TextBackgroundType } from "react-native-image-marker"
+···
+Marker.markImage({
+  backgroundImage: {
+    src: require('./images/test.jpg'),
+    scale: 1,
+  },
+  watermarkImages: [{
+    src: require('./images/watermark.png'),
+    position: {
+      position: Position.topLeft,
+    },
+    alpha: 0.5,
+  }],
+});
+```
 
 ## Compatibility
 
@@ -76,143 +647,6 @@ You can use `pod` instead of `link`. Add following lines in your `Podfile`:
 
 ```ruby
 pod 'RNImageMarker', :path => '../node_modules/react-native-image-marker'
-```
-
-## Usage
-
-### Text watermarks
-
-```javascript
-
-import Marker from "react-native-image-marker"
-
-···
-// add text watermark to a photo
-const options = {
- backgroundImage: {
-  src: require('./images/test.jpg'),
-  scale: 1,
-  rotate: 20,
-  alpha: 0.5,
- },
- // support multiple texts
- watermarkTexts: [{
-   text: 'hello',
-   positionOptions: {
-     position: Position.center,
-   },
-   style: {
-     color: '#ff00ff',
-     fontSize: 30,
-     fontName: 'Arial',
-     rotate: 30,
-     shadowStyle: {
-       dx: 10,
-       dy: 10,
-       radius: 10,
-       color: '#ffaa22',
-     },
-     textBackgroundStyle: {
-       padding: '10% 50 5% 12',
-       type: TextBackgroundType.none,
-       color: '#faaaff',
-     },
-     underline: true,
-     strikeThrough: true,
-     textAlign: 'left',
-     italic: true,
-     bold: true,
-   },
- }, {
-   text: 'world',
-   positionOptions: {
-     X: 10,
-     Y: 10,
-   },
-   style: {
-    color: '#AAFFDD',
-    fontSize: 30,
-    fontName: 'Arial',
-    rotate: 170,
-    shadowStyle: {
-     dx: 10,
-     dy: 10,
-     radius: 10,
-     color: '#ffaa22',
-    },
-    textBackgroundStyle: {
-     paddingX: 10,
-     paddingY: 10,
-     type: TextBackgroundType.stretchX,
-     color: '#faaaff',
-    },
-    textAlign: 'right',
-    skewX: 10,
-   },
- }],
- scale: 1,
- quality: 100,
- filename: 'test',
- saveFormat: ImageFormat.png,
- maxSize: 1000,
-};
-ImageMarker.markText(options).then((res) => {
- console.log(res);
-}).catch((err) => {
- console.log(err);
-});
-// or
-await ImageMarker.markText(options);
-
-```
-
-### Icon watermarks
-
-```javascript
-
-import Marker from "react-native-image-marker"
-
-···
-// add icon watermark to a background image
-const options = {
- backgroundImage: {
-   src: require('./images/test.jpg'),
-   scale: 1,
-   rotate: 20,
-   alpha: 0.5,
- },
- // support multiple icons, iOS >= 13, Android >= N(API Level 24)
- watermarkImages: [{
-   src: require('./images/watermark.png'),
-   scale: 1,
-   rotate: 20,
-   alpha: 0.5,
-   position: {
-    position: Position.center,
-   }
- }, {
-  src: require('./images/watermark1.png'),
-   scale: 1,
-   rotate: 20,
-   alpha: 0.5,
-   position: {
-    X: 20,
-    Y: 20,
-   }
- }],
- quality: 100,
- filename: 'test',
- saveFormat: ImageFormat.png,
- maxSize: 1000,
-};
-ImageMarker.markImage(options).then((res) => {
- console.log(res);
-}).catch((err) => {
- console.log(err);
-});
-// or
-await ImageMarker.markImage(options);
-
 ```
 
 ## API
