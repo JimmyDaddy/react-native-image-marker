@@ -1,6 +1,13 @@
 
 
-## [1.1.4](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.1.3...v1.1.4) (2023-09-27)
+## [1.1.4](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.1.1...v1.1.4) (2023-09-27)
+
+
+### Chore
+
+* add icon ([#126](https://github.com/JimmyDaddy/react-native-image-marker/issues/126)) ([c62fb32](https://github.com/JimmyDaddy/react-native-image-marker/commit/c62fb32c3b790d7c2c447fa26f1605f8ace52d5b))
+
+
 ### Features
 
 * android text background padding setting ([b53ac1d](https://github.com/JimmyDaddy/react-native-image-marker/commit/b53ac1ddb5e1c53f8cd9601898327b82699be3e9))
