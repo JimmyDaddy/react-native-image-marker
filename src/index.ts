@@ -335,6 +335,11 @@ export interface ShadowLayerStyle {
  *  type: TextBackgroundType.stretchX,
  *  color: '#aacc22'
  * }
+ * // or
+ * textBackgroundStyle: {
+ *  padding: '10% 50 15%',
+ *  color: '#aacc22'
+ * }
  */
 export interface TextBackgroundStyle extends Padding {
   /**
