@@ -84,8 +84,8 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
         } else {
           canvas.drawBitmap(
             markerBitmap!!,
-            (Utils.parseSpreadValue(markOpts.x, width) ?: DEFAULT_MARGIN).toFloat(),
-            (Utils.parseSpreadValue(markOpts.y, height) ?: DEFAULT_MARGIN).toFloat(),
+            (Utils.parseSpreadValue(markOpts.x, width.toFloat()) ?: DEFAULT_MARGIN),
+            (Utils.parseSpreadValue(markOpts.y, height.toFloat()) ?: DEFAULT_MARGIN),
             markOpts.imageOption.applyStyle()
           )
         }

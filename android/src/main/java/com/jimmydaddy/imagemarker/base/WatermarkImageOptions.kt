@@ -2,14 +2,14 @@ package com.jimmydaddy.imagemarker.base
 
 import com.facebook.react.bridge.ReadableMap
 
-class WatermarkImageOptions {
+data class WatermarkImageOptions(val options: ReadableMap?) {
   var imageOption: ImageOptions
   var x: String?
   var y: String?
   var positionEnum: PositionEnum?
 
-  constructor(options: ReadableMap) {
-    imageOption = ImageOptions(options);
+  init {
+    imageOption = options?.let { ImageOptions(it) }!!
     val positionOptions =
       if (null != options.getMap("position")) options.getMap("position") else null
     x = if (positionOptions!!.hasKey("X")) positionOptions.getDynamic("X").toString() else null
@@ -20,7 +20,7 @@ class WatermarkImageOptions {
       ) else null
   }
 
-  constructor(watermarkImage: ImageOptions, X: String?, Y: String?, position: PositionEnum?) {
+  constructor(watermarkImage: ImageOptions, X: String?, Y: String?, position: PositionEnum?) : this(null) {
     imageOption = watermarkImage
     this.x = X
     this.y = Y

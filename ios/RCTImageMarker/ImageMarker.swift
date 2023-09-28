@@ -116,7 +116,7 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         let canvasRect = CGRect(x: 0, y: 0, width: w, height: h)
 
         context.saveGState()
-
+        
         let transform = CGAffineTransform(translationX: 0, y: canvasRect.height)
             .scaledBy(x: 1, y: -1)
         context.concatenate(transform)
@@ -237,7 +237,14 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
                 }
                 
                 bgRect.inset(by: bgEdgeInsets!)
-                context.fill(bgRect)
+                
+                if !Utils.isNULL(textBackground.cornerRadius) {
+                    let path = textBackground.cornerRadius!.radiusPath(rect: bgRect)
+                    context.addPath(path.cgPath)
+                    context.fillPath()
+                } else {
+                    context.fill(bgRect)
+                }
             }
             
             let rect = CGRect(origin: CGPoint(x: posX, y: posY), size: size)

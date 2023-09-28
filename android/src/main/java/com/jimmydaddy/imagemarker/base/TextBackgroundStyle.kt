@@ -4,15 +4,17 @@ import android.graphics.Color
 import android.util.Log
 import com.facebook.react.bridge.ReadableMap
 
-class TextBackgroundStyle(readableMap: ReadableMap?): Padding(readableMap) {
+data class TextBackgroundStyle(val readableMap: ReadableMap?): Padding(readableMap) {
   var type: String? = ""
   var color = Color.TRANSPARENT
+  var cornerRadius: CornerRadius? = null
 
   init {
     if (null != readableMap) {
       try {
         type = readableMap.getString("type")
         setColor(readableMap.getString("color"))
+        cornerRadius = readableMap.getMap("cornerRadius")?.let { CornerRadius(it) }!!
       } catch (e: Exception) {
         Log.d(Utils.TAG, "Unknown text background options ", e)
       }

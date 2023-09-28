@@ -499,6 +499,16 @@ function useViewModel() {
                       type: textBgStretch,
                       padding: '10%',
                       color: '#0fA',
+                      cornerRadius: {
+                        topLeft: {
+                          x: '20%',
+                          y: '50%',
+                        },
+                        topRight: {
+                          x: '20%',
+                          y: '50%',
+                        },
+                      },
                     }
                   : null,
               },

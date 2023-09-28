@@ -3,8 +3,10 @@ package com.jimmydaddy.imagemarker.base
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReadableMap
 
-open class Options(options: ReadableMap) {
+open class Options(val options: ReadableMap) {
   var backgroundImage: ImageOptions
+
+  var backgroundImageOpts = options.getMap("backgroundImage")
 
   var quality: Int
 
@@ -15,12 +17,11 @@ open class Options(options: ReadableMap) {
   var maxSize: Int
 
   init {
-    val backgroundImageOpts = options.getMap("backgroundImage")
-      ?: throw MarkerError(
-        ErrorCode.PARAMS_REQUIRED,
-        "backgroundImage is required"
-      )
-    backgroundImage = ImageOptions(backgroundImageOpts)
+    this.backgroundImageOpts ?: throw MarkerError(
+      ErrorCode.PARAMS_REQUIRED,
+      "backgroundImage is required"
+    )
+    backgroundImage = ImageOptions(this.backgroundImageOpts!!)
     quality = if (options.hasKey("quality")) options.getInt("quality") else 100
     maxSize = if (options.hasKey("maxSize")) options.getInt("maxSize") else 2048
     filename = options.getString("filename")

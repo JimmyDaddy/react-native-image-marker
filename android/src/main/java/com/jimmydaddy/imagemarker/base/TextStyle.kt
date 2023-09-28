@@ -4,38 +4,27 @@ import android.graphics.Paint.Align
 import com.facebook.react.bridge.ReadableMap
 import com.jimmydaddy.imagemarker.base.Constants.DEFAULT_FONT_SIZE
 
-class TextStyle(options: ReadableMap?) {
-  var color: String?
-  var fontName: String?
-  var fontSize: Int
+data class TextStyle(val options: ReadableMap?) {
+  var color: String? = if (null != options!!.getString("color")) options.getString("color") else null
+  var fontName: String? = if (null != options?.getString("fontName")) options.getString("fontName") else null
+  var fontSize: Int = if (options?.hasKey("fontSize") == true) options.getInt("fontSize") else DEFAULT_FONT_SIZE
   var shadowLayerStyle: ShadowLayerStyle?
   var textBackgroundStyle: TextBackgroundStyle?
-  var underline: Boolean
-  var skewX: Float?
-  var strikeThrough: Boolean
+  var underline: Boolean = if (options?.hasKey("underline") == true) options.getBoolean("underline") else false
+  var skewX: Float? = if (options?.hasKey("skewX") == true) options?.getDouble("skewX")?.toFloat() else 0f
+  var strikeThrough: Boolean = if (options?.hasKey("strikeThrough") == true) options.getBoolean("strikeThrough") else false
   var textAlign: Align
-  var italic: Boolean
-  var bold: Boolean
-  var rotate: Int
+  var italic: Boolean = if (options?.hasKey("italic") == true) options.getBoolean("italic") else false
+  var bold: Boolean = if (options?.hasKey("bold") == true) options.getBoolean("bold") else false
+  var rotate: Int = if (options?.hasKey("rotate") == true) options.getInt("rotate") else 0
 
   init {
-    color = if (null != options!!.getString("color")) options.getString("color") else null
-    fontSize = if (options.hasKey("fontSize")) options.getInt("fontSize") else DEFAULT_FONT_SIZE
-    fontName =
-      if (null != options.getString("fontName")) options.getString("fontName") else null
-    skewX = if (options.hasKey("skewX")) options.getDouble("skewX").toFloat() else 0f
-    rotate = if (options.hasKey("rotate")) options.getInt("rotate") else 0
-    underline = if (options.hasKey("underline")) options.getBoolean("underline") else false
-    strikeThrough =
-      if (options.hasKey("strikeThrough")) options.getBoolean("strikeThrough") else false
-    italic = if (options.hasKey("italic")) options.getBoolean("italic") else false
-    bold = if (options.hasKey("bold")) options.getBoolean("bold") else false
-    val myShadowStyle = options.getMap("shadowStyle")
+    val myShadowStyle = options?.getMap("shadowStyle")
     shadowLayerStyle = myShadowStyle?.let { ShadowLayerStyle(it) }
-    val myTextBackgroundStyle = options.getMap("textBackgroundStyle")
+    val myTextBackgroundStyle = options?.getMap("textBackgroundStyle")
     textBackgroundStyle = myTextBackgroundStyle?.let { TextBackgroundStyle(it) }
     textAlign = Align.LEFT
-    if (options.hasKey("textAlign")) {
+    if (options?.hasKey("textAlign") == true) {
       textAlign = when (options.getString("textAlign")) {
         "center" -> Align.CENTER
         "right" -> Align.RIGHT

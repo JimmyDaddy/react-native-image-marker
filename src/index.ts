@@ -325,6 +325,19 @@ export interface ShadowLayerStyle {
   color: string;
 }
 
+export interface RadiusValue {
+  x: number | string;
+  y: number | string;
+}
+
+export interface CornerRadius {
+  topLeft?: RadiusValue;
+  topRight?: RadiusValue;
+  bottomLeft?: RadiusValue;
+  bottomRight?: RadiusValue;
+  all?: RadiusValue;
+}
+
 /**
  * @description background style for text watermark
  * > thanks [@onka13](https://github.com/onka13) for [#38](https://github.com/JimmyDaddy/react-native-image-marker/pull/38)
@@ -339,6 +352,21 @@ export interface ShadowLayerStyle {
  * textBackgroundStyle: {
  *  padding: '10% 50 15%',
  *  color: '#aacc22'
+ * }
+ * // or
+ * textBackgroundStyle: {
+ *  padding: 10,
+ *  color: '#aacc22',
+ *  cornerRadius: {
+ *    topLeft: {
+ *      x: '10%',
+ *      y: 10,
+ *    },
+ *    topRight: {
+ *      x: 10,
+ *      y: 10,
+ *    },
+ *  }
  * }
  */
 export interface TextBackgroundStyle extends Padding {
@@ -355,6 +383,30 @@ export interface TextBackgroundStyle extends Padding {
    * color: '#aacc22'
    **/
   color: string;
+
+  /**
+   * @description background corner radius
+   * @example
+   * cornerRadius: {
+   *  topLeft: {
+   *    x: '10%',
+   *    y: 10,
+   *  },
+   *  topRight: {
+   *    x: 10,
+   *    y: 10,
+   *  },
+   *  bottomLeft: {
+   *    x: 10,
+   *    y: 10,
+   *  },
+   *  bottomRight: {
+   *    x: '10%',
+   *    y: 10,
+   *  },
+   * }
+   **/
+  cornerRadius?: CornerRadius;
 }
 
 /**

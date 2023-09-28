@@ -62,4 +62,23 @@ extension RCTConvert {
         }
         return mv
     }
+
+    static func UIRectCorner(_ value: [Any] = []) -> UIRectCorner {
+        let MyEnumMap: [String: UIRectCorner] = [
+            "topLeft": .topLeft,
+            "topRight": .topRight,
+            "bottomLeft": .bottomLeft,
+            "bottomRight": .bottomRight,
+            "all": .allCorners,
+        ]
+        if value.isEmpty { return [.allCorners] }
+        var corners: UIRectCorner = []
+        for item in value {
+            if let corner = item as? String, let rectCorner = MyEnumMap[corner] {
+                corners.insert(rectCorner)
+            }
+        }
+        if corners.isEmpty { return [.allCorners] }
+        return corners
+    }
 }
