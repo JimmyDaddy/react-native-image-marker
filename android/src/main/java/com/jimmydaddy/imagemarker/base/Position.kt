@@ -3,7 +3,7 @@ package com.jimmydaddy.imagemarker.base
 /**
  * Created by jimmydaddy on 2017/9/23.
  */
-class Position(var x: Float, var y: Float) {
+data class Position(var x: Float, var y: Float) {
 
   companion object {
     fun getTextPosition(

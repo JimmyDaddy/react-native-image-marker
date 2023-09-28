@@ -7,7 +7,7 @@ import com.facebook.react.bridge.ReadableMap
 /**
  * Created by jimmydaddy on 2019/2/25.
  */
-class ShadowLayerStyle(readableMap: ReadableMap?) {
+data class ShadowLayerStyle(val readableMap: ReadableMap?) {
   var radius = 0f
   var dx = 0f
   var dy = 0f

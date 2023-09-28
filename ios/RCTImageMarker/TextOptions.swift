@@ -22,7 +22,6 @@ class TextOptions: NSObject {
         }
 
         if let positionOpts = opts["positionOptions"] as? [AnyHashable: Any] {
-            var a = positionOpts["X"]
             self.X = Utils.handleDynamicToString(v: positionOpts["X"])
             self.Y = Utils.handleDynamicToString(v: positionOpts["Y"])
             self.position = positionOpts["position"] != nil ? RCTConvert.MarkerPosition(positionOpts["position"]) : .none

@@ -149,8 +149,8 @@ class Utils {
       return pattern.containsMatchIn(str)
     }
 
-    fun parseSpreadValue(v: String?, relativeTo: Int): Float? {
-      if (v == null) return null
+    fun parseSpreadValue(v: String?, relativeTo: Float): Float {
+      if (v == null) return 0f
       return if (v.endsWith("%")) {
         val percent = v.dropLast(1).toFloatOrNull()?.div(100) ?: 0f
         relativeTo * percent

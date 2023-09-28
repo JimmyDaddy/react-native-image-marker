@@ -13,6 +13,7 @@ import React
 class TextBackground: Padding {
     var typeBg: String?
     var colorBg: UIColor?
+    var cornerRadius: CornerRadius?
 
     init?(textBackgroundStyle textBackground: [AnyHashable: Any]?) throws {
         guard let textBackground = textBackground, !Utils.isNULL(textBackground) else {
@@ -21,5 +22,8 @@ class TextBackground: Padding {
         try super.init(paddingData: textBackground)
         self.typeBg = textBackground["type"] as? String
         self.colorBg = UIColor(hex: textBackground["color"] as! String) ?? UIColor.clear
+        if textBackground.keys.contains("cornerRadius") {
+            self.cornerRadius = try CornerRadius(dicOpts: textBackground["cornerRadius"] as! [AnyHashable : Any])
+        }
     }
 }

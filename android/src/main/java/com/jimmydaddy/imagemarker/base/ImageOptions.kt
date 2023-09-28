@@ -9,8 +9,8 @@ import com.jimmydaddy.imagemarker.base.Constants.DEFAULT_ALPHA
 import com.jimmydaddy.imagemarker.base.Constants.DEFAULT_ROTATE
 import com.jimmydaddy.imagemarker.base.Constants.DEFAULT_SCALE
 
-class ImageOptions(options: ReadableMap) {
-  var src: ReadableMap?
+class ImageOptions(val options: ReadableMap) {
+  var src: ReadableMap? = options.getMap("src")
 
   var uri: String?
 
@@ -20,7 +20,6 @@ class ImageOptions(options: ReadableMap) {
   private var alpha: Int
 
   init {
-    src = options.getMap("src")
     if (src == null) {
       throw MarkerError(ErrorCode.PARAMS_REQUIRED, "image is required")
     }

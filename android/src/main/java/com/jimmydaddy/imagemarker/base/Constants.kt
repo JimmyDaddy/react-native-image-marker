@@ -15,5 +15,5 @@ object Constants {
 
   const val BASE64 = "base64"
 
-  const val DEFAULT_MARGIN = 20;
+  const val DEFAULT_MARGIN = 20f
 }

@@ -3,7 +3,7 @@ package com.jimmydaddy.imagemarker.base
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.Rect
+import android.graphics.Path
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.os.Build
@@ -18,15 +18,14 @@ import com.jimmydaddy.imagemarker.base.Constants.DEFAULT_MARGIN
 import kotlin.math.ceil
 
 @Suppress("DEPRECATION")
-class TextOptions(options: ReadableMap) {
-  private var text: String?
+data class TextOptions(val options: ReadableMap) {
+  private var text: String? = options.getString("text")
   private var x: String?
   private var y: String?
   private var positionEnum: PositionEnum?
   private var style: TextStyle
 
   init {
-    text = options.getString("text")
     if (text == null) {
       throw MarkerError(ErrorCode.PARAMS_REQUIRED, "mark text is required")
     }
@@ -126,10 +125,10 @@ class TextOptions(options: ReadableMap) {
       )
     } else {
       if (null != x) {
-        position.x = (Utils.parseSpreadValue(x, maxWidth) ?: margin) as Float
+        position.x = (Utils.parseSpreadValue(x, maxWidth.toFloat()) ?: margin) as Float
       }
       if (null != y) {
-        position.y = (Utils.parseSpreadValue(y, maxHeight) ?: margin) as Float
+        position.y = (Utils.parseSpreadValue(y, maxHeight.toFloat()) ?: margin) as Float
       }
     }
     val x = position.x
@@ -145,21 +144,29 @@ class TextOptions(options: ReadableMap) {
       paint.style = Paint.Style.FILL
       paint.color = style.textBackgroundStyle!!.color
       val bgInsets = style.textBackgroundStyle!!.toEdgeInsets(maxWidth, maxHeight)
-      var bgRect = Rect((x - bgInsets.left).toInt(), (y - bgInsets.top).toInt(), (x + textWidth + bgInsets.right).toInt(), (y + textHeight + bgInsets.bottom).toInt())
+      var bgRect = RectF(x - bgInsets.left, y - bgInsets.top, x + textWidth + bgInsets.right, y + textHeight + bgInsets.bottom)
       when (style.textBackgroundStyle!!.type) {
         "stretchX" -> {
-          bgRect = Rect(0, (y - bgInsets.top).toInt(), maxWidth,
-            (y + textHeight + bgInsets.bottom).toInt()
+          bgRect = RectF(0f, y - bgInsets.top, maxWidth.toFloat(),
+            y + textHeight + bgInsets.bottom
           )
         }
 
         "stretchY" -> {
-          bgRect = Rect((x - bgInsets.left).toInt(), 0,
-            (x + textWidth + bgInsets.right).toInt(), maxHeight)
+          bgRect = RectF(x - bgInsets.left, 0f,
+            x + textWidth + bgInsets.right, maxHeight.toFloat())
         }
       }
 
-      canvas.drawRect(bgRect, paint)
+      if (style.textBackgroundStyle!!.cornerRadius != null) {
+        val path = Path()
+
+        path.addRoundRect(bgRect, style.textBackgroundStyle!!.cornerRadius!!.radii(bgRect), Path.Direction.CW);
+
+        canvas.drawPath(path, paint);
+      } else {
+        canvas.drawRect(bgRect, paint)
+      }
     }
     canvas.restore()
     canvas.save()
