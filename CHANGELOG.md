@@ -1,6 +1,11 @@
 
 
-## [1.1.5](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.1.1...v1.1.5) (2023-09-28)
+## [1.1.6](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.1.1...v1.1.6) (2023-10-01)
+
+
+### Bug Fixes
+
+* fix [#143](https://github.com/JimmyDaddy/react-native-image-marker/issues/143) & document ([#144](https://github.com/JimmyDaddy/react-native-image-marker/issues/144)) ([4179dc0](https://github.com/JimmyDaddy/react-native-image-marker/commit/4179dc08f737875e7bed857cf3b5dfd5b0c5dfbb))
 
 
 ### Features
