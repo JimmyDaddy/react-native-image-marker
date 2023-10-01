@@ -8,7 +8,7 @@ class MarkImageOptions(options: ReadableMap) : Options(options) {
   init {
     val markerImageOpts = options.getMap("watermarkImage")
     val markerImagesOpts = options.getArray("watermarkImages")
-    if ((markerImagesOpts == null || markerImagesOpts!!.size() <= 0) && markerImageOpts == null) {
+    if ((markerImagesOpts == null || markerImagesOpts.size() <= 0) && markerImageOpts == null) {
       throw MarkerError(
         ErrorCode.PARAMS_REQUIRED,
         "marker image is required"

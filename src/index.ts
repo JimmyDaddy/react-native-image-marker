@@ -630,10 +630,12 @@ export interface TextMarkOptions {
 /**
  * @description Image options for background image or watermark image
  * @example
+ * {
  *  src: require('./images/logo.png'),
  *  scale: 0.5,
  *  rotate: 45,
  *  alpha: 0.5
+ * }
  */
 export interface ImageOptions {
   /**
@@ -692,20 +694,6 @@ export interface WatermarkImageOptions extends ImageOptions {
  *    scale: 0.5,
  *    rotate: 45,
  *    alpha: 0.5
- *  },
- *  // @deprecated since v1.1.0 use watermarkImages instead
- *  watermarkImage: {
- *    src: require('./images/logo.png'),
- *    scale: 0.5,
- *    rotate: 45,
- *    alpha: 0.5
- *  },
- *  // @deprecated since v1.1.0 use watermarkImages instead
- *  watermarkPositions: {
- *    X: 10,
- *    Y: 10,
- *    // or
- *    // position: Position.center
  *  },
  *  watermarkImages: [
  *    {
@@ -769,8 +757,9 @@ export interface ImageMarkOptions {
    *  X: 10,
    *  Y: 10,
    *  // or
-   *  // position: Position.center
+   *  position: Position.center
    * }
+   * @note use watermarkImages instead
    */
   watermarkPositions?: PositionOptions; // watermark position options see @PositionOptions
   /**
@@ -815,7 +804,7 @@ export interface ImageMarkOptions {
    *    X: 10,
    *    Y: 10,
    *    // or
-   *    // position: Position.center
+   *    position: Position.center
    *  }
    * }]
    **/

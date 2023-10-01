@@ -19,11 +19,11 @@ open class Padding(paddingData: ReadableMap?) {
     if (iterator != null) {
       while (iterator.hasNext())  {
         val entry = iterator.next()
-        val paddingValue = entry.value
+        var paddingValue = entry.value
         when (entry.key) {
           "padding" -> {
             if (paddingValue is String) {
-              var paddingValue = paddingValue.trim()
+              paddingValue = paddingValue.trim()
               if (!Utils.checkSpreadValue(paddingValue, maxLength = 4)) {
                 throw Exception("padding is invalid")
               }
@@ -147,10 +147,10 @@ open class Padding(paddingData: ReadableMap?) {
   }
 
   fun toEdgeInsets(width: Int, height: Int): MarkerInsets {
-    val topValue = Utils.parseSpreadValue(paddingTop, relativeTo = height.toFloat()) ?: 0f
-    val leftValue = Utils.parseSpreadValue(paddingLeft, relativeTo = width.toFloat()) ?: 0f
-    val bottomValue = Utils.parseSpreadValue(paddingBottom, relativeTo = height.toFloat()) ?: 0f
-    val rightValue = Utils.parseSpreadValue(paddingRight, relativeTo = width.toFloat()) ?: 0f
+    val topValue = Utils.parseSpreadValue(paddingTop, relativeTo = height.toFloat())
+    val leftValue = Utils.parseSpreadValue(paddingLeft, relativeTo = width.toFloat())
+    val bottomValue = Utils.parseSpreadValue(paddingBottom, relativeTo = height.toFloat())
+    val rightValue = Utils.parseSpreadValue(paddingRight, relativeTo = width.toFloat())
     return MarkerInsets(topValue.toInt(), leftValue.toInt(), bottomValue.toInt(), rightValue.toInt())
   }
 }

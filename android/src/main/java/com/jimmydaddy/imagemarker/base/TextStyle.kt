@@ -11,7 +11,7 @@ data class TextStyle(val options: ReadableMap?) {
   var shadowLayerStyle: ShadowLayerStyle?
   var textBackgroundStyle: TextBackgroundStyle?
   var underline: Boolean = if (options?.hasKey("underline") == true) options.getBoolean("underline") else false
-  var skewX: Float? = if (options?.hasKey("skewX") == true) options?.getDouble("skewX")?.toFloat() else 0f
+  var skewX: Float? = if (options?.hasKey("skewX") == true) options.getDouble("skewX")?.toFloat() else 0f
   var strikeThrough: Boolean = if (options?.hasKey("strikeThrough") == true) options.getBoolean("strikeThrough") else false
   var textAlign: Align
   var italic: Boolean = if (options?.hasKey("italic") == true) options.getBoolean("italic") else false

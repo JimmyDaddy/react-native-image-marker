@@ -14,22 +14,22 @@
 
 ## Features
 
-* Add **multiple text** watermarks to images
-* Add **multiple icon** watermarks to images *(Android >= N, iOS >= iOS 13)*
-* Support **rotating** background image and icon watermarks.
-* Support setting opacity for background image and icon watermarks.
+* [Add **multiple text** watermarks to images](https://jimmydaddy.github.io/react-native-image-marker/interfaces/TextMarkOptions.html#watermarkTexts)
+* [Add **multiple icon** watermarks to images *(Android >= N, iOS >= iOS 13)*](https://jimmydaddy.github.io/react-native-image-marker/classes/Marker.html#markImage)
+* [Support **rotating** background image and icon watermarks.](https://jimmydaddy.github.io/react-native-image-marker/interfaces/ImageOptions.html#rotate)
+* [Support setting opacity for background image and icon watermarks.](https://jimmydaddy.github.io/react-native-image-marker/interfaces/ImageOptions.html#rotate)
 * Support base64 format
-* Flexible text style settings
-  * rotating
-  * text shadow
-  * background color
-  * italic
-  * bold
-  * stroke
-  * text align
-  * padding
-  * relative position
-  * background border radius
+* Flexible text style settings, including:
+  * [Rotating](https://jimmydaddy.github.io/react-native-image-marker/interfaces/TextStyle.html#rotate)
+  * [Text shadow](https://jimmydaddy.github.io/react-native-image-marker/interfaces/ShadowLayerStyle.html)
+  * Background color
+  * [Italic](https://jimmydaddy.github.io/react-native-image-marker/interfaces/TextStyle.html#italic)
+  * [Bold](https://jimmydaddy.github.io/react-native-image-marker/interfaces/TextStyle.html#bold)
+  * [Stroke](https://jimmydaddy.github.io/react-native-image-marker/interfaces/TextStyle.html#strikeThrough)
+  * [Text align](https://jimmydaddy.github.io/react-native-image-marker/interfaces/TextStyle.html#textAlign)
+  * [Padding](https://jimmydaddy.github.io/react-native-image-marker/interfaces/TextBackgroundStyle.html#padding)
+  * Relative position
+  * [Background border radius](https://jimmydaddy.github.io/react-native-image-marker/interfaces/TextBackgroundStyle.html#cornerRadius)
 * Compatible with both Android and iOS
 
 ## Sample
