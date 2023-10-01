@@ -28,4 +28,3 @@ class MarkTextOptions: Options {
         }
     }
 }
-

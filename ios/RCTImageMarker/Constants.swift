@@ -10,4 +10,3 @@ enum ErrorDomainEnum: String {
     case PARAMS_INVALID = "com.jimmydaddy.imagemarker.PARAMS_INVALID"
     case BASE = "com.jimmydaddy.imagemarker"
 }
-

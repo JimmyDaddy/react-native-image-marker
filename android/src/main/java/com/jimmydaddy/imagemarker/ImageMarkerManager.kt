@@ -13,7 +13,6 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
 import com.jimmydaddy.imagemarker.base.Constants.BASE64
-import com.jimmydaddy.imagemarker.base.Constants.DEFAULT_MARGIN
 import com.jimmydaddy.imagemarker.base.Constants.IMAGE_MARKER_TAG
 import com.jimmydaddy.imagemarker.base.MarkImageOptions
 import com.jimmydaddy.imagemarker.base.MarkTextOptions
@@ -84,8 +83,8 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
         } else {
           canvas.drawBitmap(
             markerBitmap!!,
-            (Utils.parseSpreadValue(markOpts.x, width.toFloat()) ?: DEFAULT_MARGIN),
-            (Utils.parseSpreadValue(markOpts.y, height.toFloat()) ?: DEFAULT_MARGIN),
+            Utils.parseSpreadValue(markOpts.x, width.toFloat()),
+            Utils.parseSpreadValue(markOpts.y, height.toFloat()),
             markOpts.imageOption.applyStyle()
           )
         }

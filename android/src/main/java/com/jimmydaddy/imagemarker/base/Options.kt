@@ -6,7 +6,7 @@ import com.facebook.react.bridge.ReadableMap
 open class Options(val options: ReadableMap) {
   var backgroundImage: ImageOptions
 
-  var backgroundImageOpts = options.getMap("backgroundImage")
+  private var backgroundImageOpts = options.getMap("backgroundImage")
 
   var quality: Int
 

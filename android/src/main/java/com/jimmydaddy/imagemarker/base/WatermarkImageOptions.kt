@@ -12,18 +12,18 @@ data class WatermarkImageOptions(val options: ReadableMap?) {
     imageOption = options?.let { ImageOptions(it) }!!
     val positionOptions =
       if (null != options.getMap("position")) options.getMap("position") else null
-    x = if (positionOptions!!.hasKey("X")) positionOptions.getDynamic("X").toString() else null
-    y = if (positionOptions.hasKey("Y")) positionOptions.getDynamic("Y").toString() else null
+    x = if (positionOptions!!.hasKey("X")) Utils.handleDynamicToString(positionOptions.getDynamic("X")) else null
+    y = if (positionOptions.hasKey("Y")) Utils.handleDynamicToString(positionOptions.getDynamic("Y")) else null
     positionEnum =
       if (null != positionOptions.getString("position")) PositionEnum.getPosition(
         positionOptions.getString("position")
       ) else null
   }
 
-  constructor(watermarkImage: ImageOptions, X: String?, Y: String?, position: PositionEnum?) : this(null) {
+  constructor(watermarkImage: ImageOptions, x: String?, y: String?, position: PositionEnum?) : this(null) {
     imageOption = watermarkImage
-    this.x = X
-    this.y = Y
+    this.x = x
+    this.y = y
     this.positionEnum = position
   }
 
@@ -33,7 +33,7 @@ data class WatermarkImageOptions(val options: ReadableMap?) {
       return try {
         WatermarkImageOptions(opts)
       } catch (error: Throwable) {
-        reject(error.message ?: "", error.localizedMessage, null)
+        error.localizedMessage?.let { reject(error.message ?: "", it, null) }
         null
       }
     }

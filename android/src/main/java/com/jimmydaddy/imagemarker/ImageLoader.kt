@@ -85,7 +85,7 @@ class ImageLoader(private val context: ReactApplicationContext, private val maxS
                 bitmap.recycle()
                 System.gc()
               }
-              return@async bg;
+              return@async bg
             }
           }
         } catch (e: Exception) {
