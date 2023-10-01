@@ -7,8 +7,8 @@ on:
     paths:
       - "src/**"
       - "assets/**"
-      - "*.MD"
-      - "*.md"
+      - "README.MD"
+      - "README.0.9.2.MD"
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
