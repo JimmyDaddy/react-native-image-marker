@@ -19,8 +19,8 @@ class WatermarkImageOptions: NSObject {
         self.imageOption = try ImageOptions(dicOpts: opts)
         let positionOpts = opts["position"] as? [AnyHashable: Any]
         if let positionOpts = positionOpts, !Utils.isNULL(positionOpts) {
-            self.X = RCTConvert.nsString(positionOpts["X"])
-            self.Y = RCTConvert.nsString(positionOpts["Y"])
+            self.X = Utils.handleDynamicToString(v: positionOpts["X"])
+            self.Y = Utils.handleDynamicToString(v: positionOpts["Y"])
             self.position = positionOpts["position"] != nil ? RCTConvert.MarkerPosition(positionOpts["position"]) : .none
         }
     }
