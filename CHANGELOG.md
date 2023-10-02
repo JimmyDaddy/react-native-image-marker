@@ -1,3 +1,9 @@
+## [1.1.7](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.1.6...v1.1.7) (2023-10-03)
+
+
+### Bug Fixes
+
+* fix: image marker position bug WatermarkImageOptions.swift ([f3789cb](https://github.com/JimmyDaddy/react-native-image-marker/pull/149/commits/f3789cba1dd42f5896531bb1deb665acc3fc2fc4))
 
 
 ## [1.1.6](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.1.1...v1.1.6) (2023-10-01)
