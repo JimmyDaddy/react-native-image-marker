@@ -42,24 +42,19 @@
 
 ## Usage
 
-### Text background
+### Text background fit
 
-* [TextBackgroundType](https://jimmydaddy.github.io/react-native-image-marker/enums/TextBackgroundType.html)
-* [TextBackgroundStyle](https://jimmydaddy.github.io/react-native-image-marker/interfaces/TextBackgroundStyle.html)
-
-#### Text background fit
-
-##### API
+#### API
 
 [TextBackgroundType.none](https://jimmydaddy.github.io/react-native-image-marker/enums/TextBackgroundType.html#none)
 
-##### Sample
+#### Sample
 
 
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/shadow_bg_fit.png" width='150'>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/shadow_bg_fit.jpeg" width='150'>
 
 
-##### Example
+#### Example
 
 
 ```typescript
@@ -103,19 +98,19 @@ Marker.markText(options);
 
 ```
 
-#### Text background stretchX
+### Text background stretchX
 
-##### API
+#### API
 
 
 [TextBackgroundType.stretchX](https://jimmydaddy.github.io/react-native-image-marker/enums/TextBackgroundType.html#stretchX)
 
-##### Sample
+#### Sample
 
 
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/shadow_bg_sx.png" width='150'>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/shadow_bg_sx.jpeg" width='150'>
 
-##### Example
+#### Example
 
 
 ```typescript
@@ -158,19 +153,19 @@ const options = {
 Marker.markText(options);
 ```
 
-#### Text background stretchY
+### Text background stretchY
 
-##### API
+#### API
 
 
 [TextBackgroundType.stretchY](https://jimmydaddy.github.io/react-native-image-marker/enums/TextBackgroundType.html#stretchY)
 
-##### Sample
+#### Sample
 
 
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/shadow_bg_sy.png" width='150'>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/shadow_bg_sy.jpeg" width='150'>
 
-##### Example
+#### Example
 
 
 ```typescript
@@ -214,19 +209,19 @@ ImageMarker.markText(options);
 
 ```
 
-#### Text background border radius
+### Text background border radius
 
-##### API
+#### API
 
 
 [TextBackgroundType.cornerRadius](https://jimmydaddy.github.io/react-native-image-marker/enums/TextBackgroundType.html#cornerRadius)
 
-##### Sample
+#### Sample
 
 
  <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/textbgcornerradius.png" width='150'>
 
-##### Example
+#### Example
 
 
 ```typescript
@@ -279,19 +274,19 @@ ImageMarker.markText(options);
 
 ```
 
-#### Text with shadow
+### Text with shadow
 
-##### API
+#### API
 
 
 [ShadowLayerStyle](https://jimmydaddy.github.io/react-native-image-marker/interfaces/ShadowLayerStyle.html)
 
-##### Sample
+#### Sample
 
 
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/shadow.png" width='150'>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/shadow.jpeg" width='150'>
 
-##### Example
+#### Example
 
 
 
@@ -331,19 +326,19 @@ Marker.markText(options);
 
 ```
 
-#### Multiple text watermarks
+### Multiple text watermarks
 
-##### API
+#### API
 
 
 [markImage](https://jimmydaddy.github.io/react-native-image-marker/classes/Marker.html#markImage)
 
-##### Sample
+#### Sample
 
 
  <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/multipletexts.png" width='150'>
 
-##### Example
+#### Example
 
 
 
@@ -388,9 +383,9 @@ Marker.markText({
 
 ```
 
-#### Text rotation
+### Text rotation
 
-##### Sample
+#### Sample
 
 
 <p>
@@ -399,7 +394,7 @@ Marker.markText({
  <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/rotatetexts.png" width='150'>
 </p>
 
-##### Example
+#### Example
 
 
 
@@ -451,14 +446,14 @@ Marker.markText({
 
 ```
 
-#### Icon watermarks
+### Icon watermarks
 
-##### Sample
+#### Sample
 
 
  <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/imagewatermark.png" width='150'>
 
-##### Example
+#### Example
 
 
 
@@ -481,18 +476,18 @@ Marker.markImage({
 ```
 
 
-#### Multiple icon watermarks
+### Multiple icon watermarks
 
 > Note: ***require Android >= N, iOS >= iOS 13***
 
-##### Sample
+#### Sample
 
 
 
  <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/multiple_icon_markers.png" width='150'>
 
 
-##### Example
+#### Example
 
 
 
@@ -523,9 +518,10 @@ Marker.markImage({
 })
 
 ```
-#### Background rotation
 
-##### Sample
+### Background rotation
+
+#### Sample
 
 
 <p>
@@ -533,7 +529,7 @@ Marker.markImage({
  <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/rotateimageicon.png" width='150'>
 </p>
 
-##### Example
+#### Example
 
 
 ```typescript
@@ -603,14 +599,14 @@ Marker.markText({
 
 ```
 
-#### Icon rotation
+### Icon rotation
 
-##### Sample
+#### Sample
 
 
  <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/rotateicon.png" width='150'>
 
-##### Example
+#### Example
 
 
 
@@ -632,14 +628,14 @@ Marker.markImage({
 });
 ```
 
-#### Transparent background
+### Transparent background
 
-##### Sample
+#### Sample
 
 
  <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/alphabgonly.png" width='150'>
 
-##### Example
+#### Example
 
 
 
@@ -661,14 +657,14 @@ Marker.markImage({
 });
 ```
 
-#### Transparent icon
+### Transparent icon
 
-##### Sample
+#### Sample
 
 
  <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/alphicononly.png" width='150'>
 
-##### Example
+#### Example
 
 
 
