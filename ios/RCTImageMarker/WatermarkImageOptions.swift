@@ -24,7 +24,7 @@ class WatermarkImageOptions: NSObject {
             self.position = positionOpts["position"] != nil ? RCTConvert.MarkerPosition(positionOpts["position"]) : .none
         }
     }
-    
+
     init(watermarkImage: ImageOptions, X: String?, Y: String?, position: MarkerPositionEnum) {
         self.imageOption = watermarkImage;
         self.X = X;

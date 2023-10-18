@@ -9,6 +9,7 @@
 <div align="center">
 
 [![npm version](https://img.shields.io/npm/v/react-native-image-marker.svg?logo=npm)](https://www.npmjs.com/package/react-native-image-marker) [![npm](https://img.shields.io/npm/dm/react-native-image-marker?logo=npm)](https://www.npmjs.com/package/react-native-image-marker) [![stars](https://img.shields.io/github/stars/jimmydaddy/react-native-image-marker?style=social)](https://github.com/JimmyDaddy/react-native-image-marker) [![forks](https://img.shields.io/github/forks/jimmydaddy/react-native-image-marker?style=social)](https://github.com/JimmyDaddy/react-native-image-marker/fork)[![github](https://img.shields.io/badge/github-repo-blue?logo=github)](https://github.com/JimmyDaddy/react-native-image-marker) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?logo=github)](https://github.com/JimmyDaddy/react-native-image-marker/pulls) ![license](https://img.shields.io/npm/l/react-native-image-marker) 
+![platform-iOS](https://img.shields.io/badge/iOS-black?logo=Apple) ![platform-Android](https://img.shields.io/badge/Android-blue?logo=Android)
 
 </div>
 
@@ -697,7 +698,7 @@ Marker.markImage({
 | >= 0.60.0, ***iOS < 13, Android < N(API Level 24)*** | v1.0.x |
 | >= 0.60.0, other cases | v1.1.0 or later |
 
-> Note: This table is only applicable to major versions of react-native-image-marker. Patch versions should be backwards compatible.
+> ***Note: This table is only applicable to major versions of react-native-image-marker. Patch versions should be backwards compatible.***
 
 ## Installation
 
@@ -729,7 +730,7 @@ This library use [Fresco](https://github.com/facebook/fresco) to decode image on
 * RN version < 0.60.0 use fresco v1.10.0
 * RN version >= 0.60.0 use fresco v2.0.0 +
 
-[ref](https://github.com/facebook/react-native/blob/8cf9505bd27c5dade33b17cc177fa5ef1613dbcd/ReactAndroid/gradle.properties#L15)
+> [ref](https://github.com/facebook/react-native/blob/8cf9505bd27c5dade33b17cc177fa5ef1613dbcd/ReactAndroid/gradle.properties#L15)
 
 ## Save image to file
 
@@ -776,5 +777,7 @@ See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the 
 [MIT](LICENSE)
 
 ---
+
+If this library is useful to you, please give me a ⭐️. 🤩
 
 Made with [create-react-native-library](https://github.com/callstack/react-native-builder-bob)

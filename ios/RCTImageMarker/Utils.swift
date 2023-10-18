@@ -126,7 +126,7 @@ class Utils: NSObject {
     static func isNULL(_ obj: Any?) -> Bool {
         return obj == nil || obj is NSNull
     }
-    
+
     static func checkSpreadValue(str: String?, maxLength: Int = 1) -> Bool {
         if str == nil { return false }
         let pattern = #"^((\d+|\d+%)\s?){1,\#(maxLength)}$"#
@@ -146,7 +146,7 @@ class Utils: NSObject {
             return CGFloat(Double(v!) ?? 0)
         }
     }
-    
+
     static func handleDynamicToString(v: Any?) -> String {
         if (isNULL(v)) { return "0" }
         else {

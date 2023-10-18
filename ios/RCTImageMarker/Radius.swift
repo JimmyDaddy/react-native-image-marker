@@ -11,12 +11,12 @@ import React
 class Radius: NSObject {
     var x: String = "0"
     var y: String = "0"
-    
+
     init(dicOpts opts: [AnyHashable: Any]) throws {
         self.x = Utils.handleDynamicToString(v: opts["x"])
         self.y = Utils.handleDynamicToString(v: opts["y"])
     }
-    
+
     convenience override init() {
         self.init()
     }
