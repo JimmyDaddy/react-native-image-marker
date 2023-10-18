@@ -100,7 +100,7 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
     }
         
     func markerImgWithText(_ image: UIImage, _ opts: MarkTextOptions) -> UIImage? {
-       
+
         var bg = image;
         if (opts.backgroundImage.scale > 0) {
             bg = UIImage(cgImage: image.cgImage!, scale: 1 / opts.backgroundImage.scale, orientation: image.imageOrientation)

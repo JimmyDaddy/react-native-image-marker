@@ -43,7 +43,7 @@ extension UIImage {
         }
         return image
     }
-    
+
     static func transBase64(_ base64Str: String) -> UIImage? {
         let trimmedString = base64Str.trimmingCharacters(in: .whitespacesAndNewlines)
         guard let encodedString = trimmedString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),

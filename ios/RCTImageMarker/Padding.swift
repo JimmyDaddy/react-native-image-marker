@@ -12,13 +12,13 @@ class Padding {
     var paddingLeft: String = "0"
     var paddingBottom: String = "0"
     var paddingRight: String = "0"
-    
+
     init(paddingData: [AnyHashable: Any]) throws {
         var topValue: String = "0"
         var leftValue: String = "0"
         var bottomValue: String = "0"
         var rightValue: String = "0"
-        
+
         for (key, paddingValue) in paddingData {
             switch key {
             case "padding" as String:
@@ -118,13 +118,13 @@ class Padding {
                 break
             }
         }
-        
+
         self.paddingTop = topValue
         self.paddingLeft = leftValue
         self.paddingBottom = bottomValue
         self.paddingRight = rightValue
     }
-    
+
     func toEdgeInsets(width: CGFloat, height: CGFloat) -> UIEdgeInsets {
         let topValue = Utils.parseSpreadValue(v: self.paddingTop, relativeTo: height) ?? 0
         let leftValue = Utils.parseSpreadValue(v: self.paddingLeft, relativeTo: width) ?? 0

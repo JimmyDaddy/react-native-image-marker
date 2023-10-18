@@ -154,7 +154,6 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
     promise: Promise
   ) {
     var bos: BufferedOutputStream? = null
-//        val isFinished: Boolean
     var icon: Bitmap? = null
     try {
       val height = bg!!.height
@@ -197,7 +196,6 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
       e.printStackTrace()
       promise.reject("error", e.message, e)
     } finally {
-//            isFinished = true
       if (bos != null) {
         try {
           bos.close()

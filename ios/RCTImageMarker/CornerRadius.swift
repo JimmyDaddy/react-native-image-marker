@@ -14,9 +14,9 @@ class CornerRadius: NSObject {
     var bottomLeft: Radius?
     var bottomRight: Radius?
     var all: Radius?
-    
+
     init(dicOpts opts: [AnyHashable: Any]) throws {
-        
+
         for (key, cornerRadius) in opts {
             switch key {
             case "topLeft" as String:
