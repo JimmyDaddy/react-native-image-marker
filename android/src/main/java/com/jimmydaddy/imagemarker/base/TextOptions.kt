@@ -125,10 +125,10 @@ data class TextOptions(val options: ReadableMap) {
       )
     } else {
       if (null != x) {
-        position.x = (Utils.parseSpreadValue(x, maxWidth.toFloat()) ?: margin) as Float
+        position.x = Utils.parseSpreadValue(x, maxWidth.toFloat())
       }
       if (null != y) {
-        position.y = (Utils.parseSpreadValue(y, maxHeight.toFloat()) ?: margin) as Float
+        position.y = Utils.parseSpreadValue(y, maxHeight.toFloat())
       }
     }
     val x = position.x
@@ -168,8 +168,6 @@ data class TextOptions(val options: ReadableMap) {
         canvas.drawRect(bgRect, paint)
       }
     }
-    canvas.restore()
-    canvas.save()
     val textX = when(textPaint.textAlign) {
       Paint.Align.RIGHT -> x + textWidth
       Paint.Align.CENTER -> x + textWidth / 2
