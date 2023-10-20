@@ -1,3 +1,12 @@
+
+
+## [1.1.8](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.1.7...v1.1.8) (2023-10-20)
+
+
+### Bug Fixes
+
+* fix android text rotation fix [#156](https://github.com/JimmyDaddy/react-native-image-marker/issues/156) ([21b0f1b](https://github.com/JimmyDaddy/react-native-image-marker/commit/21b0f1b69808f4e3d741bfe668ef357a05155adf))
+
 ## [1.1.7](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.1.6...v1.1.7) (2023-10-03)
 
 
