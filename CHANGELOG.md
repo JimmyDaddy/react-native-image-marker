@@ -2,6 +2,11 @@
 
 ## [1.1.9](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.1.8...v1.1.9) (2023-11-18)
 
+### Bug Fixes
+
+* fix [#158](https://github.com/JimmyDaddy/react-native-image-marker/issues/158) android release bug style not working ([82e0a9a](https://github.com/JimmyDaddy/react-native-image-marker/commit/a942e30732c61094abc1e95ca5003c883d1e4410))
+
+
 ## [1.1.8](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.1.7...v1.1.8) (2023-10-20)
 
 
