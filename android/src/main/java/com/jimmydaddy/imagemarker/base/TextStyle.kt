@@ -7,7 +7,7 @@ import com.jimmydaddy.imagemarker.base.Constants.DEFAULT_FONT_SIZE
 data class TextStyle(val options: ReadableMap?) {
   var color: String? = if (null != options!!.getString("color")) options.getString("color") else null
   var fontName: String? = if (null != options?.getString("fontName")) options.getString("fontName") else null
-  var fontSize: Int = if (options?.hasKey("fontSize") == true) options.getInt("fontSize") else DEFAULT_FONT_SIZE
+  var fontSize: Float = if (options?.hasKey("fontSize") == true) options.getDouble("fontSize").toFloat() else DEFAULT_FONT_SIZE
   var shadowLayerStyle: ShadowLayerStyle?
   var textBackgroundStyle: TextBackgroundStyle?
   var underline: Boolean = if (options?.hasKey("underline") == true) options.getBoolean("underline") else false

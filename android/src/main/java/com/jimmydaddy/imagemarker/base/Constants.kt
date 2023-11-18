@@ -1,7 +1,7 @@
 package com.jimmydaddy.imagemarker.base
 
 object Constants {
-  const val DEFAULT_FONT_SIZE = 14
+  const val DEFAULT_FONT_SIZE = 14f
   const val DEFAULT_MAX_SIZE = 2048
   const val DEFAULT_QUALITY = 100
 

@@ -14,7 +14,9 @@ data class TextBackgroundStyle(val readableMap: ReadableMap?): Padding(readableM
       try {
         type = readableMap.getString("type")
         setColor(readableMap.getString("color"))
-        cornerRadius = readableMap.getMap("cornerRadius")?.let { CornerRadius(it) }!!
+        if(readableMap.hasKey("cornerRadius")) {
+          cornerRadius = readableMap.getMap("cornerRadius")?.let { CornerRadius(it) }!!
+        }
       } catch (e: Exception) {
         Log.d(Utils.TAG, "Unknown text background options ", e)
       }

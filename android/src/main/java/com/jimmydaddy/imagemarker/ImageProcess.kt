@@ -2,6 +2,8 @@ package com.jimmydaddy.imagemarker
 
 import android.graphics.Bitmap
 import android.graphics.Matrix
+import android.util.Log
+import com.jimmydaddy.imagemarker.base.Constants.IMAGE_MARKER_TAG
 
 class ImageProcess {
   companion object {
@@ -28,6 +30,7 @@ class ImageProcess {
           scaledBitmap = Bitmap.createBitmap(bitmap, 0, 0, w, h, mtx, true)
         }
       }
+      Log.d(IMAGE_MARKER_TAG, "original width: " + w + " original height: " + h + " scaled width: " + scaledBitmap?.width + " scaled height: " + scaledBitmap?.height)
       return scaledBitmap
     }
   }

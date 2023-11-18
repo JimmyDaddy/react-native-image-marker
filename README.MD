@@ -5,12 +5,11 @@
     <a href="https://jimmydaddy.github.io/react-native-image-marker/"><h1 style="color: #424E6D">react native image marker</h1></a>
     <h6>Add text or icon watermarks to images</h6>
 </div>
-
 <div align="center">
 
-[![npm version](https://img.shields.io/npm/v/react-native-image-marker.svg?logo=npm)](https://www.npmjs.com/package/react-native-image-marker) [![npm](https://img.shields.io/npm/dm/react-native-image-marker?logo=npm)](https://www.npmjs.com/package/react-native-image-marker) [![stars](https://img.shields.io/github/stars/jimmydaddy/react-native-image-marker?style=social)](https://github.com/JimmyDaddy/react-native-image-marker) [![forks](https://img.shields.io/github/forks/jimmydaddy/react-native-image-marker?style=social)](https://github.com/JimmyDaddy/react-native-image-marker/fork)[![github](https://img.shields.io/badge/github-repo-blue?logo=github)](https://github.com/JimmyDaddy/react-native-image-marker) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?logo=github)](https://github.com/JimmyDaddy/react-native-image-marker/pulls) ![license](https://img.shields.io/npm/l/react-native-image-marker) 
-![platform-iOS](https://img.shields.io/badge/iOS-black?logo=Apple) ![platform-Android](https://img.shields.io/badge/Android-blue?logo=Android)
-
+  [![npm version](https://img.shields.io/npm/v/react-native-image-marker.svg?logo=npm)](https://www.npmjs.com/package/react-native-image-marker) [![npm](https://img.shields.io/npm/dm/react-native-image-marker?logo=npm)](https://www.npmjs.com/package/react-native-image-marker) [![stars](https://img.shields.io/github/stars/jimmydaddy/react-native-image-marker?style=social)](https://github.com/JimmyDaddy/react-native-image-marker) [![forks](https://img.shields.io/github/forks/jimmydaddy/react-native-image-marker?style=social)](https://github.com/JimmyDaddy/react-native-image-marker/fork)[![github](https://img.shields.io/badge/github-repo-blue?logo=github)](https://github.com/JimmyDaddy/react-native-image-marker) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?logo=github)](https://github.com/JimmyDaddy/react-native-image-marker/pulls) ![license](https://img.shields.io/npm/l/react-native-image-marker) 
+  ![platform-iOS](https://img.shields.io/badge/iOS-black?logo=Apple) ![platform-Android](https://img.shields.io/badge/Android-black?logo=Android)
+ *If this library is useful to you, pls give me a ⭐️. 🤩*
 </div>
 
 ## Features
@@ -50,9 +49,7 @@
 
 #### Sample
 
-
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/shadow_bg_fit.jpeg" width='150'>
-
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/shadow_bg_fit.jpeg" width='400'>
 
 #### Example
 
@@ -102,16 +99,13 @@ Marker.markText(options);
 
 #### API
 
-
 [TextBackgroundType.stretchX](https://jimmydaddy.github.io/react-native-image-marker/enums/TextBackgroundType.html#stretchX)
 
 #### Sample
 
-
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/shadow_bg_sx.jpeg" width='150'>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/shadow_bg_sx.jpeg" width='400'>
 
 #### Example
-
 
 ```typescript
 import Marker, { Position, TextBackgroundType } from "react-native-image-marker"
@@ -157,16 +151,13 @@ Marker.markText(options);
 
 #### API
 
-
 [TextBackgroundType.stretchY](https://jimmydaddy.github.io/react-native-image-marker/enums/TextBackgroundType.html#stretchY)
 
 #### Sample
 
-
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/shadow_bg_sy.jpeg" width='150'>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/shadow_bg_sy.jpeg" width='400'>
 
 #### Example
-
 
 ```typescript
 import Marker, { Position, TextBackgroundType } from "react-native-image-marker"
@@ -213,16 +204,13 @@ ImageMarker.markText(options);
 
 #### API
 
-
 [TextBackgroundType.cornerRadius](https://jimmydaddy.github.io/react-native-image-marker/enums/TextBackgroundType.html#cornerRadius)
 
 #### Sample
 
-
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/textbgcornerradius.png" width='150'>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/textbgcornerradius.png" width='400'>
 
 #### Example
-
 
 ```typescript
 import Marker, { Position } from "react-native-image-marker"
@@ -278,17 +266,13 @@ ImageMarker.markText(options);
 
 #### API
 
-
 [ShadowLayerStyle](https://jimmydaddy.github.io/react-native-image-marker/interfaces/ShadowLayerStyle.html)
 
 #### Sample
 
-
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/shadow.jpeg" width='150'>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/shadow.jpeg" width='400'>
 
 #### Example
-
-
 
 ```typescript
 import Marker, { Position, TextBackgroundType } from "react-native-image-marker"
@@ -330,17 +314,13 @@ Marker.markText(options);
 
 #### API
 
-
 [markImage](https://jimmydaddy.github.io/react-native-image-marker/classes/Marker.html#markImage)
 
 #### Sample
 
-
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/multipletexts.png" width='150'>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/multipletexts.png" width='400'>
 
 #### Example
-
-
 
 ```typescript
 import Marker, { Position, TextBackgroundType } from "react-native-image-marker"
@@ -387,16 +367,13 @@ Marker.markText({
 
 #### Sample
 
-
 <p>
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/rotatetexts_1.png" width='150'>
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/textswihoutbg.png" width='150'>
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/rotatetexts.png" width='150'>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/rotatetexts_1.png" width='300'>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/textswihoutbg.png" width='300'>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/rotatetexts.png" width='300'>
 </p>
 
 #### Example
-
-
 
 ```typescript
 import Marker, { Position, TextBackgroundType } from "react-native-image-marker"
@@ -450,12 +427,9 @@ Marker.markText({
 
 #### Sample
 
-
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/imagewatermark.png" width='150'>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/imagewatermark.png" width='400'>
 
 #### Example
-
-
 
 ```typescript
 import Marker, { Position, TextBackgroundType } from "react-native-image-marker"
@@ -475,21 +449,15 @@ Marker.markImage({
 
 ```
 
-
 ### Multiple icon watermarks
 
 > Note: ***require Android >= N, iOS >= iOS 13***
 
 #### Sample
 
-
-
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/multiple_icon_markers.png" width='150'>
-
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/multiple_icon_markers.png" width='400'>
 
 #### Example
-
-
 
 ```typescript
 import Marker, { Position, TextBackgroundType } from "react-native-image-marker"
@@ -523,14 +491,12 @@ Marker.markImage({
 
 #### Sample
 
-
 <p>
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/rotatebg.png" width='150'>
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/rotateimageicon.png" width='150'>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/rotatebg.png" width='400'>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/rotateimageicon.png" width='400'>
 </p>
 
 #### Example
-
 
 ```typescript
 import Marker, { Position, TextBackgroundType } from "react-native-image-marker"
@@ -603,12 +569,9 @@ Marker.markText({
 
 #### Sample
 
-
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/rotateicon.png" width='150'>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/rotateicon.png" width='400'>
 
 #### Example
-
-
 
 ```typescript
 import Marker, { Position, TextBackgroundType } from "react-native-image-marker"
@@ -632,12 +595,9 @@ Marker.markImage({
 
 #### Sample
 
-
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/alphabgonly.png" width='150'>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/alphabgonly.png" width='400'>
 
 #### Example
-
-
 
 ```typescript
 import Marker, { Position, TextBackgroundType } from "react-native-image-marker"
@@ -661,12 +621,9 @@ Marker.markImage({
 
 #### Sample
 
-
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/alphicononly.png" width='150'>
+ <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/alphicononly.png" width='400'>
 
 #### Example
-
-
 
 ```typescript
 import Marker, { Position, TextBackgroundType } from "react-native-image-marker"

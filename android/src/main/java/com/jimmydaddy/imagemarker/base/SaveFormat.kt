@@ -8,7 +8,8 @@ enum class SaveFormat(val value: String) {
       return when (format) {
         "jpg", "JPG", "JPEG", "jpeg" -> JPG
         "base64", "BASE64" -> BASE64
-        else -> PNG
+        "png", "PNG" -> PNG
+        else -> JPG
       }
     }
   }

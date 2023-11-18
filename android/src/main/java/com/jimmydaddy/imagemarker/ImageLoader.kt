@@ -10,10 +10,12 @@ import androidx.annotation.RequiresApi
 import com.facebook.common.references.CloseableReference
 import com.facebook.datasource.DataSource
 import com.facebook.drawee.backends.pipeline.Fresco
+import com.facebook.imagepipeline.common.ResizeOptions
 import com.facebook.imagepipeline.core.ImagePipelineConfig
 import com.facebook.imagepipeline.datasource.BaseBitmapDataSubscriber
 import com.facebook.imagepipeline.image.CloseableImage
 import com.facebook.imagepipeline.request.ImageRequest
+import com.facebook.imagepipeline.request.ImageRequestBuilder
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.modules.systeminfo.ReactNativeVersion
 import com.jimmydaddy.imagemarker.base.Constants.IMAGE_MARKER_TAG
@@ -31,6 +33,11 @@ import java.util.concurrent.Executors
 
 class ImageLoader(private val context: ReactApplicationContext, private val maxSize: Int) {
 
+  init {
+    if (maxSize > 0) {
+      setMaxBitmapSize(maxSize)
+    }
+  }
   private val resources: Resources
     get() = context.resources
 
@@ -39,18 +46,22 @@ class ImageLoader(private val context: ReactApplicationContext, private val maxS
     val deferredList = images.map { img ->
       async {
         try {
-          if (isFrescoImg(img.uri)) {
+          val isFrescoImg = isFrescoImg(img.uri)
+          Log.d(IMAGE_MARKER_TAG, "isFrescoImg: " + isFrescoImg(img.uri))
+          if (isFrescoImg) {
             val future = CompletableFuture<Bitmap?>()
-            val imageRequest = ImageRequest.fromUri(img.uri)
-            if (maxSize > 0) {
-              setMaxBitmapSize(maxSize)
+            var imageRequest = ImageRequest.fromUri(img.uri)
+            if (img.src != null && img.src.width > 0 && img.src.height > 0) {
+              val options: ResizeOptions? = ResizeOptions(img.src.width, img.src.height)
+              imageRequest = ImageRequestBuilder.fromRequest(imageRequest).setResizeOptions(options).build()
+              Log.d(IMAGE_MARKER_TAG, "src.width: " + img.src.width + " src.height: " + img.src.height)
             }
             val dataSource = Fresco.getImagePipeline().fetchDecodedImage(imageRequest, null)
             val executor: Executor = Executors.newSingleThreadExecutor()
             dataSource.subscribe(object : BaseBitmapDataSubscriber() {
               public override fun onNewResultImpl(bitmap: Bitmap?) {
                 if (bitmap != null) {
-                  val bg = Utils.scaleBitmap(bitmap, img.scale)
+                  val bg = ImageProcess.scaleBitmap(bitmap, img.scale)
                   future.complete(bg)
                 } else {
                   future.completeExceptionally(MarkerError(ErrorCode.LOAD_IMAGE_FAILED,
@@ -67,19 +78,20 @@ class ImageLoader(private val context: ReactApplicationContext, private val maxS
 
           } else {
             val resId = getDrawableResourceByName(img.uri)
+            Log.d(IMAGE_MARKER_TAG, "resId: $resId")
             if (resId == 0) {
               Log.d(IMAGE_MARKER_TAG, "cannot find res")
               throw MarkerError(ErrorCode.GET_RESOURCE_FAILED, "Can't get resource by the path: ${img.uri}")
             } else {
-              Log.d(IMAGE_MARKER_TAG, "res：$resId")
               val r = resources
-              //                    InputStream is = r.openRawResource(resId);
-              val bitmap = BitmapFactory.decodeResource(r, resId)
-              //                    Bitmap bitmap = BitmapFactory.decodeStream(is);
+              Log.d(IMAGE_MARKER_TAG, "src.width: " + img.src.width + " src.height: " + img.src.height)
+              val originalBitMap = BitmapFactory.decodeResource(r, resId)
+              var bitmap = originalBitMap
+              if (img.src != null && img.src.width > 0 && img.src.height > 0) {
+                bitmap = Bitmap.createScaledBitmap(originalBitMap, img.src.width, img.src.height, true);
+              }
               Log.d(IMAGE_MARKER_TAG, bitmap!!.height.toString() + "")
-              val bg = Utils.scaleBitmap(
-                bitmap, img.scale
-              )
+              val bg = ImageProcess.scaleBitmap(bitmap, img.scale)
               Log.d(IMAGE_MARKER_TAG, bg!!.height.toString() + "")
               if (!bitmap.isRecycled && img.scale != 1f) {
                 bitmap.recycle()

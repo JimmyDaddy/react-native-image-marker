@@ -10,6 +10,7 @@ import android.os.Build
 import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
+import android.util.Log
 import android.util.TypedValue
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableMap
@@ -65,11 +66,12 @@ data class TextOptions(val options: ReadableMap) {
     }
     val textSize = TypedValue.applyDimension(
       TypedValue.COMPLEX_UNIT_SP,
-      style.fontSize.toFloat(),
+      style.fontSize,
       context.resources.displayMetrics
     )
     textPaint.isAntiAlias = true
     textPaint.textSize = textSize
+    Log.i(Constants.IMAGE_MARKER_TAG, "textSize: " + textSize + " fontSize: " + style.fontSize + " displayMetrics: " + context.resources.displayMetrics)
     textPaint.color = Color.parseColor(Utils.transRGBColor(style.color))
     textPaint.isUnderlineText = style.underline
     textPaint.textSkewX = style.skewX!!

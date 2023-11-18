@@ -10,8 +10,10 @@
   },
   "dependencies": {
     "@expo/react-native-action-sheet": "^4.0.1",
+    "filesize": "^10.1.0",
     "react": "18.2.0",
     "react-native": "0.71.11",
+    "react-native-blob-util": "^0.19.2",
     "react-native-image-picker": "^5.6.0",
     "react-native-reanimated-table": "^0.0.2",
     "react-native-toast-message": "^2.1.6"

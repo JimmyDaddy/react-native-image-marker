@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
@@ -24,6 +25,8 @@ import {
   useActionSheet,
 } from '@expo/react-native-action-sheet';
 import Toast from 'react-native-toast-message';
+import RNBlobUtil from 'react-native-blob-util';
+import filesize from 'filesize';
 
 const icon = require('./icon.jpeg');
 const icon1 = require('./yahaha.jpeg');
@@ -91,6 +94,7 @@ const s = StyleSheet.create({
     backgroundColor: '#ffA',
     borderColor: '#00B96B5A',
     borderWidth: 1,
+    padding: 0,
   },
   loading: {
     position: 'absolute',
@@ -114,12 +118,13 @@ const s = StyleSheet.create({
     padding: 10,
   },
   shortTextInput: {
-    width: 20,
+    width: 30,
     height: 30,
     backgroundColor: '#ffA',
     borderColor: '#00B96B5A',
     borderWidth: 1,
     textAlign: 'center',
+    padding: 0,
   },
   label: {
     marginRight: 2,
@@ -138,14 +143,25 @@ function RowSplit(props: any) {
 }
 
 function ImageOptions(props: {
-  alpha: any;
-  scale: any;
-  rotate: any;
-  setAlpha: (alpha: any) => void;
-  setScale: (scale: any) => void;
-  setRotate: (rotate: any) => void;
+  alpha: number;
+  scale: number;
+  rotate: number;
+  quality: number;
+  setAlpha: (alpha: number) => void;
+  setScale: (scale: number) => void;
+  setRotate: (rotate: number) => void;
+  setQuality: (quality: number) => void;
 }) {
-  const { alpha, scale, rotate, setAlpha, setScale, setRotate } = props;
+  const {
+    alpha,
+    scale,
+    rotate,
+    quality,
+    setAlpha,
+    setScale,
+    setRotate,
+    setQuality,
+  } = props;
   return (
     <View style={s.row}>
       <Text style={s.label}>scale:</Text>
@@ -199,6 +215,23 @@ function ImageOptions(props: {
           setRotate(value);
         }}
       />
+      <Text style={s.label}>quality:</Text>
+      <TextInput
+        style={s.shortTextInput}
+        defaultValue={String(quality)}
+        onChangeText={(v) => {
+          const value = Number(v);
+          if (value < 0 || value > 100) {
+            Toast.show({
+              type: 'error',
+              text1: 'quality range error',
+              text2: 'quality must be between 0 and 100',
+            });
+            return;
+          }
+          setQuality(value);
+        }}
+      />
     </View>
   );
 }
@@ -242,6 +275,9 @@ function useViewModel() {
   const [watermarkScale, setWatermarkScale] = useState(1);
   const [watermarkRotate, setWatermarkRotate] = useState(0);
   const [watermarkAlpha, setWatermarkAlpha] = useState(1);
+  const [quality, setQuality] = useState(100);
+  const [fileSize, setFileSize] = useState('0');
+  const [fontSize, setFontSize] = useState(44);
 
   function showBackgroundFormatSelector() {
     const options = ['normal image', 'base64', 'cancel'];
@@ -252,6 +288,7 @@ function useViewModel() {
         options,
         title: 'select background format',
         cancelButtonIndex,
+        useModal: true,
       },
       (buttonIndex) => {
         if (buttonIndex === cancelButtonIndex || buttonIndex == null) return;
@@ -269,6 +306,7 @@ function useViewModel() {
         options,
         title: 'select watermark type',
         cancelButtonIndex,
+        useModal: true,
       },
       (buttonIndex) => {
         if (buttonIndex === cancelButtonIndex || buttonIndex == null) return;
@@ -291,6 +329,7 @@ function useViewModel() {
         options,
         title: 'select export result format type',
         cancelButtonIndex,
+        useModal: true,
       },
       (buttonIndex) => {
         if (buttonIndex === cancelButtonIndex || buttonIndex == null) return;
@@ -317,6 +356,7 @@ function useViewModel() {
         options,
         title: 'select export result format type',
         cancelButtonIndex,
+        useModal: true,
       },
       (buttonIndex) => {
         if (buttonIndex === cancelButtonIndex || buttonIndex == null) return;
@@ -341,6 +381,7 @@ function useViewModel() {
         options,
         title: 'select text bg stretch type',
         cancelButtonIndex,
+        useModal: true,
       },
       (buttonIndex) => {
         if (buttonIndex === cancelButtonIndex || buttonIndex == null) return;
@@ -360,6 +401,7 @@ function useViewModel() {
         options,
         title: 'select text align type',
         cancelButtonIndex,
+        useModal: true,
       },
       (buttonIndex) => {
         if (buttonIndex === cancelButtonIndex || buttonIndex == null) return;
@@ -404,7 +446,7 @@ function useViewModel() {
           watermarkPositions: {
             position,
           },
-          quality: 100,
+          quality,
           saveFormat: saveFormat,
           watermarkImages: [
             {
@@ -444,7 +486,7 @@ function useViewModel() {
               style: {
                 color: '#FF0000AA',
                 fontName: 'Arial',
-                fontSize: 20,
+                fontSize,
                 underline,
                 bold,
                 italic,
@@ -478,8 +520,8 @@ function useViewModel() {
               },
               style: {
                 color: '#FF00AA9F',
-                fontName: 'STSongti-SC-Regular',
-                fontSize: 44,
+                fontName: 'NotoSansSC-Regular',
+                fontSize,
                 underline,
                 bold,
                 italic,
@@ -514,7 +556,7 @@ function useViewModel() {
               },
             },
           ],
-          quality: 100,
+          quality,
           saveFormat: saveFormat,
         });
       }
@@ -527,6 +569,8 @@ function useViewModel() {
       );
       setLoading(false);
       setShow(true);
+      const stat = await RNBlobUtil.fs.stat(path);
+      setFileSize(filesize.filesize(stat.size));
     } catch (err) {
       console.log('====================================');
       console.log(err, 'err');
@@ -569,7 +613,7 @@ function useViewModel() {
               position: { X: 200, Y: 100 },
             },
           ],
-          quality: 100,
+          quality,
           saveFormat: saveFormat,
         });
       } else {
@@ -591,8 +635,8 @@ function useViewModel() {
                 underline,
                 strikeThrough,
                 color: '#FF0',
-                fontName: 'STSongti-SC-Regular',
-                fontSize: 44,
+                fontName: 'NotoSansSC-Regular',
+                fontSize,
                 bold,
                 italic,
                 textAlign: textAlign,
@@ -627,7 +671,7 @@ function useViewModel() {
                 bold: true,
                 italic: true,
                 color: '#FF0',
-                fontSize: 44,
+                fontSize,
                 textAlign: textAlign,
                 rotate: textRotate,
                 shadowStyle: useTextShadow
@@ -650,7 +694,7 @@ function useViewModel() {
               },
             },
           ],
-          quality: 100,
+          quality,
           saveFormat: saveFormat,
         });
       }
@@ -663,6 +707,8 @@ function useViewModel() {
       );
       setShow(true);
       setLoading(false);
+      const stat = await RNBlobUtil.fs.stat(path);
+      setFileSize(filesize.filesize(stat.size));
     } catch (error) {
       console.log('====================================');
       console.log(error, 'error');
@@ -725,6 +771,9 @@ function useViewModel() {
       textOptionsVisible,
       textAlign,
       textRotate,
+      quality,
+      fileSize,
+      fontSize,
     },
     setLoading,
     setImage,
@@ -760,6 +809,8 @@ function useViewModel() {
     setTextAlign,
     setTextRotate,
     showTextAlignSelector,
+    setQuality,
+    setFontSize,
   };
 }
 
@@ -791,6 +842,8 @@ function App() {
     setTextOptionsVisible,
     showTextAlignSelector,
     setTextRotate,
+    setQuality,
+    setFontSize,
   } = useViewModel();
   return (
     <View style={{ flex: 1 }}>
@@ -838,15 +891,23 @@ function App() {
         </View>
         <View style={s.op}>
           <View style={s.row}>
-            <RowSplit>
+            <RowSplit
+              style={{
+                flex: 1,
+              }}
+            >
               <TouchableOpacity
                 style={[s.btn, { backgroundColor: '#2296F3' }]}
                 onPress={() => pickImage('image')}
               >
-                <Text style={s.text}>select background</Text>
+                <Text style={s.text}>select bg</Text>
               </TouchableOpacity>
             </RowSplit>
-            <RowSplit>
+            <RowSplit
+              style={{
+                flex: 3,
+              }}
+            >
               <ImageOptions
                 rotate={state.backgroundRotate}
                 scale={state.backgroundScale}
@@ -854,13 +915,19 @@ function App() {
                 setAlpha={setBackgroundAlpha}
                 setRotate={setBackgroundRotate}
                 setScale={setBackgroundScale}
+                quality={state.quality}
+                setQuality={setQuality}
               />
             </RowSplit>
           </View>
           <View style={s.row}>
             {state.waterMarkType === 'image' ? (
               <View style={s.row}>
-                <RowSplit>
+                <RowSplit
+                  style={{
+                    flex: 1,
+                  }}
+                >
                   <TouchableOpacity
                     style={[s.btn, { backgroundColor: '#2296F3' }]}
                     onPress={() => pickImage('mark')}
@@ -868,7 +935,11 @@ function App() {
                     <Text style={s.text}>select watermark icon</Text>
                   </TouchableOpacity>
                 </RowSplit>
-                <RowSplit>
+                <RowSplit
+                  style={{
+                    flex: 3,
+                  }}
+                >
                   <ImageOptions
                     rotate={state.watermarkRotate}
                     scale={state.watermarkScale}
@@ -876,21 +947,40 @@ function App() {
                     setAlpha={setWatermarkAlpha}
                     setRotate={setWatermarkRotate}
                     setScale={setWatermarkScale}
+                    quality={state.quality}
+                    setQuality={setQuality}
                   />
                 </RowSplit>
               </View>
             ) : (
               <View style={s.row}>
-                <RowSplit>
+                <RowSplit style={{ flex: 1 }}>
                   <Text style={s.label}>text watermark:</Text>
                 </RowSplit>
-                <RowSplit>
+                <RowSplit style={{ flex: 3 }}>
                   <TextInput
                     placeholder="input text for watermark"
                     style={s.textInput}
                     onChangeText={setText}
                     value={state.text}
                     multiline
+                  />
+                  <Text style={s.label}> fontSize:</Text>
+                  <TextInput
+                    style={s.shortTextInput}
+                    defaultValue={String(state.fontSize)}
+                    onChangeText={(v) => {
+                      const value = Number(v);
+                      if (value <= 0) {
+                        Toast.show({
+                          type: 'error',
+                          text1: 'fontSize range error',
+                          text2: 'fontSize must be greater than 0',
+                        });
+                        return;
+                      }
+                      setFontSize(value);
+                    }}
                   />
                   <TouchableOpacity
                     style={[s.btn, { marginLeft: 5 }]}
@@ -906,7 +996,7 @@ function App() {
         <View style={s.op}>
           <View style={s.row}>
             <RowSplit>
-              <Text style={s.label}>with given position:</Text>
+              <Text style={s.label}>given position:</Text>
             </RowSplit>
             <RowSplit>
               <TouchableOpacity style={s.btn} onPress={showPositionSelector}>
@@ -916,7 +1006,7 @@ function App() {
           </View>
           <View style={s.row}>
             <RowSplit>
-              <Text style={s.label}>with custom x/y:</Text>
+              <Text style={s.label}>custom x/y:</Text>
             </RowSplit>
             <RowSplit>
               <Text style={[s.label, { marginLeft: 5 }]}>X: </Text>
@@ -1055,6 +1145,9 @@ function App() {
                     }}
                   />
                 </RowSplit>
+                {/* <RowSplit>
+                  
+                </RowSplit> */}
                 <TouchableOpacity
                   style={[s.btn, { height: 40 }]}
                   onPress={() => {
@@ -1068,6 +1161,9 @@ function App() {
           </View>
         </Modal>
         <View style={{ flex: 1 }}>
+          <Text style={{ marginBottom: 8 }}>
+            result file size: {state.fileSize}
+          </Text>
           {state.show ? (
             <Image
               source={{ uri: state.uri }}

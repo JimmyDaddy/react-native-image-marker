@@ -329,9 +329,11 @@ PODS:
   - React-jsinspector (0.71.11)
   - React-logger (0.71.11):
     - glog
-  - react-native-image-marker (1.1.5):
+  - react-native-blob-util (0.19.2):
     - React-Core
-  - react-native-image-picker (5.7.0):
+  - react-native-image-marker (1.1.8):
+    - React-Core
+  - react-native-image-picker (5.6.1):
     - React-Core
   - React-perflogger (0.71.11)
   - React-RCTActionSheet (0.71.11):
@@ -468,6 +470,7 @@ DEPENDENCIES:
   - React-jsiexecutor (from `../node_modules/react-native/ReactCommon/jsiexecutor`)
   - React-jsinspector (from `../node_modules/react-native/ReactCommon/jsinspector`)
   - React-logger (from `../node_modules/react-native/ReactCommon/logger`)
+  - react-native-blob-util (from `../node_modules/react-native-blob-util`)
   - react-native-image-marker (from `../..`)
   - react-native-image-picker (from `../node_modules/react-native-image-picker`)
   - React-perflogger (from `../node_modules/react-native/ReactCommon/reactperflogger`)
@@ -544,6 +547,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/jsinspector"
   React-logger:
     :path: "../node_modules/react-native/ReactCommon/logger"
+  react-native-blob-util:
+    :path: "../node_modules/react-native-blob-util"
   react-native-image-marker:
     :path: "../.."
   react-native-image-picker:
@@ -611,8 +616,9 @@ SPEC CHECKSUMS:
   React-jsiexecutor: 18b5b33c5f2687a784a61bc8176611b73524ae77
   React-jsinspector: b6ed4cb3ffa27a041cd440300503dc512b761450
   React-logger: 186dd536128ae5924bc38ed70932c00aa740cd5b
-  react-native-image-marker: 1893342219275cd4448f32b504f9d2f9dc308213
-  react-native-image-picker: 3269f75c251cdcd61ab51b911dd30d6fff8c6169
+  react-native-blob-util: c74e4ce87c76d244761c68623df78bf0d1638271
+  react-native-image-marker: c30f34263f1868b8bdac7ad770be6fb6c6ce9f86
+  react-native-image-picker: 5fcac5a5ffcb3737837f0617d43fd767249290de
   React-perflogger: e706562ab7eb8eb590aa83a224d26fa13963d7f2
   React-RCTActionSheet: 57d4bd98122f557479a3359ad5dad8e109e20c5a
   React-RCTAnimation: ccf3ef00101ea74bda73a045d79a658b36728a60
@@ -632,4 +638,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: 20401a73c6b88dc06e028faa4ab5ae1c07ac8fa7
 
-COCOAPODS: 1.10.1
+COCOAPODS: 1.12.1
