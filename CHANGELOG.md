@@ -1,5 +1,7 @@
 
 
+## [1.1.9](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.1.8...v1.1.9) (2023-11-18)
+
 ## [1.1.8](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.1.7...v1.1.8) (2023-10-20)
 
 
