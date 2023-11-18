@@ -10,7 +10,7 @@ import com.jimmydaddy.imagemarker.base.Constants.DEFAULT_ROTATE
 import com.jimmydaddy.imagemarker.base.Constants.DEFAULT_SCALE
 
 class ImageOptions(val options: ReadableMap) {
-  var src: ReadableMap? = options.getMap("src")
+  var src: RNImageSRC
 
   var uri: String?
 
@@ -20,10 +20,12 @@ class ImageOptions(val options: ReadableMap) {
   private var alpha: Int
 
   init {
-    if (src == null) {
+    if (!options.hasKey("src")) {
       throw MarkerError(ErrorCode.PARAMS_REQUIRED, "image is required")
     }
-    uri = src!!.getString(PROP_ICON_URI)
+    var originalSRC = options.getMap("src")
+    src = RNImageSRC(originalSRC)
+    uri = originalSRC!!.getString(PROP_ICON_URI)
     scale = if (options.hasKey("scale")) options.getDouble("scale").toFloat() else DEFAULT_SCALE
     rotate = if (options.hasKey("rotate")) options.getInt("rotate").toFloat() else DEFAULT_ROTATE
     alpha = if (options.hasKey("alpha")) (options.getDouble("alpha") * 255).toInt() else DEFAULT_ALPHA

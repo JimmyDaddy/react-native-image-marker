@@ -597,10 +597,10 @@ export interface TextMarkOptions {
    **/
   watermarkTexts: TextOptions[];
   /**
-   * @description image quality `0-1`
-   * @defaultValue 1
+   * @description image quality `0-100`, `100` is best quality. If you want the quality to have more effect, try to set the image export format to the compressible format `jpg`. see #159
+   * @defaultValue 100
    * @example
-   * quality: 1
+   * quality: 100
    */
   quality?: number;
   /**
@@ -613,7 +613,7 @@ export interface TextMarkOptions {
    * @description save image format
    * @defaultValue `jpg`
    * @example
-   * saveFormat: ImageFormat.jpg
+   * saveFormat: ImageFormat.png
    */
   saveFormat?: ImageFormat;
   /**
