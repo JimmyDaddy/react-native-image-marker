@@ -9,33 +9,34 @@ import Foundation
 import UIKit
 import CoreFoundation
 import React
+import CoreGraphics
 
 extension RCTConvert {
     static func CGSize(_ json: Any, offset: Int) -> CGSize {
         let arr = self.nsArray(json)
         if arr!.count < offset + 2 {
             NSLog("Too few elements in array (expected at least %zd): %@", 2 + offset, arr!)
-            return CoreFoundation.CGSize.zero
+            return CoreGraphics.CGSize.zero
         }
-        return CoreFoundation.CGSize(width: self.cgFloat(arr![offset]), height: self.cgFloat(arr![offset + 1]))
+        return CoreGraphics.CGSize(width: self.cgFloat(arr![offset]), height: self.cgFloat(arr![offset + 1]))
     }
 
     static func CGPoint(_ json: Any, offset: Int) -> CGPoint {
         let arr = self.nsArray(json)
         if arr!.count < offset + 2 {
             NSLog("Too few elements in array (expected at least %zd): %@", 2 + offset, arr!)
-            return CoreFoundation.CGPoint.zero
+            return CoreGraphics.CGPoint.zero
         }
-        return CoreFoundation.CGPoint(x: self.cgFloat(arr?[offset]), y: self.cgFloat(arr![offset + 1]))
+        return CoreGraphics.CGPoint(x: self.cgFloat(arr?[offset]), y: self.cgFloat(arr![offset + 1]))
     }
 
     static func CGRect(_ json: Any, offset: Int) -> CGRect {
         let arr = self.nsArray(json)
         if arr!.count < offset + 4 {
             NSLog("Too few elements in array (expected at least %zd): %@", 4 + offset, arr!)
-            return CoreFoundation.CGRect.zero
+            return CoreGraphics.CGRect.zero
         }
-        return CoreFoundation.CGRect(x: self.cgFloat(arr![offset]), y: self.cgFloat(arr![offset + 1]), width: self.cgFloat(arr![offset + 2]), height: self.cgFloat(arr![offset + 3]))
+        return CoreGraphics.CGRect(x: self.cgFloat(arr![offset]), y: self.cgFloat(arr![offset + 1]), width: self.cgFloat(arr![offset + 2]), height: self.cgFloat(arr![offset + 3]))
     }
 
     static func CGColor(_ json: Any, offset: Int) -> CGColor? {
