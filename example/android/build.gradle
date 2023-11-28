@@ -13,6 +13,11 @@ buildscript {
     repositories {
         google()
         mavenCentral()
+        jcenter()
+        maven { url 'https://dl.google.com/dl/android/maven2' }
+        maven { url "https://repository.jboss.org/maven2" }
+        maven { url 'https://maven.google.com' }
+        maven { url 'https://maven.fabric.io/public' }
     }
     dependencies {
         classpath('com.android.tools.build:gradle:7.4.2')

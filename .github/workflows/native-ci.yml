@@ -1,0 +1,243 @@
+name: Native Build and Test
+on: 
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'example/**'
+      - 'android/**'
+      - 'ios/**'
+      - 'src/**'
+      - 'assets/**'
+      - 'package.json'
+      - 'react-native-image-marker.podspec'
+
+  workflow_dispatch:
+
+jobs:
+  install-dep:
+    runs-on: macos-latest
+    name: Install dependencies
+    steps:
+    - name: Checkout the code
+      uses: actions/checkout@v4
+
+    - uses: actions/cache@v3
+      name: Cache node_modules
+      id: cache-node-modules
+      with:
+        path: |
+          node_modules
+          example/node_modules
+        key: ${{ runner.os }}-nodeModules-${{ hashFiles('package.json') }}-${{ hashFiles('example/package.json') }}
+
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 2.7
+        bundler-cache: true
+    - name: Setup node 16
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+
+    - name: Install npm dependencies
+      if: steps.cache-node-modules.outputs.cache-hit != 'true'
+      run: |
+        ls
+        pwd
+        npm install
+        cd example
+        ls
+        pwd
+        npm install
+
+  android-build:
+    runs-on: macos-latest
+    name: Android Build
+    needs: install-dep
+    steps:
+    - name: Checkout the code
+      uses: actions/checkout@v4
+
+    - uses: actions/cache@v3
+      name: Cache node_modules
+      id: cache-node-modules
+      with:
+        path: |
+          node_modules
+          example/node_modules
+        fail-on-cache-miss: true
+        key: ${{ runner.os }}-nodeModules-${{ hashFiles('package.json') }}-${{ hashFiles('example/package.json') }}
+
+    - uses: actions/cache@v3
+      id: cache-gradle
+      name: Cache Gradle dependencies
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('example/android/gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('android/src/**/*.kt') }}
+
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 2.7
+        bundler-cache: true
+
+    - name: Setup node 16
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+
+    - name: Set up JDK
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-version: 11
+  
+    - name: Install Gradle dependencies
+      if: steps.cache-gradle.outputs.cache-hit != 'true'
+      run: |
+        cd example/android
+        ./gradlew build --stacktrace
+
+    - name: Run unit tests
+      run: | 
+        cd example/android
+        ./gradlew test --stacktrace
+
+    - name: Build APK
+      run: |
+        npm run prepack
+        cd example/android
+        ./gradlew assembleRelease
+        mv app/build/outputs/apk/release/app-release.apk app-release-${{ github.sha }}.apk
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v3
+      with:
+        name: app-release-${{ github.sha }}.apk
+        path:  ${{ github.workspace }}/example/android/app-release-${{ github.sha }}.apk
+
+  android-test:
+    runs-on: macos-latest
+    needs: android-build
+    strategy:
+      matrix:
+        api-level: [24, 25, 29, 30, 31]
+        target: [default]
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v4
+
+      - uses: actions/cache@v3
+        name: Cache node_modules
+        id: cache-node-modules
+        with:
+          path: |
+            node_modules
+            example/node_modules
+          fail-on-cache-miss: true
+          key: ${{ runner.os }}-nodeModules-${{ hashFiles('package.json') }}-${{ hashFiles('example/package.json') }}
+
+      - uses: actions/cache@v3
+        name: Cache Gradle dependencies
+        id: cache-gradle
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          fail-on-cache-miss: true
+          key: ${{ runner.os }}-gradle-${{ hashFiles('example/android/gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('android/src/**/*.kt') }}
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.7
+          bundler-cache: true
+
+      - name: Setup node 16
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: 11
+
+      - name: Instrumentation Tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          target: ${{ matrix.target }}
+          arch: x86_64
+          profile: Nexus 6
+          script: |
+            cd example/android && ./gradlew connectedCheck  --stacktrace
+
+      - name: Upload Reports
+        uses: actions/upload-artifact@v2
+        with:
+          name: Test-Reports
+          path:  ${{ github.workspace }}/example/android/app/build/reports
+        if: always()
+
+  ios-build-test:
+    runs-on: macos-latest
+    needs: install-dep
+    strategy:
+      matrix:
+        cocoapods: ['1.10.1', '1.11.0', '1.14.3']
+    steps:
+    - name: Checkout the code
+      uses: actions/checkout@v4
+
+    - uses: actions/cache@v3
+      name: Cache node_modules
+      id: cache-node-modules
+      with:
+        path: |
+          node_modules
+          example/node_modules
+        key: ${{ runner.os }}-nodeModules-${{ hashFiles('package.json') }}-${{ hashFiles('example/package.json') }}
+        fail-on-cache-miss: true
+  
+    - name: Cache Pods
+      id: cache-pods
+      uses: actions/cache@v3
+      with:
+        path: example/ios/Pods
+        key: ${{ runner.os }}-pods-${{ matrix.cocoapods }}-${{ hashFiles('**/Podfile.lock') }}
+
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 2.7
+        bundler-cache: true
+    - name: Install Cocoapods
+      run: gem install cocoapods -v ${{ matrix.cocoapods }}
+    - name: Setup node 16
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+
+    - name: Install Pods
+      if: steps.cache-pods.outputs.cache-hit != 'true'
+      run: |
+        cd example/ios
+        pod cache clean --all
+        pod install
+
+    - name: Install xcpretty
+      run: gem install xcpretty
+
+    - name: Build
+      run: | 
+        cd example/ios
+        xcodebuild -workspace ImageMarkerExample.xcworkspace -scheme ImageMarkerExample -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 12' | xcpretty
+    - name: Test
+      run: | 
+        cd example/ios
+        xcodebuild -workspace ImageMarkerExample.xcworkspace -scheme ImageMarkerExample -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 12' test | xcpretty
