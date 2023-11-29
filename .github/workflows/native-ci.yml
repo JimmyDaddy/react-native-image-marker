@@ -1,4 +1,4 @@
-name: Native Build and Test
+name: Build and Test
 on: 
   pull_request:
     types: [opened, synchronize, reopened]
@@ -10,10 +10,10 @@ on:
       - 'assets/**'
       - 'package.json'
       - 'react-native-image-marker.podspec'
-
   workflow_dispatch:
 
 jobs:
+
   install-dep:
     runs-on: macos-latest
     name: Install dependencies
@@ -122,6 +122,7 @@ jobs:
   android-test:
     runs-on: macos-latest
     needs: android-build
+    name: Android Test
     strategy:
       matrix:
         api-level: [24, 25, 29, 30, 31]
@@ -178,7 +179,7 @@ jobs:
             cd example/android && ./gradlew connectedCheck  --stacktrace
 
       - name: Upload Reports
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Test-Reports
           path:  ${{ github.workspace }}/example/android/app/build/reports
@@ -187,6 +188,7 @@ jobs:
   ios-build-test:
     runs-on: macos-latest
     needs: install-dep
+    name: iOS Build and Test
     strategy:
       matrix:
         cocoapods: ['1.10.1', '1.11.0', '1.14.3']
@@ -241,3 +243,14 @@ jobs:
       run: | 
         cd example/ios
         xcodebuild -workspace ImageMarkerExample.xcworkspace -scheme ImageMarkerExample -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 12' test | xcpretty
+
+  native-ci-complete:
+    name: Complete CI
+    needs: [android-build, android-test, ios-build-test]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check all job status
+        if: >-
+          ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped') }}
+        run: exit 1
