@@ -244,7 +244,7 @@ jobs:
         cd example/ios
         xcodebuild -workspace ImageMarkerExample.xcworkspace -scheme ImageMarkerExample -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 12' test | xcpretty
 
-  native-ci-complete:
+  ci-complete:
     name: Complete CI
     needs: [android-build, android-test, ios-build-test]
     if: ${{ always() }}
