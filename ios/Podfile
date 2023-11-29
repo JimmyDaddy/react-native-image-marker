@@ -43,7 +43,7 @@ target 'ImageMarkerExample' do
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
-  target 'ImageMarkerExampleTests' do
+  target 'ImageMarkerExampleUITests' do
     inherit! :complete
     # Pods for testing
   end

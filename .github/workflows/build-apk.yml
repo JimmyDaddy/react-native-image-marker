@@ -1,9 +1,6 @@
 name: Build Android APK
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
@@ -29,7 +26,6 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v2
 
-
       - name: Install dependencies
         run: |
           npm install
@@ -42,9 +38,6 @@ jobs:
           cd example/android
           ./gradlew assembleRelease
           mv app/build/outputs/apk/release/app-release.apk app-release-${{ github.sha }}.apk
-          ls
-          pwd
-          echo ${{ github.workspace }}
 
       - name: Upload APK
         uses: actions/upload-artifact@v3

@@ -25,7 +25,7 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         let images = try await withThrowingTaskGroup(of: (Int, UIImage).self) { group in
             for (index, img) in imageOptions.enumerated() {
                 group.addTask {
-                    try await withUnsafeThrowingContinuation { continuation in
+                    try await withUnsafeThrowingContinuation { continuation -> Void in
                         if Utils.isBase64(img.uri) {
                             if let image = UIImage.transBase64(img.uri) {
                                 continuation.resume(returning: (index, image))
