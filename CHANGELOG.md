@@ -1,5 +1,12 @@
 
 
+## [1.1.10](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.1.8...v1.1.10) (2023-11-29)
+
+
+### Bug Fixes
+
+* fix  [#164](https://github.com/JimmyDaddy/react-native-image-marker/issues/164) Build Failure on CI Due to CocoaPods 1.1.9 in iOS Project ([d1758e5](https://github.com/JimmyDaddy/react-native-image-marker/commit/d1758e528befba9a9d125bad3c9c1b182865c1a5))
+
 ## [1.1.9](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.1.8...v1.1.9) (2023-11-18)
 
 ### Bug Fixes
