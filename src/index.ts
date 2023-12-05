@@ -159,8 +159,8 @@ interface Padding {
  * }
  * // or
  * positionOptions: {
- *  X: '10%',
- *  Y: '10%',
+ *  X: '10%', // relative to the width of the background image
+ *  Y: '10%', // relative to the width of the background image
  * }
  */
 export interface PositionOptions {

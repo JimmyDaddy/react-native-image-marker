@@ -10,6 +10,7 @@ on:
       - 'assets/**'
       - 'package.json'
       - 'react-native-image-marker.podspec'
+      - '*.MD'
   workflow_dispatch:
 
 jobs:
