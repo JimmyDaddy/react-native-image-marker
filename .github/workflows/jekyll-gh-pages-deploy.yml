@@ -1,11 +1,13 @@
 name: Deploy Jekyll with GitHub Pages
 
 on:
-  # Runs on pushes targeting the default branch
-  push:
-    branches: ["master"]
+  pull_request:
+    types: [closed]
     paths:
-      - "docs/**"
+      - "src/**"
+      - "assets/**"
+      - "README.MD"
+      - "README.0.9.2.MD"
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -27,9 +29,20 @@ jobs:
   # Build job
   build:
     runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 16
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build docs
+        run: npm run docs
+
       - name: Setup Pages
         uses: actions/configure-pages@v3
       - name: Build with Jekyll

@@ -1,0 +1,13 @@
+{
+  "default": true,
+  "MD003": { "style": "atx" },
+  "MD007": { "indent": 2 },
+  "no-hard-tabs": false,
+  "no-inline-html": false,
+  "first-line-h1": false,
+  "no-duplicate-heading": {
+    "siblings_only": true
+  },
+  "no-alt-text": false,
+  "line-length": false
+}

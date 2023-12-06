@@ -7,11 +7,22 @@
 </div>
 <div align="center">
 
-  [![npm version](https://img.shields.io/npm/v/react-native-image-marker.svg?logo=npm)](https://www.npmjs.com/package/react-native-image-marker) [![npm](https://img.shields.io/npm/dm/react-native-image-marker?logo=npm)](https://www.npmjs.com/package/react-native-image-marker) [![stars](https://img.shields.io/github/stars/jimmydaddy/react-native-image-marker?style=social)](https://github.com/JimmyDaddy/react-native-image-marker) [![forks](https://img.shields.io/github/forks/jimmydaddy/react-native-image-marker?style=social)](https://github.com/JimmyDaddy/react-native-image-marker/fork)[![github](https://img.shields.io/badge/github-repo-blue?logo=github)](https://github.com/JimmyDaddy/react-native-image-marker) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?logo=github)](https://github.com/JimmyDaddy/react-native-image-marker/pulls) ![license](https://img.shields.io/npm/l/react-native-image-marker) 
-  ![platform-iOS](https://img.shields.io/badge/iOS-black?logo=Apple) ![platform-Android](https://img.shields.io/badge/Android-black?logo=Android) [![Native Build and Test](https://github.com/JimmyDaddy/react-native-image-marker/actions/workflows/native-ci.yml/badge.svg)](https://github.com/JimmyDaddy/react-native-image-marker/actions/workflows/native-ci.yml)
+  [![npm version](https://img.shields.io/npm/v/react-native-image-marker.svg?logo=npm)](https://www.npmjs.com/package/react-native-image-marker) 
+  [![npm](https://img.shields.io/npm/dm/react-native-image-marker?logo=npm)](https://www.npmjs.com/package/react-native-image-marker) [![npm](https://img.shields.io/npm/dt/react-native-image-marker.svg?cacheSeconds=88660&logo=npm&label=total%20downloads)](https://www.npmjs.com/package/react-native-image-marker)
+  [![stars](https://img.shields.io/github/stars/jimmydaddy/react-native-image-marker?style=social)](https://github.com/JimmyDaddy/react-native-image-marker) [![forks](https://img.shields.io/github/forks/jimmydaddy/react-native-image-marker?style=social)](https://github.com/JimmyDaddy/react-native-image-marker/fork)
+  [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?logo=github)](https://github.com/JimmyDaddy/react-native-image-marker/pulls) ![license](https://img.shields.io/npm/l/react-native-image-marker)
+  [![github](https://img.shields.io/badge/github-repo-blue?logo=github)](https://github.com/JimmyDaddy/react-native-image-marker)
+  [![Native Build and Test](https://github.com/JimmyDaddy/react-native-image-marker/actions/workflows/native-ci.yml/badge.svg)](https://github.com/JimmyDaddy/react-native-image-marker/actions/workflows/native-ci.yml)
+  ![platform-iOS](https://img.shields.io/badge/iOS-black?logo=Apple) ![platform-Android](https://img.shields.io/badge/Android-black?logo=Android) 
   <br/>
- *If this library is useful to you, pls give me a ⭐️. 🤩*
+  
 </div>
+
+---
+> * If this library is useful to you, please give me a ⭐️. 🤩
+> * If there is any bug, please submit an issue 🐛, or create a pull request 🤓.
+> * If there is any problem about using this library, please contact me, or [open a QA discussion](https://github.com/JimmyDaddy/react-native-image-marker/discussions/categories/q-a). 🤔
+---
 
 ## Features
 
@@ -313,10 +324,6 @@ Marker.markText(options);
 
 ### Multiple text watermarks
 
-#### API
-
-[markImage](https://jimmydaddy.github.io/react-native-image-marker/classes/Marker.html#markImage)
-
 #### Sample
 
  <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/multipletexts.png" width='400'>
@@ -453,6 +460,10 @@ Marker.markImage({
 ### Multiple icon watermarks
 
 > Note: ***require Android >= N, iOS >= iOS 13***
+
+#### API
+
+[markImage](https://jimmydaddy.github.io/react-native-image-marker/classes/Marker.html#markImage)
 
 #### Sample
 
@@ -732,6 +743,8 @@ See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the 
 
 ---
 
-If this library is useful to you, please give me a ⭐️. 🤩
+* If this library is useful to you, please give me a ⭐️. 🤩
+* If there is any bug, please submit an issue 🐛, or create a pull request 🤓.
+* If there is any problem about using this library, please contact me, or [open a QA discussion](https://github.com/JimmyDaddy/react-native-image-marker/discussions/categories/q-a). 🤔
 
 Made with [create-react-native-library](https://github.com/callstack/react-native-builder-bob)

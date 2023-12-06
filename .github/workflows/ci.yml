@@ -2,14 +2,6 @@ name: Build and Test
 on: 
   pull_request:
     types: [opened, synchronize, reopened]
-    paths:
-      - 'example/**'
-      - 'android/**'
-      - 'ios/**'
-      - 'src/**'
-      - 'assets/**'
-      - 'package.json'
-      - 'react-native-image-marker.podspec'
   workflow_dispatch:
 
 jobs:
@@ -21,9 +13,19 @@ jobs:
     - name: Checkout the code
       uses: actions/checkout@v4
 
+    - name: Verify Dev Changed files
+      uses: tj-actions/verify-changed-files@v16.1.1
+      id: verify-dev-changed-files
+      with:
+        files: |
+          !*.md
+          !*.MD
+          !*.yml
+
     - uses: actions/cache@v3
       name: Cache node_modules
       id: cache-node-modules
+      if: steps.verify-dev-changed-files.outputs.files_changed == 'true'
       with:
         path: |
           node_modules
@@ -31,17 +33,20 @@ jobs:
         key: ${{ runner.os }}-nodeModules-${{ hashFiles('package.json') }}-${{ hashFiles('example/package.json') }}
 
     - name: Set up Ruby
+      if: steps.verify-dev-changed-files.outputs.files_changed == 'true'
       uses: ruby/setup-ruby@v1
       with:
         ruby-version: 2.7
         bundler-cache: true
+
     - name: Setup node 16
+      if: steps.verify-dev-changed-files.outputs.files_changed == 'true'
       uses: actions/setup-node@v3
       with:
         node-version: '16'
 
     - name: Install npm dependencies
-      if: steps.cache-node-modules.outputs.cache-hit != 'true'
+      if: steps.cache-node-modules.outputs.cache-hit != 'true' && steps.verify-dev-changed-files.outputs.files_changed == 'true'
       run: |
         ls
         pwd
@@ -59,8 +64,20 @@ jobs:
     - name: Checkout the code
       uses: actions/checkout@v4
 
+    - name: Verify Android Changed files
+      uses: tj-actions/verify-changed-files@v16.1.1
+      id: verify-android-changed-files
+      with:
+        files: |
+          android/**
+          src/**
+          assets/**
+          package.json
+          !example/ios/**
+  
     - uses: actions/cache@v3
       name: Cache node_modules
+      if: steps.verify-android-changed-files.outputs.files_changed == 'true'
       id: cache-node-modules
       with:
         path: |
@@ -72,6 +89,7 @@ jobs:
     - uses: actions/cache@v3
       id: cache-gradle
       name: Cache Gradle dependencies
+      if: steps.verify-android-changed-files.outputs.files_changed == 'true'
       with:
         path: |
           ~/.gradle/caches
@@ -80,33 +98,38 @@ jobs:
 
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1
+      if: steps.verify-android-changed-files.outputs.files_changed == 'true'
       with:
         ruby-version: 2.7
         bundler-cache: true
 
     - name: Setup node 16
       uses: actions/setup-node@v3
+      if: steps.verify-android-changed-files.outputs.files_changed == 'true'
       with:
         node-version: '16'
 
     - name: Set up JDK
       uses: actions/setup-java@v3
+      if: steps.verify-android-changed-files.outputs.files_changed == 'true'
       with:
         distribution: 'zulu'
         java-version: 11
   
     - name: Install Gradle dependencies
-      if: steps.cache-gradle.outputs.cache-hit != 'true'
+      if: steps.cache-gradle.outputs.cache-hit != 'true' && steps.verify-android-changed-files.outputs.files_changed == 'true'
       run: |
         cd example/android
         ./gradlew build --stacktrace
 
     - name: Run unit tests
+      if: steps.verify-android-changed-files.outputs.files_changed == 'true'
       run: | 
         cd example/android
         ./gradlew test --stacktrace
 
     - name: Build APK
+      if: steps.verify-android-changed-files.outputs.files_changed == 'true'
       run: |
         npm run prepack
         cd example/android
@@ -114,6 +137,7 @@ jobs:
         mv app/build/outputs/apk/release/app-release.apk app-release-${{ github.sha }}.apk
 
     - name: Upload APK
+      if: steps.verify-android-changed-files.outputs.files_changed == 'true'
       uses: actions/upload-artifact@v3
       with:
         name: app-release-${{ github.sha }}.apk
@@ -131,8 +155,20 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@v4
 
+      - name: Verify Android Changed files
+        uses: tj-actions/verify-changed-files@v16.1.1
+        id: verify-android-changed-files
+        with:
+          files: |
+            android/**
+            src/**
+            assets/**
+            package.json
+            !example/ios/**
+
       - uses: actions/cache@v3
         name: Cache node_modules
+        if: steps.verify-android-changed-files.outputs.files_changed == 'true'
         id: cache-node-modules
         with:
           path: |
@@ -143,6 +179,7 @@ jobs:
 
       - uses: actions/cache@v3
         name: Cache Gradle dependencies
+        if: steps.verify-android-changed-files.outputs.files_changed == 'true'
         id: cache-gradle
         with:
           path: |
@@ -153,23 +190,27 @@ jobs:
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
+        if: steps.verify-android-changed-files.outputs.files_changed == 'true'
         with:
           ruby-version: 2.7
           bundler-cache: true
 
       - name: Setup node 16
         uses: actions/setup-node@v3
+        if: steps.verify-android-changed-files.outputs.files_changed == 'true'
         with:
           node-version: '16'
 
       - name: Set up JDK
         uses: actions/setup-java@v3
+        if: steps.verify-android-changed-files.outputs.files_changed == 'true'
         with:
           distribution: 'zulu'
           java-version: 11
 
       - name: Instrumentation Tests
         uses: reactivecircus/android-emulator-runner@v2
+        if: steps.verify-android-changed-files.outputs.files_changed == 'true'
         with:
           api-level: ${{ matrix.api-level }}
           target: ${{ matrix.target }}
@@ -180,10 +221,10 @@ jobs:
 
       - name: Upload Reports
         uses: actions/upload-artifact@v3
+        if: steps.verify-android-changed-files.outputs.files_changed == 'true'
         with:
           name: Test-Reports
           path:  ${{ github.workspace }}/example/android/app/build/reports
-        if: always()
 
   ios-build-test:
     runs-on: macos-latest
@@ -196,9 +237,21 @@ jobs:
     - name: Checkout the code
       uses: actions/checkout@v4
 
+    - name: Verify iOS Changed files
+      uses: tj-actions/verify-changed-files@v16.1.1
+      id: verify-iOS-changed-files
+      with:
+        files: |
+          ios/**
+          src/**
+          assets/**
+          package.json
+          !example/android/**
+
     - uses: actions/cache@v3
       name: Cache node_modules
       id: cache-node-modules
+      if: steps.verify-iOS-changed-files.outputs.files_changed == 'true'
       with:
         path: |
           node_modules
@@ -209,42 +262,52 @@ jobs:
     - name: Cache Pods
       id: cache-pods
       uses: actions/cache@v3
+      if: steps.verify-iOS-changed-files.outputs.files_changed == 'true'
       with:
         path: example/ios/Pods
         key: ${{ runner.os }}-pods-${{ matrix.cocoapods }}-${{ hashFiles('**/Podfile.lock') }}
 
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1
+      if: steps.verify-iOS-changed-files.outputs.files_changed == 'true'
       with:
         ruby-version: 2.7
         bundler-cache: true
+  
     - name: Install Cocoapods
+      if: steps.verify-iOS-changed-files.outputs.files_changed == 'true'
       run: gem install cocoapods -v ${{ matrix.cocoapods }}
+
     - name: Setup node 16
+      if: steps.verify-iOS-changed-files.outputs.files_changed == 'true'
       uses: actions/setup-node@v3
       with:
         node-version: '16'
 
     - name: Install Pods
-      if: steps.cache-pods.outputs.cache-hit != 'true'
+      if: steps.cache-pods.outputs.cache-hit != 'true' && steps.verify-iOS-changed-files.outputs.files_changed == 'true'
       run: |
         cd example/ios
         pod cache clean --all
         pod install
 
     - name: Install xcpretty
+      if: steps.verify-iOS-changed-files.outputs.files_changed == 'true'
       run: gem install xcpretty
 
     - name: Build
+      if: steps.verify-iOS-changed-files.outputs.files_changed == 'true'
       run: | 
         cd example/ios
         xcodebuild -workspace ImageMarkerExample.xcworkspace -scheme ImageMarkerExample -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 12' | xcpretty
+
     - name: Test
+      if: steps.verify-iOS-changed-files.outputs.files_changed == 'true'
       run: | 
         cd example/ios
         xcodebuild -workspace ImageMarkerExample.xcworkspace -scheme ImageMarkerExample -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 12' test | xcpretty
 
-  native-ci-complete:
+  ci-complete:
     name: Complete CI
     needs: [android-build, android-test, ios-build-test]
     if: ${{ always() }}
