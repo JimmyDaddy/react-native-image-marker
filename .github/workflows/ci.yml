@@ -1,4 +1,4 @@
-name: Build and Test
+name: CI
 on: 
   pull_request:
     types: [opened, synchronize, reopened]
@@ -74,7 +74,8 @@ jobs:
           assets/**
           package.json
           !example/ios/**
-  
+          example/e2e/**
+
     - uses: actions/cache@v3
       name: Cache node_modules
       if: steps.verify-android-changed-files.outputs.any_changed == 'true'
@@ -143,7 +144,7 @@ jobs:
         name: app-release-${{ github.sha }}.apk
         path:  ${{ github.workspace }}/example/android/app-release-${{ github.sha }}.apk
 
-  android-test:
+  android-api-level-test:
     runs-on: macos-latest
     needs: android-build
     name: Android Test
@@ -165,6 +166,7 @@ jobs:
             assets/**
             package.json
             !example/ios/**
+            example/e2e/**
 
       - uses: actions/cache@v3
         name: Cache node_modules
@@ -247,6 +249,7 @@ jobs:
           assets/**
           package.json
           !example/android/**
+          example/e2e/**
 
     - uses: actions/cache@v3
       name: Cache node_modules
@@ -309,7 +312,7 @@ jobs:
 
   ci-complete:
     name: Complete CI
-    needs: [android-build, android-test, ios-build-test]
+    needs: [android-build, android-api-level-test, ios-build-test]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     steps:

@@ -116,7 +116,7 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         }
     }
         
-    func markerImgWithText(_ image: UIImage, _ opts: MarkTextOptions) -> UIImage? {
+    func markImgWithText(_ image: UIImage, _ opts: MarkTextOptions) -> UIImage? {
 
         var bg = image;
         let w = bg.size.width
@@ -271,8 +271,8 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         return aimg
     }
     
-    func markeImage(with image: UIImage, waterImages: [UIImage], options: MarkImageOptions) -> UIImage? {
- 
+    func markImage(with image: UIImage, waterImages: [UIImage], options: MarkImageOptions) -> UIImage? {
+
         var bg = image;
         let w = bg.size.width
         let h = bg.size.height
@@ -388,12 +388,12 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         Task(priority: .userInitiated) {
             do {
                 let images = try await loadImages(with: [(markOpts?.backgroundImage)!])
-                let scaledImage = self.markerImgWithText(images[0], markOpts!)
+                let scaledImage = self.markImgWithText(images[0], markOpts!)
                 let res = self.saveImageForMarker(scaledImage!, with: markOpts!)
                 resolver(res)
-                print("Loaded images:", images)
+                print("Loaded images: \(images)")
             } catch {
-                print("Failed to load images:", error)
+                print("Failed to load images, error: \(error).")
             }
         }
     }
@@ -408,12 +408,12 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
             do {
                 let waterImages = markOpts?.watermarkImages.map { $0.imageOption }
                 var images = try await loadImages(with: [(markOpts?.backgroundImage)!] + waterImages!)
-                let scaledImage = self.markeImage(with: images.remove(at: 0), waterImages: images, options: markOpts!)
+                let scaledImage = self.markImage(with: images.remove(at: 0), waterImages: images, options: markOpts!)
                 let res = self.saveImageForMarker(scaledImage!, with: markOpts!)
                 resolver(res)
-                print("Loaded images:", images)
+                print("Loaded images: \(images), waterImages: \(String(describing: waterImages))")
             } catch {
-                print("Failed to load images:", error)
+                print("Failed to load images, error: \(error).")
             }
         }
     }

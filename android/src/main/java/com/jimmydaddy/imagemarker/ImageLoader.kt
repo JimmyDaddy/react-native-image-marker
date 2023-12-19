@@ -7,9 +7,11 @@ import android.graphics.BitmapFactory
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import com.facebook.common.internal.Supplier
 import com.facebook.common.references.CloseableReference
 import com.facebook.datasource.DataSource
 import com.facebook.drawee.backends.pipeline.Fresco
+import com.facebook.imagepipeline.cache.MemoryCacheParams
 import com.facebook.imagepipeline.common.ResizeOptions
 import com.facebook.imagepipeline.core.ImagePipelineConfig
 import com.facebook.imagepipeline.datasource.BaseBitmapDataSubscriber
@@ -134,9 +136,19 @@ class ImageLoader(private val context: ReactApplicationContext, private val maxS
         patch.toString()
       ) >= 0
     ) {
-      val config =
-        ImagePipelineConfig.newBuilder(context).experiment().setMaxBitmapSize(maxSize)
-          .build()
+      val bitmapMemoryCacheParamsSupplier = Supplier<MemoryCacheParams> {
+        MemoryCacheParams(
+          maxSize, // max cache entry size
+          Integer.MAX_VALUE, // max cache entries
+          maxSize, // max cache size
+          Integer.MAX_VALUE, // max cache eviction size
+          Integer.MAX_VALUE // max cache eviction count
+        )
+      }
+
+      val config = ImagePipelineConfig.newBuilder(context)
+        .setBitmapMemoryCacheParamsSupplier(bitmapMemoryCacheParamsSupplier)
+        .build()
       Fresco.initialize(context, config)
     }
   }
