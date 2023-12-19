@@ -8,7 +8,13 @@
     "start": "react-native start",
     "pods": "pod-install",
     "m1-pods": "cd ios && arch -x86_64 pod install",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package",
+    "e2e-test-build:android": "detox build -c android.emu.debug",
+    "e2e-test-build:ios": "detox build -c ios.sim.debug",
+    "e2e-test-run:android": "detox test -c android.emu.debug",
+    "e2e-test-run:ios": "detox test -c ios.sim.debug",
+    "e2e-test:android": "run-s e2e-test-build:android e2e-test-run:android",
+    "e2e-test:ios": "run-s e2e-test-build:ios e2e-test-run:ios"
   },
   "dependencies": {
     "@expo/react-native-action-sheet": "^4.0.1",
@@ -17,8 +23,11 @@
     "react-native": "0.73.1",
     "react-native-blob-util": "^0.19.2",
     "react-native-image-picker": "^5.6.0",
+    "react-native-paper": "^5.11.3",
     "react-native-reanimated-table": "^0.0.2",
-    "react-native-toast-message": "^2.1.6"
+    "react-native-safe-area-context": "^4.8.0",
+    "react-native-toast-message": "^2.1.6",
+    "react-native-vector-icons": "^10.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
@@ -33,6 +42,11 @@
     "prettier": "2.8.8",
     "typescript": "5.0.4",
     "patch-package": "^8.0.0",
-    "postinstall-postinstall": "^2.1.0"
+    "postinstall-postinstall": "^2.1.0",
+    "detox": "^20.13.5",
+    "jest": "^29.7.0",
+    "metro-react-native-babel-preset": "0.73.10",
+    "npm-run-all": "^4.1.5",
+    "power-assert": "^1.6.1"
   }
 }

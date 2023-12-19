@@ -15,6 +15,8 @@
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		A119E9E12B162437000C0527 /* ImageMarkerExampleUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A119E9E02B162437000C0527 /* ImageMarkerExampleUITests.swift */; };
 		A119E9E32B162437000C0527 /* ImageMarkerExampleUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A119E9E22B162437000C0527 /* ImageMarkerExampleUITestsLaunchTests.swift */; };
+		A1C8E4732B26D5F600D9233E /* Fonts in Resources */ = {isa = PBXBuildFile; fileRef = A1C8E4722B26D5F600D9233E /* Fonts */; };
+		A1C8E4742B26D5F600D9233E /* Fonts in Resources */ = {isa = PBXBuildFile; fileRef = A1C8E4722B26D5F600D9233E /* Fonts */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -36,14 +38,17 @@
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = ImageMarkerExample/main.m; sourceTree = "<group>"; };
 		15E0FEF5E88EB5BA856E015A /* Pods-ImageMarkerExample-ImageMarkerExampleUITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ImageMarkerExample-ImageMarkerExampleUITests.release.xcconfig"; path = "Target Support Files/Pods-ImageMarkerExample-ImageMarkerExampleUITests/Pods-ImageMarkerExample-ImageMarkerExampleUITests.release.xcconfig"; sourceTree = "<group>"; };
 		3B4392A12AC88292D35C810B /* Pods-ImageMarkerExample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ImageMarkerExample.debug.xcconfig"; path = "Target Support Files/Pods-ImageMarkerExample/Pods-ImageMarkerExample.debug.xcconfig"; sourceTree = "<group>"; };
+		4BD0221D883ACD1958386DAA /* Pods-ImageMarkerExample-ImageMarkerExampleUITests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ImageMarkerExample-ImageMarkerExampleUITests.debug.xcconfig"; path = "Target Support Files/Pods-ImageMarkerExample-ImageMarkerExampleUITests/Pods-ImageMarkerExample-ImageMarkerExampleUITests.debug.xcconfig"; sourceTree = "<group>"; };
 		5709B34CF0A7D63546082F79 /* Pods-ImageMarkerExample.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ImageMarkerExample.release.xcconfig"; path = "Target Support Files/Pods-ImageMarkerExample/Pods-ImageMarkerExample.release.xcconfig"; sourceTree = "<group>"; };
 		5DCACB8F33CDC322A6C60F78 /* libPods-ImageMarkerExample.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ImageMarkerExample.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		6F2EF2314753552DE3ED8A96 /* libPods-ImageMarkerExample-ImageMarkerExampleUITests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ImageMarkerExample-ImageMarkerExampleUITests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = ImageMarkerExample/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		A0BC82937F23256F1BD51A72 /* Pods-ImageMarkerExample-ImageMarkerExampleUITests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ImageMarkerExample-ImageMarkerExampleUITests.debug.xcconfig"; path = "Target Support Files/Pods-ImageMarkerExample-ImageMarkerExampleUITests/Pods-ImageMarkerExample-ImageMarkerExampleUITests.debug.xcconfig"; sourceTree = "<group>"; };
+		894CD00B2EE09ABC6790EC62 /* libPods-ImageMarkerExample-ImageMarkerExampleUITests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ImageMarkerExample-ImageMarkerExampleUITests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A119E9DE2B162437000C0527 /* ImageMarkerExampleUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ImageMarkerExampleUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A119E9E02B162437000C0527 /* ImageMarkerExampleUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageMarkerExampleUITests.swift; sourceTree = "<group>"; };
 		A119E9E22B162437000C0527 /* ImageMarkerExampleUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageMarkerExampleUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		A1C8E4722B26D5F600D9233E /* Fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Fonts; path = "../node_modules/react-native-vector-icons/Fonts"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -100,6 +105,7 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
+				A1C8E4722B26D5F600D9233E /* Fonts */,
 				13B07FAE1A68108700A75B9A /* ImageMarkerExample */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				A119E9DF2B162437000C0527 /* ImageMarkerExampleUITests */,
@@ -228,6 +234,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A1C8E4732B26D5F600D9233E /* Fonts in Resources */,
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 			);
@@ -237,6 +244,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A1C8E4742B26D5F600D9233E /* Fonts in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -504,7 +512,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					/usr/lib/swift,
 					"$(inherited)",
@@ -576,7 +584,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					/usr/lib/swift,
 					"$(inherited)",
