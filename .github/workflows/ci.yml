@@ -43,7 +43,7 @@ jobs:
       if: steps.verify-dev-changed-files.outputs.any_changed == 'true'
       uses: actions/setup-node@v3
       with:
-        node-version: '16'
+        node-version: '18'
 
     - name: Install npm dependencies
       if: steps.cache-node-modules.outputs.cache-hit != 'true' && steps.verify-dev-changed-files.outputs.any_changed == 'true'
@@ -108,14 +108,14 @@ jobs:
       uses: actions/setup-node@v3
       if: steps.verify-android-changed-files.outputs.any_changed == 'true'
       with:
-        node-version: '16'
+        node-version: '18'
 
     - name: Set up JDK
       uses: actions/setup-java@v3
       if: steps.verify-android-changed-files.outputs.any_changed == 'true'
       with:
         distribution: 'zulu'
-        java-version: 11
+        java-version: 17
   
     - name: Install Gradle dependencies
       if: steps.cache-gradle.outputs.cache-hit != 'true' && steps.verify-android-changed-files.outputs.any_changed == 'true'
@@ -201,14 +201,14 @@ jobs:
         uses: actions/setup-node@v3
         if: steps.verify-android-changed-files.outputs.any_changed == 'true'
         with:
-          node-version: '16'
+          node-version: '18'
 
       - name: Set up JDK
         uses: actions/setup-java@v3
         if: steps.verify-android-changed-files.outputs.any_changed == 'true'
         with:
           distribution: 'zulu'
-          java-version: 11
+          java-version: 17
 
       - name: Instrumentation Tests
         uses: reactivecircus/android-emulator-runner@v2
@@ -285,7 +285,7 @@ jobs:
       if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
       uses: actions/setup-node@v3
       with:
-        node-version: '16'
+        node-version: '18'
 
     - name: Install Pods
       if: steps.cache-pods.outputs.cache-hit != 'true' && steps.verify-iOS-changed-files.outputs.any_changed == 'true'

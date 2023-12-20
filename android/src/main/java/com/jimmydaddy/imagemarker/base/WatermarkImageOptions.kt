@@ -10,11 +10,13 @@ data class WatermarkImageOptions(val options: ReadableMap?) {
 
   init {
     if (options != null) {
-      imageOption = options?.let { ImageOptions(it) }!!
+      imageOption = ImageOptions(options)
       val positionOptions =
         if (null != options.getMap("position")) options.getMap("position") else null
-      x = if (positionOptions!!.hasKey("X")) Utils.handleDynamicToString(positionOptions.getDynamic("X")) else null
-      y = if (positionOptions.hasKey("Y")) Utils.handleDynamicToString(positionOptions.getDynamic("Y")) else null
+      x =
+        if (positionOptions!!.hasKey("X")) Utils.handleDynamicToString(positionOptions.getDynamic("X")) else null
+      y =
+        if (positionOptions.hasKey("Y")) Utils.handleDynamicToString(positionOptions.getDynamic("Y")) else null
       positionEnum =
         if (null != positionOptions.getString("position")) PositionEnum.getPosition(
           positionOptions.getString("position")

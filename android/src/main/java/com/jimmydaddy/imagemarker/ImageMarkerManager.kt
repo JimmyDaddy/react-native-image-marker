@@ -226,7 +226,7 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
     Log.d(IMAGE_MARKER_TAG, "src: " + markOpts.backgroundImage.src.toString())
     GlobalScope.launch(Dispatchers.Main) {
       try {
-        val bitmaps = ImageLoader(context, markOpts.maxSize).loadImages(
+        val bitmaps = MarkerImageLoader(context, markOpts.maxSize).loadImages(
           listOf(
             markOpts.backgroundImage,
           )
@@ -256,7 +256,7 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
         val concatenatedArray = listOf(
           markOpts.backgroundImage,
         ).plus(markers)
-        val bitmaps = ImageLoader(context, markOpts.maxSize).loadImages(
+        val bitmaps = MarkerImageLoader(context, markOpts.maxSize).loadImages(
           concatenatedArray
         )
         val bg = bitmaps[0]

@@ -101,7 +101,6 @@ const options = {
   quality: 100,
   filename: 'test',
   saveFormat: ImageFormat.png,
-  maxSize: 1000,
 };
 Marker.markText(options);
 
@@ -154,7 +153,6 @@ const options = {
   quality: 100,
   filename: 'test',
   saveFormat: ImageFormat.png,
-  maxSize: 1000,
 };
 Marker.markText(options);
 ```
@@ -206,7 +204,6 @@ const options = {
   quality: 100,
   filename: 'test',
   saveFormat: ImageFormat.png,
-  maxSize: 1000,
 };
 ImageMarker.markText(options);
 
@@ -268,7 +265,6 @@ const options = {
   quality: 100,
   filename: 'test',
   saveFormat: ImageFormat.png,
-  maxSize: 1000,
 };
 ImageMarker.markText(options);
 
@@ -316,7 +312,6 @@ const options = {
   quality: 100,
   filename: 'test',
   saveFormat: ImageFormat.png,
-  maxSize: 1000,
 };
 Marker.markText(options);
 
