@@ -7,13 +7,13 @@
 </div>
 <div align="center">
 
-  [![npm version](https://img.shields.io/npm/v/react-native-image-marker.svg?logo=npm)](https://www.npmjs.com/package/react-native-image-marker) 
-  [![npm](https://img.shields.io/npm/dm/react-native-image-marker?logo=npm)](https://www.npmjs.com/package/react-native-image-marker) [![npm](https://img.shields.io/npm/dt/react-native-image-marker.svg?cacheSeconds=88660&logo=npm&label=total%20downloads)](https://www.npmjs.com/package/react-native-image-marker)
-  [![stars](https://img.shields.io/github/stars/jimmydaddy/react-native-image-marker?style=social)](https://github.com/JimmyDaddy/react-native-image-marker) [![forks](https://img.shields.io/github/forks/jimmydaddy/react-native-image-marker?style=social)](https://github.com/JimmyDaddy/react-native-image-marker/fork)
-  [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?logo=github)](https://github.com/JimmyDaddy/react-native-image-marker/pulls) ![license](https://img.shields.io/npm/l/react-native-image-marker)
-  [![github](https://img.shields.io/badge/github-repo-blue?logo=github)](https://github.com/JimmyDaddy/react-native-image-marker)
-  [![Native Build and Test](https://github.com/JimmyDaddy/react-native-image-marker/actions/workflows/native-ci.yml/badge.svg)](https://github.com/JimmyDaddy/react-native-image-marker/actions/workflows/native-ci.yml)
-  ![platform-iOS](https://img.shields.io/badge/iOS-black?logo=Apple) ![platform-Android](https://img.shields.io/badge/Android-black?logo=Android) 
+  [![npm version](https://img.shields.io/npm/v/react-native-image-marker.svg?logo=npm&style=for-the-badge&label=latest)](https://www.npmjs.com/package/react-native-image-marker) 
+  [![npm](https://img.shields.io/npm/dm/react-native-image-marker?logo=npm&style=for-the-badge)](https://www.npmjs.com/package/react-native-image-marker) [![npm](https://img.shields.io/npm/dt/react-native-image-marker.svg?cacheSeconds=88660&logo=npm&label=total%20downloads&style=for-the-badge)](https://www.npmjs.com/package/react-native-image-marker)
+  [![stars](https://img.shields.io/github/stars/jimmydaddy/react-native-image-marker?logo=github&style=for-the-badge)](https://github.com/JimmyDaddy/react-native-image-marker) [![forks](https://img.shields.io/github/forks/jimmydaddy/react-native-image-marker?logo=github&style=for-the-badge)](https://github.com/JimmyDaddy/react-native-image-marker/fork)
+  [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?logo=github&style=for-the-badge)](https://github.com/JimmyDaddy/react-native-image-marker/pulls) ![license](https://img.shields.io/npm/l/react-native-image-marker?style=for-the-badge)
+  [![github](https://img.shields.io/badge/github-repo-blue?logo=github&style=for-the-badge)](https://github.com/JimmyDaddy/react-native-image-marker)
+  [![CI](https://github.com/JimmyDaddy/react-native-image-marker/actions/workflows/ci.yml/badge.svg)](https://github.com/JimmyDaddy/react-native-image-marker/actions/workflows/ci.yml)
+  ![platform-iOS](https://img.shields.io/badge/iOS-black?logo=Apple&style=for-the-badge) ![platform-Android](https://img.shields.io/badge/Android-black?logo=Android&style=for-the-badge)
   <br/>
   
 </div>
