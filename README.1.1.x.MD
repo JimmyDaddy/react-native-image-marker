@@ -668,7 +668,9 @@ Marker.markImage({
   * react-native link (RN version < 0.60.0)
   * [auto link](https://github.com/react-native-community/cli/blob/main/docs/autolinking.md)(RN version > 0.60.0)
 
-### iOS Pod Install (RN version < 0.60.0)
+> **RN version < 0.60.0 please use v0.5.2 or older**
+
+#### iOS Pod Install (RN version < 0.60.0)
 
 You can use `pod` instead of `link`. Add following lines in your `Podfile`:
 
@@ -679,9 +681,17 @@ pod 'RNImageMarker', :path => '../node_modules/react-native-image-marker'
 ## API
 
 * [the latest version](https://jimmydaddy.github.io/react-native-image-marker/classes/Marker.html)
-* [v1.1.x](https://github.com/JimmyDaddy/react-native-image-marker/wiki/v1.1.x)
 * [v1.0.x](https://github.com/JimmyDaddy/react-native-image-marker/wiki/v1.0.x)
 * If you are using a version lower than 1.0.0, please go to [v0.9.2](https://github.com/JimmyDaddy/react-native-image-marker/wiki/0.9.2)
+
+## Extra about Android decoding image
+
+This library use [Fresco](https://github.com/facebook/fresco) to decode image on Android. You can set your configuration through [Configure Fresco in React Native](https://medium.com/in-the-hudl/configure-fresco-in-react-native-28c2bc7dcc4d)
+
+* RN version < 0.60.0 use fresco v1.10.0
+* RN version >= 0.60.0 use fresco v2.0.0 +
+
+> [ref](https://github.com/facebook/react-native/blob/8cf9505bd27c5dade33b17cc177fa5ef1613dbcd/ReactAndroid/gradle.properties#L15)
 
 ## Save image to file
 
@@ -709,9 +719,6 @@ If you want to run the example locally, you can do the following:
 git clone git@github.com:JimmyDaddy/react-native-image-marker.git
 
 cd ./react-native-image-marker
-
-# install dependencies
-yarn
 
 # Android
 # Open an android emulator or connect a real device at first
