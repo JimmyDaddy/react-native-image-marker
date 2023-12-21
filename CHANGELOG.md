@@ -1,5 +1,14 @@
 
 
+## [1.1.11](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.1.8...v1.1.11) (2023-12-21)
+
+
+### Bug Fixes
+
+*  fix [#158](https://github.com/JimmyDaddy/react-native-image-marker/issues/158) android release bug  style not working ([#160](https://github.com/JimmyDaddy/react-native-image-marker/issues/160)) ([a942e30](https://github.com/JimmyDaddy/react-native-image-marker/commit/a942e30732c61094abc1e95ca5003c883d1e4410))
+* fix [#164](https://github.com/JimmyDaddy/react-native-image-marker/issues/164) Build Failure on CI Due to CocoaPods 1.1.9 in iOS Project ([#165](https://github.com/JimmyDaddy/react-native-image-marker/issues/165)) ([532e8a4](https://github.com/JimmyDaddy/react-native-image-marker/commit/532e8a4d325fd1c30315eac0f1ab81fbf81c144f))
+* fix [#179](https://github.com/JimmyDaddy/react-native-image-marker/issues/179) Same watermark image is behaving differently on ANDROID and IOS ([a269510](https://github.com/JimmyDaddy/react-native-image-marker/commit/a269510ad8887bb5466493ce304714d01f067c6a))
+
 ## [1.1.10](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.1.8...v1.1.10) (2023-11-29)
 
 
