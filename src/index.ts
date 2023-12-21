@@ -541,7 +541,6 @@ export interface TextOptions {
  *  quality: 1,
  *  filename: 'test',
  *  saveFormat: ImageFormat.jpg,
- *  maxSize: 2048
  */
 export interface TextMarkOptions {
   /**
@@ -617,6 +616,7 @@ export interface TextMarkOptions {
    */
   saveFormat?: ImageFormat;
   /**
+   * @deprecated since 1.2.0
    * @description max image size see #49 #42
    * android only
    * **need RN version >= 0.60.0**,  fresco `MaxBitmapSize` [`ImagePipelineConfig.Builder.experiment().setMaxBitmapSize()`](https://github.com/facebook/fresco/blob/08ca5f40cc0b60b4db16d15e45552cafeae39ccb/imagepipeline/src/main/java/com/facebook/imagepipeline/core/ImagePipelineExperiments.java#L282), see [#49](https://github.com/JimmyDaddy/react-native-image-marker/issues/49#issuecomment-535303838)
@@ -719,7 +719,6 @@ export interface WatermarkImageOptions extends ImageOptions {
  *  quality: 1,
  *  filename: 'test',
  *  saveFormat: ImageFormat.jpg,
- *  maxSize: 2048
  *
  */
 export interface ImageMarkOptions {
@@ -783,6 +782,7 @@ export interface ImageMarkOptions {
    */
   saveFormat?: ImageFormat;
   /**
+   * @deprecated since 1.2.0
    * @description max image size see #49 #42
    * android only
    * **need RN version >= 0.60.0**,  fresco `MaxBitmapSize` [`ImagePipelineConfig.Builder.experiment().setMaxBitmapSize()`](https://github.com/facebook/fresco/blob/08ca5f40cc0b60b4db16d15e45552cafeae39ccb/imagepipeline/src/main/java/com/facebook/imagepipeline/core/ImagePipelineExperiments.java#L282), see [#49](https://github.com/JimmyDaddy/react-native-image-marker/issues/49#issuecomment-535303838)
@@ -897,7 +897,6 @@ class Marker {
    *  quality: 100,
    *  filename: 'test',
    *  saveFormat: ImageFormat.png,
-   *  maxSize: 1000,
    * };
    * ImageMarker.markText(options).then((res) => {
    *  console.log(res);
@@ -944,7 +943,6 @@ class Marker {
    *  quality: 100,
    *  filename: 'test',
    *  saveFormat: ImageFormat.png,
-   *  maxSize: 1000,
    *  watermarkImages: [
    *    {
    *      src: require('./images/logo.png'),

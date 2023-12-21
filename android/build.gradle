@@ -5,10 +5,16 @@ buildscript {
     mavenCentral()
   }
 
-  dependencies {
-    classpath "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.0"
-    classpath "com.android.tools.build:gradle:7.2.1"
-    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+  if (project == rootProject) {
+    repositories {
+      google()
+      mavenCentral()
+    }
+  } else {
+    dependencies {
+      classpath 'com.android.tools.build:gradle:7.2.1'
+      classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
   }
 }
 
@@ -76,6 +82,9 @@ dependencies {
   testImplementation 'junit:junit:4.13.2'
   androidTestImplementation 'androidx.test.ext:junit:1.1.5'
   testImplementation "org.mockito:mockito-core:3.+"
+  implementation "io.coil-kt:coil:2.5.0"
+  implementation "io.coil-kt:coil-svg:2.5.0"
+  implementation "io.coil-kt:coil-gif:2.5.0"
 }
 
 if (isNewArchitectureEnabled()) {

@@ -1,4 +1,4 @@
-name: Build and Test
+name: CI
 on: 
   pull_request:
     types: [opened, synchronize, reopened]
@@ -43,7 +43,7 @@ jobs:
       if: steps.verify-dev-changed-files.outputs.any_changed == 'true'
       uses: actions/setup-node@v3
       with:
-        node-version: '16'
+        node-version: '18'
 
     - name: Install npm dependencies
       if: steps.cache-node-modules.outputs.cache-hit != 'true' && steps.verify-dev-changed-files.outputs.any_changed == 'true'
@@ -74,7 +74,8 @@ jobs:
           assets/**
           package.json
           !example/ios/**
-  
+          example/e2e/**
+
     - uses: actions/cache@v3
       name: Cache node_modules
       if: steps.verify-android-changed-files.outputs.any_changed == 'true'
@@ -107,14 +108,14 @@ jobs:
       uses: actions/setup-node@v3
       if: steps.verify-android-changed-files.outputs.any_changed == 'true'
       with:
-        node-version: '16'
+        node-version: '18'
 
     - name: Set up JDK
       uses: actions/setup-java@v3
       if: steps.verify-android-changed-files.outputs.any_changed == 'true'
       with:
         distribution: 'zulu'
-        java-version: 11
+        java-version: 17
   
     - name: Install Gradle dependencies
       if: steps.cache-gradle.outputs.cache-hit != 'true' && steps.verify-android-changed-files.outputs.any_changed == 'true'
@@ -143,7 +144,7 @@ jobs:
         name: app-release-${{ github.sha }}.apk
         path:  ${{ github.workspace }}/example/android/app-release-${{ github.sha }}.apk
 
-  android-test:
+  android-api-level-test:
     runs-on: macos-latest
     needs: android-build
     name: Android Test
@@ -165,6 +166,7 @@ jobs:
             assets/**
             package.json
             !example/ios/**
+            example/e2e/**
 
       - uses: actions/cache@v3
         name: Cache node_modules
@@ -199,14 +201,14 @@ jobs:
         uses: actions/setup-node@v3
         if: steps.verify-android-changed-files.outputs.any_changed == 'true'
         with:
-          node-version: '16'
+          node-version: '18'
 
       - name: Set up JDK
         uses: actions/setup-java@v3
         if: steps.verify-android-changed-files.outputs.any_changed == 'true'
         with:
           distribution: 'zulu'
-          java-version: 11
+          java-version: 17
 
       - name: Instrumentation Tests
         uses: reactivecircus/android-emulator-runner@v2
@@ -247,6 +249,7 @@ jobs:
           assets/**
           package.json
           !example/android/**
+          example/e2e/**
 
     - uses: actions/cache@v3
       name: Cache node_modules
@@ -282,7 +285,7 @@ jobs:
       if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
       uses: actions/setup-node@v3
       with:
-        node-version: '16'
+        node-version: '18'
 
     - name: Install Pods
       if: steps.cache-pods.outputs.cache-hit != 'true' && steps.verify-iOS-changed-files.outputs.any_changed == 'true'
@@ -309,7 +312,7 @@ jobs:
 
   ci-complete:
     name: Complete CI
-    needs: [android-build, android-test, ios-build-test]
+    needs: [android-build, android-api-level-test, ios-build-test]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     steps:

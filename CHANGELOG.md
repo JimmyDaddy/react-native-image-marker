@@ -1,5 +1,18 @@
 
 
+# [1.2.0](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.1.8...v1.2.0) (2023-12-21)
+
+
+### Bug Fixes
+
+* fix [#164](https://github.com/JimmyDaddy/react-native-image-marker/issues/164) Build Failure on CI Due to CocoaPods 1.1.9 in iOS Project ([#165](https://github.com/JimmyDaddy/react-native-image-marker/issues/165)) ([532e8a4](https://github.com/JimmyDaddy/react-native-image-marker/commit/532e8a4d325fd1c30315eac0f1ab81fbf81c144f))
+* fix[#176](https://github.com/JimmyDaddy/react-native-image-marker/issues/176) Fresco 3.1.3 compatibility issues with RN 0.73.0, compileDebugKotlin FAILED ([2fd4fef](https://github.com/JimmyDaddy/react-native-image-marker/commit/2fd4feff34e3bf9ada3de0dbb6f9789facbd0500))
+
+
+### Features
+
+* use Coil instead of Fresco to load images on the Android platform ([4438127](https://github.com/JimmyDaddy/react-native-image-marker/commit/44381276fa2973782f839415f2b3e735d63f93fa))
+
 ## [1.1.11](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.1.8...v1.1.11) (2023-12-21)
 
 
