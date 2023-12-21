@@ -3,21 +3,23 @@ package com.jimmydaddy.imagemarker.base
 import com.facebook.react.bridge.ReadableMap
 
 data class WatermarkImageOptions(val options: ReadableMap?) {
-  var imageOption: ImageOptions
-  var x: String?
-  var y: String?
-  var positionEnum: PositionEnum?
+  lateinit var imageOption: ImageOptions
+  var x: String? = null
+  var y: String? = null
+  var positionEnum: PositionEnum? = null
 
   init {
-    imageOption = options?.let { ImageOptions(it) }!!
-    val positionOptions =
-      if (null != options.getMap("position")) options.getMap("position") else null
-    x = if (positionOptions!!.hasKey("X")) Utils.handleDynamicToString(positionOptions.getDynamic("X")) else null
-    y = if (positionOptions.hasKey("Y")) Utils.handleDynamicToString(positionOptions.getDynamic("Y")) else null
-    positionEnum =
-      if (null != positionOptions.getString("position")) PositionEnum.getPosition(
-        positionOptions.getString("position")
-      ) else null
+    if (options != null) {
+      imageOption = options?.let { ImageOptions(it) }!!
+      val positionOptions =
+        if (null != options.getMap("position")) options.getMap("position") else null
+      x = if (positionOptions!!.hasKey("X")) Utils.handleDynamicToString(positionOptions.getDynamic("X")) else null
+      y = if (positionOptions.hasKey("Y")) Utils.handleDynamicToString(positionOptions.getDynamic("Y")) else null
+      positionEnum =
+        if (null != positionOptions.getString("position")) PositionEnum.getPosition(
+          positionOptions.getString("position")
+        ) else null
+    }
   }
 
   constructor(watermarkImage: ImageOptions, x: String?, y: String?, position: PositionEnum?) : this(null) {

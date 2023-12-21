@@ -35,7 +35,13 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
                             }
                         } else {
                             let request = RCTConvert.nsurlRequest(img.src)
-                            imageLoader.loadImage(with: request!) { error, loadedImage in
+                            imageLoader.loadImage(with: request!, size: CGSizeMake(img.rnSrc.width, img.rnSrc.height), scale: img.rnSrc.scale, clipped: false, resizeMode: RCTResizeMode.cover) { progress, total in
+                                print("Loading image: \(img.uri) progress: \(progress) total\(total)")
+                            } partialLoad: { loadedImage in
+                                //
+                            } completionBlock: { error, loadedImage in
+                                print("Loaded image: ", img.uri)
+
                                 if let loadedImage = loadedImage {
                                     continuation.resume(returning: (index, loadedImage))
                                 } else if let error = error {
@@ -45,6 +51,17 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
                                     continuation.resume(throwing: error)
                                 }
                             }
+
+//                            imageLoader.loadImage(with: request!) { error, loadedImage in
+//                                if let loadedImage = loadedImage {
+//                                    continuation.resume(returning: (index, loadedImage))
+//                                } else if let error = error {
+//                                    continuation.resume(throwing: error)
+//                                } else {
+//                                    let error = NSError(domain: ErrorDomainEnum.BASE.rawValue, code: 3, userInfo: [NSLocalizedDescriptionKey: "Failed to load image"])
+//                                    continuation.resume(throwing: error)
+//                                }
+//                            }
                         }
                     }
                 }
@@ -102,13 +119,9 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
     func markerImgWithText(_ image: UIImage, _ opts: MarkTextOptions) -> UIImage? {
 
         var bg = image;
-        if (opts.backgroundImage.scale > 0) {
-            bg = UIImage(cgImage: image.cgImage!, scale: 1 / opts.backgroundImage.scale, orientation: image.imageOrientation)
-        }
-
         let w = bg.size.width
         let h = bg.size.height
-        UIGraphicsBeginImageContextWithOptions(bg.size, false, 1 / opts.backgroundImage.scale)
+        UIGraphicsBeginImageContextWithOptions(bg.size, false, opts.backgroundImage.scale)
         
         guard let context = UIGraphicsGetCurrentContext() else {
             return nil
@@ -261,20 +274,16 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
     func markeImage(with image: UIImage, waterImages: [UIImage], options: MarkImageOptions) -> UIImage? {
  
         var bg = image;
-        if (options.backgroundImage.scale > 0) {
-            bg = UIImage(cgImage: image.cgImage!, scale: 1 / options.backgroundImage.scale, orientation: image.imageOrientation)
-        }
-        
         let w = bg.size.width
         let h = bg.size.height
-        UIGraphicsBeginImageContextWithOptions(bg.size, false, 1 / options.backgroundImage.scale)
+        UIGraphicsBeginImageContextWithOptions(bg.size, false, options.backgroundImage.scale)
         
         let canvasRect = CGRect(x: 0, y: 0, width: CGFloat(w), height: CGFloat(h))
         let transform = CGAffineTransform(translationX: 0, y: canvasRect.height)
             .scaledBy(x: 1, y: -1)
         var context: CGContext?
         if options.backgroundImage.alpha != 1.0 {
-            UIGraphicsBeginImageContextWithOptions(image.size, false, 0)
+            UIGraphicsBeginImageContextWithOptions(image.size, false, options.backgroundImage.scale)
             context = UIGraphicsGetCurrentContext()
             context?.saveGState()
             context?.concatenate(transform)
@@ -302,10 +311,11 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
             if (options.backgroundImage.scale > 0) {
                 markerImg = UIImage(cgImage: waterImage.cgImage!, scale: 1 / watermarkOptions.imageOption.scale, orientation: waterImage.imageOrientation)
             }
+
             let ww = markerImg.size.width
             let wh = markerImg.size.height
             
-            let diagonal = sqrt(pow(ww, 2) + pow(ww, 2)) // 计算对角线长度
+            let diagonal = sqrt(pow(ww, 2) + pow(wh, 2)) // 计算对角线长度
             let size = CGSize(width: CGFloat(diagonal), height: CGFloat(diagonal))
             var rect: CGRect
             if watermarkOptions.position != .none {
@@ -331,7 +341,7 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
                 rect = CGRect(x: Utils.parseSpreadValue(v: watermarkOptions.X, relativeTo: w) ?? 20, y: Utils.parseSpreadValue(v: watermarkOptions.Y, relativeTo: h) ?? 20, width: CGFloat(ww), height: CGFloat(wh))
             }
             
-            UIGraphicsBeginImageContextWithOptions(CGSize(width: diagonal, height: diagonal), false, watermarkOptions.imageOption.scale)
+            UIGraphicsBeginImageContextWithOptions(CGSize(width: diagonal, height: diagonal), false, 1)
             let markerContext = UIGraphicsGetCurrentContext()
             markerContext?.saveGState()
 
@@ -350,6 +360,14 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
             markerContext?.restoreGState()
 
             let waterImageRes = UIGraphicsGetImageFromCurrentImageContext()!
+//            if watermarkOptions.imageOption.scale > 0 {
+//                rect = CGRect(
+//                    x: rect.origin.x,
+//                    y: rect.origin.y,
+//                    width: rect.size.width * watermarkOptions.imageOption.scale,
+//                    height: rect.size.height * watermarkOptions.imageOption.scale
+//                )
+//            }
             context?.draw(waterImageRes.cgImage!, in: rect)
             UIGraphicsEndImageContext()
             context?.restoreGState()

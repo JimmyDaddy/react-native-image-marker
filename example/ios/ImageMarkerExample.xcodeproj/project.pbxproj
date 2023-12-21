@@ -11,6 +11,7 @@
 		13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.mm */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
+		552FE0025890E32E99AF119A /* libPods-ImageMarkerExample-ImageMarkerExampleUITests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 744A2F230C283E0D140F997B /* libPods-ImageMarkerExample-ImageMarkerExampleUITests.a */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		A119E9E12B162437000C0527 /* ImageMarkerExampleUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A119E9E02B162437000C0527 /* ImageMarkerExampleUITests.swift */; };
 		A119E9E32B162437000C0527 /* ImageMarkerExampleUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A119E9E22B162437000C0527 /* ImageMarkerExampleUITestsLaunchTests.swift */; };
@@ -33,9 +34,12 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = ImageMarkerExample/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = ImageMarkerExample/Info.plist; sourceTree = "<group>"; };
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = ImageMarkerExample/main.m; sourceTree = "<group>"; };
+		26EC0163490429FD1EA48765 /* Pods-ImageMarkerExample-ImageMarkerExampleUITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ImageMarkerExample-ImageMarkerExampleUITests.release.xcconfig"; path = "Target Support Files/Pods-ImageMarkerExample-ImageMarkerExampleUITests/Pods-ImageMarkerExample-ImageMarkerExampleUITests.release.xcconfig"; sourceTree = "<group>"; };
 		3B4392A12AC88292D35C810B /* Pods-ImageMarkerExample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ImageMarkerExample.debug.xcconfig"; path = "Target Support Files/Pods-ImageMarkerExample/Pods-ImageMarkerExample.debug.xcconfig"; sourceTree = "<group>"; };
 		5709B34CF0A7D63546082F79 /* Pods-ImageMarkerExample.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ImageMarkerExample.release.xcconfig"; path = "Target Support Files/Pods-ImageMarkerExample/Pods-ImageMarkerExample.release.xcconfig"; sourceTree = "<group>"; };
+		5AF9B3B6D62946E1E270EDB8 /* Pods-ImageMarkerExample-ImageMarkerExampleUITests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ImageMarkerExample-ImageMarkerExampleUITests.debug.xcconfig"; path = "Target Support Files/Pods-ImageMarkerExample-ImageMarkerExampleUITests/Pods-ImageMarkerExample-ImageMarkerExampleUITests.debug.xcconfig"; sourceTree = "<group>"; };
 		5DCACB8F33CDC322A6C60F78 /* libPods-ImageMarkerExample.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ImageMarkerExample.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		744A2F230C283E0D140F997B /* libPods-ImageMarkerExample-ImageMarkerExampleUITests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ImageMarkerExample-ImageMarkerExampleUITests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = ImageMarkerExample/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		A119E9DE2B162437000C0527 /* ImageMarkerExampleUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ImageMarkerExampleUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A119E9E02B162437000C0527 /* ImageMarkerExampleUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageMarkerExampleUITests.swift; sourceTree = "<group>"; };
@@ -56,6 +60,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				552FE0025890E32E99AF119A /* libPods-ImageMarkerExample-ImageMarkerExampleUITests.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -80,7 +85,7 @@
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
 				5DCACB8F33CDC322A6C60F78 /* libPods-ImageMarkerExample.a */,
-				19F6CBCC0A4E27FBF8BF4A61 /* libPods-ImageMarkerExample-ImageMarkerExampleUITests.a */,
+				744A2F230C283E0D140F997B /* libPods-ImageMarkerExample-ImageMarkerExampleUITests.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -130,8 +135,8 @@
 			children = (
 				3B4392A12AC88292D35C810B /* Pods-ImageMarkerExample.debug.xcconfig */,
 				5709B34CF0A7D63546082F79 /* Pods-ImageMarkerExample.release.xcconfig */,
-				5B7EB9410499542E8C5724F5 /* Pods-ImageMarkerExample-ImageMarkerExampleUITests.debug.xcconfig */,
-				89C6BE57DB24E9ADA2F236DE /* Pods-ImageMarkerExample-ImageMarkerExampleUITests.release.xcconfig */,
+				5AF9B3B6D62946E1E270EDB8 /* Pods-ImageMarkerExample-ImageMarkerExampleUITests.debug.xcconfig */,
+				26EC0163490429FD1EA48765 /* Pods-ImageMarkerExample-ImageMarkerExampleUITests.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -165,9 +170,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = A119E9E62B162437000C0527 /* Build configuration list for PBXNativeTarget "ImageMarkerExampleUITests" */;
 			buildPhases = (
+				EBC9A7F715DF26D017D78006 /* [CP] Check Pods Manifest.lock */,
 				A119E9DA2B162437000C0527 /* Sources */,
 				A119E9DB2B162437000C0527 /* Frameworks */,
 				A119E9DC2B162437000C0527 /* Resources */,
+				ACF99CEFF8F89F281A68F64E /* [CP] Embed Pods Frameworks */,
+				00D2AD9DAE49776B6A95E7C2 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -236,6 +244,23 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		00D2AD9DAE49776B6A95E7C2 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-ImageMarkerExample-ImageMarkerExampleUITests/Pods-ImageMarkerExample-ImageMarkerExampleUITests-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-ImageMarkerExample-ImageMarkerExampleUITests/Pods-ImageMarkerExample-ImageMarkerExampleUITests-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ImageMarkerExample-ImageMarkerExampleUITests/Pods-ImageMarkerExample-ImageMarkerExampleUITests-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 		00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -267,6 +292,23 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ImageMarkerExample/Pods-ImageMarkerExample-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		ACF99CEFF8F89F281A68F64E /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-ImageMarkerExample-ImageMarkerExampleUITests/Pods-ImageMarkerExample-ImageMarkerExampleUITests-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-ImageMarkerExample-ImageMarkerExampleUITests/Pods-ImageMarkerExample-ImageMarkerExampleUITests-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ImageMarkerExample-ImageMarkerExampleUITests/Pods-ImageMarkerExample-ImageMarkerExampleUITests-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		C38B50BA6285516D6DCD4F65 /* [CP] Check Pods Manifest.lock */ = {
@@ -306,6 +348,28 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ImageMarkerExample/Pods-ImageMarkerExample-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		EBC9A7F715DF26D017D78006 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-ImageMarkerExample-ImageMarkerExampleUITests-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
 		FD10A7F022414F080027D42C /* Start Packager */ = {
@@ -550,6 +614,7 @@
 		};
 		A119E9E72B162437000C0527 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 5AF9B3B6D62946E1E270EDB8 /* Pods-ImageMarkerExample-ImageMarkerExampleUITests.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -582,6 +647,7 @@
 		};
 		A119E9E82B162437000C0527 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 26EC0163490429FD1EA48765 /* Pods-ImageMarkerExample-ImageMarkerExampleUITests.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;

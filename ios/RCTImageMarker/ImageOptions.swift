@@ -14,12 +14,14 @@ class ImageOptions: NSObject {
     var scale: CGFloat = 1.0
     var rotate: CGFloat = 0
     var alpha: CGFloat = 1.0
+    var rnSrc: RNImageSRC
 
     init(dicOpts opts: [AnyHashable: Any]) throws {
         guard let src = opts["src"] as? [AnyHashable: Any], !Utils.isNULL(src) else {
             throw NSError(domain: ErrorDomainEnum.PARAMS_REQUIRED.rawValue, code: 0, userInfo: [NSLocalizedDescriptionKey: "image is required"])
         }
         self.src = src
+        self.rnSrc = RNImageSRC(dicOpts: src)
         self.uri = src["uri"] as! String
         self.scale = opts["scale"] as? CGFloat ?? 1.0
         self.rotate = opts["rotate"] as? CGFloat ?? 0

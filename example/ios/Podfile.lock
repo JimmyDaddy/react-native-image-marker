@@ -329,11 +329,11 @@ PODS:
   - React-jsinspector (0.71.11)
   - React-logger (0.71.11):
     - glog
-  - react-native-blob-util (0.19.2):
+  - react-native-blob-util (0.19.6):
     - React-Core
-  - react-native-image-marker (1.1.8):
+  - react-native-image-marker (1.1.10):
     - React-Core
-  - react-native-image-picker (5.6.1):
+  - react-native-image-picker (5.7.0):
     - React-Core
   - React-perflogger (0.71.11)
   - React-RCTActionSheet (0.71.11):
@@ -616,9 +616,9 @@ SPEC CHECKSUMS:
   React-jsiexecutor: 18b5b33c5f2687a784a61bc8176611b73524ae77
   React-jsinspector: b6ed4cb3ffa27a041cd440300503dc512b761450
   React-logger: 186dd536128ae5924bc38ed70932c00aa740cd5b
-  react-native-blob-util: c74e4ce87c76d244761c68623df78bf0d1638271
-  react-native-image-marker: c30f34263f1868b8bdac7ad770be6fb6c6ce9f86
-  react-native-image-picker: 5fcac5a5ffcb3737837f0617d43fd767249290de
+  react-native-blob-util: d8fa1a7f726867907a8e43163fdd8b441d4489ea
+  react-native-image-marker: 4414050c15944297bc24b3a37a1070d951fb57a2
+  react-native-image-picker: 3269f75c251cdcd61ab51b911dd30d6fff8c6169
   React-perflogger: e706562ab7eb8eb590aa83a224d26fa13963d7f2
   React-RCTActionSheet: 57d4bd98122f557479a3359ad5dad8e109e20c5a
   React-RCTAnimation: ccf3ef00101ea74bda73a045d79a658b36728a60
@@ -636,6 +636,6 @@ SPEC CHECKSUMS:
   Yoga: f7decafdc5e8c125e6fa0da38a687e35238420fa
   YogaKit: f782866e155069a2cca2517aafea43200b01fd5a
 
-PODFILE CHECKSUM: 20401a73c6b88dc06e028faa4ab5ae1c07ac8fa7
+PODFILE CHECKSUM: 4420d5a35a7e9d1bc71140c63c7e29db0be4fdf7
 
 COCOAPODS: 1.12.1
