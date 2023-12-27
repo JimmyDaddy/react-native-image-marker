@@ -7,7 +7,7 @@
 </div>
 <div align="center">
 
-  [![npm version](https://img.shields.io/npm/v/react-native-image-marker.svg?logo=npm&style=for-the-badge&label=latest)](https://www.npmjs.com/package/react-native-image-marker) 
+  [![npm version](https://img.shields.io/npm/v/react-native-image-marker.svg?logo=npm&style=for-the-badge&label=latest)](https://www.npmjs.com/package/react-native-image-marker)
   [![npm](https://img.shields.io/npm/dm/react-native-image-marker?logo=npm&style=for-the-badge)](https://www.npmjs.com/package/react-native-image-marker) [![npm](https://img.shields.io/npm/dt/react-native-image-marker.svg?cacheSeconds=88660&logo=npm&label=total%20downloads&style=for-the-badge)](https://www.npmjs.com/package/react-native-image-marker)
   [![stars](https://img.shields.io/github/stars/jimmydaddy/react-native-image-marker?logo=github&style=for-the-badge)](https://github.com/JimmyDaddy/react-native-image-marker) [![forks](https://img.shields.io/github/forks/jimmydaddy/react-native-image-marker?logo=github&style=for-the-badge)](https://github.com/JimmyDaddy/react-native-image-marker/fork)
   [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?logo=github&style=for-the-badge)](https://github.com/JimmyDaddy/react-native-image-marker/pulls) ![license](https://img.shields.io/npm/l/react-native-image-marker?style=for-the-badge)
@@ -19,10 +19,74 @@
 </div>
 
 ---
+
 > * If this library is useful to you, please give me a ⭐️. 🤩
 > * If there is any bug, please submit an issue 🐛, or create a pull request 🤓.
 > * If there is any problem about using this library, please contact me, or [open a QA discussion](https://github.com/JimmyDaddy/react-native-image-marker/discussions/categories/q-a). 🤔
+
 ---
+
+<!-- toc -->
+
+* [Features](#features)
+* [Sample](#sample)
+* [Usage](#usage)
+  * [Text background fit](#text-background-fit)
+    * [API](#api)
+    * [Sample](#sample-1)
+    * [Example](#example)
+  * [Text background stretchX](#text-background-stretchx)
+    * [API](#api-1)
+    * [Sample](#sample-2)
+    * [Example](#example-1)
+  * [Text background stretchY](#text-background-stretchy)
+    * [API](#api-2)
+    * [Sample](#sample-3)
+    * [Example](#example-2)
+  * [Text background border radius](#text-background-border-radius)
+    * [API](#api-3)
+    * [Sample](#sample-4)
+    * [Example](#example-3)
+  * [Text with shadow](#text-with-shadow)
+    * [API](#api-4)
+    * [Sample](#sample-5)
+    * [Example](#example-4)
+  * [Multiple text watermarks](#multiple-text-watermarks)
+    * [Sample](#sample-6)
+    * [Example](#example-5)
+  * [Text rotation](#text-rotation)
+    * [Sample](#sample-7)
+    * [Example](#example-6)
+  * [Icon watermarks](#icon-watermarks)
+    * [Sample](#sample-8)
+    * [Example](#example-7)
+  * [Multiple icon watermarks](#multiple-icon-watermarks)
+    * [API](#api-5)
+    * [Sample](#sample-9)
+    * [Example](#example-8)
+  * [Background rotation](#background-rotation)
+    * [Sample](#sample-10)
+    * [Example](#example-9)
+  * [Icon rotation](#icon-rotation)
+    * [Sample](#sample-11)
+    * [Example](#example-10)
+  * [Transparent background](#transparent-background)
+    * [Sample](#sample-12)
+    * [Example](#example-11)
+  * [Transparent icon](#transparent-icon)
+    * [Sample](#sample-13)
+    * [Example](#example-12)
+* [Compatibility](#compatibility)
+* [Installation](#installation)
+  * [iOS Pod Install (RN version < 0.60.0)](#ios-pod-install-rn-version--0600)
+* [API](#api-6)
+* [Save image to file](#save-image-to-file)
+* [Contributors](#contributors)
+* [Examples](#examples)
+* [Contributing](#contributing)
+* [License](#license)
+
+<!-- tocstop -->
 
 ## Features
 
@@ -65,7 +129,6 @@
 
 #### Example
 
-
 ```typescript
 import Marker, { Position, TextBackgroundType } from "react-native-image-marker"
 ···
@@ -76,7 +139,7 @@ const options = {
     scale: 1,
   },
   watermarkTexts: [{
-    text: 'text marker \n multline text',
+    text: 'text marker \n multiline text',
     positionOptions: {
       position: Position.topLeft,
     },
@@ -128,7 +191,7 @@ const options = {
     scale: 1,
   },
   watermarkTexts: [{
-    text: 'text marker \n multline text',
+    text: 'text marker \n multiline text',
     positionOptions: {
       position: Position.topLeft,
     },
@@ -179,7 +242,7 @@ const options = {
     scale: 1,
   },
   watermarkTexts: [{
-    text: 'text marker \n multline text',
+    text: 'text marker \n multiline text',
     positionOptions: {
       position: Position.topLeft,
     },
@@ -292,7 +355,7 @@ const options = {
     scale: 1,
   },
   watermarkTexts: [{
-    text: 'text marker \n multline text',
+    text: 'text marker \n multiline text',
     positionOptions: {
       position: Position.topLeft,
     },
