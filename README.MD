@@ -27,8 +27,10 @@
 ---
 
 <!-- toc -->
+## Table of Contents
 
 * [Features](#features)
+* [Compatibility](#compatibility)
 * [Sample](#sample)
 * [Usage](#usage)
   * [Text background fit](#text-background-fit)
@@ -76,7 +78,6 @@
   * [Transparent icon](#transparent-icon)
     * [Sample](#sample-13)
     * [Example](#example-12)
-* [Compatibility](#compatibility)
 * [Installation](#installation)
   * [iOS Pod Install (RN version < 0.60.0)](#ios-pod-install-rn-version--0600)
 * [API](#api-6)
@@ -107,6 +108,17 @@
   * Relative position
   * [Background border radius](https://jimmydaddy.github.io/react-native-image-marker/interfaces/TextBackgroundStyle.html#cornerRadius)
 * Compatible with both Android and iOS
+
+## Compatibility
+
+| React Native Version | react-native-image-marker Version |
+| ---------------------| --------------------------------- |
+| < 0.60.0             | v0.5.2 or earlier                 |
+| >= 0.60.0, ***iOS < 13, Android < N(API Level 24)*** | v1.0.x |
+|  0.60.0  <= rn version < 0.73.0 | v1.1.x |
+| >= 0.73.0, other cases | v1.2.0 or later |
+
+> ***Note: This table is only applicable to major versions of react-native-image-marker. Patch versions should be backwards compatible.***
 
 ## Sample
 
@@ -712,17 +724,6 @@ Marker.markImage({
   }],
 });
 ```
-
-## Compatibility
-
-| React Native Version | react-native-image-marker Version |
-| ---------------------| --------------------------------- |
-| < 0.60.0             | v0.5.2 or earlier                 |
-| >= 0.60.0, ***iOS < 13, Android < N(API Level 24)*** | v1.0.x |
-|  0.60.0  <= rn version < 0.73.0 | v1.1.x |
-| >= 0.73.0, other cases | v1.2.0 or later |
-
-> ***Note: This table is only applicable to major versions of react-native-image-marker. Patch versions should be backwards compatible.***
 
 ## Installation
 
