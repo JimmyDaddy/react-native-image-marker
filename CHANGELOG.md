@@ -1,6 +1,13 @@
 
 
-# [1.2.0](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.1.8...v1.2.0) (2023-12-21)
+## [1.2.1](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.2.0...v1.2.1) (2023-12-28)
+
+### Bug Fixes
+
+* [#179](https://github.com/JimmyDaddy/react-native-image-marker/issues/179) Same watermark image is behaving differently on ANDROID and IOS when use given position enum ([39107f0](https://github.com/JimmyDaddy/react-native-image-marker/commit/39107f0977a400faf4dc7ed8f94e3877287d9d78))
+* parse hex color string crash on iOS ([#186](https://github.com/JimmyDaddy/react-native-image-marker/issues/186)) ([53ac1f1](https://github.com/JimmyDaddy/react-native-image-marker/commit/53ac1f14461e3007a2e028d0c401a1eed3ddd962))
+
+## [1.2.0](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.1.8...v1.2.0) (2023-12-21)
 
 
 ### Bug Fixes
