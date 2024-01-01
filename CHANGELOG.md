@@ -1,5 +1,11 @@
 
 
+## [1.2.2](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.2.1...v1.2.2) (2024-01-01)
+
+### Bug Fixes
+
+* remove debug  fill red color in rect ([7ed675a](https://github.com/JimmyDaddy/react-native-image-marker/commit/7ed675aea5a4a3d4b42e181ec7ea6bd7327f834e))
+
 ## [1.2.1](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.2.0...v1.2.1) (2023-12-28)
 
 ### Bug Fixes

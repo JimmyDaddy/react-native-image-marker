@@ -343,8 +343,6 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
             
             UIGraphicsBeginImageContextWithOptions(CGSize(width: diagonal, height: diagonal), false, 1)
             let markerContext = UIGraphicsGetCurrentContext()
-            markerContext?.setFillColor(UIColor.red.cgColor)
-            markerContext?.fill(rect)
             markerContext?.saveGState()
             
             if watermarkOptions.imageOption.alpha != 1.0 {
