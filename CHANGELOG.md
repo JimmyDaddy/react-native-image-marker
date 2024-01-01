@@ -1,5 +1,12 @@
 
 
+## [1.1.12](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.1.11...v1.1.12) (2024-01-01)
+
+
+### Bug Fixes
+
+* 1.1.x iOS crash and icon watermark not shown correctly ([1ae9cb0](https://github.com/JimmyDaddy/react-native-image-marker/commit/1ae9cb015e54bc52bf6ed27fe1c70528d7e54f2c))
+
 ## [1.1.11](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.1.8...v1.1.11) (2023-12-21)
 
 

@@ -65,36 +65,32 @@ class Utils: NSObject {
     static func stringToInt(_ string: String) -> UInt32 {
         if string.count == 1 {
             let hexChar = string[string.startIndex]
-            var intCh: UInt32 = 0
-            if hexChar >= "0" && hexChar <= "9" {
-                intCh = (UInt32(hexChar.asciiValue!) - 48) * 16 /* 0 的Ascll - 48 */
-            } else if hexChar >= "A" && hexChar <= "F" {
-                intCh = (UInt32(hexChar.asciiValue!) - 55) * 16 /* A 的Ascll - 65 */
-            } else {
-                intCh = (UInt32(hexChar.asciiValue!) - 87) * 16 /* a 的Ascll - 97 */
-            }
+            var intCh: UInt32 = getCharInt(hexChar)
             return intCh * 2
         } else {
             let hexChar1 = string[string.startIndex]
-            var intCh1: UInt32 = 0
-            if hexChar1 >= "0" && hexChar1 <= "9" {
-                intCh1 = (UInt32(hexChar1.asciiValue!) - 48) * 16 /* 0 的Ascll - 48 */
-            } else if hexChar1 >= "A" && hexChar1 <= "F" {
-                intCh1 = (UInt32(hexChar1.asciiValue!) - 55) * 16 /* A 的Ascll - 65 */
-            } else {
-                intCh1 = (UInt32(hexChar1.asciiValue!) - 87) * 16 /* a 的Ascll - 97 */
-            }
+            var intCh1: UInt32 = getCharInt(hexChar1)
             let hexChar2 = string[string.index(after: string.startIndex)]
-            var intCh2: UInt32 = 0
-            if hexChar2 >= "0" && hexChar2 <= "9" {
-                intCh2 = UInt32(hexChar2.asciiValue!) - 48 /* 0 的Ascll - 48 */
-            } else if hexChar1 >= "A" && hexChar1 <= "F" {
-                intCh2 = UInt32(hexChar2.asciiValue!) - 55 /* A 的Ascll - 65 */
-            } else {
-                intCh2 = UInt32(hexChar2.asciiValue!) - 87 /* a 的Ascll - 97 */
-            }
+            var intCh2: UInt32 = getCharInt(hexChar2)
             return intCh1 + intCh2
         }
+    }
+    
+    static func getCharInt(_ char: Character) -> UInt32 {
+        var charInt: UInt32 = 0
+        if let asciiValue = char.asciiValue {
+            switch asciiValue {
+            case 48...57: // '0'...'9'
+                charInt = UInt32(asciiValue) - 48
+            case 65...70: // 'A'...'F'
+                charInt = UInt32(asciiValue) - 55
+            case 97...102: // 'a'...'f'
+                charInt = UInt32(asciiValue) - 87
+            default:
+                print("Invalid hex character")
+            }
+        }
+        return charInt
     }
 
     static func getShadowStyle(_ shadowStyle: [AnyHashable: Any]?) -> NSShadow? {
