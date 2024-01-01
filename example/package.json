@@ -6,7 +6,8 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "start": "react-native start",
-    "pods": "pod-install --quiet"
+    "pods": "pod-install",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@expo/react-native-action-sheet": "^4.0.1",
@@ -23,6 +24,8 @@
     "@babel/preset-env": "^7.20.0",
     "@babel/runtime": "^7.20.0",
     "babel-plugin-module-resolver": "^4.1.0",
-    "metro-react-native-babel-preset": "0.73.10"
+    "metro-react-native-babel-preset": "0.73.10",
+    "patch-package": "^8.0.0",
+    "postinstall-postinstall": "^2.1.0"
   }
 }

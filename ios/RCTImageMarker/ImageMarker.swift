@@ -116,7 +116,7 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         }
     }
         
-    func markerImgWithText(_ image: UIImage, _ opts: MarkTextOptions) -> UIImage? {
+    func markImgWithText(_ image: UIImage, _ opts: MarkTextOptions) -> UIImage? {
 
         var bg = image;
         let w = bg.size.width
@@ -271,9 +271,9 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         return aimg
     }
     
-    func markeImage(with image: UIImage, waterImages: [UIImage], options: MarkImageOptions) -> UIImage? {
- 
-        var bg = image;
+    func markImage(with image: UIImage, waterImages: [UIImage], options: MarkImageOptions) -> UIImage? {
+
+        let bg = image;
         let w = bg.size.width
         let h = bg.size.height
         UIGraphicsBeginImageContextWithOptions(bg.size, false, options.backgroundImage.scale)
@@ -323,39 +323,41 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
                     case .topLeft:
                         rect = CGRect(origin: CGPoint(x: 20, y: 20), size: size)
                     case .topCenter:
-                        rect = CGRect(origin: CGPoint(x: (w - size.width) / 2, y: 20), size: size)
+                        rect = CGRect(origin: CGPoint(x: (w - ww) / 2, y: 20), size: size)
                     case .topRight:
-                        rect = CGRect(origin: CGPoint(x: w - size.width - 20, y: 20), size: size)
+                        rect = CGRect(origin: CGPoint(x: w - ww - 20, y: 20), size: size)
                     case .bottomLeft:
-                        rect = CGRect(origin: CGPoint(x: 20, y: h - size.height - 20), size: size)
+                        rect = CGRect(origin: CGPoint(x: 20, y: h - wh - 20), size: size)
                     case .bottomCenter:
-                        rect = CGRect(origin: CGPoint(x: (w - size.width) / 2, y: h - size.height - 20), size: size)
+                        rect = CGRect(origin: CGPoint(x: (w - ww) / 2, y: h - wh - 20), size: size)
                     case .bottomRight:
-                        rect = CGRect(origin: CGPoint(x: w - size.width - 20, y: h - size.height - 20), size: size)
+                        rect = CGRect(origin: CGPoint(x: w - ww - 20, y: h - wh - 20), size: size)
                     case .center:
-                        rect = CGRect(origin: CGPoint(x: (w - size.width) / 2, y: (h - size.height) / 2), size: size)
+                        rect = CGRect(origin: CGPoint(x: (w - ww) / 2, y: (h - wh) / 2), size: size)
                     default:
                         rect = CGRect(origin: CGPoint(x: 20, y: 20), size: size)
                     }
             } else {
-                rect = CGRect(x: Utils.parseSpreadValue(v: watermarkOptions.X, relativeTo: w) ?? 20, y: Utils.parseSpreadValue(v: watermarkOptions.Y, relativeTo: h) ?? 20, width: CGFloat(ww), height: CGFloat(wh))
+                rect = CGRect(x: Utils.parseSpreadValue(v: watermarkOptions.X, relativeTo: w) ?? 20, y: Utils.parseSpreadValue(v: watermarkOptions.Y, relativeTo: h) ?? 20, width: diagonal, height: diagonal)
             }
             
             UIGraphicsBeginImageContextWithOptions(CGSize(width: diagonal, height: diagonal), false, 1)
             let markerContext = UIGraphicsGetCurrentContext()
             markerContext?.saveGState()
-
+            
             if watermarkOptions.imageOption.alpha != 1.0 {
                 markerContext?.beginTransparencyLayer(auxiliaryInfo: nil)
                 markerContext?.setAlpha(watermarkOptions.imageOption.alpha)
                 markerContext?.setBlendMode(.multiply)
                 let markerImage = markerImg.rotatedImageWithTransform(watermarkOptions.imageOption.rotate)
-                markerContext?.draw(markerImage.cgImage!, in: CGRect(origin: .zero, size: CGSize(width: diagonal, height: diagonal)))
+                let originPoint = CGPoint(x: 0, y: rect.height - markerImage.size.height)
+                markerContext?.draw(markerImage.cgImage!, in: CGRect(origin: originPoint, size: CGSize(width: markerImage.size.width, height: markerImage.size.height)))
                 markerContext?.endTransparencyLayer()
 
             } else {
                 let markerImage = markerImg.rotatedImageWithTransform(watermarkOptions.imageOption.rotate)
-                markerContext?.draw(markerImage.cgImage!, in: CGRect(origin: .zero, size: CGSize(width: diagonal, height: diagonal)))
+                let originPoint = CGPoint(x: 0, y: rect.height - markerImage.size.height)
+                markerContext?.draw(markerImage.cgImage!, in: CGRect(origin: originPoint, size: CGSize(width: markerImage.size.width, height: markerImage.size.height)))
             }
             markerContext?.restoreGState()
 
@@ -388,12 +390,12 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         Task(priority: .userInitiated) {
             do {
                 let images = try await loadImages(with: [(markOpts?.backgroundImage)!])
-                let scaledImage = self.markerImgWithText(images[0], markOpts!)
+                let scaledImage = self.markImgWithText(images[0], markOpts!)
                 let res = self.saveImageForMarker(scaledImage!, with: markOpts!)
                 resolver(res)
-                print("Loaded images:", images)
+                print("Loaded images: \(images)")
             } catch {
-                print("Failed to load images:", error)
+                print("Failed to load images, error: \(error).")
             }
         }
     }
@@ -408,12 +410,12 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
             do {
                 let waterImages = markOpts?.watermarkImages.map { $0.imageOption }
                 var images = try await loadImages(with: [(markOpts?.backgroundImage)!] + waterImages!)
-                let scaledImage = self.markeImage(with: images.remove(at: 0), waterImages: images, options: markOpts!)
+                let scaledImage = self.markImage(with: images.remove(at: 0), waterImages: images, options: markOpts!)
                 let res = self.saveImageForMarker(scaledImage!, with: markOpts!)
                 resolver(res)
-                print("Loaded images:", images)
+                print("Loaded images: \(images), waterImages: \(String(describing: waterImages))")
             } catch {
-                print("Failed to load images:", error)
+                print("Failed to load images, error: \(error).")
             }
         }
     }
