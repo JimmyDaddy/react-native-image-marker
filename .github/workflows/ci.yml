@@ -14,7 +14,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Verify Dev Changed files
-      uses: tj-actions/changed-files@v40
+      uses: tj-actions/changed-files@v41
       id: verify-dev-changed-files
       with:
         files: |
@@ -65,7 +65,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Verify Android Changed files
-      uses: tj-actions/changed-files@v40
+      uses: tj-actions/changed-files@v41
       id: verify-android-changed-files
       with:
         files: |
@@ -157,7 +157,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Verify Android Changed files
-        uses: tj-actions/changed-files@v40
+        uses: tj-actions/changed-files@v41
         id: verify-android-changed-files
         with:
           files: |
@@ -240,7 +240,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Verify iOS Changed files
-      uses: tj-actions/changed-files@v40
+      uses: tj-actions/changed-files@v41
       id: verify-iOS-changed-files
       with:
         files: |
