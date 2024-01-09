@@ -284,7 +284,7 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
     return if (null != filename) {
       if (filename.endsWith(".jpg") || filename.endsWith(".png")) "$cacheDir/$filename" else "$cacheDir/$filename$ext"
     } else {
-      val name = UUID.randomUUID().toString() + "image marker"
+      val name = UUID.randomUUID().toString() + "_image_marker"
       "$cacheDir/$name$ext"
     }
   }
