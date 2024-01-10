@@ -12,8 +12,8 @@
   [![stars](https://img.shields.io/github/stars/jimmydaddy/react-native-image-marker?logo=github&style=for-the-badge)](https://github.com/JimmyDaddy/react-native-image-marker) [![forks](https://img.shields.io/github/forks/jimmydaddy/react-native-image-marker?logo=github&style=for-the-badge)](https://github.com/JimmyDaddy/react-native-image-marker/fork)
   [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?logo=github&style=for-the-badge)](https://github.com/JimmyDaddy/react-native-image-marker/pulls) ![license](https://img.shields.io/npm/l/react-native-image-marker?style=for-the-badge)
   [![github](https://img.shields.io/badge/github-repo-blue?logo=github&style=for-the-badge)](https://github.com/JimmyDaddy/react-native-image-marker)
-  [![CI](https://github.com/JimmyDaddy/react-native-image-marker/actions/workflows/ci.yml/badge.svg)](https://github.com/JimmyDaddy/react-native-image-marker/actions/workflows/ci.yml)
-  ![platform-iOS](https://img.shields.io/badge/iOS-black?logo=Apple&style=for-the-badge) ![platform-Android](https://img.shields.io/badge/Android-black?logo=Android&style=for-the-badge)
+  [![CI](https://img.shields.io/github/actions/workflow/status/jimmydaddy/react-native-image-marker/ci.yml?style=for-the-badge)](https://github.com/JimmyDaddy/react-native-image-marker/actions/workflows/ci.yml)
+  ![platform-iOS](https://img.shields.io/badge/iOS-gray?logo=Apple&style=for-the-badge) ![platform-Android](https://img.shields.io/badge/Android-gray?logo=Android&style=for-the-badge)
   <br/>
   
 </div>
