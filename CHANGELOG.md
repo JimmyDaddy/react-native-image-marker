@@ -1,5 +1,13 @@
 
 
+## [1.2.3](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.2.2...v1.2.3) (2024-01-22)
+
+
+### Bug Fixes
+
+*  fontName bug (android) ([#196](https://github.com/JimmyDaddy/react-native-image-marker/issues/196)) ([83d9856](https://github.com/JimmyDaddy/react-native-image-marker/commit/83d9856c01d275fac81741f908fbb61a39e34219))
+* add custom fonts to example ([#197](https://github.com/JimmyDaddy/react-native-image-marker/issues/197)) ([6e2ad75](https://github.com/JimmyDaddy/react-native-image-marker/commit/6e2ad75b56c8a8e23bfb181beca11b4d60213f20))
+
 ## [1.2.2](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.2.1...v1.2.2) (2024-01-01)
 
 ### Bug Fixes
