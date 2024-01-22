@@ -1,5 +1,14 @@
 
 
+## [1.1.13](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.1.12...v1.1.13) (2024-01-22)
+
+
+### Bug Fixes
+
+*  fix [#158](https://github.com/JimmyDaddy/react-native-image-marker/issues/158) android release bug  style not working ([#160](https://github.com/JimmyDaddy/react-native-image-marker/issues/160)) ([a942e30](https://github.com/JimmyDaddy/react-native-image-marker/commit/a942e30732c61094abc1e95ca5003c883d1e4410))
+*  fontName bug (android) ([#196](https://github.com/JimmyDaddy/react-native-image-marker/issues/196)) ([390a418](https://github.com/JimmyDaddy/react-native-image-marker/commit/390a418fe6034f737485c7609c0276f58d08b2a4))
+
+
 ## [1.1.12](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.1.11...v1.1.12) (2024-01-01)
 
 
