@@ -485,7 +485,7 @@ function useViewModel() {
               },
               style: {
                 color: '#FF0000AA',
-                fontName: 'Arial',
+                fontName: 'MaShanZheng-Regular',
                 fontSize,
                 underline,
                 bold,
@@ -520,7 +520,7 @@ function useViewModel() {
               },
               style: {
                 color: '#FF00AA9F',
-                fontName: 'NotoSansSC-Regular',
+                fontName: 'RubikBurned-Regular',
                 fontSize,
                 underline,
                 bold,
@@ -1146,7 +1146,7 @@ function App() {
                   />
                 </RowSplit>
                 {/* <RowSplit>
-                  
+
                 </RowSplit> */}
                 <TouchableOpacity
                   style={[s.btn, { height: 40 }]}
