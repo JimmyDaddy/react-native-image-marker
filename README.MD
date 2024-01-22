@@ -15,7 +15,7 @@
   [![CI](https://github.com/JimmyDaddy/react-native-image-marker/actions/workflows/ci.yml/badge.svg)](https://github.com/JimmyDaddy/react-native-image-marker/actions/workflows/ci.yml)
   ![platform-iOS](https://img.shields.io/badge/iOS-black?logo=Apple&style=for-the-badge) ![platform-Android](https://img.shields.io/badge/Android-black?logo=Android&style=for-the-badge)
   <br/>
-  
+
 </div>
 
 ---
@@ -711,6 +711,7 @@ This library use [Fresco](https://github.com/facebook/fresco) to decode image on
 [@gaoxiaosong](https://github.com/gaoxiaosong)
 [@onka13](https://github.com/onka13)
 [@OrangeFlavoredColdCoffee](https://github.com/OrangeFlavoredColdCoffee)
+[@Dendi](https://github.com/vioku)
 
 ## Examples
 
