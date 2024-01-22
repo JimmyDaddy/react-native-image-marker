@@ -75,7 +75,7 @@ data class TextOptions(val options: ReadableMap) {
     textPaint.color = Color.parseColor(Utils.transRGBColor(style.color))
     textPaint.isUnderlineText = style.underline
     textPaint.textSkewX = style.skewX!!
-    var typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
+    var typeface = Typeface.create(ReactFontManager.getInstance() .getTypeface(style.fontName!!, Typeface.NORMAL, context.assets), Typeface.NORMAL)
     if (style.italic && style.bold) {
       typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD_ITALIC)
     } else if (style.italic) {
