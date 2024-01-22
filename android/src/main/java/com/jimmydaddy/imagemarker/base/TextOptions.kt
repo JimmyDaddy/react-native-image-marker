@@ -57,12 +57,17 @@ data class TextOptions(val options: ReadableMap) {
         style.shadowLayerStyle!!.color
       )
     }
-    try {
-      //设置字体失败时使用默认字体
-      textPaint.typeface = ReactFontManager.getInstance()
-        .getTypeface(style.fontName!!, Typeface.NORMAL, context.assets)
-    } catch (e: Exception) {
-      textPaint.typeface = Typeface.DEFAULT
+
+    var typefaceFamily = Typeface.DEFAULT
+    if (style.fontName != null) {
+      typefaceFamily = try {
+          //设置字体失败时使用默认字体
+        ReactFontManager.getInstance()
+          .getTypeface(style.fontName!!, Typeface.NORMAL, context.assets)
+      } catch (e: Exception) {
+        Log.e(Constants.IMAGE_MARKER_TAG, "Could not get typeface: " + e.message)
+        Typeface.DEFAULT
+      }
     }
     val textSize = TypedValue.applyDimension(
       TypedValue.COMPLEX_UNIT_SP,
@@ -75,13 +80,13 @@ data class TextOptions(val options: ReadableMap) {
     textPaint.color = Color.parseColor(Utils.transRGBColor(style.color))
     textPaint.isUnderlineText = style.underline
     textPaint.textSkewX = style.skewX!!
-    var typeface = Typeface.create(ReactFontManager.getInstance() .getTypeface(style.fontName!!, Typeface.NORMAL, context.assets), Typeface.NORMAL)
+    var typeface = Typeface.create(typefaceFamily, Typeface.NORMAL)
     if (style.italic && style.bold) {
-      typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD_ITALIC)
+      typeface = Typeface.create(typefaceFamily, Typeface.BOLD_ITALIC)
     } else if (style.italic) {
-      typeface = Typeface.create(Typeface.DEFAULT, Typeface.ITALIC)
+      typeface = Typeface.create(typefaceFamily, Typeface.ITALIC)
     } else if (style.bold) {
-      typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+      typeface = Typeface.create(typefaceFamily, Typeface.BOLD)
     }
     textPaint.isStrikeThruText = style.strikeThrough
     textPaint.typeface = typeface
