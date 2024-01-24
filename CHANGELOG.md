@@ -1,5 +1,17 @@
 
 
+## [1.1.14](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.1.13...v1.1.14) (2024-01-24)
+
+
+### Bug Fixes
+
+* set the font size without considering the screen density ([da84135](https://github.com/JimmyDaddy/react-native-image-marker/commit/da8413520f8adc185048ea89a21c28a55f2689c5))
+
+
+### Features
+
+* replace positionOptions to postions ([8077617](https://github.com/JimmyDaddy/react-native-image-marker/commit/8077617b5b5eadf3d239d610853d76220852f5de))
+
 ## [1.1.13](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.1.12...v1.1.13) (2024-01-22)
 
 

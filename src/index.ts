@@ -376,7 +376,7 @@ export interface TextBackgroundStyle extends Padding {
    * @example
    *  type: TextBackgroundType.stretchX
    **/
-  type: TextBackgroundType | null;
+  type?: TextBackgroundType | null;
   /**
    * @description background color
    * @example
@@ -452,6 +452,7 @@ export interface TextOptions {
    **/
   text: string;
   /**
+   * @deprecated since 1.2.4 use position instead
    * @description text position options
    * @example
    *  positionOptions: {
@@ -462,6 +463,19 @@ export interface TextOptions {
    * }
    */
   positionOptions?: PositionOptions;
+
+  /**
+   * @description text position options
+   * @example
+   *  positionOptions: {
+   *   X: 10,
+   *   Y: 10,
+   *   // or
+   *   // position: Position.center
+   * }
+   */
+  position?: PositionOptions;
+
   /**
    * @description text style
    * @example
@@ -921,6 +935,11 @@ class Marker {
         __packager_asset: false,
       };
     }
+
+    options.watermarkTexts.forEach((item) => {
+      item.position = item.position || item.positionOptions;
+      delete item.positionOptions;
+    });
 
     options.backgroundImage.src = srcObj;
     // let mShadowStyle = shadowStyle || {};

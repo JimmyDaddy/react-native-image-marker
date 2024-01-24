@@ -21,7 +21,7 @@ class TextOptions: NSObject {
             throw NSError(domain: ErrorDomainEnum.PARAMS_REQUIRED.rawValue, code: 0, userInfo: [NSLocalizedDescriptionKey: "text is required"])
         }
 
-        if let positionOpts = opts["positionOptions"] as? [AnyHashable: Any] {
+        if let positionOpts = opts["position"] as? [AnyHashable: Any] {
             self.X = Utils.handleDynamicToString(v: positionOpts["X"])
             self.Y = Utils.handleDynamicToString(v: positionOpts["Y"])
             self.position = positionOpts["position"] != nil ? RCTConvert.MarkerPosition(positionOpts["position"]) : .none
