@@ -1,10 +1,10 @@
-name: Build and Test
-on: 
+name: CI
+on:
   pull_request:
     types: [opened, synchronize, reopened]
   workflow_dispatch:
 
-concurrency: 
+concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref }}
   cancel-in-progress: true
 
@@ -43,7 +43,7 @@ jobs:
         ruby-version: 2.7
         bundler-cache: true
 
-    - name: Setup node 16
+    - name: Setup node
       if: steps.verify-dev-changed-files.outputs.any_changed == 'true'
       uses: actions/setup-node@v3
       with:
@@ -78,7 +78,7 @@ jobs:
           assets/**
           package.json
           !example/ios/**
-  
+
     - uses: actions/cache@v3
       name: Cache node_modules
       if: steps.verify-android-changed-files.outputs.any_changed == 'true'
@@ -107,7 +107,7 @@ jobs:
         ruby-version: 2.7
         bundler-cache: true
 
-    - name: Setup node 16
+    - name: Setup node
       uses: actions/setup-node@v3
       if: steps.verify-android-changed-files.outputs.any_changed == 'true'
       with:
@@ -119,7 +119,7 @@ jobs:
       with:
         distribution: 'zulu'
         java-version: 11
-  
+
     - name: Install Gradle dependencies
       if: steps.cache-gradle.outputs.cache-hit != 'true' && steps.verify-android-changed-files.outputs.any_changed == 'true'
       run: |
@@ -128,7 +128,7 @@ jobs:
 
     - name: Run unit tests
       if: steps.verify-android-changed-files.outputs.any_changed == 'true'
-      run: | 
+      run: |
         cd example/android
         ./gradlew test --stacktrace
 
@@ -153,7 +153,7 @@ jobs:
     name: Android Test
     strategy:
       matrix:
-        api-level: [24, 25, 29, 30, 31]
+        api-level: [24, 30, 31]
         target: [default]
     steps:
       - name: Checkout the code
@@ -199,7 +199,7 @@ jobs:
           ruby-version: 2.7
           bundler-cache: true
 
-      - name: Setup node 16
+      - name: Setup node
         uses: actions/setup-node@v3
         if: steps.verify-android-changed-files.outputs.any_changed == 'true'
         with:
@@ -262,7 +262,7 @@ jobs:
           example/node_modules
         key: ${{ runner.os }}-nodeModules-${{ hashFiles('package.json') }}-${{ hashFiles('example/package.json') }}
         fail-on-cache-miss: true
-  
+
     - name: Cache Pods
       id: cache-pods
       uses: actions/cache@v3
@@ -277,12 +277,12 @@ jobs:
       with:
         ruby-version: 2.7
         bundler-cache: true
-  
+
     - name: Install Cocoapods
       if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
       run: gem install cocoapods -v ${{ matrix.cocoapods }}
 
-    - name: Setup node 16
+    - name: Setup node
       if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
       uses: actions/setup-node@v3
       with:
@@ -301,13 +301,13 @@ jobs:
 
     - name: Build
       if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
-      run: | 
+      run: |
         cd example/ios
         xcodebuild -workspace ImageMarkerExample.xcworkspace -scheme ImageMarkerExample -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 12' | xcpretty
 
     - name: Test
       if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
-      run: | 
+      run: |
         cd example/ios
         xcodebuild -workspace ImageMarkerExample.xcworkspace -scheme ImageMarkerExample -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 12' test | xcpretty
 
