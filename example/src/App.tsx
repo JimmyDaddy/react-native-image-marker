@@ -291,8 +291,11 @@ function useViewModel() {
         useModal: true,
       },
       (buttonIndex) => {
-        if (buttonIndex === cancelButtonIndex || buttonIndex == null) return;
-        else setBackgroundFormat(options[buttonIndex] as any);
+        if (buttonIndex === cancelButtonIndex || buttonIndex == null) {
+          return;
+        } else {
+          setBackgroundFormat(options[buttonIndex] as any);
+        }
       }
     );
   }
@@ -309,8 +312,11 @@ function useViewModel() {
         useModal: true,
       },
       (buttonIndex) => {
-        if (buttonIndex === cancelButtonIndex || buttonIndex == null) return;
-        else setWaterMarkType(options[buttonIndex] as any);
+        if (buttonIndex === cancelButtonIndex || buttonIndex == null) {
+          return;
+        } else {
+          setWaterMarkType(options[buttonIndex] as any);
+        }
       }
     );
   }
@@ -332,8 +338,11 @@ function useViewModel() {
         useModal: true,
       },
       (buttonIndex) => {
-        if (buttonIndex === cancelButtonIndex || buttonIndex == null) return;
-        else setSaveFormat(options[buttonIndex] as any);
+        if (buttonIndex === cancelButtonIndex || buttonIndex == null) {
+          return;
+        } else {
+          setSaveFormat(options[buttonIndex] as any);
+        }
       }
     );
   }
@@ -359,8 +368,9 @@ function useViewModel() {
         useModal: true,
       },
       (buttonIndex) => {
-        if (buttonIndex === cancelButtonIndex || buttonIndex == null) return;
-        else {
+        if (buttonIndex === cancelButtonIndex || buttonIndex == null) {
+          return;
+        } else {
           setPosition(options[buttonIndex] as any);
         }
       }
@@ -384,8 +394,9 @@ function useViewModel() {
         useModal: true,
       },
       (buttonIndex) => {
-        if (buttonIndex === cancelButtonIndex || buttonIndex == null) return;
-        else {
+        if (buttonIndex === cancelButtonIndex || buttonIndex == null) {
+          return;
+        } else {
           setTextBgStretch(options[buttonIndex] as any);
         }
       }
@@ -404,8 +415,9 @@ function useViewModel() {
         useModal: true,
       },
       (buttonIndex) => {
-        if (buttonIndex === cancelButtonIndex || buttonIndex == null) return;
-        else {
+        if (buttonIndex === cancelButtonIndex || buttonIndex == null) {
+          return;
+        } else {
           setTextAlign(options[buttonIndex] as any);
         }
       }
@@ -514,7 +526,7 @@ function useViewModel() {
               },
             },
             {
-              text: `text marker normal`,
+              text: 'text marker normal',
               positionOptions: {
                 position: Position.center,
               },
@@ -560,13 +572,14 @@ function useViewModel() {
           saveFormat: saveFormat,
         });
       }
-      setUri(
+      const resUri =
         saveFormat === ImageFormat.base64
           ? path
           : Platform.OS === 'android'
           ? 'file:' + path
-          : path
-      );
+          : path;
+      setUri(resUri);
+      console.log(resUri);
       setLoading(false);
       setShow(true);
       const stat = await RNBlobUtil.fs.stat(path);
@@ -698,13 +711,14 @@ function useViewModel() {
           saveFormat: saveFormat,
         });
       }
-      setUri(
+      const resUri =
         saveFormat === ImageFormat.base64
           ? path
           : Platform.OS === 'android'
           ? 'file:' + path
-          : path
-      );
+          : path;
+      setUri(resUri);
+      console.log(resUri);
       setShow(true);
       setLoading(false);
       const stat = await RNBlobUtil.fs.stat(path);

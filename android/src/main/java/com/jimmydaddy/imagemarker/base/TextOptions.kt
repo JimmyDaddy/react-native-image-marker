@@ -31,7 +31,7 @@ data class TextOptions(val options: ReadableMap) {
       throw MarkerError(ErrorCode.PARAMS_REQUIRED, "mark text is required")
     }
     val positionOptions =
-      if (null != options.getMap("positionOptions")) options.getMap("positionOptions") else null
+      if (null != options.getMap("position")) options.getMap("position") else null
     x = if (positionOptions!!.hasKey("X")) Utils.handleDynamicToString(positionOptions.getDynamic("X")) else null
     y = if (positionOptions.hasKey("Y")) Utils.handleDynamicToString(positionOptions.getDynamic("Y")) else null
     positionEnum =
@@ -69,11 +69,12 @@ data class TextOptions(val options: ReadableMap) {
         Typeface.DEFAULT
       }
     }
-    val textSize = TypedValue.applyDimension(
-      TypedValue.COMPLEX_UNIT_SP,
-      style.fontSize,
-      context.resources.displayMetrics
-    )
+//    val textSize = TypedValue.applyDimension(
+//      TypedValue.COMPLEX_UNIT_SP,
+//      style.fontSize,
+//      context.resources.displayMetrics
+//    )
+    val textSize = style.fontSize
     textPaint.isAntiAlias = true
     textPaint.textSize = textSize
     Log.i(Constants.IMAGE_MARKER_TAG, "textSize: " + textSize + " fontSize: " + style.fontSize + " displayMetrics: " + context.resources.displayMetrics)
@@ -121,7 +122,7 @@ data class TextOptions(val options: ReadableMap) {
       ).toInt()
     }
     val margin = DEFAULT_MARGIN
-    var position = Position(margin.toFloat(), margin.toFloat())
+    var position = Position(margin, margin)
     if (positionEnum != null) {
       position = Position.getTextPosition(
         positionEnum,
@@ -168,9 +169,9 @@ data class TextOptions(val options: ReadableMap) {
       if (style.textBackgroundStyle!!.cornerRadius != null) {
         val path = Path()
 
-        path.addRoundRect(bgRect, style.textBackgroundStyle!!.cornerRadius!!.radii(bgRect), Path.Direction.CW);
+        path.addRoundRect(bgRect, style.textBackgroundStyle!!.cornerRadius!!.radii(bgRect), Path.Direction.CW)
 
-        canvas.drawPath(path, paint);
+        canvas.drawPath(path, paint)
       } else {
         canvas.drawRect(bgRect, paint)
       }
@@ -179,6 +180,7 @@ data class TextOptions(val options: ReadableMap) {
       Paint.Align.RIGHT -> x + textWidth
       Paint.Align.CENTER -> x + textWidth / 2
       Paint.Align.LEFT -> x
+      else -> x
     }
     canvas.translate(textX, y)
     textLayout.draw(canvas)
