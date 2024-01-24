@@ -30,8 +30,7 @@ class TextStyle: NSObject {
             self.shadow = nil
         }
         self.textBackground = try TextBackground(textBackgroundStyle: (opts["textBackgroundStyle"] as? [AnyHashable : Any]))
-        let scale = UIScreen.main.scale
-        let fontSize = opts["fontSize"] != nil ? (RCTConvert.cgFloat(opts["fontSize"]) * scale) : (14.0 * scale)
+        let fontSize = opts["fontSize"] != nil ? RCTConvert.cgFloat(opts["fontSize"]) : 14.0
         self.font = UIFont(name: opts["fontName"] as? String ?? "", size: fontSize)
         if self.font == nil {
             self.font = UIFont.systemFont(ofSize: fontSize)
