@@ -1,5 +1,12 @@
 
 
+## [1.2.5](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.2.4...v1.2.5) (2024-01-26)
+
+
+### Features
+
+* expo support ([6c97c55](https://github.com/JimmyDaddy/react-native-image-marker/commit/6c97c5560e874b2e1509db34627c9775f71e9d7a))
+
 ## [1.2.4](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.2.3...v1.2.4) (2024-01-24)
 
 
