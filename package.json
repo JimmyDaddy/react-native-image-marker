@@ -1,6 +1,6 @@
 {
   "name": "react-native-image-marker",
-  "version": "1.1.14",
+  "version": "1.1.15",
   "description": "Add text or icon watermark to your images",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -13,6 +13,7 @@
     "android",
     "ios",
     "cpp",
+    "app.plugin.js",
     "*.podspec",
     "!lib/typescript/example",
     "!ios/build",
@@ -33,7 +34,9 @@
     "prepack": "bob build",
     "release": "release-it",
     "example": "yarn --cwd example",
-    "bootstrap": "yarn example && yarn install && yarn example pods",
+    "expo-example": "yarn --cwd expo-example",
+    "bootstrap": "yarn example && yarn install && yarn example pods && yarn expo-example && yarn expo-example expo-install",
+    "bootstrap-m1": "yarn example && yarn install && yarn example m1-pods",
     "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build",
     "docs": "typedoc --excludePrivate --tsconfig tsconfig.doc.json"
   },
@@ -60,6 +63,7 @@
   "devDependencies": {
     "@commitlint/config-conventional": "^17.0.2",
     "@evilmartians/lefthook": "^1.2.2",
+    "@expo/config-plugins": "^7.8.4",
     "@react-native-community/eslint-config": "^3.0.2",
     "@release-it/conventional-changelog": "^7.0.2",
     "@types/jest": "^28.1.2",
@@ -72,6 +76,7 @@
     "eslint-plugin-prettier": "^4.0.0",
     "husky": "^8.0.3",
     "jest": "^28.1.1",
+    "metro-react-native-babel-preset": "^0.77.0",
     "pod-install": "^0.1.0",
     "prettier": "^2.0.5",
     "react": "18.2.0",
@@ -144,7 +149,8 @@
   },
   "eslintIgnore": [
     "node_modules/",
-    "lib/"
+    "lib/",
+    "bas64bg.js"
   ],
   "prettier": {
     "quoteProps": "consistent",
