@@ -149,7 +149,8 @@
   },
   "eslintIgnore": [
     "node_modules/",
-    "lib/"
+    "lib/",
+    "bas64bg.js"
   ],
   "prettier": {
     "quoteProps": "consistent",
