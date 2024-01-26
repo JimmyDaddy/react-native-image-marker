@@ -331,7 +331,7 @@ PODS:
     - glog
   - react-native-blob-util (0.19.6):
     - React-Core
-  - react-native-image-marker (1.1.11):
+  - react-native-image-marker (1.1.14):
     - React-Core
   - react-native-image-picker (5.7.0):
     - React-Core
@@ -617,7 +617,7 @@ SPEC CHECKSUMS:
   React-jsinspector: b6ed4cb3ffa27a041cd440300503dc512b761450
   React-logger: 186dd536128ae5924bc38ed70932c00aa740cd5b
   react-native-blob-util: d8fa1a7f726867907a8e43163fdd8b441d4489ea
-  react-native-image-marker: d58c3e046b75e3302fd4f365cd7c32051badfef2
+  react-native-image-marker: 372a979d762d27f85ac6c31715f4f419942052e1
   react-native-image-picker: 3269f75c251cdcd61ab51b911dd30d6fff8c6169
   React-perflogger: e706562ab7eb8eb590aa83a224d26fa13963d7f2
   React-RCTActionSheet: 57d4bd98122f557479a3359ad5dad8e109e20c5a
