@@ -1,7 +1,7 @@
 
 {
   "extends": "./tsconfig",
-  "exclude": ["example"],
+  "exclude": ["example", "expo-example"],
   "typedocOptions": {
     "exclude": [ "**/node_modules/**/*.*", "example/", "expo-example/" ],
     "entryPoints": ["src/index.ts"],
