@@ -8,6 +8,8 @@ on:
       - "assets/**"
       - "README.MD"
       - "README.0.9.2.MD"
+      - "README.1.1.x.MD"
+      - "tsconfig.doc.json"
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
