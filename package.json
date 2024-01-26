@@ -34,7 +34,8 @@
     "prepack": "bob build",
     "release": "release-it",
     "example": "yarn --cwd example",
-    "bootstrap": "yarn example && yarn install && yarn example pods",
+    "expo-example": "yarn --cwd expo-example",
+    "bootstrap": "yarn example && yarn install && yarn example pods && yarn expo-example && yarn expo-example expo-install",
     "bootstrap-m1": "yarn example && yarn install && yarn example m1-pods",
     "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build",
     "docs": "typedoc --excludePrivate --tsconfig tsconfig.doc.json"

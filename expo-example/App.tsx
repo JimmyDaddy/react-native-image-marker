@@ -495,7 +495,7 @@ function useViewModel() {
           watermarkTexts: [
             {
               text,
-              positionOptions: {
+              position: {
                 position,
               },
               style: {
@@ -530,7 +530,7 @@ function useViewModel() {
             },
             {
               text: 'text marker normal',
-              positionOptions: {
+              position: {
                 position: Position.center,
               },
               style: {
@@ -643,7 +643,7 @@ function useViewModel() {
           watermarkTexts: [
             {
               text,
-              positionOptions: {
+              position: {
                 X,
                 Y,
               },
@@ -677,7 +677,7 @@ function useViewModel() {
             },
             {
               text,
-              positionOptions: {
+              position: {
                 X: 500,
                 Y: 600,
               },
