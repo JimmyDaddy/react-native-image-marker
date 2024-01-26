@@ -30,56 +30,24 @@
 ## Table of Contents
 
 * [Features](#features)
+* [Installation](#installation)
+  * [React Native](#react-native)
+  * [Expo](#expo)
 * [Compatibility](#compatibility)
-* [Sample](#sample)
 * [Usage](#usage)
   * [Text background fit](#text-background-fit)
-    * [API](#api)
-    * [Sample](#sample-1)
-    * [Example](#example)
   * [Text background stretchX](#text-background-stretchx)
-    * [API](#api-1)
-    * [Sample](#sample-2)
-    * [Example](#example-1)
   * [Text background stretchY](#text-background-stretchy)
-    * [API](#api-2)
-    * [Sample](#sample-3)
-    * [Example](#example-2)
   * [Text background border radius](#text-background-border-radius)
-    * [API](#api-3)
-    * [Sample](#sample-4)
-    * [Example](#example-3)
   * [Text with shadow](#text-with-shadow)
-    * [API](#api-4)
-    * [Sample](#sample-5)
-    * [Example](#example-4)
   * [Multiple text watermarks](#multiple-text-watermarks)
-    * [Sample](#sample-6)
-    * [Example](#example-5)
   * [Text rotation](#text-rotation)
-    * [Sample](#sample-7)
-    * [Example](#example-6)
   * [Icon watermarks](#icon-watermarks)
-    * [Sample](#sample-8)
-    * [Example](#example-7)
   * [Multiple icon watermarks](#multiple-icon-watermarks)
-    * [API](#api-5)
-    * [Sample](#sample-9)
-    * [Example](#example-8)
   * [Background rotation](#background-rotation)
-    * [Sample](#sample-10)
-    * [Example](#example-9)
   * [Icon rotation](#icon-rotation)
-    * [Sample](#sample-11)
-    * [Example](#example-10)
   * [Transparent background](#transparent-background)
-    * [Sample](#sample-12)
-    * [Example](#example-11)
   * [Transparent icon](#transparent-icon)
-    * [Sample](#sample-13)
-    * [Example](#example-12)
-* [Installation](#installation)
-  * [iOS Pod Install (RN version < 0.60.0)](#ios-pod-install-rn-version--0600)
 * [API](#api-6)
 * [Save image to file](#save-image-to-file)
 * [Contributors](#contributors)
@@ -89,16 +57,23 @@
 
 <!-- tocstop -->
 
+<br/>
+
 ## Features
 
-* [Add **multiple text** watermarks to images](https://jimmydaddy.github.io/react-native-image-marker/interfaces/TextMarkOptions.html#watermarkTexts)
-* [Add **multiple icon** watermarks to images *(Android >= N, iOS >= iOS 13)*](https://jimmydaddy.github.io/react-native-image-marker/classes/Marker.html#markImage)
-* [Support **rotating** background image and icon watermarks.](https://jimmydaddy.github.io/react-native-image-marker/interfaces/ImageOptions.html#rotate)
-* [Support setting opacity for background image and icon watermarks.](https://jimmydaddy.github.io/react-native-image-marker/interfaces/ImageOptions.html#rotate)
-* Support base64 format
+<div>
+  <img align="right" width="25%" src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/IOSMarker.gif" width='150'>
+  <img align="right" width="25%" src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/AndroidMarker.gif" width='150'>
+</div>
+
+* [**Multiple text** watermarks](https://jimmydaddy.github.io/react-native-image-marker/interfaces/TextMarkOptions.html#watermarkTexts)
+* [**Multiple icon** watermarks](https://jimmydaddy.github.io/react-native-image-marker/classes/Marker.html#markImage)
+* [**Rotating** background and icon](https://jimmydaddy.github.io/react-native-image-marker/interfaces/ImageOptions.html#rotate)
+* [Setting transparency for background and icon](https://jimmydaddy.github.io/react-native-image-marker/interfaces/ImageOptions.html#rotate)
+* Base64
 * Flexible text style settings, including:
   * [Rotating](https://jimmydaddy.github.io/react-native-image-marker/interfaces/TextStyle.html#rotate)
-  * [Text shadow](https://jimmydaddy.github.io/react-native-image-marker/interfaces/ShadowLayerStyle.html)
+  * [Shadow](https://jimmydaddy.github.io/react-native-image-marker/interfaces/ShadowLayerStyle.html)
   * Background color
   * [Italic](https://jimmydaddy.github.io/react-native-image-marker/interfaces/TextStyle.html#italic)
   * [Bold](https://jimmydaddy.github.io/react-native-image-marker/interfaces/TextStyle.html#bold)
@@ -108,6 +83,30 @@
   * Relative position
   * [Background border radius](https://jimmydaddy.github.io/react-native-image-marker/interfaces/TextBackgroundStyle.html#cornerRadius)
 * Compatible with both Android and iOS
+* Expo
+
+## Installation
+
+#### React Native
+
+```shell
+# npm
+npm install react-native-image-marker --save
+
+# yarn
+yarn add react-native-image-marker
+```
+
+#### Expo
+
+```shell
+# install
+npx expo install react-native-image-marker
+
+# compile
+npx expo prebuild
+
+```
 
 ## Compatibility
 
@@ -119,13 +118,6 @@
 | >= 0.73.0, other cases | v1.2.0 or later |
 
 > ***Note: This table is only applicable to major versions of react-native-image-marker. Patch versions should be backwards compatible.***
-
-## Sample
-
-<p>
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/IOSMarker.gif" width='150'>
- <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/AndroidMarker.gif" width='150'>
-</p>
 
 ## Usage
 
@@ -152,7 +144,7 @@ const options = {
   },
   watermarkTexts: [{
     text: 'text marker \n multiline text',
-    positionOptions: {
+    position: {
       position: Position.topLeft,
     },
     style: {
@@ -204,7 +196,7 @@ const options = {
   },
   watermarkTexts: [{
     text: 'text marker \n multiline text',
-    positionOptions: {
+    position: {
       position: Position.topLeft,
     },
     style: {
@@ -255,7 +247,7 @@ const options = {
   },
   watermarkTexts: [{
     text: 'text marker \n multiline text',
-    positionOptions: {
+    position: {
       position: Position.topLeft,
     },
     style: {
@@ -307,7 +299,7 @@ const options = {
   },
   watermarkTexts: [{
     text: 'text marker normal',
-    positionOptions: {
+    position: {
       position: Position.center,
     },
     style: {
@@ -368,7 +360,7 @@ const options = {
   },
   watermarkTexts: [{
     text: 'text marker \n multiline text',
-    positionOptions: {
+    position: {
       position: Position.topLeft,
     },
     style: {
@@ -410,7 +402,7 @@ Marker.markText({
   },
   waterMarkTexts: [{
     text: 'hello world \n 你好',
-    positionOptions: {
+    position: {
       position: Position.topLeft,
     },
     style: {
@@ -424,7 +416,7 @@ Marker.markText({
     },
   }, {
     text: 'text marker normal',
-    positionOptions: {
+    position: {
       position: Position.topRight,
     },
     style: {
@@ -464,7 +456,7 @@ Marker.markText({
   },
   waterMarkTexts: [{
     text: 'hello world \n 你好',
-    positionOptions: {
+    position: {
       position: Position.topLeft,
     },
     style: {
@@ -481,7 +473,7 @@ Marker.markText({
     },
   }, {
     text: 'text marker normal',
-    positionOptions: {
+    position: {
       position: Position.center,
     },
     style: {
@@ -605,7 +597,7 @@ Marker.markText({
   },
   watermarkTexts: [{
     text: 'hello world \n 你好',
-    positionOptions: {
+    position: {
       position: Position.topLeft,
     },
     style: {
@@ -628,7 +620,7 @@ Marker.markText({
     },
   }, {
     text: 'hello world \n 你好',
-    positionOptions: {
+    position: {
       position: Position.center,
     },
     style: {
@@ -725,21 +717,6 @@ Marker.markImage({
 });
 ```
 
-## Installation
-
-* npm install react-native-image-marker --save
-* link
-  * react-native link (RN version < 0.60.0)
-  * [auto link](https://github.com/react-native-community/cli/blob/main/docs/autolinking.md)(RN version > 0.60.0)
-
-### iOS Pod Install (RN version < 0.60.0)
-
-You can use `pod` instead of `link`. Add following lines in your `Podfile`:
-
-```ruby
-pod 'RNImageMarker', :path => '../node_modules/react-native-image-marker'
-```
-
 ## API
 
 * [the latest version](https://jimmydaddy.github.io/react-native-image-marker/classes/Marker.html)
@@ -765,7 +742,9 @@ pod 'RNImageMarker', :path => '../node_modules/react-native-image-marker'
 
 ## Examples
 
-[examples](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/example)
+#### React Native
+
+[example](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/example)
 
 If you want to run the example locally, you can do the following:
 
@@ -784,6 +763,31 @@ yarn example android
 
 # iOS
 yarn example ios
+
+```
+
+#### Expo
+
+[expo-example](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/expo-example)
+
+If you want to run the example locally, you can do the following:
+
+```bash
+
+git clone git@github.com:JimmyDaddy/react-native-image-marker.git
+
+cd ./react-native-image-marker
+
+# Expo
+# install dependencies
+yarn
+
+# Android
+# Open an android emulator or connect a real device at first
+yarn expo-example android
+
+# iOS
+yarn expo-example ios
 
 ```
 
