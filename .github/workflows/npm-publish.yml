@@ -15,7 +15,7 @@ jobs:
           registry-url: https://registry.npmjs.org/
       - run: npm install
       - run: npm run prepack
-      - run: npm publish
+      - run: npm publish --tag 1.1.x_latest
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_AUTH_TOKEN}}
 
