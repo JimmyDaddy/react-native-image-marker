@@ -30,6 +30,7 @@ import {
 import Toast from 'react-native-toast-message';
 import * as FileSystem from 'expo-file-system';
 import filesize from 'filesize';
+import * as ImageManipulator from 'expo-image-manipulator';
 
 const icon = require('./assets/icon.jpeg');
 const icon1 = require('./assets/yahaha.jpeg');
@@ -121,7 +122,7 @@ const s = StyleSheet.create({
     padding: 10,
   },
   shortTextInput: {
-    width: 30,
+    width: 40,
     height: 30,
     backgroundColor: '#ffA',
     borderColor: '#00B96B5A',
@@ -587,6 +588,12 @@ function useViewModel() {
       setShow(true);
       const stat = await FileSystem.getInfoAsync(path);
       setFileSize(filesize.filesize(stat.exists ? stat.size : 0));
+      const imRes = await ImageManipulator.manipulateAsync(path, [
+        {
+          rotate: 90,
+        },
+      ]);
+      console.log(imRes);
     } catch (err) {
       console.log('====================================');
       console.log(err, 'err');
