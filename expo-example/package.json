@@ -14,13 +14,14 @@
     "expo": "~50.0.3",
     "expo-file-system": "~16.0.5",
     "expo-font": "~11.10.2",
+    "expo-image-manipulator": "~11.8.0",
     "expo-image-picker": "~14.7.1",
     "expo-status-bar": "~1.11.1",
     "filesize": "^10.1.0",
     "react": "18.2.0",
     "react-native": "0.73.2",
-    "react-native-toast-message": "^2.2.0",
-    "react-native-image-marker": "*"
+    "react-native-image-marker": "*",
+    "react-native-toast-message": "^2.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
