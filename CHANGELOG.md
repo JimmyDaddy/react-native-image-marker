@@ -1,5 +1,17 @@
 
 
+## [1.2.6](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.1.8...v1.2.6) (2024-02-04)
+
+
+### Bug Fixes
+
+* coil load image use the original dimensions by default ([fc29a6a](https://github.com/JimmyDaddy/react-native-image-marker/commit/fc29a6ac4c55e994863bd32d8b32e7414be0d378))
+
+### Other Changes
+
+* remove expo android ios folders and ignore it ([7cd0df2](https://github.com/JimmyDaddy/react-native-image-marker/commit/7cd0df272e516a18cacea6f4d8114ad14c36f769))
+
+
 ## [1.2.5](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.2.4...v1.2.5) (2024-01-26)
 
 

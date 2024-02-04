@@ -14,6 +14,7 @@ import coil.decode.GifDecoder
 import coil.decode.ImageDecoderDecoder
 import coil.decode.SvgDecoder
 import coil.request.ImageRequest
+import coil.size.Size
 import com.facebook.react.bridge.ReactApplicationContext
 import com.jimmydaddy.imagemarker.base.Constants.IMAGE_MARKER_TAG
 import com.jimmydaddy.imagemarker.base.ErrorCode
@@ -56,6 +57,8 @@ class MarkerImageLoader(private val context: ReactApplicationContext, private va
             if (img.src != null && img.src.width > 0 && img.src.height > 0) {
               request = request.size(img.src.width, img.src.height)
               Log.d(IMAGE_MARKER_TAG, "src.width: " + img.src.width + " src.height: " + img.src.height)
+            }  else {
+              request = request.size(Size.ORIGINAL)
             }
             imageLoader.enqueue(request.target (
               onStart = { _ ->
