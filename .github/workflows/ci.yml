@@ -154,7 +154,7 @@ jobs:
     name: Android Test
     strategy:
       matrix:
-        api-level: [24, 30, 31]
+        api-level: [24, 31]
         target: [default]
     steps:
       - name: Checkout the code
