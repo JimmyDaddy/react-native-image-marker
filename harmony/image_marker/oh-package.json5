@@ -1,0 +1,11 @@
+{
+  "name": "image_marker",
+  "version": "1.2.6-0.0.1",
+  "description": "Please describe the basic information.",
+  "main": "Index.ets",
+  "author": "",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@rnoh/react-native-openharmony": "file:../react_native_openharmony"
+  }
+}

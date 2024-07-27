@@ -1,0 +1,29 @@
+{
+  "module": {
+    "name": "image_marker",
+    "type": "har",
+    "deviceTypes": [
+      "default",
+      "tablet",
+      "2in1"
+    ],
+    "metadata": [
+      {
+        "name": "ContextResourceConfigLoadFromParentTemp",
+        "value": "true"
+      }
+    ],
+    "requestPermissions": [
+      {
+        "name": "ohos.permission.WRITE_IMAGEVIDEO",
+        "reason": "$string:reason",
+        "usedScene": {
+          "abilities": [
+            "FormAbility"
+          ],
+          "when": "inuse"
+        }
+      }
+    ]
+  }
+}
