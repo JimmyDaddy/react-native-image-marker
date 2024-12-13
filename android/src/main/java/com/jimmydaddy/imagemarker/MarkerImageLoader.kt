@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
+import android.util.Base64
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.graphics.drawable.toBitmap
@@ -48,8 +49,10 @@ class MarkerImageLoader(private val context: ReactApplicationContext, private va
     val deferredList = images.map { img ->
       async {
         try {
+
           val isCoilImg = isCoilImg(img.uri)
           Log.d(IMAGE_MARKER_TAG, "isCoilImg: $isCoilImg")
+
           if (isCoilImg) {
             val future = CompletableFuture<Bitmap?>()
             var request = ImageRequest.Builder(context)
@@ -80,6 +83,17 @@ class MarkerImageLoader(private val context: ReactApplicationContext, private va
               }
             ).build())
             return@async future.get()
+          } else if (isBase64String(img.uri)) {
+            Log.d(IMAGE_MARKER_TAG, "Loading Base64 Image")
+            decodeBase64ToBitmap(img.uri)?.let { bitmap ->
+              val scaledBitmap = ImageProcess.scaleBitmap(bitmap, img.scale)
+                ?: throw MarkerError(ErrorCode.LOAD_IMAGE_FAILED, "Failed to scale Base64 image")
+              if (!bitmap.isRecycled && img.scale != 1f) {
+                bitmap.recycle()
+                System.gc()
+              }
+              return@async scaledBitmap
+            } ?: throw MarkerError(ErrorCode.GET_RESOURCE_FAILED, "Failed to decode Base64 image")
           } else {
             val resId = getDrawableResourceByName(img.uri)
             Log.d(IMAGE_MARKER_TAG, "resId: $resId")
@@ -130,4 +144,20 @@ class MarkerImageLoader(private val context: ReactApplicationContext, private va
     )
   }
 
+
+  private fun isBase64String(s: String?): Boolean {
+    if (s == null) return false
+    return s.startsWith("data:image/") && s.contains(";base64,")
+  }
+
+  private fun decodeBase64ToBitmap(base64Str: String?): Bitmap? {
+    if (base64Str == null) return null
+    return try {
+      val imageBytes = Base64.decode(base64Str.substring(base64Str.indexOf(",") + 1), Base64.DEFAULT)
+      BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+    } catch (e: Exception) {
+      Log.e("ImageLoader", "Failed to decode Base64 image", e)
+      null
+    }
+  }
 }
