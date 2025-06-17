@@ -163,8 +163,8 @@ class Utils {
       return if (d == null) "0"
       else
           when (d.type) {
-            ReadableType.String -> d.asString()
-            ReadableType.Number -> d.asDouble().toString()
+            ReadableType.String -> d.asString()!!
+            ReadableType.Number -> d.asDouble().toString()!!
             else -> {
               "0"
             }
