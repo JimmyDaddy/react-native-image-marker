@@ -8,11 +8,13 @@ class MarkTextOptions(options: ReadableMap) : Options(options) {
 
   init {
     val waterMarkTextsMap = options.getArray("watermarkTexts")
-    if (waterMarkTextsMap!!.size() > 0) {
+    if (waterMarkTextsMap != null && waterMarkTextsMap.size() > 0) {
       watermarkTexts = arrayOfNulls(waterMarkTextsMap.size())
       for (i in 0 until waterMarkTextsMap.size()) {
         val textMap = waterMarkTextsMap.getMap(i)
-        watermarkTexts[i] = TextOptions(textMap)
+        if (textMap != null) {
+          watermarkTexts[i] = TextOptions(textMap)
+        }
       }
     }
   }
@@ -20,12 +22,12 @@ class MarkTextOptions(options: ReadableMap) : Options(options) {
   companion object {
     @JvmStatic
     fun checkParams(opts: ReadableMap, promise: Promise): MarkTextOptions? {
-      try {
-        return MarkTextOptions(opts)
+      return try {
+        MarkTextOptions(opts)
       } catch (e: MarkerError) {
         promise.reject(e.getErrorCode(), e.getErrMsg())
+        null
       }
-      return null
     }
   }
 }
