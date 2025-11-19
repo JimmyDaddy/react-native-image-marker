@@ -10,13 +10,13 @@ class MarkTextOptions(options: ReadableMap) : Options(options) {
     val waterMarkTextsMap = options.getArray("watermarkTexts")
     if (waterMarkTextsMap!!.size() > 0) {
       watermarkTexts = arrayOfNulls(waterMarkTextsMap.size())
-     for (i in 0 until waterMarkTextsMap.size()) {
-          val textMap = waterMarkTextsMap.getMap(i)
-          textMap?.let {
-              watermarkTexts[i] = TextOptions(it)
-          } ?: run {
-             throw MarkerError(ErrorCode.NULL_MAP, "watermarkTexts[$i] is null")
-          }
+      for (i in 0 until waterMarkTextsMap.size()) {
+        val textMap = waterMarkTextsMap.getMap(i)
+        textMap?.let {
+          watermarkTexts[i] = TextOptions(it)
+        } ?: run {
+          throw MarkerError(ErrorCode.NULL_MAP, "watermarkTexts[$i] is null")
+        }
       }
     }
   }
