@@ -226,7 +226,7 @@ jobs:
             cd example/android && ./gradlew connectedCheck  --stacktrace
 
       - name: Upload Reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: steps.verify-android-changed-files.outputs.any_changed == 'true'
         with:
           name: Test-Reports
