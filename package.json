@@ -66,7 +66,7 @@
     "@evilmartians/lefthook": "^1.2.2",
     "@expo/config-plugins": "^7.8.4",
     "@react-native-community/eslint-config": "^3.0.2",
-    "@release-it/conventional-changelog": "^7.0.2",
+    "@release-it/conventional-changelog": "^10.0.2",
     "@types/jest": "^28.1.2",
     "@types/react": "~17.0.21",
     "@types/react-native": "0.70.0",
@@ -83,7 +83,7 @@
     "react": "18.2.0",
     "react-native": "0.73.3",
     "react-native-builder-bob": "^0.20.0",
-    "release-it": "^16.2.0",
+    "release-it": "^19.0.6",
     "typedoc": "^0.24.8",
     "typedoc-plugin-localization": "^3.0.1",
     "typedoc-plugin-rename-defaults": "^0.6.5",
@@ -114,7 +114,8 @@
   "release-it": {
     "git": {
       "commitMessage": "chore: release ${version}",
-      "tagName": "v${version}"
+      "tagName": "v${version}",
+      "changelog": "grep '^## ' CHANGELOG.md | head -n 1"
     },
     "npm": {
       "publish": false
@@ -125,7 +126,9 @@
     "plugins": {
       "@release-it/conventional-changelog": {
         "preset": "conventionalcommits",
-        "infile": "CHANGELOG.md"
+        "infile": "CHANGELOG.md",
+        "header": "# Changelog",
+        "releaseCount": 0
       }
     }
   },
