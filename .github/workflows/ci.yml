@@ -29,7 +29,7 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Run npm audit
         run: npm audit --audit-level=moderate
@@ -172,7 +172,7 @@ jobs:
         path:  ${{ github.workspace }}/example/android/app-release-${{ github.sha }}.apk
 
   android-api-level-test:
-    runs-on: macos-latest
+    runs-on: macos-13
     needs: android-build
     name: Android Test
     strategy:
@@ -238,7 +238,7 @@ jobs:
         with:
           api-level: ${{ matrix.api-level }}
           target: ${{ matrix.target }}
-          arch: arm64-v8a
+          arch: x86_64
           profile: pixel_5
           script: |
             cd example/android && ./gradlew connectedCheck  --stacktrace
@@ -328,13 +328,13 @@ jobs:
       if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
       run: |
         cd example/ios
-        xcodebuild -workspace ImageMarkerExample.xcworkspace -scheme ImageMarkerExample -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 12' | xcpretty
+        xcodebuild -workspace ImageMarkerExample.xcworkspace -scheme ImageMarkerExample -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16' | xcpretty
 
     - name: Test
       if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
       run: |
         cd example/ios
-        xcodebuild -workspace ImageMarkerExample.xcworkspace -scheme ImageMarkerExample -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 12' test | xcpretty
+        xcodebuild -workspace ImageMarkerExample.xcworkspace -scheme ImageMarkerExample -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16' test | xcpretty
 
   ci-complete:
     name: Complete CI
