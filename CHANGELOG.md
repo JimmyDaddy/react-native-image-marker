@@ -1,27 +1,5 @@
 # Changelog
 
-## [1.2.7](///compare/v1.1.8...v1.2.7) (2025-11-20)
-
-### Features
-
-* expo support ([#207](undefined/undefined/undefined/issues/207)) 7a6ca14
-
-### Bug Fixes
-
-*  fix [#158](undefined/undefined/undefined/issues/158) android release bug  style not working ([#160](undefined/undefined/undefined/issues/160)) a942e30
-*  fontName bug (android) ([#196](undefined/undefined/undefined/issues/196)) 83d9856
-* add custom fonts to example ([#197](undefined/undefined/undefined/issues/197)) 6e2ad75
-* coil load image with original size ([#217](undefined/undefined/undefined/issues/217)) d6e8744
-* fix [#164](undefined/undefined/undefined/issues/164) Build Failure on CI Due to CocoaPods 1.1.9 in iOS Project ([#165](undefined/undefined/undefined/issues/165)) 532e8a4
-* fix [#179](undefined/undefined/undefined/issues/179) Same watermark image is behaving differently on ANDROID and iOS ([#180](undefined/undefined/undefined/issues/180)) 10d71e1
-* fix [#179](undefined/undefined/undefined/issues/179) same watermark image is behaving differently on android and ios when use given position enum ([#187](undefined/undefined/undefined/issues/187)) 1c62250
-* fix [#202](undefined/undefined/undefined/issues/202) generates inconsistent text size across different devices ([#204](undefined/undefined/undefined/issues/204)) 47c0cd9
-* fix[#176](undefined/undefined/undefined/issues/176) Fresco 3.1.3 compatibility issues with RN 0.73.0, compileDebugKotlin FAILED ([#177](undefined/undefined/undefined/issues/177)) 06d65c4
-* Handle Nullable Map and Enum Mismatch in MarkTextOptions.kt ([#247](undefined/undefined/undefined/issues/247)) 9878efa
-* load base64 image on android ([#240](undefined/undefined/undefined/issues/240)) 4764a6f
-* parse hex color string crash on iOS ([#186](undefined/undefined/undefined/issues/186)) 53ac1f1
-* RN 0.80.2 build error ([#248](undefined/undefined/undefined/issues/248)) 76d6972
-
 ## [1.2.6](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.1.8...v1.2.6) (2024-02-04)
 
 
