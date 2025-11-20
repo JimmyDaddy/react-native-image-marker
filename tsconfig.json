@@ -4,11 +4,12 @@
     "paths": {
       "react-native-image-marker": ["./src/index"]
     },
+    "types": [],
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "esModuleInterop": true,
     "ignoreDeprecations": "5.0",
-    "importsNotUsedAsValues": "error",
+    "verbatimModuleSyntax": true,
     "forceConsistentCasingInFileNames": true,
     "jsx": "react",
     "lib": ["esnext"],
