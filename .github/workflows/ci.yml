@@ -37,6 +37,8 @@ jobs:
 
   install-dep:
     runs-on: macos-latest
+    env:
+      NO_FLIPPER: '1'
     name: Install dependencies
     steps:
     - name: Checkout the code
@@ -67,7 +69,7 @@ jobs:
       if: steps.verify-dev-changed-files.outputs.any_changed == 'true'
       uses: ruby/setup-ruby@v1
       with:
-        ruby-version: '3.3'
+        ruby-version: '3.2'
         bundler-cache: true
 
     - name: Setup node
@@ -252,6 +254,8 @@ jobs:
 
   ios-build-test:
     runs-on: macos-latest
+    env:
+      NO_FLIPPER: '1'
     needs: install-dep
     name: iOS Build and Test
     strategy:
