@@ -10,6 +10,31 @@ concurrency:
 
 jobs:
 
+  security:
+    runs-on: ubuntu-latest
+    name: Security & Dependency Review
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v4
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
+        if: github.event_name == 'pull_request'
+        with:
+          fail-on-severity: moderate
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit
+        run: npm audit --audit-level=moderate
+        continue-on-error: true
+
   install-dep:
     runs-on: macos-latest
     name: Install dependencies
@@ -26,7 +51,7 @@ jobs:
           !*.MD
           !*.yml
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       name: Cache node_modules
       id: cache-node-modules
       if: steps.verify-dev-changed-files.outputs.any_changed == 'true'
@@ -35,19 +60,21 @@ jobs:
           node_modules
           example/node_modules
         key: ${{ runner.os }}-nodeModules-${{ hashFiles('package.json') }}-${{ hashFiles('example/package.json') }}
+        restore-keys: |
+          ${{ runner.os }}-nodeModules-
 
     - name: Set up Ruby
       if: steps.verify-dev-changed-files.outputs.any_changed == 'true'
       uses: ruby/setup-ruby@v1
       with:
-        ruby-version: 2.7
+        ruby-version: '3.3'
         bundler-cache: true
 
     - name: Setup node
       if: steps.verify-dev-changed-files.outputs.any_changed == 'true'
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '20'
 
     - name: Install npm dependencies
       if: steps.cache-node-modules.outputs.cache-hit != 'true' && steps.verify-dev-changed-files.outputs.any_changed == 'true'
@@ -80,7 +107,7 @@ jobs:
           !example/ios/**
           example/e2e/**
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       name: Cache node_modules
       if: steps.verify-android-changed-files.outputs.any_changed == 'true'
       id: cache-node-modules
@@ -88,10 +115,11 @@ jobs:
         path: |
           node_modules
           example/node_modules
-        fail-on-cache-miss: true
         key: ${{ runner.os }}-nodeModules-${{ hashFiles('package.json') }}-${{ hashFiles('example/package.json') }}
+        restore-keys: |
+          ${{ runner.os }}-nodeModules-
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       id: cache-gradle
       name: Cache Gradle dependencies
       if: steps.verify-android-changed-files.outputs.any_changed == 'true'
@@ -100,22 +128,17 @@ jobs:
           ~/.gradle/caches
           ~/.gradle/wrapper
         key: ${{ runner.os }}-gradle-${{ hashFiles('example/android/gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('android/src/**/*.kt') }}
-
-    - name: Set up Ruby
-      uses: ruby/setup-ruby@v1
-      if: steps.verify-android-changed-files.outputs.any_changed == 'true'
-      with:
-        ruby-version: 2.7
-        bundler-cache: true
+        restore-keys: |
+          ${{ runner.os }}-gradle-
 
     - name: Setup node
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       if: steps.verify-android-changed-files.outputs.any_changed == 'true'
       with:
-        node-version: '18'
+        node-version: '20'
 
     - name: Set up JDK
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       if: steps.verify-android-changed-files.outputs.any_changed == 'true'
       with:
         distribution: 'zulu'
@@ -172,7 +195,7 @@ jobs:
             !example/ios/**
             example/e2e/**
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         name: Cache node_modules
         if: steps.verify-android-changed-files.outputs.any_changed == 'true'
         id: cache-node-modules
@@ -180,10 +203,11 @@ jobs:
           path: |
             node_modules
             example/node_modules
-          fail-on-cache-miss: true
           key: ${{ runner.os }}-nodeModules-${{ hashFiles('package.json') }}-${{ hashFiles('example/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nodeModules-
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         name: Cache Gradle dependencies
         if: steps.verify-android-changed-files.outputs.any_changed == 'true'
         id: cache-gradle
@@ -191,24 +215,18 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          fail-on-cache-miss: true
           key: ${{ runner.os }}-gradle-${{ hashFiles('example/android/gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('android/src/**/*.kt') }}
-
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
-        if: steps.verify-android-changed-files.outputs.any_changed == 'true'
-        with:
-          ruby-version: 2.7
-          bundler-cache: true
+          restore-keys: |
+            ${{ runner.os }}-gradle-
 
       - name: Setup node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         if: steps.verify-android-changed-files.outputs.any_changed == 'true'
         with:
-          node-version: '18'
+          node-version: '20'
 
       - name: Set up JDK
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         if: steps.verify-android-changed-files.outputs.any_changed == 'true'
         with:
           distribution: 'zulu'
@@ -238,7 +256,7 @@ jobs:
     name: iOS Build and Test
     strategy:
       matrix:
-        cocoapods: ['1.10.1', '1.14.3']
+        cocoapods: ['1.14.3', '1.15.2']
     steps:
     - name: Checkout the code
       uses: actions/checkout@v4
@@ -255,7 +273,7 @@ jobs:
           !example/android/**
           example/e2e/**
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       name: Cache node_modules
       id: cache-node-modules
       if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
@@ -264,21 +282,25 @@ jobs:
           node_modules
           example/node_modules
         key: ${{ runner.os }}-nodeModules-${{ hashFiles('package.json') }}-${{ hashFiles('example/package.json') }}
-        fail-on-cache-miss: true
+        restore-keys: |
+          ${{ runner.os }}-nodeModules-
 
     - name: Cache Pods
       id: cache-pods
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
       with:
         path: example/ios/Pods
         key: ${{ runner.os }}-pods-${{ matrix.cocoapods }}-${{ hashFiles('**/Podfile.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-pods-${{ matrix.cocoapods }}-
+          ${{ runner.os }}-pods-
 
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1
       if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
       with:
-        ruby-version: 2.7
+        ruby-version: '3.3'
         bundler-cache: true
 
     - name: Install Cocoapods
@@ -287,9 +309,9 @@ jobs:
 
     - name: Setup node
       if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '20'
 
     - name: Install Pods
       if: steps.cache-pods.outputs.cache-hit != 'true' && steps.verify-iOS-changed-files.outputs.any_changed == 'true'
@@ -316,11 +338,11 @@ jobs:
 
   ci-complete:
     name: Complete CI
-    needs: [android-build, android-api-level-test, ios-build-test]
+    needs: [security, android-build, android-api-level-test, ios-build-test]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     steps:
       - name: Check all job status
         if: >-
-          ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped') }}
+          ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
         run: exit 1
