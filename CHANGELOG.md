@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.2.7](///compare/v1.1.8...v1.2.7) (2025-11-20)
+## [1.2.9](///compare/v1.1.8...v1.2.9) (2025-11-20)
 
 ### Features
 
@@ -11,6 +11,7 @@
 *  fix [#158](undefined/undefined/undefined/issues/158) android release bug  style not working ([#160](undefined/undefined/undefined/issues/160)) a942e30
 *  fontName bug (android) ([#196](undefined/undefined/undefined/issues/196)) 83d9856
 * add custom fonts to example ([#197](undefined/undefined/undefined/issues/197)) 6e2ad75
+* cd scripts error f01c061
 * coil load image with original size ([#217](undefined/undefined/undefined/issues/217)) d6e8744
 * fix [#164](undefined/undefined/undefined/issues/164) Build Failure on CI Due to CocoaPods 1.1.9 in iOS Project ([#165](undefined/undefined/undefined/issues/165)) 532e8a4
 * fix [#179](undefined/undefined/undefined/issues/179) Same watermark image is behaving differently on ANDROID and iOS ([#180](undefined/undefined/undefined/issues/180)) 10d71e1
