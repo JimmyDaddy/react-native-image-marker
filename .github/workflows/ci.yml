@@ -256,7 +256,7 @@ jobs:
     name: iOS Build and Test
     strategy:
       matrix:
-        cocoapods: ['1.14.3', '1.15.2']
+        cocoapods: ['1.14.3', '1.15.0']
     steps:
     - name: Checkout the code
       uses: actions/checkout@v4
@@ -300,7 +300,7 @@ jobs:
       uses: ruby/setup-ruby@v1
       if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
       with:
-        ruby-version: '3.3'
+        ruby-version: '3.2'
         bundler-cache: true
 
     - name: Install Cocoapods
