@@ -7,7 +7,7 @@
     "ios": "react-native run-ios",
     "start": "react-native start",
     "pods": "pod-install",
-    "m1-pods": "cd ios && arch -x86_64 pod install"
+    "m1-pods": "cd ios && arch -arm64 pod install"
   },
   "dependencies": {
     "@expo/react-native-action-sheet": "^4.0.1",
