@@ -396,6 +396,7 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
                 print("Loaded images: \(images)")
             } catch {
                 print("Failed to load images, error: \(error).")
+                rejecter("error", error.localizedDescription, error)
             }
         }
     }
@@ -416,6 +417,7 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
                 print("Loaded images: \(images), waterImages: \(String(describing: waterImages))")
             } catch {
                 print("Failed to load images, error: \(error).")
+                rejecter("error", error.localizedDescription, error)
             }
         }
     }
