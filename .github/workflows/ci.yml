@@ -174,7 +174,7 @@ jobs:
         path:  ${{ github.workspace }}/example/android/app-release-${{ github.sha }}.apk
 
   android-api-level-test:
-    runs-on: macos-13
+    runs-on: macos-14
     needs: android-build
     name: Android Test
     strategy:
