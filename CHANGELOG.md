@@ -1,6 +1,18 @@
 # Changelog
 
+## [1.2.11](///compare/v1.2.10...v1.2.11) (2026-01-31)
+
+### Bug Fixes
+* fix: propagate image loading errors via rejecter on iOS (#267) ([7e9bb86](https://github.com/JimmyDaddy/react-native-image-marker/commit/7e9bb86)), closes [#267](https://github.com/JimmyDaddy/react-native-image-marker/issues/267)
+* ci: bump Cocoapods version from 1.15.0 to 1.15.2 in the iOS build matrix (#266) ([f12c10b](https://github.com/JimmyDaddy/react-native-image-marker/commit/f12c10b)), closes [#266](https://github.com/JimmyDaddy/react-native-image-marker/issues/266)
+* ci: change macos-13 pipline image to macos-14 (#263) ([9362fc4](https://github.com/JimmyDaddy/react-native-image-marker/commit/9362fc4)), closes [#263](https://github.com/JimmyDaddy/react-native-image-marker/issues/263)
+* ci: update npm publish workflow to Node.js 24, newer actions, and OIDC permissions (#265) ([db893db](https://github.com/JimmyDaddy/react-native-image-marker/commit/db893db)), closes [#265](https://github.com/JimmyDaddy/react-native-image-marker/issues/265)
+
+
 ## [1.2.10](///compare/v1.2.9-1...v1.2.10) (2026-01-30)
+
+### Bug Fixes
+* fix(android): remove deprecated jcenter repository (#262) ([6f665ce](https://github.com/JimmyDaddy/react-native-image-marker/commit/6f665ce)), closes [#262](https://github.com/JimmyDaddy/react-native-image-marker/issues/262)
 
 ## [1.2.9](///compare/v1.1.8...v1.2.9) (2025-11-20)
 
