@@ -26,5 +26,19 @@
     "skipLibCheck": true,
     "strict": true,
     "target": "esnext"
-  }
+  },
+  "include": [
+    "src/**/*",
+    "specs/**/*",
+    "scripts/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "lib",
+    "example",
+    "example-0.73",
+    "expo-example",
+    "android",
+    "ios"
+  ]
 }
