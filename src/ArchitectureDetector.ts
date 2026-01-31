@@ -3,6 +3,7 @@ import { TurboModuleRegistry, UIManager } from 'react-native';
 /**
  * Architecture detector for React Native new architecture support
  * Detects whether TurboModules, JSI, and Fabric are available at runtime
+ * Extended with cross-platform architecture detection and switching capabilities
  */
 export class ArchitectureDetector {
   private static _isNewArchitecture: boolean | null = null;
@@ -172,4 +173,147 @@ export class ArchitectureDetector {
       hasFabric: this.hasFabric(),
     };
   }
+
+  /**
+   * Detects cross-platform architecture compatibility
+   * This method provides a bridge to the CrossPlatformArchitectureManager
+   * @returns Cross-platform architecture information
+   */
+  static detectCrossPlatformArchitecture(): CrossPlatformArchitectureInfo | null {
+    try {
+      // Lazy import to avoid circular dependencies
+      const {
+        CrossPlatformArchitectureManager,
+      } = require('./CrossPlatformArchitectureManager');
+      return CrossPlatformArchitectureManager.detectCrossPlatformArchitecture();
+    } catch (error) {
+      console.warn(
+        'Cross-platform architecture detection not available:',
+        error
+      );
+      return null;
+    }
+  }
+
+  /**
+   * Validates architecture consistency across platforms
+   * @returns Validation result or null if cross-platform detection is not available
+   */
+  static validateArchitectureConsistency(): ArchitectureConsistencyResult | null {
+    try {
+      const {
+        CrossPlatformArchitectureManager,
+      } = require('./CrossPlatformArchitectureManager');
+      return CrossPlatformArchitectureManager.validateArchitectureConsistency();
+    } catch (error) {
+      console.warn(
+        'Cross-platform architecture validation not available:',
+        error
+      );
+      return null;
+    }
+  }
+
+  /**
+   * Gets architecture switching recommendations
+   * @returns Array of recommendations or empty array if not available
+   */
+  static getArchitectureRecommendations(): ArchitectureRecommendation[] {
+    try {
+      const {
+        CrossPlatformArchitectureManager,
+      } = require('./CrossPlatformArchitectureManager');
+      return CrossPlatformArchitectureManager.getArchitectureRecommendations();
+    } catch (error) {
+      console.warn('Architecture recommendations not available:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Switches architecture across platforms
+   * @param targetArchitecture Target architecture (legacy or new)
+   * @param platforms Platforms to switch (optional, defaults to all)
+   * @returns Switch result or null if not available
+   */
+  static switchArchitecture(
+    targetArchitecture: 'legacy' | 'new',
+    platforms?: ('android' | 'ios' | 'expo')[]
+  ): ArchitectureSwitchResult | null {
+    try {
+      const {
+        CrossPlatformArchitectureManager,
+      } = require('./CrossPlatformArchitectureManager');
+      return CrossPlatformArchitectureManager.switchArchitecture(
+        targetArchitecture,
+        platforms
+      );
+    } catch (error) {
+      console.warn('Architecture switching not available:', error);
+      return null;
+    }
+  }
+}
+
+// Type definitions for cross-platform functionality
+export interface CrossPlatformArchitectureInfo {
+  javascript: ArchitectureInfo;
+  android: ArchitectureInfo;
+  ios: ArchitectureInfo;
+  expo: ArchitectureInfo;
+  isConsistent: boolean;
+  recommendedArchitecture: 'legacy' | 'new';
+}
+
+export interface ArchitectureInfo {
+  platform: 'javascript' | 'android' | 'ios' | 'expo';
+  isNewArchitecture: boolean;
+  hasTurboModules: boolean;
+  hasJSI: boolean;
+  hasFabric: boolean;
+  version: string;
+  configurationSource: string;
+}
+
+export interface ArchitectureConsistencyResult {
+  isConsistent: boolean;
+  inconsistencies: ArchitectureInconsistency[];
+  recommendations: string[];
+}
+
+export interface ArchitectureInconsistency {
+  platforms: string[];
+  issue: string;
+  currentState: Record<string, string>;
+}
+
+export interface ArchitectureRecommendation {
+  type:
+    | 'version_upgrade'
+    | 'consistency_fix'
+    | 'performance_improvement'
+    | 'dependency_fix';
+  priority: 'high' | 'medium' | 'low';
+  title: string;
+  description: string;
+  action: string;
+}
+
+export interface ArchitectureSwitchResult {
+  success: boolean;
+  platformResults: Record<string, PlatformSwitchResult>;
+  errors: string[];
+  warnings: string[];
+}
+
+export interface PlatformSwitchResult {
+  success: boolean;
+  errors: string[];
+  warnings: string[];
+  configChanges: ConfigChange[];
+}
+
+export interface ConfigChange {
+  file: string;
+  change: string;
 }

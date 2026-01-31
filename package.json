@@ -187,7 +187,12 @@
     "type": "modules",
     "jsSrcsDir": "src",
     "android": {
-      "javaPackageName": "com.jimmydaddy.imagemarker"
+      "javaPackageName": "com.jimmydaddy.imagemarker",
+      "outputDir": "android/build/generated/source/codegen"
+    },
+    "ios": {
+      "moduleName": "RNImageMarkerSpec",
+      "outputDir": "ios/build/generated/ios"
     }
   },
   "dependencies": {

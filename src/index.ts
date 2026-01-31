@@ -1,6 +1,7 @@
 /**
  * Unified API interface for react-native-image-marker
  * Supports both legacy bridge and new architecture (TurboModules) with Fabric integration
+ * Extended with cross-platform architecture detection and switching capabilities
  */
 import { ArchitectureDetector } from './ArchitectureDetector';
 import { TurboModuleImpl } from './TurboModuleImpl';
@@ -45,6 +46,29 @@ export {
   type InferNumericType,
   type InferSourceType,
 } from './types';
+
+// Re-export architecture detection and cross-platform management
+export { ArchitectureDetector } from './ArchitectureDetector';
+export { CrossPlatformArchitectureManager } from './CrossPlatformArchitectureManager';
+export { CrossPlatformConfigurationManager } from './CrossPlatformConfigurationManager';
+export { CrossPlatformVersionDetector } from './CrossPlatformVersionDetector';
+
+// Re-export cross-platform types
+export type {
+  CrossPlatformArchitectureInfo,
+  ArchitectureInfo,
+  ArchitectureConsistencyResult,
+  ArchitectureInconsistency,
+  ArchitectureRecommendation,
+  ArchitectureSwitchResult,
+  PlatformSwitchResult,
+  ConfigChange,
+} from './ArchitectureDetector';
+
+export type {
+  Platform,
+  ArchitectureType,
+} from './CrossPlatformArchitectureManager';
 
 class ImageMarker {
   /** @ignore ignore constructors for typedoc only */
@@ -242,6 +266,46 @@ class ImageMarker {
    */
   static getImageCacheStats(): { size: number; keys: string[] } {
     return FabricImageLoader.getCacheStats();
+  }
+
+  /**
+   * Detect cross-platform architecture compatibility
+   * @returns Cross-platform architecture information or null if not available
+   */
+  static detectCrossPlatformArchitecture() {
+    return ArchitectureDetector.detectCrossPlatformArchitecture();
+  }
+
+  /**
+   * Validate architecture consistency across platforms
+   * @returns Validation result or null if not available
+   */
+  static validateArchitectureConsistency() {
+    return ArchitectureDetector.validateArchitectureConsistency();
+  }
+
+  /**
+   * Get architecture switching recommendations
+   * @returns Array of recommendations
+   */
+  static getArchitectureRecommendations() {
+    return ArchitectureDetector.getArchitectureRecommendations();
+  }
+
+  /**
+   * Switch architecture across platforms
+   * @param targetArchitecture Target architecture (legacy or new)
+   * @param platforms Platforms to switch (optional, defaults to all)
+   * @returns Switch result or null if not available
+   */
+  static switchArchitecture(
+    targetArchitecture: 'legacy' | 'new',
+    platforms?: ('android' | 'ios' | 'expo')[]
+  ) {
+    return ArchitectureDetector.switchArchitecture(
+      targetArchitecture,
+      platforms
+    );
   }
 }
 

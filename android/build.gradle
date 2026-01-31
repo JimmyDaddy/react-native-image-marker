@@ -1,5 +1,6 @@
 buildscript {
   def kotlin_version = rootProject.ext.has("kotlinVersion") ? rootProject.ext.get("kotlinVersion") : project.properties["ImageMarker_kotlinVersion"]
+  
   repositories {
     google()
     mavenCentral()
@@ -11,8 +12,12 @@ buildscript {
       mavenCentral()
     }
   } else {
+    // Detect React Native version for version-specific configuration
+    def reactNativeVersion = detectReactNativeVersion()
+    def gradlePluginVersion = getGradlePluginVersionForRN(reactNativeVersion)
+    
     dependencies {
-      classpath 'com.android.tools.build:gradle:7.2.1'
+      classpath "com.android.tools.build:gradle:$gradlePluginVersion"
       classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
   }
@@ -22,10 +27,87 @@ def isNewArchitectureEnabled() {
   return rootProject.hasProperty("newArchEnabled") && rootProject.getProperty("newArchEnabled") == "true"
 }
 
+def detectReactNativeVersion() {
+  try {
+    // Try to read from package.json in root project
+    def packageJsonFile = file("../package.json")
+    if (packageJsonFile.exists()) {
+      def packageJson = new groovy.json.JsonSlurper().parseText(packageJsonFile.text)
+      def rnVersion = packageJson.dependencies?.get("react-native") ?: packageJson.devDependencies?.get("react-native")
+      if (rnVersion) {
+        return normalizeVersion(rnVersion)
+      }
+    }
+    
+    // Try to read from node_modules/react-native/package.json
+    def rnPackageJsonFile = file("../node_modules/react-native/package.json")
+    if (rnPackageJsonFile.exists()) {
+      def rnPackageJson = new groovy.json.JsonSlurper().parseText(rnPackageJsonFile.text)
+      return normalizeVersion(rnPackageJson.version)
+    }
+    
+    // Default fallback
+    return "0.73.0"
+  } catch (Exception e) {
+    println "Warning: Failed to detect React Native version: ${e.message}"
+    return "0.73.0"
+  }
+}
+
+def normalizeVersion(version) {
+  // Remove common prefixes like ^, ~, >=, etc.
+  def cleanVersion = version.replaceAll(/^[\^~>=<]+/, '')
+  
+  // Extract major.minor.patch format
+  def versionMatch = cleanVersion =~ /(\d+\.\d+\.\d+)/
+  if (versionMatch) {
+    return versionMatch[0][1]
+  }
+  
+  // Extract major.minor format and add .0
+  def shortVersionMatch = cleanVersion =~ /(\d+\.\d+)/
+  if (shortVersionMatch) {
+    return "${shortVersionMatch[0][1]}.0"
+  }
+  
+  return cleanVersion
+}
+
+def getGradlePluginVersionForRN(rnVersion) {
+  if (rnVersion.startsWith("0.73")) {
+    return "8.1.0"
+  } else if (rnVersion.startsWith("0.81")) {
+    return "8.3.0"
+  } else if (rnVersion.startsWith("0.8")) {
+    return "8.4.0"
+  } else {
+    return "8.1.0" // Default fallback
+  }
+}
+
+def getKotlinVersionForRN(rnVersion) {
+  if (rnVersion.startsWith("0.73")) {
+    return "1.8.0"
+  } else if (rnVersion.startsWith("0.81")) {
+    return "1.9.0"
+  } else if (rnVersion.startsWith("0.8")) {
+    return "1.9.22"
+  } else {
+    return "1.8.0" // Default fallback
+  }
+}
+
+def shouldUseCodegenInBuildGradle(rnVersion) {
+  // For React Native 0.81+ and 0.8x, codegenConfig should be in build.gradle
+  // For React Native 0.73, codegenConfig should be in package.json
+  return rnVersion.startsWith("0.81") || rnVersion.startsWith("0.8")
+}
+
 apply plugin: "com.android.library"
 apply plugin: "kotlin-android"
 
 def appProject = rootProject.allprojects.find { it.plugins.hasPlugin('com.android.application') }
+def reactNativeVersion = detectReactNativeVersion()
 
 if (isNewArchitectureEnabled()) {
   apply plugin: "com.facebook.react"
@@ -40,6 +122,9 @@ def getExtOrIntegerDefault(name) {
 }
 
 android {
+  // Add namespace for Android Gradle Plugin 8.x compatibility
+  namespace "com.jimmydaddy.imagemarker"
+  
   compileSdkVersion getExtOrIntegerDefault("compileSdkVersion")
 
   defaultConfig {
@@ -104,7 +189,7 @@ repositories {
   google()
 }
 
-def kotlin_version = getExtOrDefault("kotlinVersion")
+def kotlin_version = getKotlinVersionForRN(reactNativeVersion)
 
 dependencies {
   // For < 0.71, this will be from the local maven repo
@@ -137,14 +222,23 @@ if (isNewArchitectureEnabled()) {
     jsRootDir = file("../src/")
     libraryName = "ImageMarker"
     codegenJavaPackageName = "com.jimmydaddy.imagemarker"
-    codegenConfig = [
-      name: "RNImageMarkerSpec",
-      type: "modules",
-      jsSrcsDir: "../src",
-      android: [
-        javaPackageName: "com.jimmydaddy.imagemarker"
+    
+    // Configure codegenConfig based on React Native version
+    if (shouldUseCodegenInBuildGradle(reactNativeVersion)) {
+      // For React Native 0.81+ and 0.8x, configure codegenConfig in build.gradle
+      codegenConfig = [
+        name: "RNImageMarkerSpec",
+        type: "modules",
+        jsSrcsDir: "../src",
+        android: [
+          javaPackageName: "com.jimmydaddy.imagemarker"
+        ]
       ]
-    ]
+    } else {
+      // For React Native 0.73, codegenConfig should be in package.json
+      // The react block will automatically pick up the configuration from package.json
+      println "Using codegenConfig from package.json for React Native ${reactNativeVersion}"
+    }
   }
 }
 
