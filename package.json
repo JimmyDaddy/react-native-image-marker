@@ -13,6 +13,7 @@
     "android",
     "ios",
     "cpp",
+    "specs",
     "app.plugin.js",
     "*.podspec",
     "!lib/typescript/example",
@@ -28,7 +29,12 @@
     "!**/.*"
   ],
   "scripts": {
-    "test": "jest",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:ui": "vitest --ui",
+    "test:architecture": "./scripts/test-architecture.sh",
+    "test:architecture:legacy": "./scripts/test-architecture.sh legacy",
+    "test:architecture:new": "./scripts/test-architecture.sh new",
     "typecheck": "tsc --noEmit",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "prepack": "bob build",
@@ -36,10 +42,10 @@
     "example": "yarn --cwd example",
     "expo-example": "yarn --cwd expo-example",
     "bootstrap": "yarn example && yarn install && yarn example pods && yarn expo-example && yarn expo-example expo-install",
-    "bootstrap-m1": "yarn example && yarn install && yarn example m1-pods",
     "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build",
     "docs": "typedoc --excludePrivate --tsconfig tsconfig.doc.json",
-    "expo-install": "yarn expo-example expo-install"
+    "expo-install": "yarn expo-example expo-install",
+    "codegen": "react-native codegen --path . --outputPath ./lib/codegen"
   },
   "keywords": [
     "react-native",
@@ -65,18 +71,19 @@
     "@commitlint/config-conventional": "^17.0.2",
     "@evilmartians/lefthook": "^1.2.2",
     "@expo/config-plugins": "^7.8.4",
-    "@react-native-community/eslint-config": "^3.0.2",
+    "@react-native-community/eslint-config": "^3.2.0",
     "@release-it/conventional-changelog": "^9.0.4",
-    "@types/jest": "^28.1.2",
     "@types/react": "~17.0.21",
     "@types/react-native": "0.70.0",
+    "@vitest/ui": "^4.0.18",
+    "baseline-browser-mapping": "^2.9.19",
     "commitlint": "^17.0.2",
     "del-cli": "^5.0.0",
     "eslint": "^8.4.1",
     "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-ft-flow": "^3.0.11",
     "eslint-plugin-prettier": "^4.0.0",
     "husky": "^8.0.3",
-    "jest": "^28.1.1",
     "metro-react-native-babel-preset": "^0.77.0",
     "pod-install": "^0.1.0",
     "prettier": "^2.0.5",
@@ -87,10 +94,16 @@
     "typedoc": "^0.28.14",
     "typedoc-plugin-localization": "^3.1.0",
     "typedoc-plugin-rename-defaults": "^0.7.3",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
   },
   "resolutions": {
     "@types/react": "17.0.21"
+  },
+  "overrides": {
+    "@typescript-eslint/typescript-estree": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "@typescript-eslint/eslint-plugin": "^7.18.0"
   },
   "peerDependencies": {
     "react": "*",
@@ -98,13 +111,6 @@
   },
   "engines": {
     "node": ">= 16.0.0"
-  },
-  "jest": {
-    "preset": "react-native",
-    "modulePathIgnorePatterns": [
-      "<rootDir>/example/node_modules",
-      "<rootDir>/lib/"
-    ]
   },
   "commitlint": {
     "extends": [
@@ -175,6 +181,14 @@
         }
       ]
     ]
+  },
+  "codegenConfig": {
+    "name": "RNImageMarkerSpec",
+    "type": "modules",
+    "jsSrcsDir": "src",
+    "android": {
+      "javaPackageName": "com.jimmydaddy.imagemarker"
+    }
   },
   "dependencies": {
     "patch-package": "^8.0.0",

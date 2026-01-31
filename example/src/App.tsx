@@ -26,7 +26,7 @@ import {
 } from '@expo/react-native-action-sheet';
 import Toast from 'react-native-toast-message';
 import RNBlobUtil from 'react-native-blob-util';
-import filesize from 'filesize';
+import { filesize } from 'filesize';
 
 const icon = require('./icon.jpeg');
 const icon1 = require('./yahaha.jpeg');
@@ -168,7 +168,7 @@ function ImageOptions(props: {
       <TextInput
         style={s.shortTextInput}
         defaultValue={String(scale)}
-        onChangeText={(v) => {
+        onChangeText={v => {
           const value = Number(v);
           if (value < 0) {
             Toast.show({
@@ -185,7 +185,7 @@ function ImageOptions(props: {
       <TextInput
         style={s.shortTextInput}
         defaultValue={String(alpha)}
-        onChangeText={(v) => {
+        onChangeText={v => {
           const value = Number(v);
           if (value < 0 || value > 1) {
             Toast.show({
@@ -202,7 +202,7 @@ function ImageOptions(props: {
       <TextInput
         style={s.shortTextInput}
         defaultValue={String(rotate)}
-        onChangeText={(v) => {
+        onChangeText={v => {
           const value = Number(v);
           if (value < -360 || value > 360) {
             Toast.show({
@@ -219,7 +219,7 @@ function ImageOptions(props: {
       <TextInput
         style={s.shortTextInput}
         defaultValue={String(quality)}
-        onChangeText={(v) => {
+        onChangeText={v => {
           const value = Number(v);
           if (value < 0 || value > 100) {
             Toast.show({
@@ -250,7 +250,7 @@ function useViewModel() {
   const [useTextShadow, setUseTextShadow] = useState(true);
   const [useTextBgStyle, setUseTextBgStyle] = useState(true);
   const [textBgStretch, setTextBgStretch] = useState<TextBackgroundType>(
-    TextBackgroundType.none
+    TextBackgroundType.none,
   );
   const [position, setPosition] = useState<Position>(Position.topLeft);
   const [X, setX] = useState<number | string>(20);
@@ -262,7 +262,7 @@ function useViewModel() {
   const [bold, setBold] = useState(false);
   const [strikeThrough, setStrikeThrough] = useState(false);
   const [textAlign, setTextAlign] = useState<'left' | 'right' | 'center'>(
-    'left'
+    'left',
   );
 
   const [textRotate, setTextRotate] = useState(0);
@@ -290,13 +290,13 @@ function useViewModel() {
         cancelButtonIndex,
         useModal: true,
       },
-      (buttonIndex) => {
+      buttonIndex => {
         if (buttonIndex === cancelButtonIndex || buttonIndex == null) {
           return;
         } else {
           setBackgroundFormat(options[buttonIndex] as any);
         }
-      }
+      },
     );
   }
 
@@ -311,13 +311,13 @@ function useViewModel() {
         cancelButtonIndex,
         useModal: true,
       },
-      (buttonIndex) => {
+      buttonIndex => {
         if (buttonIndex === cancelButtonIndex || buttonIndex == null) {
           return;
         } else {
           setWaterMarkType(options[buttonIndex] as any);
         }
-      }
+      },
     );
   }
 
@@ -337,13 +337,13 @@ function useViewModel() {
         cancelButtonIndex,
         useModal: true,
       },
-      (buttonIndex) => {
+      buttonIndex => {
         if (buttonIndex === cancelButtonIndex || buttonIndex == null) {
           return;
         } else {
           setSaveFormat(options[buttonIndex] as any);
         }
-      }
+      },
     );
   }
 
@@ -367,13 +367,13 @@ function useViewModel() {
         cancelButtonIndex,
         useModal: true,
       },
-      (buttonIndex) => {
+      buttonIndex => {
         if (buttonIndex === cancelButtonIndex || buttonIndex == null) {
           return;
         } else {
           setPosition(options[buttonIndex] as any);
         }
-      }
+      },
     );
   }
 
@@ -393,13 +393,13 @@ function useViewModel() {
         cancelButtonIndex,
         useModal: true,
       },
-      (buttonIndex) => {
+      buttonIndex => {
         if (buttonIndex === cancelButtonIndex || buttonIndex == null) {
           return;
         } else {
           setTextBgStretch(options[buttonIndex] as any);
         }
-      }
+      },
     );
   }
 
@@ -414,13 +414,13 @@ function useViewModel() {
         cancelButtonIndex,
         useModal: true,
       },
-      (buttonIndex) => {
+      buttonIndex => {
         if (buttonIndex === cancelButtonIndex || buttonIndex == null) {
           return;
         } else {
           setTextAlign(options[buttonIndex] as any);
         }
-      }
+      },
     );
   }
 
@@ -583,7 +583,7 @@ function useViewModel() {
       setLoading(false);
       setShow(true);
       const stat = await RNBlobUtil.fs.stat(path);
-      setFileSize(filesize.filesize(stat.size));
+      setFileSize(filesize(stat.size));
     } catch (err) {
       console.log('====================================');
       console.log(err, 'err');
@@ -722,7 +722,7 @@ function useViewModel() {
       setShow(true);
       setLoading(false);
       const stat = await RNBlobUtil.fs.stat(path);
-      setFileSize(filesize.filesize(stat.size));
+      setFileSize(filesize(stat.size));
     } catch (error) {
       console.log('====================================');
       console.log(error, 'error');
@@ -983,7 +983,7 @@ function App() {
                   <TextInput
                     style={s.shortTextInput}
                     defaultValue={String(state.fontSize)}
-                    onChangeText={(v) => {
+                    onChangeText={v => {
                       const value = Number(v);
                       if (value <= 0) {
                         Toast.show({
@@ -1028,14 +1028,14 @@ function App() {
                 style={s.shortTextInput}
                 value={String(state.X)}
                 keyboardType="decimal-pad"
-                onChangeText={(v) => setX(v)}
+                onChangeText={v => setX(v)}
               />
               <Text style={[s.label, { marginLeft: 5 }]}>Y: </Text>
               <TextInput
                 style={s.shortTextInput}
                 keyboardType="decimal-pad"
                 value={String(state.Y)}
-                onChangeText={(v) => setY(v)}
+                onChangeText={v => setY(v)}
               />
               <TouchableOpacity
                 style={[s.btn, { marginLeft: 5 }]}
@@ -1145,7 +1145,7 @@ function App() {
                   <TextInput
                     style={s.shortTextInput}
                     defaultValue={String(state.textRotate)}
-                    onChangeText={(v) => {
+                    onChangeText={v => {
                       const value = Number(v);
                       if (value < -360 || value > 360) {
                         Toast.show({

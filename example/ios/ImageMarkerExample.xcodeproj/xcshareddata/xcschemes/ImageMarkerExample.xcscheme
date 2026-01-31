@@ -29,13 +29,12 @@
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
          <TestableReference
-            skipped = "NO"
-            parallelizable = "YES">
+            skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "A119E9DD2B162437000C0527"
-               BuildableName = "ImageMarkerExampleUITests.xctest"
-               BlueprintName = "ImageMarkerExampleUITests"
+               BlueprintIdentifier = "00E356ED1AD99517003FC87E"
+               BuildableName = "ImageMarkerExampleTests.xctest"
+               BlueprintName = "ImageMarkerExampleTests"
                ReferencedContainer = "container:ImageMarkerExample.xcodeproj">
             </BuildableReference>
          </TestableReference>

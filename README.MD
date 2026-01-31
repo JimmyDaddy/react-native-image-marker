@@ -72,6 +72,9 @@
   <img align="right" width="25%" src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/assets/AndroidMarker.gif" width='150'>
 </div>
 
+* **🚀 React Native New Architecture Support**: Full support for TurboModules and Fabric with automatic fallback to legacy bridge
+* **⚡ Performance Optimized**: JSI direct communication, reduced serialization overhead, and optimized memory usage
+* **🔒 Type Safe**: Complete TypeScript support with generic types and compile-time validation
 * [**Multiple text** watermarks](https://jimmydaddy.github.io/react-native-image-marker/interfaces/TextMarkOptions.html#watermarkTexts)
 * [**Multiple icon** watermarks](https://jimmydaddy.github.io/react-native-image-marker/classes/Marker.html#markImage)
 * [**Rotating** background and icon](https://jimmydaddy.github.io/react-native-image-marker/interfaces/ImageOptions.html#rotate)
@@ -118,16 +121,121 @@ eas build
 
 ## Compatibility
 
-| React Native Version | react-native-image-marker Version |
-| ---------------------| --------------------------------- |
-| >= 0.73.0, other cases | v1.2.0 or later |
-|  0.60.0  <= rn version < 0.73.0 | v1.1.x |
-| >= 0.60.0, ***iOS < 13, Android < N(API Level 24)*** | v1.0.x |
-| < 0.60.0             | v0.5.2 or earlier                 |
+| React Native Version | react-native-image-marker Version | New Architecture Support |
+| ---------------------| --------------------------------- | ------------------------ |
+| >= 0.74.0 | v1.2.0 or later | ✅ Full Support |
+| >= 0.73.0 | v1.2.0 or later | ✅ Full Support |
+| >= 0.72.0 | v1.2.0 or later | ⚠️ Experimental |
+|  0.60.0  <= rn version < 0.72.0 | v1.1.x | ❌ Legacy Only |
+| >= 0.60.0, ***iOS < 13, Android < N(API Level 24)*** | v1.0.x | ❌ Legacy Only |
+| < 0.60.0             | v0.5.2 or earlier | ❌ Legacy Only |
 
 > ***Note: This table is only applicable to major versions of react-native-image-marker. Patch versions should be backwards compatible.***
 
+### New Architecture Migration
+
+For projects using React Native 0.72+, you can enable the new architecture for better performance and type safety. See our [New Architecture Migration Guide](./docs/NEW_ARCHITECTURE_MIGRATION.md) for detailed instructions.
+
+**Quick Start with New Architecture:**
+
+```bash
+# Enable new architecture (iOS)
+cd ios && RCT_NEW_ARCH_ENABLED=1 bundle exec pod install
+
+# Enable new architecture (Android)
+# Add to android/gradle.properties:
+# newArchEnabled=true
+```
+
 ## Usage
+
+### Architecture Detection
+
+Check which architecture is being used and access new features:
+
+```typescript
+import ImageMarker, { ArchitectureDetector } from 'react-native-image-marker';
+
+// Check if new architecture is enabled
+const isNewArch = ImageMarker.isNewArchitecture();
+console.log('New Architecture enabled:', isNewArch);
+
+// Get detailed architecture information
+const info = ArchitectureDetector.getArchitectureInfo();
+console.log('Architecture info:', {
+  isNewArchitecture: info.isNewArchitecture,
+  hasTurboModules: info.hasTurboModules,
+  hasJSI: info.hasJSI,
+  hasFabric: info.hasFabric
+});
+
+// Check Fabric support
+const isFabricEnabled = ImageMarker.isFabricEnabled();
+console.log('Fabric enabled:', isFabricEnabled);
+```
+
+### Type-Safe API with Generics
+
+The new architecture provides enhanced TypeScript support with generic types:
+
+```typescript
+import ImageMarker, { 
+  type StandardTextMarkOptions,
+  type StrictTextMarkOptions,
+  type URITextMarkOptions,
+  Position,
+  ImageFormat 
+} from 'react-native-image-marker';
+
+// Standard options (number coordinates + any image source)
+const standardOptions: StandardTextMarkOptions = {
+  backgroundImage: { src: require('./bg.jpg') },
+  watermarkTexts: [{
+    text: 'Hello World',
+    position: { X: 100, Y: 200 }, // number coordinates
+    style: { fontSize: 20, color: '#FFFFFF' }
+  }]
+};
+
+// URI options (string coordinates + URI image source)
+const uriOptions: URITextMarkOptions = {
+  backgroundImage: { src: 'https://example.com/bg.jpg' },
+  watermarkTexts: [{
+    text: 'Hello World',
+    position: { X: '50%', Y: '25%' }, // percentage coordinates
+    style: { fontSize: 20, color: '#FFFFFF' }
+  }]
+};
+
+// Both work with the same API
+const result1 = await ImageMarker.markText(standardOptions);
+const result2 = await ImageMarker.markText(uriOptions);
+```
+
+### Performance Optimization
+
+The new architecture includes automatic performance optimizations:
+
+```typescript
+// Automatic serialization optimization (no code changes needed)
+const result = await ImageMarker.markText({
+  backgroundImage: { src: 'test.jpg' },
+  watermarkTexts: [{
+    text: 'Optimized',
+    position: { X: undefined, Y: 100 }, // undefined values are automatically removed
+    style: {
+      padding: 10,
+      paddingLeft: 10, // duplicate values are automatically merged
+    }
+  }],
+  quality: 90, // default values are automatically optimized
+});
+
+// Manual cache management
+ImageMarker.clearImageCache(); // Clear Fabric image cache
+const stats = ImageMarker.getImageCacheStats(); // Get cache statistics
+console.log(`Cache size: ${stats.size}, Keys: ${stats.keys.length}`);
+```
 
 ### Text background fit
 
@@ -789,10 +897,15 @@ Marker.markImage({
 
 ## API
 
-* [the latest version](https://jimmydaddy.github.io/react-native-image-marker/classes/Marker.html)
-* [v1.1.x](https://github.com/JimmyDaddy/react-native-image-marker/wiki/v1.1.x)
-* [v1.0.x](https://github.com/JimmyDaddy/react-native-image-marker/wiki/v1.0.x)
-* If you are using a version lower than 1.0.0, please go to [v0.9.2](https://github.com/JimmyDaddy/react-native-image-marker/wiki/0.9.2)
+* **📚 Complete Documentation**:
+  * [API Reference](./docs/API_REFERENCE.md) - Complete API documentation with examples ([English](./docs/API_REFERENCE_EN.md))
+  * [TypeScript Guide](./docs/TYPESCRIPT_GUIDE.md) - Type-safe usage patterns and best practices ([English](./docs/TYPESCRIPT_GUIDE_EN.md))
+  * [New Architecture Migration Guide](./docs/NEW_ARCHITECTURE_MIGRATION.md) - Step-by-step migration instructions ([English](./docs/NEW_ARCHITECTURE_MIGRATION_EN.md))
+* **🔗 Online Documentation**:
+  * [Latest API (v1.2.x)](https://jimmydaddy.github.io/react-native-image-marker/classes/Marker.html)
+  * [v1.1.x](https://github.com/JimmyDaddy/react-native-image-marker/wiki/v1.1.x)
+  * [v1.0.x](https://github.com/JimmyDaddy/react-native-image-marker/wiki/v1.0.x)
+  * [v0.9.2 and earlier](https://github.com/JimmyDaddy/react-native-image-marker/wiki/0.9.2)
 
 ## Save image to file
 

@@ -4,7 +4,7 @@
     "paths": {
       "react-native-image-marker": ["./src/index"]
     },
-    "types": [],
+    "types": ["node", "vitest/globals"],
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "esModuleInterop": true,

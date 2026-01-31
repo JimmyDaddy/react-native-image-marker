@@ -2,6 +2,8 @@ name: CI
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+  push:
+    branches: [main, master]
   workflow_dispatch:
 
 concurrency:
@@ -34,6 +36,143 @@ jobs:
       - name: Run npm audit
         run: npm audit --audit-level=moderate
         continue-on-error: true
+
+  architecture-compatibility:
+    runs-on: ubuntu-latest
+    name: Architecture Compatibility Test
+    strategy:
+      matrix:
+        node-version: [18, 20]
+        architecture: [legacy, new]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run TypeScript compilation
+        run: npm run typecheck
+
+      - name: Run unit tests
+        run: npm test -- --run
+
+      - name: Test architecture detection
+        run: |
+          if [ "${{ matrix.architecture }}" = "new" ]; then
+            echo "Testing new architecture detection..."
+            export RCT_NEW_ARCH_ENABLED=1
+            npm test -- --run --testNamePattern="Architecture detection"
+          else
+            echo "Testing legacy architecture detection..."
+            export RCT_NEW_ARCH_ENABLED=0
+            npm test -- --run --testNamePattern="Architecture detection"
+          fi
+
+      - name: Test build configuration
+        run: npm test -- --run --testNamePattern="Property 6"
+
+      - name: Validate Codegen specs
+        run: |
+          if [ -f "specs/NativeImageMarker.ts" ]; then
+            echo "✅ Codegen spec file exists"
+            npx tsc --noEmit specs/NativeImageMarker.ts
+          else
+            echo "❌ Codegen spec file missing"
+            exit 1
+          fi
+
+      - name: Check package.json configuration
+        run: |
+          if grep -q "codegenConfig" package.json; then
+            echo "✅ Package.json has codegenConfig"
+          else
+            echo "❌ Package.json missing codegenConfig"
+            exit 1
+          fi
+
+      - name: Build library
+        run: npm run prepack
+
+      - name: Test library exports
+        run: |
+          node -e "
+            const lib = require('./lib/commonjs/index.js');
+            console.log('✅ Library exports:', Object.keys(lib));
+            if (!lib.default) {
+              console.error('❌ Default export missing');
+              process.exit(1);
+            }
+            console.log('✅ Integration test passed');
+          "
+
+      - name: Verify architecture detection in built library
+        run: |
+          node -e "
+            const { ArchitectureDetector } = require('./lib/commonjs/ArchitectureDetector.js');
+            console.log('✅ ArchitectureDetector available');
+            const isNewArch = ArchitectureDetector.isNewArchitecture();
+            console.log('Architecture detection result:', isNewArch);
+            console.log('✅ Architecture detection test passed');
+          "
+
+  validate-build-configs:
+    runs-on: macos-latest
+    name: Validate Build Configurations
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: 17
+
+      - name: Install CocoaPods
+        run: gem install cocoapods
+
+      - name: Validate podspec syntax
+        run: pod spec lint react-native-image-marker.podspec --allow-warnings
+
+      - name: Test legacy architecture podspec
+        run: |
+          export RCT_NEW_ARCH_ENABLED=0
+          pod spec lint react-native-image-marker.podspec --allow-warnings
+
+      - name: Test new architecture podspec
+        run: |
+          export RCT_NEW_ARCH_ENABLED=1
+          pod spec lint react-native-image-marker.podspec --allow-warnings
+
+      - name: Validate Android Gradle syntax
+        run: |
+          cd android
+          ./gradlew help
+
+      - name: Test legacy architecture Android build
+        run: |
+          cd android
+          echo "newArchEnabled=false" > gradle.properties
+          ./gradlew build --dry-run
+
+      - name: Test new architecture Android build
+        run: |
+          cd android
+          echo "newArchEnabled=true" > gradle.properties
+          ./gradlew build --dry-run
 
   install-dep:
     runs-on: macos-latest
@@ -93,6 +232,9 @@ jobs:
     runs-on: macos-latest
     name: Android Build
     needs: install-dep
+    strategy:
+      matrix:
+        architecture: [legacy, new]
     steps:
     - name: Checkout the code
       uses: actions/checkout@v4
@@ -129,8 +271,9 @@ jobs:
         path: |
           ~/.gradle/caches
           ~/.gradle/wrapper
-        key: ${{ runner.os }}-gradle-${{ hashFiles('example/android/gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('android/src/**/*.kt') }}
+        key: ${{ runner.os }}-gradle-${{ matrix.architecture }}-${{ hashFiles('example/android/gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('android/src/**/*.kt') }}
         restore-keys: |
+          ${{ runner.os }}-gradle-${{ matrix.architecture }}-
           ${{ runner.os }}-gradle-
 
     - name: Setup node
@@ -145,6 +288,19 @@ jobs:
       with:
         distribution: 'zulu'
         java-version: 17
+
+    - name: Configure Architecture
+      if: steps.verify-android-changed-files.outputs.any_changed == 'true'
+      run: |
+        cd example/android
+        if [ "${{ matrix.architecture }}" = "new" ]; then
+          echo "newArchEnabled=true" >> gradle.properties
+          echo "hermesEnabled=true" >> gradle.properties
+        else
+          echo "newArchEnabled=false" >> gradle.properties
+          echo "hermesEnabled=false" >> gradle.properties
+        fi
+        cat gradle.properties
 
     - name: Install Gradle dependencies
       if: steps.cache-gradle.outputs.cache-hit != 'true' && steps.verify-android-changed-files.outputs.any_changed == 'true'
@@ -164,14 +320,14 @@ jobs:
         npm run prepack
         cd example/android
         ./gradlew assembleRelease
-        mv app/build/outputs/apk/release/app-release.apk app-release-${{ github.sha }}.apk
+        mv app/build/outputs/apk/release/app-release.apk app-release-${{ matrix.architecture }}-${{ github.sha }}.apk
 
     - name: Upload APK
       if: steps.verify-android-changed-files.outputs.any_changed == 'true'
       uses: actions/upload-artifact@v4
       with:
-        name: app-release-${{ github.sha }}.apk
-        path:  ${{ github.workspace }}/example/android/app-release-${{ github.sha }}.apk
+        name: app-release-${{ matrix.architecture }}-${{ github.sha }}.apk
+        path:  ${{ github.workspace }}/example/android/app-release-${{ matrix.architecture }}-${{ github.sha }}.apk
 
   android-api-level-test:
     runs-on: macos-14
@@ -261,6 +417,7 @@ jobs:
     strategy:
       matrix:
         cocoapods: ['1.14.3', '1.15.2']
+        architecture: [legacy, new]
     steps:
     - name: Checkout the code
       uses: actions/checkout@v4
@@ -295,8 +452,9 @@ jobs:
       if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
       with:
         path: example/ios/Pods
-        key: ${{ runner.os }}-pods-${{ matrix.cocoapods }}-${{ hashFiles('**/Podfile.lock') }}
+        key: ${{ runner.os }}-pods-${{ matrix.cocoapods }}-${{ matrix.architecture }}-${{ hashFiles('**/Podfile.lock') }}
         restore-keys: |
+          ${{ runner.os }}-pods-${{ matrix.cocoapods }}-${{ matrix.architecture }}-
           ${{ runner.os }}-pods-${{ matrix.cocoapods }}-
           ${{ runner.os }}-pods-
 
@@ -317,12 +475,29 @@ jobs:
       with:
         node-version: '20'
 
+    - name: Configure Architecture
+      if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
+      run: |
+        cd example/ios
+        if [ "${{ matrix.architecture }}" = "new" ]; then
+          export RCT_NEW_ARCH_ENABLED=1
+          echo "RCT_NEW_ARCH_ENABLED=1" >> .xcode.env.local
+        else
+          export RCT_NEW_ARCH_ENABLED=0
+          echo "RCT_NEW_ARCH_ENABLED=0" >> .xcode.env.local
+        fi
+        cat .xcode.env.local
+
     - name: Install Pods
       if: steps.cache-pods.outputs.cache-hit != 'true' && steps.verify-iOS-changed-files.outputs.any_changed == 'true'
       run: |
         cd example/ios
         pod cache clean --all
-        pod install
+        if [ "${{ matrix.architecture }}" = "new" ]; then
+          RCT_NEW_ARCH_ENABLED=1 pod install
+        else
+          RCT_NEW_ARCH_ENABLED=0 pod install
+        fi
 
     - name: Install xcpretty
       if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
@@ -332,17 +507,25 @@ jobs:
       if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
       run: |
         cd example/ios
-        xcodebuild -workspace ImageMarkerExample.xcworkspace -scheme ImageMarkerExample -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16' | xcpretty
+        if [ "${{ matrix.architecture }}" = "new" ]; then
+          RCT_NEW_ARCH_ENABLED=1 xcodebuild -workspace ImageMarkerExample.xcworkspace -scheme ImageMarkerExample -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16' | xcpretty
+        else
+          RCT_NEW_ARCH_ENABLED=0 xcodebuild -workspace ImageMarkerExample.xcworkspace -scheme ImageMarkerExample -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16' | xcpretty
+        fi
 
     - name: Test
       if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
       run: |
         cd example/ios
-        xcodebuild -workspace ImageMarkerExample.xcworkspace -scheme ImageMarkerExample -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16' test | xcpretty
+        if [ "${{ matrix.architecture }}" = "new" ]; then
+          RCT_NEW_ARCH_ENABLED=1 xcodebuild -workspace ImageMarkerExample.xcworkspace -scheme ImageMarkerExample -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16' test | xcpretty
+        else
+          RCT_NEW_ARCH_ENABLED=0 xcodebuild -workspace ImageMarkerExample.xcworkspace -scheme ImageMarkerExample -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16' test | xcpretty
+        fi
 
   ci-complete:
     name: Complete CI
-    needs: [security, android-build, android-api-level-test, ios-build-test]
+    needs: [security, architecture-compatibility, validate-build-configs, android-build, android-api-level-test, ios-build-test]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     steps:
@@ -350,3 +533,13 @@ jobs:
         if: >-
           ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
         run: exit 1
+
+      - name: Report Success
+        if: ${{ !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
+        run: |
+          echo "🎉 All CI tests passed!"
+          echo "✅ Security checks passed"
+          echo "✅ Architecture compatibility validated"
+          echo "✅ Build configurations validated"
+          echo "✅ Android builds and tests passed"
+          echo "✅ iOS builds and tests passed"

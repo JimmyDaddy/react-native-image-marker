@@ -5,12 +5,43 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "RCT_NEW_ARCH_ENABLED": "0"
+      }
+    },
+    "development-new-arch": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "RCT_NEW_ARCH_ENABLED": "1",
+        "RCT_FABRIC_ENABLED": "1"
+      }
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "RCT_NEW_ARCH_ENABLED": "0"
+      }
     },
-    "production": {}
+    "preview-new-arch": {
+      "distribution": "internal",
+      "env": {
+        "RCT_NEW_ARCH_ENABLED": "1",
+        "RCT_FABRIC_ENABLED": "1"
+      }
+    },
+    "production": {
+      "env": {
+        "RCT_NEW_ARCH_ENABLED": "0"
+      }
+    },
+    "production-new-arch": {
+      "env": {
+        "RCT_NEW_ARCH_ENABLED": "1",
+        "RCT_FABRIC_ENABLED": "1"
+      }
+    }
   },
   "submit": {
     "production": {}

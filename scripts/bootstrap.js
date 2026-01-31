@@ -22,12 +22,7 @@ if (process.cwd() !== root || args.length) {
   // In this case, forward the command to `yarn`
   result = child_process.spawnSync('yarn', args, options);
 } else {
-  if (os.platform() === 'darwin' && os.arch() === 'arm64') {
-    // If `yarn` is run without arguments, perform bootstrap
-    result = child_process.spawnSync('yarn', ['bootstrap-m1'], options);
-  } else {
-    result = child_process.spawnSync('yarn', ['bootstrap'], options);
-  }
+  result = child_process.spawnSync('yarn', ['bootstrap'], options);
 }
 
 process.exitCode = result.status;

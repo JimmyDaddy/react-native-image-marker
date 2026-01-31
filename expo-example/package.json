@@ -4,10 +4,15 @@
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
     "start": "expo start",
+    "start:new-arch": "EXPO_USE_BETA_CLI=1 expo start --config app.new-arch.json",
     "android": "expo run:android",
+    "android:new-arch": "RCT_NEW_ARCH_ENABLED=1 expo run:android --config app.new-arch.json",
     "ios": "expo run:ios",
+    "ios:new-arch": "RCT_NEW_ARCH_ENABLED=1 expo run:ios --config app.new-arch.json",
     "web": "expo start --web",
-    "expo-install": "npx expo install"
+    "expo-install": "npx expo install",
+    "prebuild": "expo prebuild",
+    "prebuild:new-arch": "RCT_NEW_ARCH_ENABLED=1 expo prebuild --config app.new-arch.json --clean"
   },
   "dependencies": {
     "@expo/react-native-action-sheet": "^4.0.1",

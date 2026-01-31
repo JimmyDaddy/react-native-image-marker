@@ -29,7 +29,7 @@ import {
 } from '@expo/react-native-action-sheet';
 import Toast from 'react-native-toast-message';
 import * as FileSystem from 'expo-file-system';
-import filesize from 'filesize';
+import { filesize } from 'filesize';
 import * as ImageManipulator from 'expo-image-manipulator';
 
 const icon = require('./assets/icon.jpeg');
@@ -587,7 +587,7 @@ function useViewModel() {
       setLoading(false);
       setShow(true);
       const stat = await FileSystem.getInfoAsync(path);
-      setFileSize(filesize.filesize(stat.exists ? stat.size : 0));
+      setFileSize(filesize(stat.exists ? stat.size : 0));
       const imRes = await ImageManipulator.manipulateAsync(path, [
         {
           rotate: 90,
@@ -732,7 +732,7 @@ function useViewModel() {
       setShow(true);
       setLoading(false);
       const stat = await FileSystem.getInfoAsync(path);
-      setFileSize(filesize.filesize(stat.exists ? stat.size : 0));
+      setFileSize(filesize(stat.exists ? stat.size : 0));
     } catch (error) {
       console.log('====================================');
       console.log(error, 'error');

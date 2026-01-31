@@ -46,10 +46,25 @@ android {
     minSdkVersion getExtOrIntegerDefault("minSdkVersion")
     targetSdkVersion getExtOrIntegerDefault("targetSdkVersion")
     buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
+    
+    if (isNewArchitectureEnabled()) {
+      externalNativeBuild {
+        ndkBuild {
+          arguments "APP_PLATFORM=android-21",
+                    "APP_STL=c++_shared",
+                    "NDK_TOOLCHAIN_VERSION=clang"
+          cppFlags "-std=c++17"
+        }
+      }
+    }
   }
+  
   buildTypes {
     release {
       minifyEnabled false
+    }
+    debug {
+      debuggable true
     }
   }
 
@@ -62,6 +77,26 @@ android {
     targetCompatibility JavaVersion.VERSION_1_8
   }
 
+  if (isNewArchitectureEnabled()) {
+    sourceSets {
+      main {
+        java {
+          srcDirs += [
+            "src/newarch/java",
+            "${project.buildDir}/generated/source/codegen/java"
+          ]
+        }
+      }
+    }
+  } else {
+    sourceSets {
+      main {
+        java {
+          srcDirs += ["src/oldarch/java"]
+        }
+      }
+    }
+  }
 }
 
 repositories {
@@ -78,12 +113,23 @@ dependencies {
   implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.0"
   implementation "com.facebook.react:react-native:+"
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-  testImplementation 'junit:junit:4.13.2'
-  androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-  testImplementation "org.mockito:mockito-core:3.+"
+  
+  // Image processing dependencies
   implementation "io.coil-kt:coil:2.5.0"
   implementation "io.coil-kt:coil-svg:2.5.0"
   implementation "io.coil-kt:coil-gif:2.5.0"
+  
+  // New Architecture dependencies
+  if (isNewArchitectureEnabled()) {
+    implementation "com.facebook.react:react-android"
+    implementation "com.facebook.react:hermes-android"
+    implementation "androidx.annotation:annotation:1.6.0"
+  }
+  
+  // Test dependencies
+  testImplementation 'junit:junit:4.13.2'
+  androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+  testImplementation "org.mockito:mockito-core:3.+"
 }
 
 if (isNewArchitectureEnabled()) {
@@ -91,6 +137,14 @@ if (isNewArchitectureEnabled()) {
     jsRootDir = file("../src/")
     libraryName = "ImageMarker"
     codegenJavaPackageName = "com.jimmydaddy.imagemarker"
+    codegenConfig = [
+      name: "RNImageMarkerSpec",
+      type: "modules",
+      jsSrcsDir: "../src",
+      android: [
+        javaPackageName: "com.jimmydaddy.imagemarker"
+      ]
+    ]
   }
 }
 

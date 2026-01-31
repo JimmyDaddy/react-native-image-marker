@@ -32,7 +32,14 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "react-native-image-marker",
+      [
+        "react-native-image-marker",
+        {
+          "newArchEnabled": false,
+          "enableFabric": false,
+          "enableTurboModules": false
+        }
+      ],
       [
         "expo-font",
         {

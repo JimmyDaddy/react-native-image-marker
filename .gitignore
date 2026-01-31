@@ -44,6 +44,7 @@ android.iml
 # Cocoapods
 #
 example/ios/Pods
+**/Pods/
 
 # Ruby
 example/vendor/
@@ -76,3 +77,11 @@ docs/**/*.html
 
 # testing
 /coverage
+
+# Yarn
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
