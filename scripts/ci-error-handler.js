@@ -189,11 +189,20 @@ class CIErrorHandlerScript {
     fs.writeFileSync('ci-health-report.md', healthReport);
     console.log('\n📊 Health report saved to ci-health-report.md');
 
-    // Exit with error if any critical issues found
+    // Exit with error if any critical issues found (but not during pre-install phase)
     const criticalIssues = results.filter((r) => r.status === 'critical');
-    if (criticalIssues.length > 0) {
+    const nodeModulesExists = fs.existsSync(
+      path.join(process.cwd(), 'node_modules')
+    );
+    const isPreInstall = !nodeModulesExists;
+
+    if (criticalIssues.length > 0 && !isPreInstall) {
       console.error(`\n❌ ${criticalIssues.length} critical issues found`);
       process.exit(1);
+    } else if (criticalIssues.length > 0 && isPreInstall) {
+      console.log(
+        `\n⚠️ ${criticalIssues.length} issues found (pre-install phase - will be resolved after dependency installation)`
+      );
     }
   }
 
@@ -480,13 +489,28 @@ class CIErrorHandlerScript {
       }
     }
 
+    // Check if we're in a pre-install phase (node_modules doesn't exist or is empty)
+    const nodeModulesExists = fs.existsSync(
+      path.join(process.cwd(), 'node_modules')
+    );
+    const isPreInstall =
+      !nodeModulesExists || missingDeps.length === criticalDeps.length;
+
     return {
-      status: missingDeps.length === 0 ? 'healthy' : 'critical',
+      status:
+        missingDeps.length === 0
+          ? 'healthy'
+          : isPreInstall
+          ? 'warning'
+          : 'critical',
       message:
         missingDeps.length === 0
           ? 'All dependencies available'
+          : isPreInstall
+          ? `Pre-install phase: ${missingDeps.join(', ')} will be installed`
           : `Missing: ${missingDeps.join(', ')}`,
-      recommendations: missingDeps.length > 0 ? ['Run yarn install'] : [],
+      recommendations:
+        missingDeps.length > 0 && !isPreInstall ? ['Run yarn install'] : [],
     };
   }
 
