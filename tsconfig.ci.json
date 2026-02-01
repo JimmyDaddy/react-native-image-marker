@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "noResolve": false,
+    "isolatedModules": false,
+    "types": []
+  },
+  "include": [
+    "specs/**/*"
+  ],
+  "exclude": [
+    "node_modules/**/*",
+    "lib/**/*",
+    "example/**/*",
+    "example-0.73/**/*",
+    "expo-example/**/*",
+    "android/**/*",
+    "ios/**/*"
+  ]
+}
