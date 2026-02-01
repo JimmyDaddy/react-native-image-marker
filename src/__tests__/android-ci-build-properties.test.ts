@@ -106,9 +106,8 @@ describe('Android CI Build Fix - Property Tests', () => {
       );
 
       // Verify version-specific Gradle plugin selection
-      expect(buildGradleContent).toContain(
-        'getGradlePluginVersionForRN(reactNativeVersion)'
-      );
+      expect(buildGradleContent).toContain('def gradlePluginVersion = "8.1.0"');
+      expect(buildGradleContent).toContain('cleanVersion.startsWith("0.81")');
       expect(buildGradleContent).toContain(
         'getKotlinVersionForRN(reactNativeVersion)'
       );
