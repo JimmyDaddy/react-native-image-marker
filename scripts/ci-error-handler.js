@@ -364,6 +364,34 @@ class CIErrorHandlerScript {
           affectedFiles: ['*.swift', '*.m', '*.h'],
         };
       }
+
+      // Additional iOS error patterns
+      if (logs.includes('Command PhaseScriptExecution failed')) {
+        return {
+          errorType: 'xcode_script_failure',
+          message: 'Xcode script phase execution failed',
+          affectedFiles: ['.xcode.env', '.xcode.env.local'],
+        };
+      }
+
+      if (
+        logs.includes('node: command not found') ||
+        logs.includes('NODE_BINARY')
+      ) {
+        return {
+          errorType: 'node_path_error',
+          message: 'Node.js path configuration error',
+          affectedFiles: ['.xcode.env', '.xcode.env.local'],
+        };
+      }
+
+      if (logs.includes('Unable to find a specification')) {
+        return {
+          errorType: 'podspec_not_found',
+          message: 'CocoaPods specification not found',
+          affectedFiles: ['Podfile', '*.podspec'],
+        };
+      }
     }
 
     // Cross-platform error patterns
@@ -415,6 +443,43 @@ class CIErrorHandlerScript {
             'pod install --repo-update',
           ],
         },
+        {
+          description: 'Reset CocoaPods specs and reinstall',
+          priority: 'medium',
+          successRate: 0.8,
+          commands: [
+            'cd ios',
+            'pod repo remove trunk',
+            'pod setup',
+            'rm -rf Pods Podfile.lock',
+            'pod install --repo-update --verbose',
+          ],
+        },
+      ],
+      xcode_build_failure: [
+        {
+          description: 'Clean Xcode build cache and rebuild',
+          priority: 'high',
+          successRate: 0.85,
+          commands: [
+            'cd ios',
+            'rm -rf build DerivedData',
+            'xcodebuild clean -workspace *.xcworkspace -scheme *',
+            'xcodebuild -workspace *.xcworkspace -scheme * -configuration Release -sdk iphonesimulator',
+          ],
+        },
+        {
+          description: 'Reset Xcode environment and rebuild',
+          priority: 'medium',
+          successRate: 0.75,
+          commands: [
+            'cd ios',
+            'rm -rf build DerivedData',
+            'export NODE_BINARY=$(command -v node)',
+            'echo "NODE_BINARY=$(command -v node)" > .xcode.env.local',
+            'xcodebuild -workspace *.xcworkspace -scheme * -configuration Release -sdk iphonesimulator',
+          ],
+        },
       ],
       codegen_failure: [
         {
@@ -434,6 +499,43 @@ class CIErrorHandlerScript {
           priority: 'high',
           successRate: 0.95,
           commands: ['rm -rf node_modules', 'yarn install'],
+        },
+      ],
+      xcode_script_failure: [
+        {
+          description: 'Fix Xcode script environment',
+          priority: 'high',
+          successRate: 0.9,
+          commands: [
+            'cd ios',
+            'echo "export NODE_BINARY=$(command -v node)" > .xcode.env.local',
+            'echo "export RCT_NEW_ARCH_ENABLED=${RCT_NEW_ARCH_ENABLED:-0}" >> .xcode.env.local',
+          ],
+        },
+      ],
+      node_path_error: [
+        {
+          description: 'Fix Node.js path configuration',
+          priority: 'high',
+          successRate: 0.95,
+          commands: [
+            'cd ios',
+            'echo "export NODE_BINARY=$(command -v node)" > .xcode.env.local',
+            'which node',
+            'node --version',
+          ],
+        },
+      ],
+      podspec_not_found: [
+        {
+          description: 'Update CocoaPods repository and retry',
+          priority: 'high',
+          successRate: 0.85,
+          commands: [
+            'cd ios',
+            'pod repo update',
+            'pod install --repo-update --verbose',
+          ],
         },
       ],
     };

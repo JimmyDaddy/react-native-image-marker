@@ -835,6 +835,14 @@ jobs:
         echo "🏥 Running pre-build health checks..."
         node scripts/ci-error-handler.js health-check
 
+    - name: Setup iOS environment
+      if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
+      env:
+        RCT_NEW_ARCH_ENABLED: ${{ matrix.architecture == 'new' && '1' || '0' }}
+      run: |
+        echo "🍎 Setting up iOS environment for ${{ matrix.architecture }} architecture..."
+        ./scripts/ios-ci-setup.sh ${{ matrix.example-app }}
+
     - name: Install enhanced CocoaPods dependencies with error handling
       if: steps.cache-enhanced-pods.outputs.cache-hit != 'true' && steps.verify-iOS-changed-files.outputs.any_changed == 'true'
       env:
@@ -842,53 +850,28 @@ jobs:
         MATRIX_ARCHITECTURE: ${{ matrix.architecture }}
         MATRIX_RN_VERSION: ${{ matrix.rn-version }}
         MATRIX_EXAMPLE_APP: ${{ matrix.example-app }}
+        RCT_NEW_ARCH_ENABLED: ${{ matrix.architecture == 'new' && '1' || '0' }}
       run: |
-        cd ${{ matrix.example-app }}/ios
-        echo "Installing CocoaPods for ${{ matrix.architecture }} architecture, RN ${{ matrix.rn-version }}, CocoaPods ${{ matrix.cocoapods }}..."
-        pod cache clean --all
-        # Remove Podfile.lock to avoid version conflicts
-        rm -f Podfile.lock
-        if [ "${{ matrix.architecture }}" = "new" ]; then
-          node ../../scripts/ci-error-handler.js monitor "RCT_NEW_ARCH_ENABLED=1 pod install --repo-update --verbose"
-        else
-          node ../../scripts/ci-error-handler.js monitor "RCT_NEW_ARCH_ENABLED=0 pod install --repo-update --verbose"
-        fi
+        cd ${{ matrix.example-app }}
+        echo "Installing dependencies for ${{ matrix.architecture }} architecture, RN ${{ matrix.rn-version }}, CocoaPods ${{ matrix.cocoapods }}..."
+        yarn install --frozen-lockfile
+        echo "✅ Node dependencies installed"
 
     - name: Install xcpretty
       if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
       run: gem install xcpretty
 
-    - name: Cross-platform iOS build with error handling
+    - name: Cross-platform iOS build and test with error handling
       if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
       env:
         MATRIX_PLATFORM: ios
         MATRIX_ARCHITECTURE: ${{ matrix.architecture }}
         MATRIX_RN_VERSION: ${{ matrix.rn-version }}
         MATRIX_EXAMPLE_APP: ${{ matrix.example-app }}
+        RCT_NEW_ARCH_ENABLED: ${{ matrix.architecture == 'new' && '1' || '0' }}
       run: |
-        cd ${{ matrix.example-app }}/ios
-        echo "Building iOS app for ${{ matrix.architecture }} architecture, RN ${{ matrix.rn-version }}..."
-        if [ "${{ matrix.architecture }}" = "new" ]; then
-          node ../../scripts/ci-error-handler.js monitor "RCT_NEW_ARCH_ENABLED=1 xcodebuild -workspace ImageMarkerExample.xcworkspace -scheme ImageMarkerExample -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16' -derivedDataPath build/DerivedData | xcpretty"
-        else
-          node ../../scripts/ci-error-handler.js monitor "RCT_NEW_ARCH_ENABLED=0 xcodebuild -workspace ImageMarkerExample.xcworkspace -scheme ImageMarkerExample -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16' -derivedDataPath build/DerivedData | xcpretty"
-        fi
-
-    - name: Cross-platform iOS test with error handling
-      if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
-      env:
-        MATRIX_PLATFORM: ios
-        MATRIX_ARCHITECTURE: ${{ matrix.architecture }}
-        MATRIX_RN_VERSION: ${{ matrix.rn-version }}
-        MATRIX_EXAMPLE_APP: ${{ matrix.example-app }}
-      run: |
-        cd ${{ matrix.example-app }}/ios
-        echo "Testing iOS app for ${{ matrix.architecture }} architecture, RN ${{ matrix.rn-version }}..."
-        if [ "${{ matrix.architecture }}" = "new" ]; then
-          node ../../scripts/ci-error-handler.js monitor "RCT_NEW_ARCH_ENABLED=1 xcodebuild -workspace ImageMarkerExample.xcworkspace -scheme ImageMarkerExample -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16' -derivedDataPath build/DerivedData test | xcpretty"
-        else
-          node ../../scripts/ci-error-handler.js monitor "RCT_NEW_ARCH_ENABLED=0 xcodebuild -workspace ImageMarkerExample.xcworkspace -scheme ImageMarkerExample -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16' -derivedDataPath build/DerivedData test | xcpretty"
-        fi
+        echo "🍎 Building and testing iOS app for ${{ matrix.architecture }} architecture, RN ${{ matrix.rn-version }}..."
+        node scripts/ci-error-handler.js monitor "./scripts/ios-ci-build.sh ${{ matrix.example-app }} ${{ matrix.architecture }} 3"
 
     - name: Upload iOS build artifacts
       if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
