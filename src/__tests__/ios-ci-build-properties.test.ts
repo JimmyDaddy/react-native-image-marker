@@ -664,8 +664,6 @@ describe('iOS CI Build Fix - Property Tests', () => {
         'RCTTypeSafety',
         'ReactCommon/turbomodule/core',
         'React-jsi',
-        'React-logger',
-        'React-perflogger',
         'React-utils',
         'React-graphics',
         'React-debug',

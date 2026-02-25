@@ -54,5 +54,14 @@ target 'ImageMarkerExample' do
       config[:reactNativePath],
       :mac_catalyst_enabled => false
     )
+    
+    # Enable modular headers for Swift compatibility with New Architecture
+    installer.pods_project.targets.each do |target|
+      if ['React-logger', 'React-perflogger'].include?(target.name)
+        target.build_configurations.each do |config|
+          config.build_settings['DEFINES_MODULE'] = 'YES'
+        end
+      end
+    end
   end
 end

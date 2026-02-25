@@ -162,8 +162,6 @@ Pod::Spec.new do |s|
     
     # Additional new architecture dependencies
     s.dependency "React-jsi"
-    s.dependency "React-logger"
-    s.dependency "React-perflogger"
     s.dependency "React-utils"
     
     # Fabric dependencies (for future Fabric integration)
