@@ -4,103 +4,105 @@ package = JSON.parse(File.read(File.join(__dir__, "package.json")))
 folly_compiler_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -Wno-comma -Wno-shorten-64-to-32'
 
 # Cross-platform version detection for iOS configuration
-def detect_react_native_version
-  # Try to read from package.json in current project
-  package_json_paths = [
-    File.join(__dir__, "package.json"),
-    File.join(__dir__, "..", "package.json"),
-    File.join(__dir__, "..", "..", "package.json")
-  ]
-  
-  package_json_paths.each do |path|
-    if File.exist?(path)
-      begin
-        package_data = JSON.parse(File.read(path))
-        rn_version = package_data.dig("dependencies", "react-native") || 
-                    package_data.dig("devDependencies", "react-native")
-        
-        if rn_version
-          # Remove version prefixes like ^, ~, >=
-          clean_version = rn_version.gsub(/^[\^~>=<]+/, '')
-          # Extract major.minor.patch format
-          version_match = clean_version.match(/(\d+\.\d+\.\d+)/)
-          return version_match[1] if version_match
+module ReactNativeImageMarker
+  def self.detect_react_native_version
+    # Try to read from package.json in current project
+    package_json_paths = [
+      File.join(__dir__, "package.json"),
+      File.join(__dir__, "..", "package.json"),
+      File.join(__dir__, "..", "..", "package.json")
+    ]
+    
+    package_json_paths.each do |path|
+      if File.exist?(path)
+        begin
+          package_data = JSON.parse(File.read(path))
+          rn_version = package_data.dig("dependencies", "react-native") || 
+                      package_data.dig("devDependencies", "react-native")
           
-          # Extract major.minor format and add .0
-          short_version_match = clean_version.match(/(\d+\.\d+)/)
-          return "#{short_version_match[1]}.0" if short_version_match
+          if rn_version
+            # Remove version prefixes like ^, ~, >=
+            clean_version = rn_version.gsub(/^[\^~>=<]+/, '')
+            # Extract major.minor.patch format
+            version_match = clean_version.match(/(\d+\.\d+\.\d+)/)
+            return version_match[1] if version_match
+            
+            # Extract major.minor format and add .0
+            short_version_match = clean_version.match(/(\d+\.\d+)/)
+            return "#{short_version_match[1]}.0" if short_version_match
+          end
+        rescue JSON::ParserError
+          # Continue to next path
         end
-      rescue JSON::ParserError
-        # Continue to next path
       end
     end
-  end
-  
-  # Try to read from node_modules/react-native/package.json
-  node_modules_paths = [
-    File.join(__dir__, "node_modules", "react-native", "package.json"),
-    File.join(__dir__, "..", "node_modules", "react-native", "package.json"),
-    File.join(__dir__, "..", "..", "node_modules", "react-native", "package.json")
-  ]
-  
-  node_modules_paths.each do |path|
-    if File.exist?(path)
-      begin
-        rn_package = JSON.parse(File.read(path))
-        return rn_package["version"] if rn_package["version"]
-      rescue JSON::ParserError
-        # Continue to next path
+    
+    # Try to read from node_modules/react-native/package.json
+    node_modules_paths = [
+      File.join(__dir__, "node_modules", "react-native", "package.json"),
+      File.join(__dir__, "..", "node_modules", "react-native", "package.json"),
+      File.join(__dir__, "..", "..", "node_modules", "react-native", "package.json")
+    ]
+    
+    node_modules_paths.each do |path|
+      if File.exist?(path)
+        begin
+          rn_package = JSON.parse(File.read(path))
+          return rn_package["version"] if rn_package["version"]
+        rescue JSON::ParserError
+          # Continue to next path
+        end
       end
     end
+    
+    # Default fallback version
+    "0.73.0"
   end
-  
-  # Default fallback version
-  "0.73.0"
-end
 
-# Get iOS configuration based on React Native version
-def get_ios_config_for_version(version)
-  major_minor = version[0, 4] # e.g., "0.73", "0.81"
-  
-  case major_minor
-  when "0.73"
-    {
-      deployment_target: "13.0",
-      swift_version: "5.0",
-      xcode_version: "15.0",
-      cocoapods_version: "1.12.0"
-    }
-  when "0.81"
-    {
-      deployment_target: "13.4",
-      swift_version: "5.9",
-      xcode_version: "15.3",
-      cocoapods_version: "1.15.0"
-    }
-  else
-    # For 0.8x and newer versions
-    if version.start_with?("0.8")
+  # Get iOS configuration based on React Native version
+  def self.get_ios_config_for_version(version)
+    major_minor = version[0, 4] # e.g., "0.73", "0.81"
+    
+    case major_minor
+    when "0.73"
       {
-        deployment_target: "14.0",
-        swift_version: "5.10",
-        xcode_version: "16.0",
-        cocoapods_version: "1.16.0"
+        deployment_target: "13.0",
+        swift_version: "5.0",
+        xcode_version: "15.0",
+        cocoapods_version: "1.12.0"
+      }
+    when "0.81"
+      {
+        deployment_target: "13.4",
+        swift_version: "5.9",
+        xcode_version: "15.3",
+        cocoapods_version: "1.15.0"
       }
     else
-      # Default to latest strategy for unknown versions
-      {
-        deployment_target: "14.0",
-        swift_version: "5.10",
-        xcode_version: "16.0",
-        cocoapods_version: "1.16.0"
-      }
+      # For 0.8x and newer versions
+      if version.start_with?("0.8")
+        {
+          deployment_target: "14.0",
+          swift_version: "5.10",
+          xcode_version: "16.0",
+          cocoapods_version: "1.16.0"
+        }
+      else
+        # Default to latest strategy for unknown versions
+        {
+          deployment_target: "14.0",
+          swift_version: "5.10",
+          xcode_version: "16.0",
+          cocoapods_version: "1.16.0"
+        }
+      end
     end
   end
 end
 
 # Detect current React Native version and get configuration
-rn_version = detect_react_native_version
-ios_config = get_ios_config_for_version(rn_version)
+rn_version = ReactNativeImageMarker.detect_react_native_version
+ios_config = ReactNativeImageMarker.get_ios_config_for_version(rn_version)
 
 puts "Detected React Native version: #{rn_version}"
 puts "Using iOS deployment target: #{ios_config[:deployment_target]}"

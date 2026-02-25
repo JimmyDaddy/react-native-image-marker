@@ -630,8 +630,15 @@ jobs:
         MATRIX_RN_VERSION: ${{ matrix.rn-version }}
         MATRIX_EXAMPLE_APP: ${{ matrix.example-app }}
       run: |
+        echo "Installing main project dependencies for library build..."
+        if ! yarn install --frozen-lockfile; then
+          echo "⚠️ Frozen lockfile failed, updating lockfile..."
+          yarn install
+        fi
+        
         echo "Building library for cross-platform compatibility..."
         yarn prepack
+        
         cd ${{ matrix.example-app }}/android
         echo "Building APK for ${{ matrix.architecture }} architecture, RN ${{ matrix.rn-version }}..."
         node ../../scripts/ci-error-handler.js monitor "./gradlew assembleRelease --stacktrace --build-cache"
