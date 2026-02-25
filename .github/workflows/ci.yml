@@ -608,9 +608,9 @@ jobs:
         fi
         cd android
         # Clean any existing build artifacts
-        ./gradlew clean --stacktrace
+        ./gradlew clean --stacktrace --no-build-cache
         # Download dependencies without building
-        node ../../scripts/ci-error-handler.js monitor "./gradlew dependencies --stacktrace --build-cache"
+        node ../../scripts/ci-error-handler.js monitor "./gradlew dependencies --stacktrace --no-build-cache"
 
     - name: Run cross-platform unit tests with error handling
       if: steps.verify-android-changed-files.outputs.any_changed == 'true'
@@ -625,7 +625,7 @@ jobs:
         # Check if test source directory exists
         if [ -d "app/src/test" ] && [ "$(find app/src/test -name '*.java' -o -name '*.kt' | wc -l)" -gt 0 ]; then
           echo "Running unit tests..."
-          node ../../scripts/ci-error-handler.js monitor "./gradlew test --stacktrace --build-cache"
+          node ../../scripts/ci-error-handler.js monitor "./gradlew test --stacktrace --no-build-cache --info"
         else
           echo "⚠️ No unit tests found, skipping test execution"
           echo "This is acceptable for example applications"
@@ -650,7 +650,8 @@ jobs:
         
         cd ${{ matrix.example-app }}/android
         echo "Building APK for ${{ matrix.architecture }} architecture, RN ${{ matrix.rn-version }}..."
-        node ../../scripts/ci-error-handler.js monitor "./gradlew assembleRelease --stacktrace --build-cache"
+        echo "Using --info flag for detailed Kotlin compilation logs..."
+        node ../../scripts/ci-error-handler.js monitor "./gradlew assembleRelease --stacktrace --no-build-cache --info"
         mv app/build/outputs/apk/release/app-release.apk app-release-${{ matrix.architecture }}-${{ matrix.rn-version }}-${{ matrix.example-app }}-${{ github.sha }}.apk
 
     - name: Upload cross-platform APK
@@ -801,7 +802,7 @@ jobs:
           profile: pixel_5
           script: |
             echo "Running instrumentation tests for ${{ matrix.architecture }} architecture, API ${{ matrix.api-level }}, RN ${{ matrix.rn-version }}..."
-            cd ${{ matrix.example-app }}/android && ./gradlew connectedCheck --stacktrace --build-cache
+            cd ${{ matrix.example-app }}/android && ./gradlew connectedCheck --stacktrace --no-build-cache --info
 
       - name: Upload cross-platform test reports
         uses: actions/upload-artifact@v4

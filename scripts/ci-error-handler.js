@@ -75,23 +75,30 @@ class CIErrorHandlerScript {
 
     try {
       // Execute build command and capture output
+      // Use 'inherit' for stdio to show real-time output, but also capture to file
       const result = execSync(buildCommand, {
         encoding: 'utf8',
-        stdio: 'pipe',
-        maxBuffer: 10 * 1024 * 1024, // 10MB buffer
+        stdio: ['inherit', 'pipe', 'pipe'], // stdin: inherit, stdout: pipe, stderr: pipe
+        maxBuffer: 50 * 1024 * 1024, // 50MB buffer for large build logs
       });
       buildOutput = result;
       console.log('✅ Build completed successfully');
     } catch (error) {
       exitCode = error.status || 1;
-      buildOutput = error.stdout + error.stderr;
+      // Combine stdout and stderr, ensuring we capture all output
+      buildOutput = (error.stdout || '') + '\n' + (error.stderr || '');
+
+      // Print the full error output to console for immediate visibility
       console.error('❌ Build failed with exit code:', exitCode);
+      console.error('\n📋 Full build output:');
+      console.error(buildOutput);
     }
 
     const buildDuration = Date.now() - startTime;
 
-    // Save build log
+    // Save complete build log to file
     fs.writeFileSync(this.logFile, buildOutput);
+    console.log(`📄 Full build log saved to: ${this.logFile}`);
 
     // Analyze build failure if it occurred
     if (exitCode !== 0) {
@@ -433,13 +440,24 @@ class CIErrorHandlerScript {
     const recoveryStrategies = {
       gradle_build_failure: [
         {
-          description: 'Clean Gradle cache and rebuild',
+          description: 'Clean Gradle cache and rebuild (without build-cache)',
           priority: 'high',
           successRate: 0.85,
           commands: [
             'cd android',
-            './gradlew clean',
-            './gradlew build --refresh-dependencies',
+            './gradlew clean --no-build-cache',
+            './gradlew build --refresh-dependencies --no-build-cache --stacktrace',
+          ],
+        },
+        {
+          description: 'Clean all Gradle caches and rebuild',
+          priority: 'medium',
+          successRate: 0.75,
+          commands: [
+            'cd android',
+            './gradlew clean cleanBuildCache --no-build-cache',
+            'rm -rf .gradle build',
+            './gradlew build --refresh-dependencies --no-build-cache --info',
           ],
         },
       ],
@@ -840,7 +858,10 @@ Examples:
       }
     }
 
-    // Generate error report
+    // Extract relevant error sections for better visibility
+    const relevantErrors = this.extractRelevantErrors(buildOutput);
+
+    // Generate error report with full output
     const errorReport = [
       '# Build Failure Report',
       `Timestamp: ${new Date().toISOString()}`,
@@ -861,9 +882,17 @@ Examples:
       `Architecture: ${this.buildContext.buildMatrix.architecture}`,
       `RN Version: ${this.buildContext.buildMatrix.rnVersion}`,
       '',
-      '## Build Output',
+      '## Relevant Error Messages',
       '```',
-      buildOutput.slice(-2000), // Last 2000 characters
+      relevantErrors,
+      '```',
+      '',
+      '## Full Build Output',
+      `See complete log in: ${this.logFile}`,
+      '',
+      '### Last 5000 characters:',
+      '```',
+      buildOutput.slice(-5000), // Last 5000 characters for quick reference
       '```',
     ]
       .filter((line) => line !== '')
@@ -871,6 +900,52 @@ Examples:
 
     fs.writeFileSync(this.errorReportFile, errorReport);
     console.log(`\n📄 Error report saved to ${this.errorReportFile}`);
+  }
+
+  /**
+   * Extract relevant error messages from build output
+   */
+  extractRelevantErrors(buildOutput) {
+    const lines = buildOutput.split('\n');
+    const errorLines = [];
+    let captureContext = false;
+    let contextLines = 0;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+
+      // Detect error markers
+      if (
+        line.includes('error:') ||
+        line.includes('ERROR:') ||
+        line.includes('FAILURE:') ||
+        line.includes('Exception:') ||
+        line.includes('Execution failed for task') ||
+        line.includes('Compilation error') ||
+        line.includes('BUILD FAILED')
+      ) {
+        captureContext = true;
+        contextLines = 0;
+        // Capture 3 lines before the error for context
+        for (let j = Math.max(0, i - 3); j < i; j++) {
+          errorLines.push(lines[j]);
+        }
+      }
+
+      if (captureContext) {
+        errorLines.push(line);
+        contextLines++;
+
+        // Capture 10 lines after error for context
+        if (contextLines > 10) {
+          captureContext = false;
+        }
+      }
+    }
+
+    return errorLines.length > 0
+      ? errorLines.join('\n')
+      : 'No specific error markers found in output';
   }
 
   async recordBuildSuccess(buildDuration) {
