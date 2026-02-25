@@ -890,11 +890,7 @@ jobs:
         key: ${{ runner.os }}-${{ env.COCOAPODS_CACHE_KEY }}-${{ matrix.cocoapods }}-${{ matrix.architecture }}-${{ matrix.rn-version }}-${{ matrix.example-app }}-${{ hashFiles(format('{0}/ios/Podfile', matrix.example-app), 'package.json', 'react-native-image-marker.podspec') }}
         restore-keys: |
           ${{ runner.os }}-${{ env.COCOAPODS_CACHE_KEY }}-${{ matrix.cocoapods }}-${{ matrix.architecture }}-${{ matrix.rn-version }}-${{ matrix.example-app }}-
-          ${{ runner.os }}-${{ env.COCOAPODS_CACHE_KEY }}-${{ matrix.cocoapods }}-${{ matrix.architecture }}-${{ matrix.rn-version }}-${{ matrix.example-app }}-
           ${{ runner.os }}-${{ env.COCOAPODS_CACHE_KEY }}-${{ matrix.cocoapods }}-${{ matrix.architecture }}-${{ matrix.rn-version }}-
-          ${{ runner.os }}-${{ env.COCOAPODS_CACHE_KEY }}-${{ matrix.cocoapods }}-${{ matrix.architecture }}-
-          ${{ runner.os }}-${{ env.COCOAPODS_CACHE_KEY }}-${{ matrix.cocoapods }}-
-          ${{ runner.os }}-${{ env.COCOAPODS_CACHE_KEY }}-
 
     - name: Cache Ruby gems
       uses: actions/cache@v4
@@ -1022,17 +1018,78 @@ jobs:
         
         echo "✅ CocoaPods installation completed"
         
-    - name: Verify CocoaPods installation
+    - name: Verify CocoaPods installation and recover from cache failure
       if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
+      env:
+        RCT_NEW_ARCH_ENABLED: ${{ matrix.architecture == 'new' && '1' || '0' }}
       run: |
         cd ${{ matrix.example-app }}/ios
-        if [ -d "Pods" ] && [ -f "Podfile.lock" ]; then
+        
+        echo "🔍 Checking CocoaPods installation integrity..."
+        
+        # Check if CocoaPods installation is valid
+        PODS_VALID=true
+        
+        # 1. Check if Pods directory exists and is not empty
+        if [ ! -d "Pods" ] || [ ! "$(ls -A Pods 2>/dev/null)" ]; then
+          echo "⚠️ Pods directory missing or empty"
+          PODS_VALID=false
+        fi
+        
+        # 2. Check if Podfile.lock exists
+        if [ ! -f "Podfile.lock" ]; then
+          echo "⚠️ Podfile.lock missing"
+          PODS_VALID=false
+        fi
+        
+        # 3. Check if critical Pod directories exist
+        if [ "$PODS_VALID" = "true" ]; then
+          CRITICAL_PODS=("React-Core" "React-RCTImage" "React-RCTText")
+          for pod in "${CRITICAL_PODS[@]}"; do
+            if [ ! -d "Pods/$pod" ]; then
+              echo "⚠️ Critical pod missing: $pod"
+              PODS_VALID=false
+              break
+            fi
+          done
+        fi
+        
+        # 4. Check cache hit status
+        CACHE_HIT="${{ steps.cache-enhanced-pods.outputs.cache-hit }}"
+        if [ "$CACHE_HIT" = "true" ] && [ "$PODS_VALID" = "false" ]; then
+          echo "⚠️ Cache hit reported but Pods installation is invalid"
+          echo "📊 This indicates cache corruption or partial restore"
+          echo "🔍 Cache key used: ${{ runner.os }}-${{ env.COCOAPODS_CACHE_KEY }}-${{ matrix.cocoapods }}-${{ matrix.architecture }}-${{ matrix.rn-version }}-${{ matrix.example-app }}"
+        fi
+        
+        if [ "$PODS_VALID" = "true" ]; then
           echo "✅ CocoaPods installation verified"
           echo "📊 Installed pods:"
           ls -la Pods/ | head -10
         else
-          echo "❌ CocoaPods installation failed"
-          exit 1
+          echo "⚠️ CocoaPods installation incomplete (cache restore may have failed)"
+          echo "🔄 Attempting to recover by reinstalling pods..."
+          
+          # Clean up incomplete installation
+          rm -rf Pods Podfile.lock
+          rm -rf build DerivedData
+          
+          # Reinstall pods
+          if [ "${{ matrix.architecture }}" = "new" ]; then
+            echo "🏗️ Installing with New Architecture enabled"
+            RCT_NEW_ARCH_ENABLED=1 pod install --repo-update --verbose
+          else
+            echo "🏗️ Installing with Legacy Architecture"
+            RCT_NEW_ARCH_ENABLED=0 pod install --repo-update --verbose
+          fi
+          
+          # Verify installation after recovery
+          if [ -d "Pods" ] && [ -f "Podfile.lock" ]; then
+            echo "✅ CocoaPods installation recovered successfully"
+          else
+            echo "❌ CocoaPods installation failed after recovery attempt"
+            exit 1
+          fi
         fi
 
     - name: Install xcpretty
