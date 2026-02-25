@@ -47,14 +47,19 @@ export {
   type InferSourceType,
 } from './types';
 
-// Re-export architecture detection and cross-platform management
+// Re-export architecture detection (runtime only)
 export { ArchitectureDetector } from './ArchitectureDetector';
-export { CrossPlatformArchitectureManager } from './CrossPlatformArchitectureManager';
-export { CrossPlatformConfigurationManager } from './CrossPlatformConfigurationManager';
-export { CrossPlatformVersionDetector } from './CrossPlatformVersionDetector';
-export { VersionAPIAdapter } from './VersionAPIAdapter';
 
-// Re-export cross-platform types
+// Note: Build-time utilities (CrossPlatformVersionDetector, CrossPlatformArchitectureManager, etc.)
+// are not exported from the main entry point as they use Node.js APIs (fs, path)
+// and cannot run in React Native environment.
+// These utilities are available for build scripts through direct imports:
+// import { CrossPlatformVersionDetector } from 'react-native-image-marker/src/CrossPlatformVersionDetector';
+
+// Re-export runtime architecture types only
+// Note: CrossPlatformArchitectureInfo and related types are still exported for type compatibility,
+// but the runtime methods (detectCrossPlatformArchitecture, etc.) are only available in build scripts
+// through CrossPlatformArchitectureManager
 export type {
   CrossPlatformArchitectureInfo,
   ArchitectureInfo,
@@ -65,22 +70,6 @@ export type {
   PlatformSwitchResult,
   ConfigChange,
 } from './ArchitectureDetector';
-
-export type {
-  Platform,
-  ArchitectureType,
-} from './CrossPlatformArchitectureManager';
-
-export type {
-  VersionAPIInterface,
-  CodegenConfiguration,
-  BuildSystemConfiguration,
-  ArchitectureSupport,
-  ValidationResult as VersionValidationResult,
-  BuildCommands,
-  DependencyRequirements,
-  APICompatibilityResult,
-} from './VersionAPIAdapter';
 
 class ImageMarker {
   /** @ignore ignore constructors for typedoc only */
@@ -278,46 +267,6 @@ class ImageMarker {
    */
   static getImageCacheStats(): { size: number; keys: string[] } {
     return FabricImageLoader.getCacheStats();
-  }
-
-  /**
-   * Detect cross-platform architecture compatibility
-   * @returns Cross-platform architecture information or null if not available
-   */
-  static detectCrossPlatformArchitecture() {
-    return ArchitectureDetector.detectCrossPlatformArchitecture();
-  }
-
-  /**
-   * Validate architecture consistency across platforms
-   * @returns Validation result or null if not available
-   */
-  static validateArchitectureConsistency() {
-    return ArchitectureDetector.validateArchitectureConsistency();
-  }
-
-  /**
-   * Get architecture switching recommendations
-   * @returns Array of recommendations
-   */
-  static getArchitectureRecommendations() {
-    return ArchitectureDetector.getArchitectureRecommendations();
-  }
-
-  /**
-   * Switch architecture across platforms
-   * @param targetArchitecture Target architecture (legacy or new)
-   * @param platforms Platforms to switch (optional, defaults to all)
-   * @returns Switch result or null if not available
-   */
-  static switchArchitecture(
-    targetArchitecture: 'legacy' | 'new',
-    platforms?: ('android' | 'ios' | 'expo')[]
-  ) {
-    return ArchitectureDetector.switchArchitecture(
-      targetArchitecture,
-      platforms
-    );
   }
 }
 

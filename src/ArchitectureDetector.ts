@@ -174,85 +174,17 @@ export class ArchitectureDetector {
     };
   }
 
-  /**
-   * Detects cross-platform architecture compatibility
-   * This method provides a bridge to the CrossPlatformArchitectureManager
-   * @returns Cross-platform architecture information
-   */
-  static detectCrossPlatformArchitecture(): CrossPlatformArchitectureInfo | null {
-    try {
-      // Lazy import to avoid circular dependencies
-      const {
-        CrossPlatformArchitectureManager,
-      } = require('./CrossPlatformArchitectureManager');
-      return CrossPlatformArchitectureManager.detectCrossPlatformArchitecture();
-    } catch (error) {
-      console.warn(
-        'Cross-platform architecture detection not available:',
-        error
-      );
-      return null;
-    }
-  }
-
-  /**
-   * Validates architecture consistency across platforms
-   * @returns Validation result or null if cross-platform detection is not available
-   */
-  static validateArchitectureConsistency(): ArchitectureConsistencyResult | null {
-    try {
-      const {
-        CrossPlatformArchitectureManager,
-      } = require('./CrossPlatformArchitectureManager');
-      return CrossPlatformArchitectureManager.validateArchitectureConsistency();
-    } catch (error) {
-      console.warn(
-        'Cross-platform architecture validation not available:',
-        error
-      );
-      return null;
-    }
-  }
-
-  /**
-   * Gets architecture switching recommendations
-   * @returns Array of recommendations or empty array if not available
-   */
-  static getArchitectureRecommendations(): ArchitectureRecommendation[] {
-    try {
-      const {
-        CrossPlatformArchitectureManager,
-      } = require('./CrossPlatformArchitectureManager');
-      return CrossPlatformArchitectureManager.getArchitectureRecommendations();
-    } catch (error) {
-      console.warn('Architecture recommendations not available:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Switches architecture across platforms
-   * @param targetArchitecture Target architecture (legacy or new)
-   * @param platforms Platforms to switch (optional, defaults to all)
-   * @returns Switch result or null if not available
-   */
-  static switchArchitecture(
-    targetArchitecture: 'legacy' | 'new',
-    platforms?: ('android' | 'ios' | 'expo')[]
-  ): ArchitectureSwitchResult | null {
-    try {
-      const {
-        CrossPlatformArchitectureManager,
-      } = require('./CrossPlatformArchitectureManager');
-      return CrossPlatformArchitectureManager.switchArchitecture(
-        targetArchitecture,
-        platforms
-      );
-    } catch (error) {
-      console.warn('Architecture switching not available:', error);
-      return null;
-    }
-  }
+  // Note: Cross-platform architecture management methods (detectCrossPlatformArchitecture,
+  // validateArchitectureConsistency, getArchitectureRecommendations, switchArchitecture)
+  // have been removed from ArchitectureDetector as they require Node.js APIs (fs, path)
+  // and cannot run in React Native runtime environment.
+  //
+  // These methods are available through CrossPlatformArchitectureManager for build scripts:
+  // import { CrossPlatformArchitectureManager } from 'react-native-image-marker/src/CrossPlatformArchitectureManager';
+  // CrossPlatformArchitectureManager.detectCrossPlatformArchitecture();
+  // CrossPlatformArchitectureManager.validateArchitectureConsistency();
+  // CrossPlatformArchitectureManager.getArchitectureRecommendations();
+  // CrossPlatformArchitectureManager.switchArchitecture(targetArchitecture, platforms);
 }
 
 // Type definitions for cross-platform functionality

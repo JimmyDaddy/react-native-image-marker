@@ -865,16 +865,14 @@ describe('Cross-Platform Architecture Compatibility Properties', () => {
       expect(info3).not.toBe(info1); // Should be a new object
       expect(mockFs.readFileSync).toHaveBeenCalled();
 
-      // Test ArchitectureDetector integration
+      // Test ArchitectureDetector integration (runtime detection only)
       ArchitectureDetector.reset();
-      const detectorInfo1 =
-        ArchitectureDetector.detectCrossPlatformArchitecture();
+      const detectorInfo1 = ArchitectureDetector.getArchitectureInfo();
       expect(detectorInfo1).toBeDefined();
 
-      // Should be cached in ArchitectureDetector as well
-      const detectorInfo2 =
-        ArchitectureDetector.detectCrossPlatformArchitecture();
-      expect(detectorInfo2).toBe(detectorInfo1);
+      // getArchitectureInfo() returns a new object each time (not cached)
+      const detectorInfo2 = ArchitectureDetector.getArchitectureInfo();
+      expect(detectorInfo2).toStrictEqual(detectorInfo1); // Same content, different object
 
       console.log('Architecture caching and state management verified');
     });

@@ -17,7 +17,7 @@ class ImageOptions(val options: ReadableMap) {
   var scale: Float
 
   var rotate: Float
-  private var alpha: Int
+  var alpha: Int
 
   init {
     if (!options.hasKey("src")) {

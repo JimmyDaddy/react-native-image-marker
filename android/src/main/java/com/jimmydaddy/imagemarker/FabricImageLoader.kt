@@ -151,8 +151,9 @@ class FabricImageLoader(private val context: ReactApplicationContext, private va
         
         // Check if the image source is a Fabric-processed source
         val fabricSource = img.src
-        if (fabricSource is ReadableMap && fabricSource.hasKey("uri")) {
-            return loadFabricImageSource(fabricSource, img)
+        // RNImageSRC contains the original ReadableMap in options
+        if (fabricSource.options != null && fabricSource.options.hasKey("uri")) {
+            return loadFabricImageSource(fabricSource.options, img)
         }
         
         // Fallback to legacy loading for non-Fabric sources
