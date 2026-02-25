@@ -987,8 +987,17 @@ jobs:
         echo "📦 Installing CocoaPods dependencies for ${{ matrix.architecture }} architecture..."
         cd ${{ matrix.example-app }}/ios
         
-        # Clean previous builds but keep Pods if cache exists
+        # Clean previous builds and cached podspecs to avoid version conflicts
         rm -rf build DerivedData
+        rm -rf Pods/Local\ Podspecs
+        
+        # Clean CocoaPods cache if there are version conflicts
+        if [ -f "Podfile.lock" ]; then
+          echo "🧹 Cleaning CocoaPods cache to avoid version conflicts..."
+          pod cache clean --all || true
+          # Remove Podfile.lock to force fresh resolution
+          rm -f Podfile.lock
+        fi
         
         # Install pods with architecture configuration
         if [ "${{ matrix.architecture }}" = "new" ]; then
