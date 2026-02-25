@@ -411,6 +411,18 @@ class CIErrorHandlerScript {
       };
     }
 
+    // Yarn lockfile mismatch
+    if (
+      logs.includes('Your lockfile needs to be updated') ||
+      logs.includes('frozen-lockfile')
+    ) {
+      return {
+        errorType: 'yarn_lockfile_mismatch',
+        message: 'Yarn lockfile is out of sync with package.json',
+        affectedFiles: ['package.json', 'yarn.lock'],
+      };
+    }
+
     return null;
   }
 
@@ -526,16 +538,18 @@ class CIErrorHandlerScript {
           ],
         },
       ],
-      podspec_not_found: [
+      yarn_lockfile_mismatch: [
         {
-          description: 'Update CocoaPods repository and retry',
+          description: 'Update yarn lockfile and reinstall',
           priority: 'high',
+          successRate: 0.95,
+          commands: ['rm -f yarn.lock', 'yarn install'],
+        },
+        {
+          description: 'Clear yarn cache and reinstall',
+          priority: 'medium',
           successRate: 0.85,
-          commands: [
-            'cd ios',
-            'pod repo update',
-            'pod install --repo-update --verbose',
-          ],
+          commands: ['yarn cache clean', 'rm -f yarn.lock', 'yarn install'],
         },
       ],
     };

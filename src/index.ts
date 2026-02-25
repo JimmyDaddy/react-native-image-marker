@@ -52,6 +52,7 @@ export { ArchitectureDetector } from './ArchitectureDetector';
 export { CrossPlatformArchitectureManager } from './CrossPlatformArchitectureManager';
 export { CrossPlatformConfigurationManager } from './CrossPlatformConfigurationManager';
 export { CrossPlatformVersionDetector } from './CrossPlatformVersionDetector';
+export { VersionAPIAdapter } from './VersionAPIAdapter';
 
 // Re-export cross-platform types
 export type {
@@ -69,6 +70,17 @@ export type {
   Platform,
   ArchitectureType,
 } from './CrossPlatformArchitectureManager';
+
+export type {
+  VersionAPIInterface,
+  CodegenConfiguration,
+  BuildSystemConfiguration,
+  ArchitectureSupport,
+  ValidationResult as VersionValidationResult,
+  BuildCommands,
+  DependencyRequirements,
+  APICompatibilityResult,
+} from './VersionAPIAdapter';
 
 class ImageMarker {
   /** @ignore ignore constructors for typedoc only */

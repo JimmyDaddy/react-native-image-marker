@@ -45,7 +45,19 @@
     "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build",
     "docs": "typedoc --excludePrivate --tsconfig tsconfig.doc.json",
     "expo-install": "yarn expo-example expo-install",
-    "codegen": "react-native codegen --path . --outputPath ./lib/codegen"
+    "codegen": "react-native codegen --path . --outputPath ./lib/codegen",
+    "arch:switch": "node scripts/switch-architecture.js",
+    "arch:check": "node scripts/check-architecture.js",
+    "arch:new": "node scripts/switch-architecture.js new",
+    "arch:legacy": "node scripts/switch-architecture.js legacy",
+    "expo:arch:switch": "node scripts/switch-expo-architecture.js",
+    "expo:arch:new": "node scripts/switch-expo-architecture.js new",
+    "expo:arch:legacy": "node scripts/switch-expo-architecture.js legacy",
+    "arch:status": "node scripts/manage-architecture.js status",
+    "arch:switch-all": "node scripts/manage-architecture.js switch",
+    "arch:validate": "node scripts/manage-architecture.js validate",
+    "arch:new-all": "node scripts/manage-architecture.js switch new",
+    "arch:legacy-all": "node scripts/manage-architecture.js switch legacy"
   },
   "keywords": [
     "react-native",
