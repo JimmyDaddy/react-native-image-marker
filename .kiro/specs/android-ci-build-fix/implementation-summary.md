@@ -1,157 +1,111 @@
-# Android CI 构建日志增强实现总结
+# Android CI 构建日志增强实现总结 (v2)
 
 ## 问题分析
 
 ### 原始问题
-在 GitHub Actions CI 中，Android 构建失败时只显示简短的错误信息：
+在 GitHub Actions CI 中,Android 构建失败时只显示简短的错误信息:
 ```
 ❌ Build failed with exit code: 1
 🔍 Analyzing build failure (exit code: 1)
 Error Type: gradle_build_failure
-Message: Execution failed for task ':react-native-image-marker:compileReleaseKotlin'.
+Message: Execution failed for task ':app:configureCMakeRelWithDebInfo[arm64-v8a]'.
 ```
 
-但没有显示详细的 Kotlin 编译错误，导致无法定位具体问题。
+但没有显示详细的 CMake 配置错误,导致无法定位具体问题。
 
 ### 根本原因
-1. **日志输出被截断**：`ci-error-handler.js` 只保存最后 2000 个字符到错误报告
-2. **stdio 配置问题**：使用 `stdio: 'pipe'` 捕获输出，但没有实时显示
-3. **缓冲区限制**：maxBuffer 只有 10MB，可能不足以容纳大型构建日志
-4. **`--build-cache` 参数**：可能导致缓存的构建状态与实际代码不一致
+1. **日志输出被 ci-error-handler.js 包装器截断**：使用 `stdio: ['inherit', 'pipe', 'pipe']` 时,stdout 和 stderr 被捕获但没有实时输出
+2. **CMake 错误信息丢失**：真正的错误是 CMake 配置失败,不是 Kotlin 编译错误
+3. **`--build-cache` 参数**：可能导致缓存的构建状态与实际代码不一致
 
-## 实施的修复
+## 实施的修复 (v2 - 简化方案)
 
-### 1. 增强日志捕获和输出 (`scripts/ci-error-handler.js`)
+### 1. 移除 ci-error-handler.js 包装器
 
-#### 修改 `monitorBuild` 方法
-```javascript
-// 之前：只捕获输出，不显示
-stdio: 'pipe',
-maxBuffer: 10 * 1024 * 1024, // 10MB
+**问题**：`ci-error-handler.js` 的 stdio 配置导致输出被截断或延迟显示
 
-// 之后：实时显示并捕获完整输出
-stdio: ['inherit', 'pipe', 'pipe'], // stdin: inherit, stdout: pipe, stderr: pipe
-maxBuffer: 50 * 1024 * 1024, // 50MB buffer for large build logs
+**解决方案**：直接运行 Gradle 命令,使用 `tee` 保存日志的同时实时输出到控制台
 
-// 打印完整错误输出到控制台
-console.error('\n📋 Full build output:');
-console.error(buildOutput);
-
-// 保存完整日志到文件
-fs.writeFileSync(this.logFile, buildOutput);
-console.log(`📄 Full build log saved to: ${this.logFile}`);
-```
-
-#### 新增 `extractRelevantErrors` 方法
-智能提取错误相关的上下文信息：
-```javascript
-extractRelevantErrors(buildOutput) {
-  // 检测错误标记：error:, ERROR:, FAILURE:, Exception:, etc.
-  // 捕获错误前 3 行和后 10 行的上下文
-  // 返回所有相关错误片段
-}
-```
-
-#### 增强 `analyzeBuildFailure` 方法
-```javascript
-// 生成更详细的错误报告
-const errorReport = [
-  '## Relevant Error Messages',  // 智能提取的错误信息
-  '## Full Build Output',         // 完整日志文件路径
-  '### Last 5000 characters:',    // 最后 5000 字符（从 2000 增加）
-];
-```
-
-### 2. 移除 `--build-cache` 参数
-
-#### CI 配置修改 (`.github/workflows/ci.yml`)
-
-**依赖安装步骤**：
+#### 修改前:
 ```yaml
-# 之前
-./gradlew clean --stacktrace
-./gradlew dependencies --stacktrace --build-cache
+node ../../scripts/ci-error-handler.js monitor "./gradlew assembleRelease --stacktrace --build-cache"
+```
 
-# 之后
+#### 修改后:
+```yaml
+# Run Gradle directly with tee to capture log while showing output
+./gradlew assembleRelease --stacktrace --no-build-cache --info 2>&1 | tee build.log
+
+# Check exit code
+if [ ${PIPESTATUS[0]} -ne 0 ]; then
+  echo "❌ Build failed!"
+  echo "📄 Showing last 200 lines of build log:"
+  tail -200 build.log
+  exit 1
+fi
+```
+
+### 2. 使用 tee 命令同时输出和保存日志
+
+**优势**:
+- ✅ 实时显示完整的构建输出到控制台
+- ✅ 同时保存完整日志到 `build.log` 文件
+- ✅ 使用 `${PIPESTATUS[0]}` 正确捕获 Gradle 的退出码
+- ✅ 失败时显示最后 200 行日志,便于快速定位问题
+
+### 3. 移除 `--build-cache` 参数
+
+所有 Gradle 命令改用 `--no-build-cache`:
+
+**依赖安装**:
+```bash
 ./gradlew clean --stacktrace --no-build-cache
 ./gradlew dependencies --stacktrace --no-build-cache
 ```
 
-**单元测试步骤**：
-```yaml
-# 之前
-./gradlew test --stacktrace --build-cache
-
-# 之后
+**单元测试**:
+```bash
 ./gradlew test --stacktrace --no-build-cache --info
 ```
 
-**APK 构建步骤**：
-```yaml
-# 之前
-./gradlew assembleRelease --stacktrace --build-cache
-
-# 之后
-./gradlew assembleRelease --stacktrace --no-build-cache --info
+**APK 构建**:
+```bash
+./gradlew assembleRelease --stacktrace --no-build-cache --info 2>&1 | tee build.log
 ```
 
-**集成测试步骤**：
-```yaml
-# 之前
-./gradlew connectedCheck --stacktrace --build-cache
-
-# 之后
+**集成测试**:
+```bash
 ./gradlew connectedCheck --stacktrace --no-build-cache --info
 ```
 
-### 3. 添加 `--info` 标志
+### 4. 添加 `--info` 标志
 
-在关键构建步骤中添加 `--info` 标志，提供更详细的 Gradle 输出：
+在关键构建步骤中添加 `--info` 标志,提供详细的 Gradle 输出:
 - 显示任务执行详情
 - 显示依赖解析过程
+- 显示 CMake 配置详细信息
 - 显示 Kotlin 编译详细信息
 - 显示插件应用过程
 
-### 4. 更新恢复策略
-
-修改 `getRecoveryActions` 中的 Gradle 构建失败恢复策略：
-```javascript
-gradle_build_failure: [
-  {
-    description: 'Clean Gradle cache and rebuild (without build-cache)',
-    commands: [
-      './gradlew clean --no-build-cache',
-      './gradlew build --refresh-dependencies --no-build-cache --stacktrace',
-    ],
-  },
-  {
-    description: 'Clean all Gradle caches and rebuild',
-    commands: [
-      './gradlew clean cleanBuildCache --no-build-cache',
-      'rm -rf .gradle build',
-      './gradlew build --refresh-dependencies --no-build-cache --info',
-    ],
-  },
-]
-```
-
 ## 预期效果
 
-### 1. 完整的错误日志
+### 1. 完整的实时日志输出
 - ✅ 在 CI 控制台中实时显示完整的构建输出
-- ✅ 保存完整日志到 `ci-build.log` 文件（50MB 缓冲区）
-- ✅ 在错误报告中包含智能提取的相关错误信息
-- ✅ 在错误报告中包含最后 5000 字符的快速参考
+- ✅ 保存完整日志到 `build.log` 文件
+- ✅ 失败时自动显示最后 200 行日志
 
-### 2. 详细的 Kotlin 编译错误
-使用 `--info` 标志后，将显示：
+### 2. 详细的 CMake 错误信息
+使用 `--info` 标志后,CMake 配置错误将显示:
 ```
-> Task :react-native-image-marker:compileReleaseKotlin
-Kotlin compilation 'compileReleaseKotlin' started
-Using Kotlin/Native compiler version 1.9.22
-Compiling Kotlin sources from [android/src/main/java/...]
-e: file:///path/to/file.kt:123:45 Unresolved reference: SomeClass
-e: file:///path/to/file.kt:124:10 Type mismatch: inferred type is X but Y was expected
+> Task :app:configureCMakeRelWithDebInfo[arm64-v8a]
+CMake configuration started
+CMake Error at CMakeLists.txt:123 (find_package):
+  Could not find a package configuration file provided by "SomePackage"
+  
+Call Stack (most recent call first):
+  CMakeLists.txt:456 (include)
+
+-- Configuring incomplete, errors occurred!
 ```
 
 ### 3. 避免缓存问题
@@ -159,89 +113,80 @@ e: file:///path/to/file.kt:124:10 Type mismatch: inferred type is X but Y was ex
 - ✅ 避免缓存的构建状态导致的误导性错误
 - ✅ 更容易重现和调试构建问题
 
-### 4. 更好的错误诊断
-错误报告现在包含：
-```markdown
-## Relevant Error Messages
-```
-e: file:///path/to/file.kt:123:45 Unresolved reference: SomeClass
-e: file:///path/to/file.kt:124:10 Type mismatch
-FAILURE: Build failed with an exception.
-* What went wrong:
-Execution failed for task ':react-native-image-marker:compileReleaseKotlin'.
-> Compilation error. See log for more details
-```
-
-## Full Build Output
-See complete log in: /path/to/ci-build.log
-
-### Last 5000 characters:
-[详细的构建输出...]
-```
-
-## 质量检查结果
-
-所有质量检查都已通过：
-
+### 4. 简化的错误处理
+不再需要复杂的 JavaScript 包装器:
 ```bash
-✅ npm run lint -- --fix scripts/ci-error-handler.js
-✅ npm run typecheck
-✅ npm test -- --run
+# 简单直接的错误处理
+if [ ${PIPESTATUS[0]} -ne 0 ]; then
+  echo "❌ Build failed!"
+  tail -200 build.log
+  exit 1
+fi
 ```
+
+## 技术细节
+
+### tee 命令说明
+```bash
+./gradlew assembleRelease --stacktrace --no-build-cache --info 2>&1 | tee build.log
+```
+- `2>&1` - 将 stderr 重定向到 stdout
+- `| tee build.log` - 同时输出到控制台和文件
+- `${PIPESTATUS[0]}` - 获取管道中第一个命令(gradlew)的退出码
+
+### Gradle 参数说明
+- `--no-build-cache`: 禁用构建缓存,确保干净构建
+- `--info`: 显示详细的构建信息
+- `--stacktrace`: 显示完整的异常堆栈跟踪
+
+## 与 v1 方案的对比
+
+| 特性 | v1 (ci-error-handler.js) | v2 (直接 Gradle + tee) |
+|------|-------------------------|----------------------|
+| 实时输出 | ❌ 延迟或截断 | ✅ 完全实时 |
+| 日志完整性 | ⚠️ 可能截断 | ✅ 100% 完整 |
+| 复杂度 | ⚠️ 需要 Node.js 包装器 | ✅ 简单的 shell 命令 |
+| 错误诊断 | ⚠️ 需要解析日志 | ✅ 直接显示 |
+| 维护成本 | ⚠️ 需要维护 JS 代码 | ✅ 标准 shell 命令 |
+
+## 保留 ci-error-handler.js 的用途
+
+虽然我们移除了 `monitor` 命令的使用,但 `ci-error-handler.js` 仍然保留用于:
+- `health-check`: 运行 CI 健康检查
+- `diagnose`: 诊断现有构建日志
+- `report`: 生成 CI 报告
+- `retry`: 自动重试失败的构建
 
 ## 下一步
 
-1. **提交更改**：
+1. **提交更改**:
    ```bash
-   git add scripts/ci-error-handler.js .github/workflows/ci.yml
-   git commit -m "fix(ci): enhance Android build logging and remove build-cache
+   git add .github/workflows/ci.yml .kiro/specs/android-ci-build-fix/
+   git commit -m "fix(ci): use direct Gradle execution with tee for complete logs
 
-   - Increase log buffer from 10MB to 50MB
-   - Add real-time console output for build errors
-   - Extract relevant error messages intelligently
+   - Remove ci-error-handler.js wrapper for build commands
+   - Use tee to capture logs while showing real-time output
+   - Add --info flag for detailed CMake and Kotlin logs
    - Remove --build-cache to avoid cache-related issues
-   - Add --info flag for detailed Kotlin compilation logs
-   - Improve error report with 5000 char preview (up from 2000)
+   - Show last 200 lines on failure for quick diagnosis
    
+   This ensures complete CMake configuration errors are visible
    Fixes: Android CI build failures with insufficient error details"
    ```
 
-2. **推送并观察 CI**：
+2. **推送并观察 CI**:
    ```bash
    git push origin <branch-name>
    ```
 
-3. **验证改进**：
-   - 检查 CI 日志是否显示完整的 Kotlin 编译错误
-   - 验证 `ci-build.log` 文件是否包含完整输出
-   - 确认错误报告中的 "Relevant Error Messages" 部分
-
-## 技术细节
-
-### stdio 配置说明
-```javascript
-stdio: ['inherit', 'pipe', 'pipe']
-```
-- `stdin: 'inherit'` - 继承父进程的标准输入
-- `stdout: 'pipe'` - 捕获标准输出到变量
-- `stderr: 'pipe'` - 捕获标准错误到变量
-
-这样既能实时显示输出，又能捕获完整日志。
-
-### 错误提取算法
-1. 扫描每一行，查找错误标记
-2. 发现错误时，回溯 3 行获取上下文
-3. 继续捕获后续 10 行
-4. 去重并返回所有相关错误片段
-
-### Gradle 参数说明
-- `--no-build-cache`: 禁用构建缓存，确保干净构建
-- `--info`: 显示详细的构建信息
-- `--stacktrace`: 显示完整的异常堆栈跟踪
-- `--refresh-dependencies`: 强制刷新依赖
+3. **验证改进**:
+   - 检查 CI 日志是否显示完整的 CMake 配置错误
+   - 验证 `build.log` 文件是否包含完整输出
+   - 确认失败时显示的最后 200 行是否足够诊断问题
 
 ## 参考资料
 
 - [Gradle Build Cache](https://docs.gradle.org/current/userguide/build_cache.html)
 - [Gradle Logging](https://docs.gradle.org/current/userguide/logging.html)
-- [Node.js Child Process stdio](https://nodejs.org/api/child_process.html#child_process_options_stdio)
+- [Bash tee Command](https://man7.org/linux/man-pages/man1/tee.1.html)
+- [Bash PIPESTATUS](https://www.gnu.org/software/bash/manual/html_node/Pipelines.html)

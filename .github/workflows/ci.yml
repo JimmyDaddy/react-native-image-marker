@@ -610,7 +610,7 @@ jobs:
         # Clean any existing build artifacts
         ./gradlew clean --stacktrace --no-build-cache
         # Download dependencies without building
-        node ../../scripts/ci-error-handler.js monitor "./gradlew dependencies --stacktrace --no-build-cache"
+        ./gradlew dependencies --stacktrace --no-build-cache
 
     - name: Run cross-platform unit tests with error handling
       if: steps.verify-android-changed-files.outputs.any_changed == 'true'
@@ -625,7 +625,7 @@ jobs:
         # Check if test source directory exists
         if [ -d "app/src/test" ] && [ "$(find app/src/test -name '*.java' -o -name '*.kt' | wc -l)" -gt 0 ]; then
           echo "Running unit tests..."
-          node ../../scripts/ci-error-handler.js monitor "./gradlew test --stacktrace --no-build-cache --info"
+          ./gradlew test --stacktrace --no-build-cache --info
         else
           echo "⚠️ No unit tests found, skipping test execution"
           echo "This is acceptable for example applications"
@@ -650,8 +650,19 @@ jobs:
         
         cd ${{ matrix.example-app }}/android
         echo "Building APK for ${{ matrix.architecture }} architecture, RN ${{ matrix.rn-version }}..."
-        echo "Using --info flag for detailed Kotlin compilation logs..."
-        node ../../scripts/ci-error-handler.js monitor "./gradlew assembleRelease --stacktrace --no-build-cache --info"
+        echo "Using --info flag for detailed build logs..."
+        
+        # Run Gradle directly without wrapper to see full output
+        ./gradlew assembleRelease --stacktrace --no-build-cache --info 2>&1 | tee build.log
+        
+        # Check exit code
+        if [ ${PIPESTATUS[0]} -ne 0 ]; then
+          echo "❌ Build failed!"
+          echo "📄 Showing last 200 lines of build log:"
+          tail -200 build.log
+          exit 1
+        fi
+        
         mv app/build/outputs/apk/release/app-release.apk app-release-${{ matrix.architecture }}-${{ matrix.rn-version }}-${{ matrix.example-app }}-${{ github.sha }}.apk
 
     - name: Upload cross-platform APK
