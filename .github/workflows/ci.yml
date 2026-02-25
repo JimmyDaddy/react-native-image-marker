@@ -558,6 +558,15 @@ jobs:
           echo "# RN ${{ matrix.rn-version }} Legacy Architecture Build" >> gradle.properties
         fi
         
+        # Set Kotlin version based on RN version
+        if [ "${{ matrix.rn-version }}" = "0.73" ]; then
+          echo "kotlin_version=1.8.0" >> gradle.properties
+        elif [ "${{ matrix.rn-version }}" = "0.81" ]; then
+          echo "kotlin_version=1.9.22" >> gradle.properties
+        else
+          echo "kotlin_version=1.9.22" >> gradle.properties
+        fi
+        
         # Ensure required properties are set
         echo "android.useAndroidX=true" >> gradle.properties
         echo "android.enableJetifier=true" >> gradle.properties

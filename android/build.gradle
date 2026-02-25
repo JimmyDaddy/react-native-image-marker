@@ -193,6 +193,18 @@ android {
         }
       }
     }
+    
+    // Ensure codegen output directory exists
+    task ensureCodegenDir {
+      doLast {
+        def codegenDir = file("${project.buildDir}/generated/source/codegen/java")
+        if (!codegenDir.exists()) {
+          codegenDir.mkdirs()
+        }
+      }
+    }
+    
+    preBuild.dependsOn ensureCodegenDir
   } else {
     sourceSets {
       main {
