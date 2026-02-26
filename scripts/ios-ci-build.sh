@@ -14,7 +14,6 @@ IOS_DIR="${EXAMPLE_APP}/ios"
 BUILD_SCHEME="ImageMarkerExample"
 BUILD_CONFIGURATION="Release"
 BUILD_SDK="iphonesimulator"
-BUILD_DESTINATION="platform=iOS Simulator,name=iPhone 16"
 
 echo "🍎 Starting iOS CI build..."
 echo "📱 Example App: $EXAMPLE_APP"
@@ -25,6 +24,37 @@ if [ ! -d "$IOS_DIR" ]; then
     echo "❌ iOS directory not found: $IOS_DIR"
     exit 1
 fi
+
+# Dynamically find available iOS simulator
+echo "🔍 Finding available iOS simulators..."
+AVAILABLE_SIMULATORS=$(xcrun simctl list devices available | grep "iPhone" | grep -v "unavailable" | head -5)
+echo "📱 Available simulators:"
+echo "$AVAILABLE_SIMULATORS"
+
+# Try to find a suitable simulator (prefer iPhone 15, 14, 13, or any available iPhone)
+SIMULATOR_NAME=""
+for sim in "iPhone 15" "iPhone 14" "iPhone 13" "iPhone 12" "iPhone 11"; do
+    if xcrun simctl list devices available | grep -q "$sim"; then
+        SIMULATOR_NAME="$sim"
+        break
+    fi
+done
+
+# If no specific simulator found, use the first available iPhone simulator
+if [ -z "$SIMULATOR_NAME" ]; then
+    SIMULATOR_NAME=$(xcrun simctl list devices available | grep "iPhone" | grep -v "unavailable" | head -1 | sed 's/.*(\([^)]*\)).*/\1/' | xargs)
+    if [ -z "$SIMULATOR_NAME" ]; then
+        # Fallback: use generic destination without specific device name
+        echo "⚠️ No specific iPhone simulator found, using generic destination"
+        BUILD_DESTINATION="platform=iOS Simulator,OS=latest"
+    else
+        BUILD_DESTINATION="platform=iOS Simulator,name=$SIMULATOR_NAME"
+    fi
+else
+    BUILD_DESTINATION="platform=iOS Simulator,name=$SIMULATOR_NAME"
+fi
+
+echo "✅ Using simulator destination: $BUILD_DESTINATION"
 
 cd "$IOS_DIR"
 
