@@ -33,7 +33,7 @@ describe('End-to-End Test Suite', () => {
         watermarkTexts: [
           {
             text: 'Basic Watermark Test',
-            position: { position: Position.Center },
+            position: { position: Position.center },
             style: {
               color: '#FF0000',
               fontSize: 20,
@@ -43,7 +43,7 @@ describe('End-to-End Test Suite', () => {
           },
         ],
         quality: 90,
-        saveFormat: ImageFormat.Jpg,
+        saveFormat: ImageFormat.jpg,
       };
 
       // Test Legacy Implementation
@@ -81,7 +81,7 @@ describe('End-to-End Test Suite', () => {
         watermarkTexts: [
           {
             text: 'Header Text',
-            position: { position: Position.TopCenter },
+            position: { position: Position.topCenter },
             style: {
               color: '#FF0000',
               fontSize: 24,
@@ -99,7 +99,7 @@ describe('End-to-End Test Suite', () => {
                 color: '#000000',
               },
               textBackgroundStyle: {
-                type: TextBackgroundType.StretchX,
+                type: TextBackgroundType.stretchX,
                 color: '#FFFFFF',
                 padding: 10,
                 cornerRadius: {
@@ -110,7 +110,7 @@ describe('End-to-End Test Suite', () => {
           },
           {
             text: 'Footer Text',
-            position: { position: Position.BottomCenter },
+            position: { position: Position.bottomCenter },
             style: {
               color: '#0000FF',
               fontSize: 16,
@@ -136,7 +136,7 @@ describe('End-to-End Test Suite', () => {
         ],
         quality: 85,
         filename: 'complex-text-watermark.jpg',
-        saveFormat: ImageFormat.Jpg,
+        saveFormat: ImageFormat.jpg,
         maxSize: 2048,
       };
 
@@ -173,7 +173,7 @@ describe('End-to-End Test Suite', () => {
         watermarkTexts: [
           {
             text: 'Comprehensive Styling Test',
-            position: { position: Position.Center },
+            position: { position: Position.center },
             style: {
               color: '#FF6600',
               fontSize: 22,
@@ -192,7 +192,7 @@ describe('End-to-End Test Suite', () => {
                 color: '#333333',
               },
               textBackgroundStyle: {
-                type: TextBackgroundType.StretchY,
+                type: TextBackgroundType.stretchY,
                 color: '#FFFF00',
                 padding: 15,
                 paddingLeft: 20,
@@ -210,7 +210,7 @@ describe('End-to-End Test Suite', () => {
           },
         ],
         quality: 95,
-        saveFormat: ImageFormat.Png,
+        saveFormat: ImageFormat.png,
       };
 
       // Test comprehensive styling in both implementations
@@ -246,14 +246,14 @@ describe('End-to-End Test Suite', () => {
         watermarkImages: [
           {
             src: 'watermark-logo.png',
-            position: { position: Position.BottomRight },
+            position: { position: Position.bottomRight },
             scale: 0.5,
             alpha: 0.8,
             rotate: 0,
           },
         ],
         quality: 90,
-        saveFormat: ImageFormat.Png,
+        saveFormat: ImageFormat.png,
       };
 
       // Test both implementations
@@ -294,14 +294,14 @@ describe('End-to-End Test Suite', () => {
         watermarkImages: [
           {
             src: 'logo-1.png',
-            position: { position: Position.TopLeft },
+            position: { position: Position.topLeft },
             scale: 0.3,
             alpha: 0.9,
             rotate: 0,
           },
           {
             src: 'logo-2.png',
-            position: { position: Position.TopRight },
+            position: { position: Position.topRight },
             scale: 0.4,
             alpha: 0.8,
             rotate: 15,
@@ -315,7 +315,7 @@ describe('End-to-End Test Suite', () => {
           },
           {
             src: 'logo-4.png',
-            position: { position: Position.BottomCenter },
+            position: { position: Position.bottomCenter },
             scale: 0.5,
             alpha: 0.85,
             rotate: -30,
@@ -323,7 +323,7 @@ describe('End-to-End Test Suite', () => {
         ],
         quality: 88,
         filename: 'multiple-watermarks.png',
-        saveFormat: ImageFormat.Png,
+        saveFormat: ImageFormat.png,
         maxSize: 3072,
       };
 
@@ -354,19 +354,19 @@ describe('End-to-End Test Suite', () => {
        * End-to-End Test: All supported image formats
        * Tests: Requirements 11.2, 11.3
        */
-      const formats = [ImageFormat.Png, ImageFormat.Jpg, ImageFormat.Base64];
+      const formats = [ImageFormat.png, ImageFormat.jpg, ImageFormat.base64];
 
       for (const format of formats) {
         const formatOptions: TextMarkOptions = {
           backgroundImage: {
             src: `format-test.${
-              format === ImageFormat.Base64 ? 'jpg' : format
+              format === ImageFormat.base64 ? 'jpg' : format
             }`,
           },
           watermarkTexts: [
             {
               text: `Format Test: ${format}`,
-              position: { position: Position.Center },
+              position: { position: Position.center },
               style: {
                 color: '#FF0000',
                 fontSize: 18,
@@ -388,7 +388,7 @@ describe('End-to-End Test Suite', () => {
           const implName = index === 0 ? 'Legacy' : 'TurboModule';
           if (result.status === 'fulfilled') {
             expect(typeof result.value).toBe('string');
-            if (format === ImageFormat.Base64) {
+            if (format === ImageFormat.base64) {
               // Base64 results should be longer strings (but in test environment might be mocked)
               expect(result.value.length).toBeGreaterThan(10);
             } else {
@@ -411,13 +411,13 @@ describe('End-to-End Test Suite', () => {
        * Tests: Requirements 11.2, 11.3
        */
       const positions = [
-        Position.TopLeft,
-        Position.TopCenter,
-        Position.TopRight,
-        Position.BottomLeft,
-        Position.BottomCenter,
-        Position.BottomRight,
-        Position.Center,
+        Position.topLeft,
+        Position.topCenter,
+        Position.topRight,
+        Position.bottomLeft,
+        Position.bottomCenter,
+        Position.bottomRight,
+        Position.center,
       ];
 
       for (const position of positions) {
@@ -435,7 +435,7 @@ describe('End-to-End Test Suite', () => {
             },
           ],
           quality: 85,
-          saveFormat: ImageFormat.Jpg,
+          saveFormat: ImageFormat.jpg,
         };
 
         // Test positioning in both implementations
@@ -488,7 +488,7 @@ describe('End-to-End Test Suite', () => {
             },
           ],
           quality: 80,
-          saveFormat: ImageFormat.Png,
+          saveFormat: ImageFormat.png,
         };
 
         // Test custom positioning in both implementations
@@ -532,7 +532,7 @@ describe('End-to-End Test Suite', () => {
           watermarkTexts: [
             {
               text: `Quality: ${quality}%`,
-              position: { position: Position.Center },
+              position: { position: Position.center },
               style: {
                 color: '#FF00FF',
                 fontSize: 20,
@@ -541,7 +541,7 @@ describe('End-to-End Test Suite', () => {
             },
           ],
           quality,
-          saveFormat: ImageFormat.Jpg,
+          saveFormat: ImageFormat.jpg,
         };
 
         // Test quality settings in both implementations
@@ -621,7 +621,7 @@ describe('End-to-End Test Suite', () => {
         watermarkTexts: [
           {
             text: `Concurrent Test ${index}`,
-            position: { position: Position.Center },
+            position: { position: Position.center },
             style: {
               color: '#FF0000',
               fontSize: 18,
@@ -630,7 +630,7 @@ describe('End-to-End Test Suite', () => {
           },
         ],
         quality: 85,
-        saveFormat: ImageFormat.Jpg,
+        saveFormat: ImageFormat.jpg,
       }));
 
       // Test concurrent operations in Legacy implementation
@@ -688,9 +688,9 @@ describe('End-to-End Test Suite', () => {
             },
             textBackgroundStyle: {
               type: [
-                TextBackgroundType.None,
-                TextBackgroundType.StretchX,
-                TextBackgroundType.StretchY,
+                TextBackgroundType.fit,
+                TextBackgroundType.stretchX,
+                TextBackgroundType.stretchY,
               ][index % 3],
               color: '#FFFFFF',
               padding: 5 + (index % 5),
@@ -699,7 +699,7 @@ describe('End-to-End Test Suite', () => {
         })),
         quality: 90,
         maxSize: 4096,
-        saveFormat: ImageFormat.Png,
+        saveFormat: ImageFormat.png,
       };
 
       // Test memory-intensive operations in both implementations
@@ -734,7 +734,7 @@ describe('End-to-End Test Suite', () => {
         watermarkTexts: [
           {
             text: 'Architecture Consistency Test',
-            position: { position: Position.Center },
+            position: { position: Position.center },
             style: {
               color: '#FF0000',
               fontSize: 20,
@@ -744,7 +744,7 @@ describe('End-to-End Test Suite', () => {
           },
         ],
         quality: 90,
-        saveFormat: ImageFormat.Jpg,
+        saveFormat: ImageFormat.jpg,
       };
 
       // Test that both implementations handle the same options
@@ -882,7 +882,7 @@ describe('End-to-End Test Suite', () => {
         watermarkTexts: [
           {
             text: `Sequential ${index}`,
-            position: { position: Position.Center },
+            position: { position: Position.center },
             style: {
               color: '#FF0000',
               fontSize: 16,
@@ -891,7 +891,7 @@ describe('End-to-End Test Suite', () => {
           },
         ],
         quality: 80,
-        saveFormat: ImageFormat.Jpg,
+        saveFormat: ImageFormat.jpg,
       }));
 
       // Test rapid sequential operations in Legacy implementation
@@ -967,7 +967,7 @@ describe('End-to-End Test Suite', () => {
           },
         ],
         quality: 75,
-        saveFormat: ImageFormat.Jpg,
+        saveFormat: ImageFormat.jpg,
       }));
 
       // Test batch operations in both implementations
@@ -1038,7 +1038,7 @@ describe('End-to-End Test Suite', () => {
         watermarkTexts: [
           {
             text: 'Main API Integration Test',
-            position: { position: Position.Center },
+            position: { position: Position.center },
             style: {
               color: '#FF0000',
               fontSize: 20,
@@ -1047,7 +1047,7 @@ describe('End-to-End Test Suite', () => {
           },
         ],
         quality: 90,
-        saveFormat: ImageFormat.Jpg,
+        saveFormat: ImageFormat.jpg,
       };
 
       try {

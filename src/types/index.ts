@@ -6,39 +6,42 @@
 /**
  * @description Position enum for text watermark and image watermark
  * @enum
- * Note: Keys use PascalCase for Codegen C++ generation compatibility
+ * Note: Codegen generates C++ code based on enum KEYS (not values)
+ * Both keys and values must use camelCase for C++ and native compatibility
  */
 export enum Position {
-  TopLeft = 'topLeft',
-  TopCenter = 'topCenter',
-  TopRight = 'topRight',
-  BottomLeft = 'bottomLeft',
-  BottomCenter = 'bottomCenter',
-  BottomRight = 'bottomRight',
-  Center = 'center',
+  topLeft = 'topLeft',
+  topCenter = 'topCenter',
+  topRight = 'topRight',
+  bottomLeft = 'bottomLeft',
+  bottomCenter = 'bottomCenter',
+  bottomRight = 'bottomRight',
+  center = 'center',
 }
 
 /**
  * @description TextBackgroundType enum for text watermark
  * @enum
- * Note: Keys use PascalCase for Codegen C++ generation compatibility
+ * Note: Codegen generates C++ code based on enum KEYS (not values)
+ * Both keys and values must use camelCase for C++ and native compatibility
  */
 export enum TextBackgroundType {
-  StretchX = 'stretchX',
-  StretchY = 'stretchY',
-  None = 'fit',
+  stretchX = 'stretchX',
+  stretchY = 'stretchY',
+  fit = 'fit',
 }
 
 /**
  * @description ImageFormat enum for save image format
  * @enum
- * Note: Keys use PascalCase for Codegen C++ generation compatibility
+ * Note: Codegen generates C++ code based on enum KEYS (not values)
+ * Both keys and values must use camelCase for C++ and native compatibility
  */
 export enum ImageFormat {
-  Png = 'png',
-  Jpg = 'jpg',
+  png = 'png',
+  jpg = 'jpg',
   // base64 string
-  Base64 = 'base64',
+  base64 = 'base64',
 }
 
 /**

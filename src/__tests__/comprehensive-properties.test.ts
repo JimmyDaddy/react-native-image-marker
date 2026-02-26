@@ -136,7 +136,7 @@ describe('Comprehensive Property Verification Tests', () => {
           watermarkTexts: [
             {
               text: 'Expo Integration Test',
-              position: { position: Position.Center },
+              position: { position: Position.center },
               style: {
                 color: '#FF0000',
                 fontSize: 18,
@@ -145,7 +145,7 @@ describe('Comprehensive Property Verification Tests', () => {
             },
           ],
           quality: 90,
-          saveFormat: ImageFormat.Jpg,
+          saveFormat: ImageFormat.jpg,
         };
 
         // Test with both implementations
@@ -262,7 +262,7 @@ describe('Comprehensive Property Verification Tests', () => {
         watermarkTexts: [
           {
             text: 'Optimization Test',
-            position: { position: Position.Center, X: undefined, Y: undefined },
+            position: { position: Position.center, X: undefined, Y: undefined },
             style: {
               color: '#FF0000',
               fontSize: 20,
@@ -281,7 +281,7 @@ describe('Comprehensive Property Verification Tests', () => {
                 color: '#000000',
               },
               textBackgroundStyle: {
-                type: TextBackgroundType.None,
+                type: TextBackgroundType.fit,
                 color: '#FFFFFF',
                 padding: 0,
                 paddingLeft: undefined,
@@ -301,7 +301,7 @@ describe('Comprehensive Property Verification Tests', () => {
         ],
         quality: 90,
         filename: undefined,
-        saveFormat: ImageFormat.Jpg,
+        saveFormat: ImageFormat.jpg,
         maxSize: undefined,
       };
 
@@ -371,7 +371,7 @@ describe('Comprehensive Property Verification Tests', () => {
             text: 'Padding Test',
             style: {
               textBackgroundStyle: {
-                type: TextBackgroundType.StretchX,
+                type: TextBackgroundType.stretchX,
                 padding: 10,
                 paddingLeft: 10,
                 paddingRight: 10,
@@ -410,7 +410,7 @@ describe('Comprehensive Property Verification Tests', () => {
             text: 'Corner Radius Test',
             style: {
               textBackgroundStyle: {
-                type: TextBackgroundType.StretchY,
+                type: TextBackgroundType.stretchY,
                 cornerRadius: {
                   all: { x: 5, y: 5 },
                   topLeft: { x: 5, y: 5 },
@@ -487,7 +487,7 @@ describe('Comprehensive Property Verification Tests', () => {
         watermarkTexts: [
           {
             text: 'Essential Data Test',
-            position: { position: Position.Center },
+            position: { position: Position.center },
             style: {
               color: '#FF0000',
               fontSize: 20,
@@ -497,7 +497,7 @@ describe('Comprehensive Property Verification Tests', () => {
           },
         ],
         quality: 90,
-        saveFormat: ImageFormat.Jpg,
+        saveFormat: ImageFormat.jpg,
       };
 
       const optimized =
@@ -507,14 +507,14 @@ describe('Comprehensive Property Verification Tests', () => {
       expect(optimized.backgroundImage.src).toBe('essential.jpg');
       expect(optimized.watermarkTexts[0].text).toBe('Essential Data Test');
       expect(optimized.watermarkTexts[0].position.position).toBe(
-        Position.Center
+        Position.center
       );
       expect(optimized.watermarkTexts[0].style.color).toBe('#FF0000');
       expect(optimized.watermarkTexts[0].style.fontSize).toBe(20);
       expect(optimized.watermarkTexts[0].style.fontName).toBe('Arial');
       expect(optimized.watermarkTexts[0].style.bold).toBe(true);
       expect(optimized.quality).toBe(90);
-      expect(optimized.saveFormat).toBe(ImageFormat.Jpg);
+      expect(optimized.saveFormat).toBe(ImageFormat.jpg);
 
       console.log('SerializationOptimizer preserved essential data correctly');
     });
@@ -544,14 +544,14 @@ describe('Comprehensive Property Verification Tests', () => {
               color: '#000000',
             },
             textBackgroundStyle: {
-              type: TextBackgroundType.None,
+              type: TextBackgroundType.fit,
               color: '#FFFFFF',
               padding: 5,
             },
           },
         })),
         quality: 90,
-        saveFormat: ImageFormat.Jpg,
+        saveFormat: ImageFormat.jpg,
       };
 
       const startTime = performance.now();
@@ -597,12 +597,12 @@ describe('Comprehensive Property Verification Tests', () => {
             watermarkTexts: [
               {
                 text: 'Consistency Test',
-                position: { position: Position.Center },
+                position: { position: Position.center },
                 style: { color: '#FF0000', fontSize: 20 },
               },
             ],
             quality: 90,
-            saveFormat: ImageFormat.Jpg,
+            saveFormat: ImageFormat.jpg,
           },
         },
         {
@@ -612,17 +612,17 @@ describe('Comprehensive Property Verification Tests', () => {
             watermarkTexts: [
               {
                 text: 'First Text',
-                position: { position: Position.TopLeft },
+                position: { position: Position.topLeft },
                 style: { color: '#FF0000', fontSize: 18 },
               },
               {
                 text: 'Second Text',
-                position: { position: Position.BottomRight },
+                position: { position: Position.bottomRight },
                 style: { color: '#0000FF', fontSize: 16 },
               },
             ],
             quality: 85,
-            saveFormat: ImageFormat.Png,
+            saveFormat: ImageFormat.png,
           },
         },
         {
@@ -637,7 +637,7 @@ describe('Comprehensive Property Verification Tests', () => {
               },
             ],
             quality: 95,
-            saveFormat: ImageFormat.Jpg,
+            saveFormat: ImageFormat.jpg,
           },
         },
       ];
@@ -744,7 +744,7 @@ describe('Comprehensive Property Verification Tests', () => {
         watermarkTexts: [
           {
             text: 'Performance Comparison Test',
-            position: { position: Position.Center },
+            position: { position: Position.center },
             style: {
               color: '#FF0000',
               fontSize: 20,
@@ -754,7 +754,7 @@ describe('Comprehensive Property Verification Tests', () => {
           },
         ],
         quality: 90,
-        saveFormat: ImageFormat.Jpg,
+        saveFormat: ImageFormat.jpg,
       };
 
       // Measure Legacy implementation performance
@@ -820,7 +820,7 @@ describe('Comprehensive Property Verification Tests', () => {
           },
         })),
         quality: 85,
-        saveFormat: ImageFormat.Jpg,
+        saveFormat: ImageFormat.jpg,
       };
 
       // Measure initial memory
@@ -1371,7 +1371,7 @@ describe('Comprehensive Property Verification Tests', () => {
         watermarkTexts: [
           {
             text: 'Integration Test',
-            position: { position: Position.Center },
+            position: { position: Position.center },
             style: {
               color: '#FF0000',
               fontSize: 20,
@@ -1381,7 +1381,7 @@ describe('Comprehensive Property Verification Tests', () => {
           },
         ],
         quality: 90,
-        saveFormat: ImageFormat.Jpg,
+        saveFormat: ImageFormat.jpg,
       };
 
       const optimizedOptions =
@@ -1471,7 +1471,7 @@ describe('Comprehensive Property Verification Tests', () => {
         watermarkTexts: [
           {
             text: 'Performance Final Test',
-            position: { position: Position.Center },
+            position: { position: Position.center },
             style: {
               color: '#FF0000',
               fontSize: 20,
@@ -1480,7 +1480,7 @@ describe('Comprehensive Property Verification Tests', () => {
           },
         ],
         quality: 90,
-        saveFormat: ImageFormat.Jpg,
+        saveFormat: ImageFormat.jpg,
       };
 
       // Test architecture detection performance
@@ -1550,7 +1550,7 @@ describe('Comprehensive Property Verification Tests', () => {
           },
         })),
         quality: 85,
-        saveFormat: ImageFormat.Jpg,
+        saveFormat: ImageFormat.jpg,
       };
 
       SerializationOptimizer.optimizeForTransmission(testOptions);
