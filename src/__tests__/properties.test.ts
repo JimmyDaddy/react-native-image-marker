@@ -248,21 +248,21 @@ describe('ImageMarker Properties', () => {
       const typesPath = path.join(__dirname, '../types/index.ts');
       const typesContent = fs.readFileSync(typesPath, 'utf8');
 
-      // Test Position enum values (keys and values are both camelCase for Codegen C++ compatibility)
-      expect(specContent).toContain("topLeft = 'topLeft'");
-      expect(typesContent).toContain("topLeft = 'topLeft'");
-      expect(specContent).toContain("center = 'center'");
-      expect(typesContent).toContain("center = 'center'");
+      // Test Position enum values (keys are PascalCase, values are camelCase for Codegen C++ compatibility)
+      expect(specContent).toContain("TopLeft = 'topLeft'");
+      expect(typesContent).toContain("TopLeft = 'topLeft'");
+      expect(specContent).toContain("Center = 'center'");
+      expect(typesContent).toContain("Center = 'center'");
 
       // Test TextBackgroundType enum values
-      expect(specContent).toContain("stretchX = 'stretchX'");
-      expect(typesContent).toContain("stretchX = 'stretchX'");
+      expect(specContent).toContain("StretchX = 'stretchX'");
+      expect(typesContent).toContain("StretchX = 'stretchX'");
 
       // Test ImageFormat enum values
-      expect(specContent).toContain("png = 'png'");
-      expect(typesContent).toContain("png = 'png'");
-      expect(specContent).toContain("jpg = 'jpg'");
-      expect(typesContent).toContain("jpg = 'jpg'");
+      expect(specContent).toContain("Png = 'png'");
+      expect(typesContent).toContain("Png = 'png'");
+      expect(specContent).toContain("Jpg = 'jpg'");
+      expect(typesContent).toContain("Jpg = 'jpg'");
     });
   });
 
@@ -302,7 +302,7 @@ describe('ImageMarker Properties', () => {
         watermarkTexts: [
           {
             text: 'Test Watermark',
-            position: { position: Position.center },
+            position: { position: Position.Center },
             style: {
               color: '#FF0000',
               fontSize: 20,
@@ -312,12 +312,12 @@ describe('ImageMarker Properties', () => {
               underline: false,
               strikeThrough: false,
               rotate: 0,
-              textAlign: Position.center,
+              textAlign: Position.Center,
             },
           },
         ],
         quality: 90,
-        saveFormat: ImageFormat.jpg,
+        saveFormat: ImageFormat.Jpg,
       };
 
       // Both implementations should handle the same text options
@@ -347,14 +347,14 @@ describe('ImageMarker Properties', () => {
         watermarkImages: [
           {
             src: 'watermark.png',
-            position: { position: Position.bottomRight },
+            position: { position: Position.BottomRight },
             scale: 0.5,
             alpha: 0.8,
             rotate: 0,
           },
         ],
         quality: 85,
-        saveFormat: ImageFormat.png,
+        saveFormat: ImageFormat.Png,
       };
 
       // Both implementations should handle the same image options
@@ -380,13 +380,13 @@ describe('ImageMarker Properties', () => {
        * Validates: Requirements 1.4, 4.3, 5.3
        */
       const positionOptions = [
-        Position.topLeft,
-        Position.topCenter,
-        Position.topRight,
-        Position.bottomLeft,
-        Position.bottomCenter,
-        Position.bottomRight,
-        Position.center,
+        Position.TopLeft,
+        Position.TopCenter,
+        Position.TopRight,
+        Position.BottomLeft,
+        Position.BottomCenter,
+        Position.BottomRight,
+        Position.Center,
       ];
 
       positionOptions.forEach((position) => {
@@ -429,9 +429,9 @@ describe('ImageMarker Properties', () => {
        * Validates: Requirements 1.4, 4.3, 5.3
        */
       const supportedFormats = [
-        ImageFormat.png,
-        ImageFormat.jpg,
-        ImageFormat.base64,
+        ImageFormat.Png,
+        ImageFormat.Jpg,
+        ImageFormat.Base64,
       ];
 
       supportedFormats.forEach((format) => {
@@ -477,7 +477,7 @@ describe('ImageMarker Properties', () => {
                 color: '#000000',
               },
               textBackgroundStyle: {
-                type: types.TextBackgroundType.fit,
+                type: types.TextBackgroundType.Fit,
                 color: '#FFFFFF',
                 padding: 10,
                 cornerRadius: {
@@ -504,10 +504,10 @@ describe('ImageMarker Properties', () => {
       const multipleTextOptions = {
         backgroundImage: { src: 'test.jpg' },
         watermarkTexts: [
-          { text: 'First Watermark', position: { position: Position.topLeft } },
+          { text: 'First Watermark', position: { position: Position.TopLeft } },
           {
             text: 'Second Watermark',
-            position: { position: Position.bottomRight },
+            position: { position: Position.BottomRight },
           },
           { text: 'Third Watermark', position: { X: 100, Y: 100 } },
         ],
@@ -516,10 +516,10 @@ describe('ImageMarker Properties', () => {
       const multipleImageOptions = {
         backgroundImage: { src: 'test.jpg' },
         watermarkImages: [
-          { src: 'watermark1.png', position: { position: Position.topLeft } },
+          { src: 'watermark1.png', position: { position: Position.TopLeft } },
           {
             src: 'watermark2.png',
-            position: { position: Position.bottomRight },
+            position: { position: Position.BottomRight },
           },
           { src: 'watermark3.png', position: { X: 150, Y: 150 } },
         ],
@@ -554,7 +554,7 @@ describe('ImageMarker Properties', () => {
             scale: 0.8,
             rotate: 45,
             alpha: 0.7,
-            position: { position: Position.center },
+            position: { position: Position.Center },
           },
         ],
       };
@@ -616,7 +616,7 @@ describe('ImageMarker Properties', () => {
         watermarkTexts: [
           {
             text: 'Comprehensive Test',
-            position: { position: Position.center },
+            position: { position: Position.Center },
             style: {
               color: '#FF0000',
               fontSize: 20,
@@ -635,7 +635,7 @@ describe('ImageMarker Properties', () => {
                 color: '#000000',
               },
               textBackgroundStyle: {
-                type: types.TextBackgroundType.fit,
+                type: types.TextBackgroundType.Fit,
                 color: '#FFFFFF',
                 padding: 5,
               },
@@ -644,7 +644,7 @@ describe('ImageMarker Properties', () => {
         ],
         quality: 90,
         filename: 'comprehensive-test.jpg',
-        saveFormat: ImageFormat.jpg,
+        saveFormat: ImageFormat.Jpg,
         maxSize: 2048,
       };
 
@@ -1121,7 +1121,7 @@ describe('ImageMarker Properties', () => {
         backgroundImage: { src: 'large-image.jpg' },
         watermarkTexts: Array.from({ length: 10 }, (_, index) => ({
           text: `Large Data Test ${index} - ${'x'.repeat(100)}`,
-          position: { position: Position.center },
+          position: { position: Position.Center },
         })),
         quality: 100,
         maxSize: 4096,
@@ -1223,19 +1223,19 @@ describe('ImageMarker Properties', () => {
         expect((types as any)[exportName]).toBeDefined();
         expect(typeof (types as any)[exportName]).toBe('object');
 
-        // Test specific enum values (keys and values are both camelCase for Codegen C++ compatibility)
+        // Test specific enum values (keys are PascalCase, values are camelCase for Codegen C++ compatibility)
         if (exportName === 'Position') {
-          expect((types as any)[exportName].topLeft).toBe('topLeft');
-          expect((types as any)[exportName].center).toBe('center');
-          expect((types as any)[exportName].bottomRight).toBe('bottomRight');
+          expect((types as any)[exportName].TopLeft).toBe('topLeft');
+          expect((types as any)[exportName].Center).toBe('center');
+          expect((types as any)[exportName].BottomRight).toBe('bottomRight');
         } else if (exportName === 'TextBackgroundType') {
-          expect((types as any)[exportName].stretchX).toBe('stretchX');
-          expect((types as any)[exportName].stretchY).toBe('stretchY');
-          expect((types as any)[exportName].fit).toBe('fit');
+          expect((types as any)[exportName].StretchX).toBe('stretchX');
+          expect((types as any)[exportName].StretchY).toBe('stretchY');
+          expect((types as any)[exportName].Fit).toBe('fit');
         } else if (exportName === 'ImageFormat') {
-          expect((types as any)[exportName].png).toBe('png');
-          expect((types as any)[exportName].jpg).toBe('jpg');
-          expect((types as any)[exportName].base64).toBe('base64');
+          expect((types as any)[exportName].Png).toBe('png');
+          expect((types as any)[exportName].Jpg).toBe('jpg');
+          expect((types as any)[exportName].Base64).toBe('base64');
         }
       });
     });
@@ -1367,7 +1367,7 @@ describe('ImageMarker Properties', () => {
         watermarkTexts: [
           {
             text: 'Performance Verification Test',
-            position: { position: Position.center },
+            position: { position: Position.Center },
             style: {
               color: '#FF0000',
               fontSize: 20,
@@ -1377,7 +1377,7 @@ describe('ImageMarker Properties', () => {
           },
         ],
         quality: 90,
-        saveFormat: ImageFormat.jpg,
+        saveFormat: ImageFormat.Jpg,
       };
 
       // Measure legacy implementation performance
@@ -1439,7 +1439,7 @@ describe('ImageMarker Properties', () => {
         watermarkTexts: [
           {
             text: 'Communication Test',
-            position: { position: Position.center },
+            position: { position: Position.Center },
           },
         ],
       };
@@ -1502,7 +1502,7 @@ describe('ImageMarker Properties', () => {
         backgroundImage: { src: 'memory-optimization-test.jpg' },
         watermarkTexts: Array.from({ length: 5 }, (_, index) => ({
           text: `Memory Test ${index}`,
-          position: { position: Position.center },
+          position: { position: Position.Center },
           style: {
             color: '#FF0000',
             fontSize: 16,
@@ -1626,7 +1626,7 @@ describe('ImageMarker Properties', () => {
         watermarkTexts: [
           {
             text: 'Concurrent Performance Test',
-            position: { position: Position.center },
+            position: { position: Position.Center },
           },
         ],
       };
@@ -1718,9 +1718,9 @@ describe('ImageMarker Properties', () => {
             },
             textBackgroundStyle: {
               type: [
-                types.TextBackgroundType.fit,
-                types.TextBackgroundType.stretchX,
-                types.TextBackgroundType.stretchY,
+                types.TextBackgroundType.Fit,
+                types.TextBackgroundType.StretchX,
+                types.TextBackgroundType.StretchY,
               ][index % 3],
               color: '#FFFFFF',
               padding: 5 + (index % 5),
@@ -1733,7 +1733,7 @@ describe('ImageMarker Properties', () => {
         quality: 88,
         filename: 'serialization-performance-test.jpg',
         maxSize: 1024,
-        saveFormat: ImageFormat.jpg,
+        saveFormat: ImageFormat.Jpg,
       };
 
       // Measure legacy serialization performance
@@ -1791,10 +1791,10 @@ describe('ImageMarker Properties', () => {
       expect(ImageFormatEnum).toBeDefined();
       expect(TextBackgroundType).toBeDefined();
 
-      // Test that enums have correct values (keys and values are both camelCase for Codegen C++ compatibility)
-      expect(PositionEnum.center).toBe('center');
-      expect(ImageFormatEnum.png).toBe('png');
-      expect(TextBackgroundType.fit).toBe('fit');
+      // Test that enums have correct values (keys are PascalCase, values are camelCase for Codegen C++ compatibility)
+      expect(PositionEnum.Center).toBe('center');
+      expect(ImageFormatEnum.Png).toBe('png');
+      expect(TextBackgroundType.Fit).toBe('fit');
 
       // Test that we can create properly typed options objects
       const textOptions = {
@@ -2043,18 +2043,18 @@ describe('ImageMarker Properties', () => {
 
       // Test enum exports
       expect(mainModule.Position).toBeDefined();
-      expect(mainModule.Position.center).toBe('center');
-      expect(mainModule.Position.topLeft).toBe('topLeft');
+      expect(mainModule.Position.Center).toBe('center');
+      expect(mainModule.Position.TopLeft).toBe('topLeft');
 
       expect(mainModule.ImageFormat).toBeDefined();
-      expect(mainModule.ImageFormat.png).toBe('png');
-      expect(mainModule.ImageFormat.jpg).toBe('jpg');
-      expect(mainModule.ImageFormat.base64).toBe('base64');
+      expect(mainModule.ImageFormat.Png).toBe('png');
+      expect(mainModule.ImageFormat.Jpg).toBe('jpg');
+      expect(mainModule.ImageFormat.Base64).toBe('base64');
 
       expect(mainModule.TextBackgroundType).toBeDefined();
-      expect(mainModule.TextBackgroundType.fit).toBe('fit');
-      expect(mainModule.TextBackgroundType.stretchX).toBe('stretchX');
-      expect(mainModule.TextBackgroundType.stretchY).toBe('stretchY');
+      expect(mainModule.TextBackgroundType.Fit).toBe('fit');
+      expect(mainModule.TextBackgroundType.StretchX).toBe('stretchX');
+      expect(mainModule.TextBackgroundType.StretchY).toBe('stretchY');
 
       // Test that type aliases are available (they won't have runtime values,
       // but we can verify the module structure)
@@ -2313,7 +2313,7 @@ describe('ImageMarker Properties', () => {
         watermarkTexts: [
           {
             text: 'Android TurboModule Test',
-            position: { position: Position.center },
+            position: { position: Position.Center },
             style: {
               color: '#FF0000',
               fontSize: 24,
@@ -2331,7 +2331,7 @@ describe('ImageMarker Properties', () => {
                 color: '#000000',
               },
               textBackgroundStyle: {
-                type: types.TextBackgroundType.fit,
+                type: types.TextBackgroundType.Fit,
                 color: '#FFFFFF',
                 padding: 10,
                 cornerRadius: {
@@ -2342,7 +2342,7 @@ describe('ImageMarker Properties', () => {
           },
         ],
         quality: 90,
-        saveFormat: ImageFormat.jpg,
+        saveFormat: ImageFormat.Jpg,
       };
 
       const imageOptions = {
@@ -2350,14 +2350,14 @@ describe('ImageMarker Properties', () => {
         watermarkImages: [
           {
             src: 'android-watermark.png',
-            position: { position: Position.bottomRight },
+            position: { position: Position.BottomRight },
             scale: 0.5,
             alpha: 0.8,
             rotate: 45,
           },
         ],
         quality: 85,
-        saveFormat: ImageFormat.png,
+        saveFormat: ImageFormat.Png,
       };
 
       // Android TurboModule should handle both text and image watermarking
@@ -2484,7 +2484,7 @@ describe('ImageMarker Properties', () => {
         watermarkTexts: [
           {
             text: 'Cross-Platform Test',
-            position: { position: Position.center },
+            position: { position: Position.Center },
             style: {
               color: '#0000FF',
               fontSize: 18,
@@ -2493,7 +2493,7 @@ describe('ImageMarker Properties', () => {
           },
         ],
         quality: 80,
-        saveFormat: ImageFormat.png,
+        saveFormat: ImageFormat.Png,
       };
 
       // Both platforms should handle the same options
@@ -2552,7 +2552,7 @@ describe('ImageMarker Properties', () => {
                 color: '#333333',
               },
               textBackgroundStyle: {
-                type: types.TextBackgroundType.stretchX,
+                type: types.TextBackgroundType.StretchX,
                 color: '#FFFF00',
                 padding: 15,
                 paddingLeft: 20,
@@ -2567,7 +2567,7 @@ describe('ImageMarker Properties', () => {
         ],
         quality: 95,
         filename: 'android-comprehensive-test.png',
-        saveFormat: ImageFormat.png,
+        saveFormat: ImageFormat.Png,
         maxSize: 2048,
       };
 
@@ -2594,7 +2594,7 @@ describe('ImageMarker Properties', () => {
         backgroundImage: { src: 'android-memory-test.jpg' },
         watermarkTexts: Array.from({ length: 5 }, (_, index) => ({
           text: `Memory Test ${index}`,
-          position: { position: Position.center },
+          position: { position: Position.Center },
         })),
       };
 
@@ -2630,13 +2630,13 @@ describe('ImageMarker Properties', () => {
        * Property 13: Android TurboModule 应正确处理不同的图片格式
        * Validates: Requirements 5.3, 5.4
        */
-      const formats = [ImageFormat.png, ImageFormat.jpg, ImageFormat.base64];
+      const formats = [ImageFormat.Png, ImageFormat.Jpg, ImageFormat.Base64];
 
       for (const format of formats) {
         const options = {
           backgroundImage: {
             src: `android-format-test.${
-              format === ImageFormat.base64 ? 'jpg' : format
+              format === ImageFormat.Base64 ? 'jpg' : format
             }`,
           },
           watermarkTexts: [{ text: `Format Test ${format}` }],
@@ -2647,7 +2647,7 @@ describe('ImageMarker Properties', () => {
           const result = await TurboModuleImpl.markText(options);
           expect(typeof result).toBe('string');
 
-          if (format === ImageFormat.base64) {
+          if (format === ImageFormat.Base64) {
             // Base64 results should start with data: prefix
             expect(
               result.startsWith('data:image/') || result.length > 100
@@ -3228,7 +3228,7 @@ describe('ImageMarker Properties', () => {
         watermarkTexts: [
           {
             text: 'Fabric Integration Test',
-            position: { position: Position.center },
+            position: { position: Position.Center },
             style: {
               color: '#FF0000',
               fontSize: 20,
@@ -3236,7 +3236,7 @@ describe('ImageMarker Properties', () => {
           },
         ],
         quality: 90,
-        saveFormat: ImageFormat.jpg,
+        saveFormat: ImageFormat.Jpg,
       };
 
       try {
@@ -3823,7 +3823,7 @@ describe('ImageMarker Properties', () => {
         watermarkTexts: [
           {
             text: 'Expo API Test',
-            position: { position: Position.center },
+            position: { position: Position.Center },
             style: {
               color: '#FF0000',
               fontSize: 20,
@@ -3832,7 +3832,7 @@ describe('ImageMarker Properties', () => {
           },
         ],
         quality: 90,
-        saveFormat: ImageFormat.jpg,
+        saveFormat: ImageFormat.Jpg,
       };
 
       // Both implementations should work with Expo-style options

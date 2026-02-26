@@ -81,11 +81,11 @@ describe('Expo SDK Integration Tests', () => {
           watermarkTexts: [
             {
               text: 'Expo File System Test',
-              position: { position: Position.center },
+              position: { position: Position.Center },
             },
           ],
           quality: 90,
-          saveFormat: ImageFormat.jpg,
+          saveFormat: ImageFormat.Jpg,
         };
 
         // Should not throw validation errors for Expo file paths
@@ -153,7 +153,7 @@ describe('Expo SDK Integration Tests', () => {
         watermarkTexts: [
           {
             text: 'Expo Workflow Test',
-            position: { position: Position.center },
+            position: { position: Position.Center },
           },
         ],
         filename: 'expo-workflow-result.jpg',
@@ -198,11 +198,11 @@ describe('Expo SDK Integration Tests', () => {
             watermarkTexts: [
               {
                 text: 'Picked Image Test',
-                position: { position: Position.center },
+                position: { position: Position.Center },
               },
             ],
             quality: 90,
-            saveFormat: ImageFormat.jpg,
+            saveFormat: ImageFormat.Jpg,
           };
 
           // Should handle image picker URIs
@@ -236,11 +236,11 @@ describe('Expo SDK Integration Tests', () => {
         watermarkTexts: [
           {
             text: 'Manipulated Image Test',
-            position: { position: Position.center },
+            position: { position: Position.Center },
           },
         ],
         quality: 90,
-        saveFormat: ImageFormat.jpg,
+        saveFormat: ImageFormat.Jpg,
       };
 
       // Should handle manipulated image URIs
@@ -272,11 +272,11 @@ describe('Expo SDK Integration Tests', () => {
           watermarkTexts: [
             {
               text: 'Chained Operations',
-              position: { position: Position.center },
+              position: { position: Position.Center },
             },
           ],
           quality: 90,
-          saveFormat: ImageFormat.jpg,
+          saveFormat: ImageFormat.Jpg,
         };
 
         const watermarkedResult = await TurboModuleImpl.markText(
@@ -319,7 +319,7 @@ describe('Expo SDK Integration Tests', () => {
           watermarkTexts: [
             {
               text: 'Asset Test',
-              position: { position: Position.center },
+              position: { position: Position.Center },
             },
           ],
         };
@@ -348,7 +348,7 @@ describe('Expo SDK Integration Tests', () => {
           watermarkTexts: [
             {
               text: 'Bundled Asset Test',
-              position: { position: Position.center },
+              position: { position: Position.Center },
             },
           ],
         };
@@ -435,7 +435,7 @@ describe('Expo SDK Integration Tests', () => {
         watermarkTexts: [
           {
             text: 'Expo Consistency Test',
-            position: { position: Position.center },
+            position: { position: Position.Center },
             style: {
               color: '#FF0000',
               fontSize: 20,
@@ -444,7 +444,7 @@ describe('Expo SDK Integration Tests', () => {
           },
         ],
         quality: 90,
-        saveFormat: ImageFormat.jpg,
+        saveFormat: ImageFormat.Jpg,
       };
 
       // Both implementations should work consistently in Expo environment

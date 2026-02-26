@@ -2,34 +2,34 @@ import type { TurboModule } from 'react-native';
 import { TurboModuleRegistry } from 'react-native';
 
 // Position enum for text watermark and image watermark
-// Note: Codegen generates C++ code based on enum KEYS (not values)
-// Both keys and values must use camelCase for C++ compatibility
+// Note: Codegen generates C++ code based on enum KEYS
+// Keys must use PascalCase for C++ compatibility, values use camelCase for JS
 export enum Position {
-  topLeft = 'topLeft',
-  topCenter = 'topCenter',
-  topRight = 'topRight',
-  bottomLeft = 'bottomLeft',
-  bottomCenter = 'bottomCenter',
-  bottomRight = 'bottomRight',
-  center = 'center',
+  TopLeft = 'topLeft',
+  TopCenter = 'topCenter',
+  TopRight = 'topRight',
+  BottomLeft = 'bottomLeft',
+  BottomCenter = 'bottomCenter',
+  BottomRight = 'bottomRight',
+  Center = 'center',
 }
 
 // TextBackgroundType enum for text watermark
-// Note: Codegen generates C++ code based on enum KEYS (not values)
-// Both keys and values must use camelCase for C++ compatibility
+// Note: Codegen generates C++ code based on enum KEYS
+// Keys must use PascalCase for C++ compatibility, values use camelCase for JS
 export enum TextBackgroundType {
-  stretchX = 'stretchX',
-  stretchY = 'stretchY',
-  fit = 'fit',
+  StretchX = 'stretchX',
+  StretchY = 'stretchY',
+  Fit = 'fit',
 }
 
 // ImageFormat enum for save image format
-// Note: Codegen generates C++ code based on enum KEYS (not values)
-// Both keys and values must use camelCase for C++ compatibility
+// Note: Codegen generates C++ code based on enum KEYS
+// Keys must use PascalCase for C++ compatibility, values use camelCase for JS
 export enum ImageFormat {
-  png = 'png',
-  jpg = 'jpg',
-  base64 = 'base64',
+  Png = 'png',
+  Jpg = 'jpg',
+  Base64 = 'base64',
 }
 
 // Position options interface

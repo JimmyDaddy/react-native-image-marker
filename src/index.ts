@@ -109,7 +109,7 @@ class ImageMarker {
    *  {
    *    text: 'hello',
    *    positionOptions: {
-   *      position: Position.center,
+   *      position: Position.Center,
    *    },
    *    style: {
    *      color: '#ff00ff',
@@ -155,7 +155,7 @@ class ImageMarker {
    *     textBackgroundStyle: {
    *      paddingX: 10,
    *      paddingY: 10,
-   *      type: TextBackgroundType.stretchX,
+   *      type: TextBackgroundType.StretchX,
    *      color: '#faaaff',
    *     },
    *     textAlign: 'right',
@@ -164,7 +164,7 @@ class ImageMarker {
    *  scale: 1,
    *  quality: 100,
    *  filename: 'test',
-   *  saveFormat: ImageFormat.png,
+   *  saveFormat: ImageFormat.Png,
    * };
    * ImageMarker.markText(options).then((res) => {
    *  console.log(res);
@@ -198,7 +198,7 @@ class ImageMarker {
    *  },
    *  quality: 100,
    *  filename: 'test',
-   *  saveFormat: ImageFormat.png,
+   *  saveFormat: ImageFormat.Png,
    *  watermarkImages: [
    *    {
    *      src: require('./images/logo.png'),
@@ -216,7 +216,7 @@ class ImageMarker {
    *      rotate: 45,
    *      alpha: 0.5,
    *      position: {
-   *        position: Position.center,
+   *        position: Position.Center,
    *     },
    *    },
    *  ],

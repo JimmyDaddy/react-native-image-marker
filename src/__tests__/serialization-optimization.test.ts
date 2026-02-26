@@ -21,7 +21,7 @@ describe('Serialization Optimization', () => {
         watermarkTexts: [
           {
             text: 'Test',
-            position: { position: Position.center },
+            position: { position: Position.Center },
             style: {
               color: '#FF0000',
               fontSize: 20,
@@ -33,7 +33,7 @@ describe('Serialization Optimization', () => {
         ],
         quality: undefined,
         filename: '',
-        saveFormat: ImageFormat.jpg,
+        saveFormat: ImageFormat.Jpg,
       };
 
       const optimized = SerializationOptimizer.optimizeTextMarkOptions(options);
@@ -53,7 +53,7 @@ describe('Serialization Optimization', () => {
       expect(optimized.watermarkTexts[0]!.text).toBe('Test');
       expect(optimized.watermarkTexts[0]!.style?.color).toBe('#FF0000');
       expect(optimized.watermarkTexts[0]!.style?.fontSize).toBe(20);
-      expect(optimized.saveFormat).toBe(ImageFormat.jpg);
+      expect(optimized.saveFormat).toBe(ImageFormat.Jpg);
     });
 
     test('should optimize complex text styling', () => {
@@ -80,7 +80,7 @@ describe('Serialization Optimization', () => {
                 color: '#000000',
               },
               textBackgroundStyle: {
-                type: TextBackgroundType.fit, // Should be removed (default)
+                type: TextBackgroundType.Fit, // Should be removed (default)
                 color: '  #FFFFFF  ',
                 padding: 10,
                 cornerRadius: {
@@ -168,7 +168,7 @@ describe('Serialization Optimization', () => {
             scale: 0.5,
             rotate: 45,
             alpha: 1.0, // Should be removed (default)
-            position: { position: Position.bottomRight },
+            position: { position: Position.BottomRight },
           },
         ],
         quality: 0, // Should be removed (invalid)
@@ -201,7 +201,7 @@ describe('Serialization Optimization', () => {
           scale: 1.0,
           rotate: 0,
         },
-        watermarkPositions: { position: Position.center },
+        watermarkPositions: { position: Position.Center },
         watermarkImages: [],
       };
 
@@ -212,7 +212,7 @@ describe('Serialization Optimization', () => {
       expect(optimized.watermarkImage?.src).toBe('legacy.png');
       expect(optimized.watermarkImage?.scale).toBeUndefined();
       expect(optimized.watermarkImage?.rotate).toBeUndefined();
-      expect(optimized.watermarkPositions?.position).toBe(Position.center);
+      expect(optimized.watermarkPositions?.position).toBe(Position.Center);
     });
   });
 
@@ -390,7 +390,7 @@ describe('Serialization Optimization', () => {
               color: '',
             },
             textBackgroundStyle: {
-              type: TextBackgroundType.fit,
+              type: TextBackgroundType.Fit,
               color: '#FFFFFF',
               padding: 0,
               cornerRadius: {
@@ -401,7 +401,7 @@ describe('Serialization Optimization', () => {
         })),
         quality: 90,
         filename: 'optimized-output.jpg',
-        saveFormat: ImageFormat.jpg,
+        saveFormat: ImageFormat.Jpg,
         maxSize: 2048,
       };
 
@@ -420,7 +420,7 @@ describe('Serialization Optimization', () => {
       expect(optimized.watermarkTexts).toHaveLength(5);
       expect(optimized.quality).toBe(90);
       expect(optimized.filename).toBe('optimized-output.jpg');
-      expect(optimized.saveFormat).toBe(ImageFormat.jpg);
+      expect(optimized.saveFormat).toBe(ImageFormat.Jpg);
       expect(optimized.maxSize).toBe(2048);
 
       // Should remove default/empty values
@@ -458,22 +458,22 @@ describe('Serialization Optimization', () => {
           alpha: 1.0, // Default, should be removed
           position: {
             position: [
-              Position.topLeft,
-              Position.topCenter,
-              Position.topRight,
-              Position.center,
-              Position.bottomLeft,
-              Position.bottomCenter,
-              Position.bottomRight,
-              Position.center,
-              Position.topLeft,
-              Position.bottomRight,
+              Position.TopLeft,
+              Position.TopCenter,
+              Position.TopRight,
+              Position.Center,
+              Position.BottomLeft,
+              Position.BottomCenter,
+              Position.BottomRight,
+              Position.Center,
+              Position.TopLeft,
+              Position.BottomRight,
             ][index],
           },
         })),
         quality: 95,
         filename: 'large-watermarked-image.png',
-        saveFormat: ImageFormat.png,
+        saveFormat: ImageFormat.Png,
         maxSize: 4096,
       };
 
