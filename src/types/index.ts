@@ -6,36 +6,39 @@
 /**
  * @description Position enum for text watermark and image watermark
  * @enum
+ * Note: Keys use PascalCase for Codegen C++ generation compatibility
  */
 export enum Position {
-  topLeft = 'topLeft',
-  topCenter = 'topCenter',
-  topRight = 'topRight',
-  bottomLeft = 'bottomLeft',
-  bottomCenter = 'bottomCenter',
-  bottomRight = 'bottomRight',
-  center = 'center',
+  TopLeft = 'topLeft',
+  TopCenter = 'topCenter',
+  TopRight = 'topRight',
+  BottomLeft = 'bottomLeft',
+  BottomCenter = 'bottomCenter',
+  BottomRight = 'bottomRight',
+  Center = 'center',
 }
 
 /**
  * @description TextBackgroundType enum for text watermark
  * @enum
+ * Note: Keys use PascalCase for Codegen C++ generation compatibility
  */
 export enum TextBackgroundType {
-  stretchX = 'stretchX',
-  stretchY = 'stretchY',
-  none = 'fit',
+  StretchX = 'stretchX',
+  StretchY = 'stretchY',
+  None = 'fit',
 }
 
 /**
  * @description ImageFormat enum for save image format
  * @enum
+ * Note: Keys use PascalCase for Codegen C++ generation compatibility
  */
 export enum ImageFormat {
-  png = 'png',
-  jpg = 'jpg',
+  Png = 'png',
+  Jpg = 'jpg',
   // base64 string
-  base64 = 'base64',
+  Base64 = 'base64',
 }
 
 /**

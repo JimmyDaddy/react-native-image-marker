@@ -35,7 +35,7 @@ describe('Performance Benchmark Tests', () => {
         watermarkTexts: [
           {
             text: 'Performance Test',
-            position: { position: Position.center },
+            position: { position: Position.Center },
           },
         ],
       };
@@ -91,7 +91,7 @@ describe('Performance Benchmark Tests', () => {
           backgroundImage: { src: 'large-data-test.jpg' },
           watermarkTexts: Array.from({ length: size }, (_, index) => ({
             text: `Large Data Test ${index} - ${'x'.repeat(50)}`,
-            position: { position: Position.center },
+            position: { position: Position.Center },
             style: {
               color: '#FF0000',
               fontSize: 20,
@@ -162,7 +162,7 @@ describe('Performance Benchmark Tests', () => {
         watermarkTexts: [
           {
             text: 'Concurrent Test',
-            position: { position: Position.center },
+            position: { position: Position.Center },
           },
         ],
       };
@@ -212,7 +212,7 @@ describe('Performance Benchmark Tests', () => {
         watermarkTexts: [
           {
             text: 'Memory Test',
-            position: { position: Position.center },
+            position: { position: Position.Center },
           },
         ],
       };
@@ -258,7 +258,7 @@ describe('Performance Benchmark Tests', () => {
         watermarkTexts: [
           {
             text: 'Cleanup Test',
-            position: { position: Position.center },
+            position: { position: Position.Center },
           },
         ],
       };
@@ -317,7 +317,7 @@ describe('Performance Benchmark Tests', () => {
               color: '#000000',
             },
             textBackgroundStyle: {
-              type: TextBackgroundType.none,
+              type: TextBackgroundType.None,
               color: '#FFFFFF',
               padding: 5,
               cornerRadius: {
@@ -328,7 +328,7 @@ describe('Performance Benchmark Tests', () => {
         })),
         quality: 95,
         maxSize: 4096,
-        saveFormat: ImageFormat.jpg,
+        saveFormat: ImageFormat.Jpg,
       };
 
       // Measure legacy implementation with large image
@@ -372,14 +372,14 @@ describe('Performance Benchmark Tests', () => {
           src: `watermark-${index}.png`,
           position: {
             position: [
-              Position.topLeft,
-              Position.topCenter,
-              Position.topRight,
-              Position.center,
-              Position.bottomLeft,
-              Position.bottomCenter,
-              Position.bottomRight,
-              Position.center,
+              Position.TopLeft,
+              Position.TopCenter,
+              Position.TopRight,
+              Position.Center,
+              Position.BottomLeft,
+              Position.BottomCenter,
+              Position.BottomRight,
+              Position.Center,
             ][index],
           },
           scale: 0.3 + index * 0.1,
@@ -387,7 +387,7 @@ describe('Performance Benchmark Tests', () => {
           rotate: index * 45,
         })),
         quality: 90,
-        saveFormat: ImageFormat.png,
+        saveFormat: ImageFormat.Png,
       };
 
       // Measure legacy implementation with multiple images
@@ -502,7 +502,7 @@ describe('Performance Benchmark Tests', () => {
         watermarkTexts: [
           {
             text: 'Rapid Test',
-            position: { position: Position.center },
+            position: { position: Position.Center },
           },
         ],
       };
@@ -570,7 +570,7 @@ describe('Performance Benchmark Tests', () => {
         watermarkTexts: [
           {
             text: 'Mixed Test Text',
-            position: { position: Position.center },
+            position: { position: Position.Center },
           },
         ],
       };
@@ -580,7 +580,7 @@ describe('Performance Benchmark Tests', () => {
         watermarkImages: [
           {
             src: 'mixed-watermark.png',
-            position: { position: Position.bottomRight },
+            position: { position: Position.BottomRight },
             scale: 0.5,
             alpha: 0.8,
           },

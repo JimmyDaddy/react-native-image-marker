@@ -46,7 +46,7 @@ describe('Regression Test Suite', () => {
         watermarkTexts: [
           {
             text: 'Regression Test',
-            position: { position: Position.center },
+            position: { position: Position.Center },
           },
         ],
       };
@@ -67,31 +67,41 @@ describe('Regression Test Suite', () => {
        * Ensures: All existing enum values are preserved
        */
       // Test Position enum values
-      const expectedPositions = [
-        'topLeft',
-        'topCenter',
-        'topRight',
-        'bottomLeft',
-        'bottomCenter',
-        'bottomRight',
-        'center',
+      // Test Position enum - keys are PascalCase, values are camelCase
+      const expectedPositions: Array<[keyof typeof Position, string]> = [
+        ['TopLeft', 'topLeft'],
+        ['TopCenter', 'topCenter'],
+        ['TopRight', 'topRight'],
+        ['BottomLeft', 'bottomLeft'],
+        ['BottomCenter', 'bottomCenter'],
+        ['BottomRight', 'bottomRight'],
+        ['Center', 'center'],
       ];
 
-      expectedPositions.forEach((position) => {
-        expect(Position[position as keyof typeof Position]).toBe(position);
+      expectedPositions.forEach(([key, value]) => {
+        expect(Position[key]).toBe(value);
       });
 
-      // Test ImageFormat enum values
-      const expectedFormats = ['png', 'jpg', 'base64'];
-      expectedFormats.forEach((format) => {
-        expect(ImageFormat[format as keyof typeof ImageFormat]).toBe(format);
+      // Test ImageFormat enum - keys are PascalCase, values are lowercase
+      const expectedFormats: Array<[keyof typeof ImageFormat, string]> = [
+        ['Png', 'png'],
+        ['Jpg', 'jpg'],
+        ['Base64', 'base64'],
+      ];
+      expectedFormats.forEach(([key, value]) => {
+        expect(ImageFormat[key]).toBe(value);
       });
 
-      // Test TextBackgroundType enum values
-      const expectedBackgroundTypes = ['fit', 'stretchX', 'stretchY'];
-      expectedBackgroundTypes.forEach((type) => {
-        const enumValues = Object.values(TextBackgroundType);
-        expect(enumValues).toContain(type);
+      // Test TextBackgroundType enum - keys are PascalCase, values are camelCase/fit
+      const expectedBackgroundTypes: Array<
+        [keyof typeof TextBackgroundType, string]
+      > = [
+        ['StretchX', 'stretchX'],
+        ['StretchY', 'stretchY'],
+        ['None', 'fit'],
+      ];
+      expectedBackgroundTypes.forEach(([key, value]) => {
+        expect(TextBackgroundType[key]).toBe(value);
       });
 
       console.log('Enum value compatibility verified');
@@ -114,7 +124,7 @@ describe('Regression Test Suite', () => {
         watermarkTexts: [
           {
             text: 'Legacy Compatibility Test',
-            position: { position: Position.center },
+            position: { position: Position.Center },
             style: {
               color: '#FF0000',
               fontSize: 20,
@@ -133,7 +143,7 @@ describe('Regression Test Suite', () => {
                 color: '#000000',
               },
               textBackgroundStyle: {
-                type: TextBackgroundType.none,
+                type: TextBackgroundType.None,
                 color: '#FFFFFF',
                 padding: 10,
                 paddingLeft: 15,
@@ -153,7 +163,7 @@ describe('Regression Test Suite', () => {
         ],
         quality: 90,
         filename: 'legacy-test.jpg',
-        saveFormat: ImageFormat.jpg,
+        saveFormat: ImageFormat.Jpg,
         maxSize: 2048,
       };
 
@@ -232,7 +242,7 @@ describe('Regression Test Suite', () => {
         watermarkImages: [
           {
             src: 'watermark-logo.png',
-            position: { position: Position.bottomRight },
+            position: { position: Position.BottomRight },
             scale: 0.5,
             alpha: 0.8,
             rotate: 0,
@@ -246,7 +256,7 @@ describe('Regression Test Suite', () => {
           },
         ],
         quality: 85,
-        saveFormat: ImageFormat.png,
+        saveFormat: ImageFormat.Png,
       };
 
       const results = await Promise.allSettled([
@@ -330,9 +340,9 @@ describe('Regression Test Suite', () => {
       });
 
       // Test that enums have expected values
-      expect(mainModule.Position.center).toBe('center');
-      expect(mainModule.ImageFormat.png).toBe('png');
-      expect(mainModule.TextBackgroundType.none).toBe('fit');
+      expect(mainModule.Position.Center).toBe('center');
+      expect(mainModule.ImageFormat.Png).toBe('png');
+      expect(mainModule.TextBackgroundType.None).toBe('fit');
 
       console.log('Type export breaking changes test passed');
     });
@@ -484,7 +494,7 @@ describe('Regression Test Suite', () => {
         watermarkTexts: [
           {
             text: 'Legacy Styling Test',
-            position: { position: Position.center },
+            position: { position: Position.Center },
             style: {
               color: '#FF0000',
               fontSize: 24,
@@ -503,7 +513,7 @@ describe('Regression Test Suite', () => {
                 color: '#333333',
               },
               textBackgroundStyle: {
-                type: TextBackgroundType.stretchX,
+                type: TextBackgroundType.StretchX,
                 color: '#FFFF00',
                 padding: 12,
                 paddingLeft: 16,
@@ -522,7 +532,7 @@ describe('Regression Test Suite', () => {
           },
         ],
         quality: 95,
-        saveFormat: ImageFormat.png,
+        saveFormat: ImageFormat.Png,
       };
 
       const results = await Promise.allSettled([
@@ -560,7 +570,7 @@ describe('Regression Test Suite', () => {
         watermarkImages: [
           {
             src: 'legacy-watermark-1.png',
-            position: { position: Position.topLeft },
+            position: { position: Position.TopLeft },
             scale: 0.4,
             alpha: 0.8,
             rotate: 45,
@@ -575,7 +585,7 @@ describe('Regression Test Suite', () => {
         ],
         quality: 88,
         filename: 'legacy-transform-result.png',
-        saveFormat: ImageFormat.png,
+        saveFormat: ImageFormat.Png,
         maxSize: 2048,
       };
 
@@ -610,11 +620,11 @@ describe('Regression Test Suite', () => {
           options: {
             backgroundImage: { src: 'position-enum.jpg' },
             watermarkTexts: [
-              { text: 'Top Left', position: { position: Position.topLeft } },
-              { text: 'Center', position: { position: Position.center } },
+              { text: 'Top Left', position: { position: Position.TopLeft } },
+              { text: 'Center', position: { position: Position.Center } },
               {
                 text: 'Bottom Right',
-                position: { position: Position.bottomRight },
+                position: { position: Position.BottomRight },
               },
             ],
           },
@@ -687,7 +697,7 @@ describe('Regression Test Suite', () => {
             backgroundImage: { src: 'quality-png.jpg' },
             watermarkTexts: [{ text: 'PNG High Quality' }],
             quality: 100,
-            saveFormat: ImageFormat.png,
+            saveFormat: ImageFormat.Png,
           },
         },
         {
@@ -696,7 +706,7 @@ describe('Regression Test Suite', () => {
             backgroundImage: { src: 'quality-jpg.jpg' },
             watermarkTexts: [{ text: 'JPG Medium Quality' }],
             quality: 75,
-            saveFormat: ImageFormat.jpg,
+            saveFormat: ImageFormat.Jpg,
           },
         },
         {
@@ -705,7 +715,7 @@ describe('Regression Test Suite', () => {
             backgroundImage: { src: 'quality-base64.jpg' },
             watermarkTexts: [{ text: 'Base64 Low Quality' }],
             quality: 50,
-            saveFormat: ImageFormat.base64,
+            saveFormat: ImageFormat.Base64,
           },
         },
         {
@@ -715,7 +725,7 @@ describe('Regression Test Suite', () => {
             watermarkTexts: [{ text: 'Custom Filename' }],
             quality: 90,
             filename: 'custom-output.jpg',
-            saveFormat: ImageFormat.jpg,
+            saveFormat: ImageFormat.Jpg,
           },
         },
         {
@@ -725,7 +735,7 @@ describe('Regression Test Suite', () => {
             watermarkTexts: [{ text: 'Max Size' }],
             quality: 85,
             maxSize: 1024,
-            saveFormat: ImageFormat.png,
+            saveFormat: ImageFormat.Png,
           },
         },
       ];
@@ -742,7 +752,7 @@ describe('Regression Test Suite', () => {
           const implName = index === 0 ? 'Legacy' : 'TurboModule';
           if (result.status === 'fulfilled') {
             expect(typeof result.value).toBe('string');
-            if (testCase.options.saveFormat === ImageFormat.base64) {
+            if (testCase.options.saveFormat === ImageFormat.Base64) {
               // Base64 results should be longer (but in test environment might be mocked)
               expect(result.value.length).toBeGreaterThan(10);
             }
@@ -770,7 +780,7 @@ describe('Regression Test Suite', () => {
         watermarkTexts: [
           {
             text: 'Performance Regression Test',
-            position: { position: Position.center },
+            position: { position: Position.Center },
             style: {
               color: '#FF0000',
               fontSize: 20,
@@ -779,7 +789,7 @@ describe('Regression Test Suite', () => {
           },
         ],
         quality: 90,
-        saveFormat: ImageFormat.jpg,
+        saveFormat: ImageFormat.Jpg,
       };
 
       // Test Legacy implementation performance
@@ -841,7 +851,7 @@ describe('Regression Test Suite', () => {
           },
         })),
         quality: 85,
-        saveFormat: ImageFormat.jpg,
+        saveFormat: ImageFormat.Jpg,
       };
 
       const initialMemory = process.memoryUsage();
@@ -884,7 +894,7 @@ describe('Regression Test Suite', () => {
         watermarkTexts: [
           {
             text: `Concurrent Regression ${index}`,
-            position: { position: Position.center },
+            position: { position: Position.Center },
             style: {
               color: '#FF0000',
               fontSize: 18,
@@ -893,7 +903,7 @@ describe('Regression Test Suite', () => {
           },
         ],
         quality: 80,
-        saveFormat: ImageFormat.jpg,
+        saveFormat: ImageFormat.Jpg,
       }));
 
       // Test concurrent operations in Legacy implementation
@@ -952,7 +962,7 @@ describe('Regression Test Suite', () => {
         watermarkTexts: [
           {
             text: 'Integration Regression Test',
-            position: { position: Position.center },
+            position: { position: Position.Center },
             style: {
               color: '#FF0000',
               fontSize: 20,
@@ -961,7 +971,7 @@ describe('Regression Test Suite', () => {
           },
         ],
         quality: 90,
-        saveFormat: ImageFormat.jpg,
+        saveFormat: ImageFormat.Jpg,
       };
 
       // Test main API methods
