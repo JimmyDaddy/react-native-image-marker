@@ -186,6 +186,11 @@ export enum TextBackgroundType {
    - `src/__tests__/expo-integration.test.ts`
    - `src/__tests__/end-to-end.test.ts`
 
+5. **示例应用**（所有枚举引用已更新）
+   - `example/src/App.tsx` - Legacy 架构示例
+   - `example-0.73/src/App.tsx` - New Architecture 示例
+   - `expo-example/App.tsx` - Expo 示例
+
 #### 原生代码（不需要修改）
 
 **iOS 和 Android 原生代码都不需要修改**，原因：

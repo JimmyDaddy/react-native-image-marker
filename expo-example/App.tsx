@@ -246,7 +246,7 @@ function useViewModel() {
     'normal image' | 'base64'
   >('normal image');
   const [waterMarkType, setWaterMarkType] = useState<'text' | 'image'>('text');
-  const [saveFormat, setSaveFormat] = useState<ImageFormat>(ImageFormat.png);
+  const [saveFormat, setSaveFormat] = useState<ImageFormat>(ImageFormat.Png);
   const [image, setImage] = useState(bg);
   const [uri, setUri] = useState('');
   const [marker, setMarker] = useState(icon);
@@ -256,7 +256,7 @@ function useViewModel() {
   const [textBgStretch, setTextBgStretch] = useState<TextBackgroundType>(
     TextBackgroundType.none
   );
-  const [position, setPosition] = useState<Position>(Position.topLeft);
+  const [position, setPosition] = useState<Position>(Position.TopLeft);
   const [X, setX] = useState<number | string>(20);
   const [Y, setY] = useState<number | string>(20);
   const [loading, setLoading] = useState(false);
@@ -327,9 +327,9 @@ function useViewModel() {
 
   function showExportResultTypeSelector() {
     const options = [
-      ImageFormat.png,
-      ImageFormat.jpg,
-      ImageFormat.base64,
+      ImageFormat.Png,
+      ImageFormat.Jpg,
+      ImageFormat.Base64,
       'cancel',
     ];
     const cancelButtonIndex = 3;
@@ -353,13 +353,13 @@ function useViewModel() {
 
   function showPositionSelector() {
     const options = [
-      Position.topLeft,
-      Position.topCenter,
-      Position.topRight,
-      Position.center,
-      Position.bottomLeft,
-      Position.bottomCenter,
-      Position.bottomRight,
+      Position.TopLeft,
+      Position.TopCenter,
+      Position.TopRight,
+      Position.Center,
+      Position.BottomLeft,
+      Position.BottomCenter,
+      Position.BottomRight,
       'cancel',
     ];
     const cancelButtonIndex = 7;
@@ -384,8 +384,8 @@ function useViewModel() {
   function showTextBgStretchSelector() {
     const options = [
       TextBackgroundType.none,
-      TextBackgroundType.stretchX,
-      TextBackgroundType.stretchY,
+      TextBackgroundType.StretchX,
+      TextBackgroundType.StretchY,
       'cancel',
     ];
     const cancelButtonIndex = 3;
@@ -471,7 +471,7 @@ function useViewModel() {
               alpha: watermarkAlpha,
               rotate: watermarkRotate,
               position: {
-                position: Position.topLeft,
+                position: Position.TopLeft,
               },
             },
             {
@@ -480,7 +480,7 @@ function useViewModel() {
               alpha: watermarkAlpha,
               rotate: watermarkRotate,
               position: {
-                position: Position.topRight,
+                position: Position.TopRight,
               },
             },
           ],
@@ -532,7 +532,7 @@ function useViewModel() {
             {
               text: 'text marker normal',
               position: {
-                position: Position.center,
+                position: Position.Center,
               },
               style: {
                 color: '#FF00AA9F',
@@ -577,7 +577,7 @@ function useViewModel() {
         });
       }
       const resUri =
-        saveFormat === ImageFormat.base64
+        saveFormat === ImageFormat.Base64
           ? path
           : Platform.OS === 'android'
           ? 'file:' + path
@@ -722,7 +722,7 @@ function useViewModel() {
         });
       }
       const resUri =
-        saveFormat === ImageFormat.base64
+        saveFormat === ImageFormat.Base64
           ? path
           : Platform.OS === 'android'
           ? 'file:' + path
