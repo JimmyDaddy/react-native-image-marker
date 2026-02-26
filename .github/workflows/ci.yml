@@ -659,7 +659,13 @@ jobs:
         echo "🧹 Cleaning stale build artifacts..."
         rm -rf app/.cxx
         rm -rf app/build/generated/autolinking
-        rm -rf ../android/build/generated/source/codegen
+        
+        # Clean library module's codegen directory (absolute path from workspace root)
+        LIBRARY_CODEGEN_DIR="$GITHUB_WORKSPACE/android/build/generated/source/codegen"
+        if [ -d "$LIBRARY_CODEGEN_DIR" ]; then
+          echo "🧹 Removing library codegen directory: $LIBRARY_CODEGEN_DIR"
+          rm -rf "$LIBRARY_CODEGEN_DIR"
+        fi
         
         # For legacy architecture, ensure autolinking doesn't reference codegen
         if [ "${{ matrix.architecture }}" = "legacy" ]; then
