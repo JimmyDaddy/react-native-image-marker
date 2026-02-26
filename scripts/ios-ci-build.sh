@@ -31,23 +31,29 @@ AVAILABLE_SIMULATORS=$(xcrun simctl list devices available | grep "iPhone" | gre
 echo "📱 Available simulators:"
 echo "$AVAILABLE_SIMULATORS"
 
-# Try to find a suitable simulator (prefer iPhone 15, 14, 13, or any available iPhone)
+# Try to find a suitable simulator (prefer iPhone 16, 15, 14, 13, or any available iPhone)
 SIMULATOR_NAME=""
-for sim in "iPhone 15" "iPhone 14" "iPhone 13" "iPhone 12" "iPhone 11"; do
+for sim in "iPhone 16" "iPhone 15" "iPhone 14" "iPhone 13" "iPhone 12" "iPhone 11"; do
     if xcrun simctl list devices available | grep -q "$sim"; then
         SIMULATOR_NAME="$sim"
+        echo "✅ Found simulator: $SIMULATOR_NAME"
         break
     fi
 done
 
-# If no specific simulator found, use the first available iPhone simulator
+# If no specific simulator found, extract the first available iPhone simulator name
 if [ -z "$SIMULATOR_NAME" ]; then
-    SIMULATOR_NAME=$(xcrun simctl list devices available | grep "iPhone" | grep -v "unavailable" | head -1 | sed 's/.*(\([^)]*\)).*/\1/' | xargs)
-    if [ -z "$SIMULATOR_NAME" ]; then
+    echo "⚠️ No preferred simulator found, searching for any available iPhone..."
+    # Extract device name from format: "    iPhone SE (3rd generation) (UUID) (Booted)"
+    # We want to extract "iPhone SE (3rd generation)" part
+    SIMULATOR_NAME=$(xcrun simctl list devices available | grep "iPhone" | grep -v "unavailable" | head -1 | sed -E 's/^[[:space:]]+([^(]+)\(.*/\1/' | sed 's/[[:space:]]*$//')
+    
+    if [ -z "$SIMULATOR_NAME" ] || [ "$SIMULATOR_NAME" = "Shutdown" ] || [ "$SIMULATOR_NAME" = "Booted" ]; then
         # Fallback: use generic destination without specific device name
-        echo "⚠️ No specific iPhone simulator found, using generic destination"
+        echo "⚠️ Could not extract valid simulator name, using generic destination"
         BUILD_DESTINATION="platform=iOS Simulator,OS=latest"
     else
+        echo "✅ Extracted simulator name: $SIMULATOR_NAME"
         BUILD_DESTINATION="platform=iOS Simulator,name=$SIMULATOR_NAME"
     fi
 else
