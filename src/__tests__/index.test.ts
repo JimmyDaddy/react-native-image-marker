@@ -17,13 +17,13 @@ describe('Project Structure Setup', () => {
       expect(fs.existsSync(nativeImageMarkerSpec)).toBe(true);
     });
 
-    test('should have src/NativeImageMarker.ts for TurboModule spec', () => {
-      const nativeImageMarkerSrc = path.join(
+    test('should have specs/NativeImageMarker.ts for TurboModule spec', () => {
+      const nativeImageMarkerSpec = path.join(
         __dirname,
-        '../NativeImageMarker.ts'
+        '../../specs/NativeImageMarker.ts'
       );
 
-      expect(fs.existsSync(nativeImageMarkerSrc)).toBe(true);
+      expect(fs.existsSync(nativeImageMarkerSpec)).toBe(true);
     });
 
     test('should have ArchitectureDetector.ts', () => {
@@ -145,7 +145,7 @@ describe('Project Structure Setup', () => {
     test('should be able to import NativeImageMarker spec without registration error', () => {
       // In test environment, the NativeImageMarker spec is mocked
       // We can test that the spec file exists and has the correct structure
-      const specPath = path.join(__dirname, '../NativeImageMarker.ts');
+      const specPath = path.join(__dirname, '../../specs/NativeImageMarker.ts');
       expect(fs.existsSync(specPath)).toBe(true);
 
       const specContent = fs.readFileSync(specPath, 'utf8');

@@ -176,10 +176,15 @@ describe('ImageMarker Properties', () => {
       const specPath = path.join(__dirname, '../../specs/NativeImageMarker.ts');
       const specContent = fs.readFileSync(specPath, 'utf8');
 
-      const requiredTypes = [
+      // String literal union types (used for Codegen compatibility)
+      const stringLiteralTypes = [
         'Position',
         'TextBackgroundType',
         'ImageFormat',
+      ];
+
+      // Interface types
+      const interfaceTypes = [
         'PositionOptions',
         'TextStyle',
         'TextOptions',
@@ -188,8 +193,17 @@ describe('ImageMarker Properties', () => {
         'ImageMarkOptions',
       ];
 
-      requiredTypes.forEach((typeName) => {
-        const interfaceRegex = new RegExp(`(interface|enum)\\s+${typeName}`);
+      // Check string literal union types (type Position = 'topLeft' | 'topCenter' | ...)
+      stringLiteralTypes.forEach((typeName) => {
+        const typeRegex = new RegExp(`(export\\s+)?type\\s+${typeName}\\s*=`);
+        expect(specContent).toMatch(typeRegex);
+      });
+
+      // Check interface types
+      interfaceTypes.forEach((typeName) => {
+        const interfaceRegex = new RegExp(
+          `(export\\s+)?interface\\s+${typeName}`
+        );
         expect(specContent).toMatch(interfaceRegex);
       });
     });
@@ -248,20 +262,22 @@ describe('ImageMarker Properties', () => {
       const typesPath = path.join(__dirname, '../types/index.ts');
       const typesContent = fs.readFileSync(typesPath, 'utf8');
 
-      // Test Position enum values (keys are PascalCase, values are camelCase for Codegen C++ compatibility)
-      expect(specContent).toContain("TopLeft = 'topLeft'");
+      // Test Position enum values (spec uses string literal union, types use enum with camelCase values)
+      // Spec should contain string literals like 'topLeft'
+      expect(specContent).toContain("'topLeft'");
+      expect(specContent).toContain("'center'");
+      // Types should contain enum definitions with camelCase values
       expect(typesContent).toContain("TopLeft = 'topLeft'");
-      expect(specContent).toContain("Center = 'center'");
       expect(typesContent).toContain("Center = 'center'");
 
       // Test TextBackgroundType enum values
-      expect(specContent).toContain("StretchX = 'stretchX'");
+      expect(specContent).toContain("'stretchX'");
       expect(typesContent).toContain("StretchX = 'stretchX'");
 
       // Test ImageFormat enum values
-      expect(specContent).toContain("Png = 'png'");
+      expect(specContent).toContain("'png'");
       expect(typesContent).toContain("Png = 'png'");
-      expect(specContent).toContain("Jpg = 'jpg'");
+      expect(specContent).toContain("'jpg'");
       expect(typesContent).toContain("Jpg = 'jpg'");
     });
   });
@@ -312,7 +328,7 @@ describe('ImageMarker Properties', () => {
               underline: false,
               strikeThrough: false,
               rotate: 0,
-              textAlign: Position.Center,
+              textAlign: 'center',
             },
           },
         ],
@@ -1223,7 +1239,7 @@ describe('ImageMarker Properties', () => {
         expect((types as any)[exportName]).toBeDefined();
         expect(typeof (types as any)[exportName]).toBe('object');
 
-        // Test specific enum values (keys are PascalCase, values are camelCase for Codegen C++ compatibility)
+        // Test specific enum values (keys are PascalCase, values are camelCase for native compatibility)
         if (exportName === 'Position') {
           expect((types as any)[exportName].TopLeft).toBe('topLeft');
           expect((types as any)[exportName].Center).toBe('center');
@@ -1343,9 +1359,12 @@ describe('ImageMarker Properties', () => {
           expect((types as any)[typeName]).toBeDefined();
           expect(typeof (types as any)[typeName]).toBe('object');
 
-          // Enums should also be defined in spec
-          const enumRegex = new RegExp(`enum\\s+${typeName}`);
-          expect(specContent).toMatch(enumRegex);
+          // In spec, these are now string literal union types (not enums)
+          // Check for type definition instead of enum
+          const typeRegex = new RegExp(
+            `(export\\s+type\\s+${typeName}|enum\\s+${typeName})`
+          );
+          expect(specContent).toMatch(typeRegex);
         } else {
           // Interfaces should be defined in spec
           const interfaceRegex = new RegExp(`interface\\s+${typeName}`);
@@ -1791,7 +1810,7 @@ describe('ImageMarker Properties', () => {
       expect(ImageFormatEnum).toBeDefined();
       expect(TextBackgroundType).toBeDefined();
 
-      // Test that enums have correct values (keys are PascalCase, values are camelCase for Codegen C++ compatibility)
+      // Test that enums have correct values (keys are PascalCase, values are camelCase for native compatibility)
       expect(PositionEnum.Center).toBe('center');
       expect(ImageFormatEnum.Png).toBe('png');
       expect(TextBackgroundType.Fit).toBe('fit');

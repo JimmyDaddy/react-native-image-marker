@@ -6,8 +6,7 @@
 /**
  * @description Position enum for text watermark and image watermark
  * @enum
- * Note: Codegen generates C++ code based on enum KEYS
- * Keys must use PascalCase for C++ compatibility, values use camelCase for JS
+ * Uses camelCase values to match native implementation expectations
  */
 export enum Position {
   TopLeft = 'topLeft',
@@ -22,8 +21,7 @@ export enum Position {
 /**
  * @description TextBackgroundType enum for text watermark
  * @enum
- * Note: Codegen generates C++ code based on enum KEYS
- * Keys must use PascalCase for C++ compatibility, values use camelCase for JS
+ * Uses camelCase values to match native implementation expectations
  */
 export enum TextBackgroundType {
   StretchX = 'stretchX',
@@ -34,8 +32,7 @@ export enum TextBackgroundType {
 /**
  * @description ImageFormat enum for save image format
  * @enum
- * Note: Codegen generates C++ code based on enum KEYS
- * Keys must use PascalCase for C++ compatibility, values use camelCase for JS
+ * Uses lowercase values to match native implementation expectations
  */
 export enum ImageFormat {
   Png = 'png',

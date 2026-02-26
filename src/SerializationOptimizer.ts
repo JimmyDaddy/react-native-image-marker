@@ -374,10 +374,10 @@ export class SerializationOptimizer {
       }
     }
 
-    // Special case: if type is 'fit' (none) and only color is set, remove it
-    // because a background with type 'none' doesn't actually show anything
+    // Special case: if type is 'Fit' (default) and only color is set, remove it
+    // because a background with type 'Fit' doesn't actually show anything meaningful
     if (
-      optimized.type === 'fit' &&
+      optimized.type === 'Fit' &&
       Object.keys(optimized).length <= 2 &&
       optimized.color
     ) {

@@ -1,36 +1,28 @@
 import type { TurboModule } from 'react-native';
 import { TurboModuleRegistry } from 'react-native';
 
-// Position enum for text watermark and image watermark
-// Note: Codegen generates C++ code based on enum KEYS
-// Keys must use PascalCase for C++ compatibility, values use camelCase for JS
-export enum Position {
-  TopLeft = 'topLeft',
-  TopCenter = 'topCenter',
-  TopRight = 'topRight',
-  BottomLeft = 'bottomLeft',
-  BottomCenter = 'bottomCenter',
-  BottomRight = 'bottomRight',
-  Center = 'center',
-}
+// CODEGEN SPEC: Use string literal union types for native compatibility
+// These types use camelCase to match native implementation expectations
+// The actual enums exported to users are defined in src/types/index.ts
 
-// TextBackgroundType enum for text watermark
-// Note: Codegen generates C++ code based on enum KEYS
-// Keys must use PascalCase for C++ compatibility, values use camelCase for JS
-export enum TextBackgroundType {
-  StretchX = 'stretchX',
-  StretchY = 'stretchY',
-  Fit = 'fit',
-}
+// Position type for text watermark and image watermark
+// Uses camelCase to match iOS/Android native code expectations
+export type Position =
+  | 'topLeft'
+  | 'topCenter'
+  | 'topRight'
+  | 'bottomLeft'
+  | 'bottomCenter'
+  | 'bottomRight'
+  | 'center';
 
-// ImageFormat enum for save image format
-// Note: Codegen generates C++ code based on enum KEYS
-// Keys must use PascalCase for C++ compatibility, values use camelCase for JS
-export enum ImageFormat {
-  Png = 'png',
-  Jpg = 'jpg',
-  Base64 = 'base64',
-}
+// TextBackgroundType for text watermark background styling
+// Uses camelCase to match iOS/Android native code expectations
+export type TextBackgroundType = 'stretchX' | 'stretchY' | 'fit';
+
+// ImageFormat for save image format
+// Uses camelCase to match iOS/Android native code expectations
+export type ImageFormat = 'png' | 'jpg' | 'base64';
 
 // Position options interface
 export interface PositionOptions {

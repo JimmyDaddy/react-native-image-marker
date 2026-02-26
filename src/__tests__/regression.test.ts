@@ -66,7 +66,7 @@ describe('Regression Test Suite', () => {
        * Tests: Requirements 6.2, 11.1
        * Ensures: All existing enum values are preserved
        */
-      // Test Position enum - keys are PascalCase, values are camelCase for Codegen compatibility
+      // Test Position enum - keys and values are both PascalCase for Codegen compatibility
       const expectedPositions: Array<[keyof typeof Position, string]> = [
         ['TopLeft', 'topLeft'],
         ['TopCenter', 'topCenter'],
@@ -81,7 +81,7 @@ describe('Regression Test Suite', () => {
         expect(Position[key]).toBe(value);
       });
 
-      // Test ImageFormat enum - keys are PascalCase, values are lowercase for Codegen compatibility
+      // Test ImageFormat enum - keys and values are both PascalCase for Codegen compatibility
       const expectedFormats: Array<[keyof typeof ImageFormat, string]> = [
         ['Png', 'png'],
         ['Jpg', 'jpg'],
@@ -91,7 +91,7 @@ describe('Regression Test Suite', () => {
         expect(ImageFormat[key]).toBe(value);
       });
 
-      // Test TextBackgroundType enum - keys are PascalCase, values are camelCase for Codegen compatibility
+      // Test TextBackgroundType enum - keys and values are both PascalCase for Codegen compatibility
       const expectedBackgroundTypes: Array<
         [keyof typeof TextBackgroundType, string]
       > = [
@@ -338,7 +338,7 @@ describe('Regression Test Suite', () => {
         console.log(`Type export verified: ${exportName}`);
       });
 
-      // Test that enums have expected values
+      // Test that enums have expected values (camelCase for native compatibility)
       expect(mainModule.Position.Center).toBe('center');
       expect(mainModule.ImageFormat.Png).toBe('png');
       expect(mainModule.TextBackgroundType.Fit).toBe('fit');
