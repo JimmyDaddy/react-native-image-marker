@@ -658,10 +658,18 @@ jobs:
         # Clean any stale build artifacts that might cause CMake issues
         echo "🧹 Cleaning stale build artifacts..."
         
-        # First, clean the library module to ensure no codegen artifacts exist
-        echo "🧹 Cleaning library module..."
+        # First, ensure the library module creates necessary directories for Legacy mode
+        echo "🔧 Preparing library module for ${{ matrix.architecture }} architecture..."
         cd "$GITHUB_WORKSPACE/android"
-        ./gradlew clean --stacktrace || echo "⚠️ Library clean task failed, continuing..."
+        
+        if [ "${{ matrix.architecture }}" = "legacy" ]; then
+          echo "📁 Creating empty Codegen directories for Legacy Architecture..."
+          # The library's Gradle task will create these, but we ensure it runs
+          ./gradlew createEmptyCodegenDirs --stacktrace || echo "⚠️ createEmptyCodegenDirs task not available yet, will be created during build"
+        else
+          echo "🏗️ Cleaning for New Architecture build..."
+          ./gradlew clean --stacktrace || echo "⚠️ Library clean task failed, continuing..."
+        fi
         
         # Return to example app directory
         cd "$GITHUB_WORKSPACE/${{ matrix.example-app }}/android"
@@ -671,23 +679,6 @@ jobs:
         rm -rf app/build/generated/autolinking
         rm -rf app/build/generated/source
         rm -rf app/build
-        
-        # For legacy architecture, ensure autolinking doesn't reference codegen
-        if [ "${{ matrix.architecture }}" = "legacy" ]; then
-          echo "🔧 Configuring for Legacy Architecture build..."
-          # Verify newArchEnabled is false
-          if grep -q "newArchEnabled=true" gradle.properties; then
-            echo "⚠️ Warning: newArchEnabled=true found in gradle.properties for legacy build!"
-            echo "This should have been set to false in the configuration step."
-          fi
-          
-          # Force regenerate autolinking to exclude codegen references
-          echo "🔄 Regenerating autolinking configuration for Legacy Architecture..."
-          cd "$GITHUB_WORKSPACE/${{ matrix.example-app }}"
-          # Remove node_modules/.bin cache that might have stale autolinking
-          rm -rf node_modules/.bin/react-native-*
-          cd android
-        fi
         
         echo "Building APK for ${{ matrix.architecture }} architecture, RN ${{ matrix.rn-version }}..."
         echo "Using --info flag for detailed build logs..."

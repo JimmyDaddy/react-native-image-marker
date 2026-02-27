@@ -126,7 +126,8 @@ apply plugin: "kotlin-android"
 def appProject = rootProject.allprojects.find { it.plugins.hasPlugin('com.android.application') }
 def reactNativeVersion = detectReactNativeVersion()
 
-// Only apply React plugin if we're in a React Native app context
+// Only apply React plugin if we're in New Architecture mode AND in a React Native app context
+// This prevents autolinking from detecting Codegen configuration in Legacy mode
 if (isNewArchitectureEnabled() && appProject != null) {
   try {
     apply plugin: "com.facebook.react"
@@ -220,32 +221,46 @@ android {
       }
     }
     
-    // Ensure codegen directories are NOT created in legacy mode
-    // This prevents autolinking from trying to link non-existent codegen artifacts
-    task cleanCodegenArtifacts {
+    // In Legacy mode, create empty Codegen directories to satisfy autolinking
+    // Autolinking detects codegenConfig in package.json and expects these directories to exist
+    // even when not building with New Architecture
+    task createEmptyCodegenDirs {
       doLast {
-        def codegenDir = file("${project.buildDir}/generated/source/codegen")
-        if (codegenDir.exists()) {
-          println "Removing codegen directory for Legacy Architecture: ${codegenDir}"
-          codegenDir.deleteDir()
+        // Create empty Java codegen directory
+        def javaCodegenDir = file("${project.buildDir}/generated/source/codegen/java")
+        if (!javaCodegenDir.exists()) {
+          javaCodegenDir.mkdirs()
+          println "Created empty Java codegen directory for Legacy Architecture: ${javaCodegenDir}"
         }
         
-        // Also clean JNI codegen directory to prevent CMake errors
+        // Create empty JNI codegen directory to prevent CMake errors
         def jniCodegenDir = file("${project.buildDir}/generated/source/codegen/jni")
-        if (jniCodegenDir.exists()) {
-          println "Removing JNI codegen directory for Legacy Architecture: ${jniCodegenDir}"
-          jniCodegenDir.deleteDir()
+        if (!jniCodegenDir.exists()) {
+          jniCodegenDir.mkdirs()
+          // Create a minimal CMakeLists.txt to satisfy CMake
+          def cmakeFile = new File(jniCodegenDir, "CMakeLists.txt")
+          cmakeFile.text = """# Empty CMakeLists.txt for Legacy Architecture
+# This file is created to satisfy autolinking requirements
+# when codegenConfig exists in package.json but New Architecture is disabled
+
+cmake_minimum_required(VERSION 3.13)
+project(react_codegen_RNImageMarkerSpec)
+
+# Empty library target to satisfy autolinking
+add_library(react_codegen_RNImageMarkerSpec INTERFACE)
+"""
+          println "Created empty JNI codegen directory with CMakeLists.txt for Legacy Architecture: ${jniCodegenDir}"
         }
       }
     }
     
-    // Run cleanup before build to ensure no stale codegen artifacts
-    preBuild.dependsOn cleanCodegenArtifacts
+    // Run before preBuild to ensure directories exist before autolinking runs
+    preBuild.dependsOn createEmptyCodegenDirs
     
-    // Also clean before configuration to prevent autolinking issues
+    // Also ensure directories exist before CMake configuration
     afterEvaluate {
       tasks.matching { it.name.startsWith('configureCMake') }.all {
-        dependsOn cleanCodegenArtifacts
+        dependsOn createEmptyCodegenDirs
       }
     }
   }
