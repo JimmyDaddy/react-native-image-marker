@@ -840,8 +840,11 @@ jobs:
         with:
           api-level: ${{ matrix.api-level }}
           target: ${{ matrix.target }}
-          arch: x86_64
+          arch: arm64-v8a
           profile: pixel_5
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
           script: |
             echo "Running instrumentation tests for ${{ matrix.architecture }} architecture, API ${{ matrix.api-level }}, RN ${{ matrix.rn-version }}..."
             cd ${{ matrix.example-app }}/android && ./gradlew connectedCheck --stacktrace --no-build-cache --info
