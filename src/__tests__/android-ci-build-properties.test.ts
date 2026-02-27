@@ -332,7 +332,7 @@ describe('Android CI Build Fix - Property Tests', () => {
 
         expect(codegenConfig.name).toBe('RNImageMarkerSpec');
         expect(codegenConfig.type).toBe('modules');
-        expect(codegenConfig.jsSrcsDir).toBe('src');
+        expect(codegenConfig.jsSrcsDir).toBe('specs');
         expect(codegenConfig.android?.javaPackageName).toBe(
           'com.jimmydaddy.imagemarker'
         );
@@ -360,7 +360,7 @@ describe('Android CI Build Fix - Property Tests', () => {
       expect(packageJson.codegenConfig).toBeDefined();
       expect(packageJson.codegenConfig.name).toBe('RNImageMarkerSpec');
       expect(packageJson.codegenConfig.type).toBe('modules');
-      expect(packageJson.codegenConfig.jsSrcsDir).toBe('src');
+      expect(packageJson.codegenConfig.jsSrcsDir).toBe('specs');
       expect(packageJson.codegenConfig.android?.javaPackageName).toBe(
         'com.jimmydaddy.imagemarker'
       );

@@ -280,7 +280,8 @@ if (isNewArchitectureEnabled() && appProject != null) {
     apply plugin: "com.facebook.react"
     
     react {
-      jsRootDir = file("../src/")
+      // Point to the directory containing the spec files
+      jsRootDir = file("../")
       libraryName = "ImageMarker"
       codegenJavaPackageName = "com.jimmydaddy.imagemarker"
       
@@ -290,11 +291,12 @@ if (isNewArchitectureEnabled() && appProject != null) {
         codegenConfig = [
           name: "RNImageMarkerSpec",
           type: "modules",
-          jsSrcsDir: "../src",
+          jsSrcsDir: "specs",
           android: [
             javaPackageName: "com.jimmydaddy.imagemarker"
           ]
         ]
+        println "Configured Codegen for React Native ${reactNativeVersion} with jsSrcsDir: specs"
       } else {
         // For React Native 0.73, codegenConfig should be in package.json
         // The react block will automatically pick up the configuration from package.json

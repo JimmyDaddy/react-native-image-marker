@@ -91,7 +91,7 @@ export default TurboModuleRegistry.getEnforcing<Spec>('ImageMarker');
         codegenConfig: {
           name: 'RNImageMarkerSpec',
           type: 'modules',
-          jsSrcsDir: 'src',
+          jsSrcsDir: 'specs',
           android: {
             javaPackageName: 'com.jimmydaddy.imagemarker',
             outputDir: 'android/build/generated/source/codegen',
@@ -199,7 +199,7 @@ export default TurboModuleRegistry.getEnforcing<Spec>('ImageMarker');
         expect(platformDifferences.shared.specFiles).toContain(
           'specs/NativeImageMarker.ts'
         );
-        expect(platformDifferences.shared.jsSrcsDir).toBe('src');
+        expect(platformDifferences.shared.jsSrcsDir).toBe('specs');
         expect(platformDifferences.shared.type).toBe('modules');
 
         // Version-specific features
@@ -240,7 +240,7 @@ export default TurboModuleRegistry.getEnforcing<Spec>('ImageMarker');
         codegenConfig: {
           name: 'RNImageMarkerSpec',
           type: 'modules',
-          jsSrcsDir: 'src',
+          jsSrcsDir: 'specs',
           android: {
             javaPackageName: 'com.jimmydaddy.imagemarker',
             outputDir: 'android/build/generated/source/codegen',

@@ -2797,7 +2797,7 @@ describe('ImageMarker Properties', () => {
       expect(packageJson.codegenConfig).toBeDefined();
       expect(packageJson.codegenConfig.name).toBe('RNImageMarkerSpec');
       expect(packageJson.codegenConfig.type).toBe('modules');
-      expect(packageJson.codegenConfig.jsSrcsDir).toBe('src');
+      expect(packageJson.codegenConfig.jsSrcsDir).toBe('specs');
 
       // Should have Android configuration
       expect(packageJson.codegenConfig.android).toBeDefined();
@@ -2951,7 +2951,8 @@ describe('ImageMarker Properties', () => {
 
       // Should have correct JS source directory
       expect(buildGradleContent).toContain('jsRootDir');
-      expect(buildGradleContent).toContain('../src/');
+      // jsRootDir now points to parent directory, and jsSrcsDir points to specs
+      expect(buildGradleContent).toContain('jsSrcsDir: "specs"');
     });
 
     test('Build system should support both development and production builds', () => {

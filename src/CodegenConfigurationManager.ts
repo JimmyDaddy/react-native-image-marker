@@ -213,7 +213,7 @@ export class CodegenConfigurationManager {
       },
       shared: {
         specFiles: [this.SPEC_FILE_PATH],
-        jsSrcsDir: 'src',
+        jsSrcsDir: 'specs',
         type: 'modules' as const,
       },
     };

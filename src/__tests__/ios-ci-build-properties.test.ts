@@ -403,7 +403,7 @@ describe('iOS CI Build Fix - Property Tests', () => {
 
         expect(codegenConfig.name).toBe('RNImageMarkerSpec');
         expect(codegenConfig.type).toBe('modules');
-        expect(codegenConfig.jsSrcsDir).toBe('src');
+        expect(codegenConfig.jsSrcsDir).toBe('specs');
         expect(codegenConfig.ios?.moduleName).toBe('RNImageMarkerSpec');
 
         // Verify spec files are referenced

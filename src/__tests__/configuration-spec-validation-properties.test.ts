@@ -90,7 +90,7 @@ react {
     codegenConfig {
         name = "RNImageMarkerSpec"
         type = "modules"
-        jsSrcsDir = "src"
+        jsSrcsDir = "specs"
         android {
             javaPackageName = "com.jimmydaddy.imagemarker"
             outputDir = "android/build/generated/source/codegen"

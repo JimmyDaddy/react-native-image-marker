@@ -544,7 +544,7 @@ class ReactNative073ConfigurationStrategy
     return {
       name: 'RNImageMarkerSpec',
       type: 'modules',
-      jsSrcsDir: 'src',
+      jsSrcsDir: 'specs',
       specFiles: ['specs/NativeImageMarker.ts'],
       android: {
         javaPackageName: 'com.jimmydaddy.imagemarker',
@@ -623,7 +623,7 @@ class ReactNative081ConfigurationStrategy
     return {
       name: 'RNImageMarkerSpec',
       type: 'modules',
-      jsSrcsDir: 'src',
+      jsSrcsDir: 'specs',
       specFiles: ['specs/NativeImageMarker.ts'],
       android: {
         javaPackageName: 'com.jimmydaddy.imagemarker',
@@ -702,7 +702,7 @@ class ReactNative08xConfigurationStrategy
     return {
       name: 'RNImageMarkerSpec',
       type: 'modules',
-      jsSrcsDir: 'src',
+      jsSrcsDir: 'specs',
       specFiles: ['specs/NativeImageMarker.ts'],
       android: {
         javaPackageName: 'com.jimmydaddy.imagemarker',
