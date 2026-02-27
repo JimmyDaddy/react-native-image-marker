@@ -229,11 +229,25 @@ android {
           println "Removing codegen directory for Legacy Architecture: ${codegenDir}"
           codegenDir.deleteDir()
         }
+        
+        // Also clean JNI codegen directory to prevent CMake errors
+        def jniCodegenDir = file("${project.buildDir}/generated/source/codegen/jni")
+        if (jniCodegenDir.exists()) {
+          println "Removing JNI codegen directory for Legacy Architecture: ${jniCodegenDir}"
+          jniCodegenDir.deleteDir()
+        }
       }
     }
     
     // Run cleanup before build to ensure no stale codegen artifacts
     preBuild.dependsOn cleanCodegenArtifacts
+    
+    // Also clean before configuration to prevent autolinking issues
+    afterEvaluate {
+      tasks.matching { it.name.startsWith('configureCMake') }.all {
+        dependsOn cleanCodegenArtifacts
+      }
+    }
   }
 }
 
