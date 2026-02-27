@@ -257,7 +257,22 @@ add_library(react_codegen_RNImageMarkerSpec STATIC "\${DUMMY_SOURCE_FILE}")
 # Set minimal properties
 target_include_directories(react_codegen_RNImageMarkerSpec PUBLIC .)
 """
-          println "Created empty JNI codegen directory with CMakeLists.txt for Legacy Architecture: ${jniCodegenDir}"
+          
+          // Create an empty header file to satisfy #include directives
+          def headerFile = new File(jniCodegenDir, "RNImageMarkerSpec.h")
+          headerFile.text = """// Empty header file for Legacy Architecture
+// This file is created to satisfy autolinking requirements
+// when codegenConfig exists in package.json but New Architecture is disabled
+
+#ifndef RNIMAGEMARKERSPE_H
+#define RNIMAGEMARKERSPE_H
+
+// Empty header - no Codegen types needed in Legacy mode
+
+#endif // RNIMAGEMARKERSPE_H
+"""
+          
+          println "Created empty JNI codegen directory with CMakeLists.txt and header for Legacy Architecture: ${jniCodegenDir}"
         }
       }
     }
