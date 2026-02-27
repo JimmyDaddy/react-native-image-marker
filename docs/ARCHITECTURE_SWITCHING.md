@@ -419,7 +419,7 @@ If example-0.81 doesn't exist yet:
 
 ```bash
 # Run the creation script
-./scripts/create-example-0.81.sh
+./scripts/create-example.sh 0.81.0 legacy
 
 # Or follow the manual guide
 cat docs/CREATE_EXAMPLE_0.81.md

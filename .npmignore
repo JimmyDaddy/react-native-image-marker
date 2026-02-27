@@ -2,6 +2,7 @@ asset/*
 example/*
 build/*
 *.iml
+docs/dev
 
 # OSX
 #

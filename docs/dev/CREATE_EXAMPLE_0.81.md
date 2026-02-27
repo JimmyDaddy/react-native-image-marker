@@ -279,7 +279,17 @@ npm run arch:legacy example-0.81
 
 ## Automated Setup Script
 
-You can create a setup script `scripts/create-example-0.81.sh`:
+**推荐使用通用脚本 `scripts/create-example.sh`**，它支持任意版本和架构：
+
+```bash
+# 创建 React Native 0.81 Legacy 架构示例
+./scripts/create-example.sh 0.81.0 legacy
+
+# 创建 React Native 0.81 New Architecture 示例
+./scripts/create-example.sh 0.81.0 new
+```
+
+如果你需要自定义脚本，可以参考以下模板：
 
 ```bash
 #!/bin/bash
@@ -315,16 +325,21 @@ echo "  cd example-0.81"
 echo "  npm run android  # or npm run ios"
 ```
 
+**注意：现在推荐使用通用脚本 `scripts/create-example.sh`**
+
 Make it executable:
 
 ```bash
-chmod +x scripts/create-example-0.81.sh
+chmod +x scripts/create-example.sh
 ```
 
 Run it:
 
 ```bash
-./scripts/create-example-0.81.sh
+# 使用通用脚本（推荐）
+./scripts/create-example.sh 0.81.0 legacy
+
+# 或者使用上面的自定义脚本模板
 ```
 
 ## Integration with CI
