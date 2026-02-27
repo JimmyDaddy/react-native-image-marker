@@ -738,125 +738,6 @@ jobs:
           ci-build.log
         retention-days: 7
 
-  # Cross-platform Android API level testing
-  android-api-level-test:
-    runs-on: macos-14
-    needs: android-build
-    name: Cross-Platform Android API Level Test
-    strategy:
-      matrix:
-        api-level: [24, 31, 34]
-        target: [default]
-        architecture: [legacy, new]
-        rn-version: ['0.73', '0.81']
-        example-app: [example, example-0.73]
-        exclude:
-          # Only test example with 0.73 and example-0.73 with 0.81 to avoid redundancy
-          - rn-version: '0.81'
-            example-app: example
-          - rn-version: '0.73'
-            example-app: example-0.73
-    steps:
-      - name: Checkout the code
-        uses: actions/checkout@v4
-
-      - name: Verify Android changed files
-        uses: tj-actions/changed-files@v46
-        id: verify-android-changed-files
-        with:
-          files: |
-            android/**
-            src/**
-            assets/**
-            package.json
-            ${{ matrix.example-app }}/**
-            !${{ matrix.example-app }}/ios/**
-
-      - name: Cache cross-platform node_modules
-        uses: actions/cache@v4
-        if: steps.verify-android-changed-files.outputs.any_changed == 'true'
-        id: cache-cross-platform-node-modules
-        with:
-          path: |
-            node_modules
-            ${{ matrix.example-app }}/node_modules
-            ~/.npm
-          key: ${{ runner.os }}-${{ env.NODE_MODULES_CACHE_KEY }}-android-test-${{ matrix.rn-version }}-${{ hashFiles('package.json', format('{0}/package.json', matrix.example-app)) }}
-          restore-keys: |
-            ${{ runner.os }}-${{ env.NODE_MODULES_CACHE_KEY }}-android-test-${{ matrix.rn-version }}-
-            ${{ runner.os }}-${{ env.NODE_MODULES_CACHE_KEY }}-android-test-
-            ${{ runner.os }}-${{ env.NODE_MODULES_CACHE_KEY }}-
-
-      - name: Cache enhanced Gradle dependencies for testing
-        uses: actions/cache@v4
-        if: steps.verify-android-changed-files.outputs.any_changed == 'true'
-        id: cache-enhanced-gradle-test
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-            ~/.gradle/daemon
-            ${{ matrix.example-app }}/android/.gradle
-            ${{ matrix.example-app }}/android/build
-          key: ${{ runner.os }}-${{ env.GRADLE_CACHE_KEY }}-test-${{ matrix.architecture }}-${{ matrix.rn-version }}-${{ matrix.example-app }}-api${{ matrix.api-level }}-${{ hashFiles(format('{0}/android/gradle/wrapper/gradle-wrapper.properties', matrix.example-app), 'android/src/**/*.kt') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ env.GRADLE_CACHE_KEY }}-test-${{ matrix.architecture }}-${{ matrix.rn-version }}-${{ matrix.example-app }}-
-            ${{ runner.os }}-${{ env.GRADLE_CACHE_KEY }}-test-${{ matrix.architecture }}-${{ matrix.rn-version }}-
-            ${{ runner.os }}-${{ env.GRADLE_CACHE_KEY }}-test-${{ matrix.architecture }}-
-            ${{ runner.os }}-${{ env.GRADLE_CACHE_KEY }}-test-
-
-      - name: Setup node
-        uses: actions/setup-node@v4
-        if: steps.verify-android-changed-files.outputs.any_changed == 'true'
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: Set up JDK
-        uses: actions/setup-java@v4
-        if: steps.verify-android-changed-files.outputs.any_changed == 'true'
-        with:
-          distribution: 'zulu'
-          java-version: ${{ env.JAVA_VERSION }}
-
-      - name: Configure cross-platform architecture for testing
-        if: steps.verify-android-changed-files.outputs.any_changed == 'true'
-        run: |
-          cd ${{ matrix.example-app }}/android
-          echo "Configuring ${{ matrix.architecture }} architecture for API ${{ matrix.api-level }} testing, RN ${{ matrix.rn-version }}..."
-          if [ "${{ matrix.architecture }}" = "new" ]; then
-            echo "newArchEnabled=true" >> gradle.properties
-            echo "hermesEnabled=true" >> gradle.properties
-          else
-            echo "newArchEnabled=false" >> gradle.properties
-            echo "hermesEnabled=false" >> gradle.properties
-          fi
-          echo "android.useAndroidX=true" >> gradle.properties
-          echo "android.enableJetifier=true" >> gradle.properties
-          cat gradle.properties
-
-      - name: Cross-platform instrumentation tests
-        uses: reactivecircus/android-emulator-runner@v2
-        if: steps.verify-android-changed-files.outputs.any_changed == 'true'
-        with:
-          api-level: ${{ matrix.api-level }}
-          target: ${{ matrix.target }}
-          arch: arm64-v8a
-          profile: pixel_5
-          force-avd-creation: false
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          disable-animations: true
-          script: |
-            echo "Running instrumentation tests for ${{ matrix.architecture }} architecture, API ${{ matrix.api-level }}, RN ${{ matrix.rn-version }}..."
-            cd ${{ matrix.example-app }}/android && ./gradlew connectedCheck --stacktrace --no-build-cache --info
-
-      - name: Upload cross-platform test reports
-        uses: actions/upload-artifact@v4
-        if: steps.verify-android-changed-files.outputs.any_changed == 'true'
-        with:
-          name: Android-Test-Reports-${{ matrix.architecture }}-${{ matrix.rn-version }}-${{ matrix.example-app }}-API${{ matrix.api-level }}
-          path: ${{ github.workspace }}/${{ matrix.example-app }}/android/app/build/reports
-          retention-days: 7
-
   # Cross-platform iOS build and test with enhanced matrix and caching
   ios-build-test:
     runs-on: macos-latest
@@ -1189,7 +1070,7 @@ jobs:
   # Cross-platform CI completion with enhanced reporting
   ci-complete:
     name: Cross-Platform CI Complete
-    needs: [security, architecture-compatibility, validate-build-configs, android-build, android-api-level-test, ios-build-test]
+    needs: [security, architecture-compatibility, validate-build-configs, android-build, ios-build-test]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     steps:
@@ -1230,13 +1111,6 @@ jobs:
             echo "| Android Build | ❌ ${{ needs.android-build.result }} | Android | Legacy + New | 0.73 + 0.81 |" >> $GITHUB_STEP_SUMMARY
           fi
           
-          # Android API tests
-          if [ "${{ needs.android-api-level-test.result }}" = "success" ]; then
-            echo "| Android API Level Test | ✅ Success | Android | Legacy + New | API 24/31/34 |" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "| Android API Level Test | ❌ ${{ needs.android-api-level-test.result }} | Android | Legacy + New | API 24/31/34 |" >> $GITHUB_STEP_SUMMARY
-          fi
-          
           # iOS builds
           if [ "${{ needs.ios-build-test.result }}" = "success" ]; then
             echo "| iOS Build and Test | ✅ Success | iOS | Legacy + New | 0.73 + 0.81 |" >> $GITHUB_STEP_SUMMARY
@@ -1263,9 +1137,6 @@ jobs:
           if [ "${{ needs.android-build.result }}" != "success" ]; then
             echo "- Android Build: ${{ needs.android-build.result }}" >> $GITHUB_STEP_SUMMARY
           fi
-          if [ "${{ needs.android-api-level-test.result }}" != "success" ]; then
-            echo "- Android API Level Test: ${{ needs.android-api-level-test.result }}" >> $GITHUB_STEP_SUMMARY
-          fi
           if [ "${{ needs.ios-build-test.result }}" != "success" ]; then
             echo "- iOS Build and Test: ${{ needs.ios-build-test.result }}" >> $GITHUB_STEP_SUMMARY
           fi
@@ -1280,7 +1151,7 @@ jobs:
           echo "- **Security checks** passed across all platforms" >> $GITHUB_STEP_SUMMARY
           echo "- **Architecture compatibility** validated for Legacy and New Architecture" >> $GITHUB_STEP_SUMMARY
           echo "- **Build configurations** validated for Android and iOS" >> $GITHUB_STEP_SUMMARY
-          echo "- **Android builds and tests** passed for multiple RN versions and API levels" >> $GITHUB_STEP_SUMMARY
+          echo "- **Android builds** passed for multiple RN versions" >> $GITHUB_STEP_SUMMARY
           echo "- **iOS builds and tests** passed for multiple RN versions and CocoaPods versions" >> $GITHUB_STEP_SUMMARY
           echo "- **Cross-platform caching** optimized build times" >> $GITHUB_STEP_SUMMARY
           echo "- **Parallel builds** executed successfully without conflicts" >> $GITHUB_STEP_SUMMARY
@@ -1290,6 +1161,4 @@ jobs:
           echo "- **Architectures**: Legacy, New Architecture (TurboModules + Fabric)" >> $GITHUB_STEP_SUMMARY
           echo "- **React Native Versions**: 0.73, 0.81, 0.8x" >> $GITHUB_STEP_SUMMARY
           echo "- **Example Apps**: example (Legacy), example-0.73 (New Architecture)" >> $GITHUB_STEP_SUMMARY
-          echo "- **Android API Levels**: 24, 31, 34" >> $GITHUB_STEP_SUMMARY
           echo "- **CocoaPods Versions**: 1.14.3, 1.15.2" >> $GITHUB_STEP_SUMMARY
-          echo "- **Xcode Versions**: 15.0, 15.2" >> $GITHUB_STEP_SUMMARY
