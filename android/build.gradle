@@ -219,6 +219,21 @@ android {
         }
       }
     }
+    
+    // Ensure codegen directories are NOT created in legacy mode
+    // This prevents autolinking from trying to link non-existent codegen artifacts
+    task cleanCodegenArtifacts {
+      doLast {
+        def codegenDir = file("${project.buildDir}/generated/source/codegen")
+        if (codegenDir.exists()) {
+          println "Removing codegen directory for Legacy Architecture: ${codegenDir}"
+          codegenDir.deleteDir()
+        }
+      }
+    }
+    
+    // Run cleanup before build to ensure no stale codegen artifacts
+    preBuild.dependsOn cleanCodegenArtifacts
   }
 }
 

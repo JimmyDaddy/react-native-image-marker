@@ -659,12 +659,20 @@ jobs:
         echo "🧹 Cleaning stale build artifacts..."
         rm -rf app/.cxx
         rm -rf app/build/generated/autolinking
+        rm -rf app/build/generated/source
         
         # Clean library module's codegen directory (absolute path from workspace root)
         LIBRARY_CODEGEN_DIR="$GITHUB_WORKSPACE/android/build/generated/source/codegen"
         if [ -d "$LIBRARY_CODEGEN_DIR" ]; then
           echo "🧹 Removing library codegen directory: $LIBRARY_CODEGEN_DIR"
           rm -rf "$LIBRARY_CODEGEN_DIR"
+        fi
+        
+        # Clean library module's entire build directory to ensure no codegen artifacts
+        LIBRARY_BUILD_DIR="$GITHUB_WORKSPACE/android/build"
+        if [ -d "$LIBRARY_BUILD_DIR" ]; then
+          echo "🧹 Cleaning library build directory: $LIBRARY_BUILD_DIR"
+          rm -rf "$LIBRARY_BUILD_DIR"
         fi
         
         # For legacy architecture, ensure autolinking doesn't reference codegen
@@ -675,6 +683,13 @@ jobs:
             echo "⚠️ Warning: newArchEnabled=true found in gradle.properties for legacy build!"
             echo "This should have been set to false in the configuration step."
           fi
+          
+          # Force regenerate autolinking to exclude codegen references
+          echo "🔄 Regenerating autolinking configuration for Legacy Architecture..."
+          cd ..
+          # Remove node_modules/.bin cache that might have stale autolinking
+          rm -rf node_modules/.bin/react-native-*
+          cd android
         fi
         
         echo "Building APK for ${{ matrix.architecture }} architecture, RN ${{ matrix.rn-version }}..."
