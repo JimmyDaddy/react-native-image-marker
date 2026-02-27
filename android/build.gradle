@@ -75,7 +75,13 @@ def shouldUseCodegenInBuildGradle(rnVersion) {
 }
 
 buildscript {
-  def kotlin_version = rootProject.ext.has("kotlinVersion") ? rootProject.ext.get("kotlinVersion") : project.properties["ImageMarker_kotlinVersion"]
+  // Try to get Kotlin version from root project first (from example app)
+  // This ensures compatibility with the host app's Kotlin version
+  def kotlin_version = rootProject.ext.has("kotlinVersion") ? 
+    rootProject.ext.get("kotlinVersion") : 
+    (project.hasProperty("kotlin_version") ? 
+      project.properties["kotlin_version"] : 
+      project.properties["ImageMarker_kotlinVersion"])
   
   repositories {
     google()
@@ -221,7 +227,12 @@ repositories {
   google()
 }
 
-def kotlin_version = getKotlinVersionForRN(reactNativeVersion)
+// Use Kotlin version from root project if available, otherwise use version based on RN version
+def kotlin_version = rootProject.ext.has("kotlinVersion") ? 
+  rootProject.ext.get("kotlinVersion") : 
+  (project.hasProperty("kotlin_version") ? 
+    project.properties["kotlin_version"] : 
+    getKotlinVersionForRN(reactNativeVersion))
 
 dependencies {
   // For < 0.71, this will be from the local maven repo
