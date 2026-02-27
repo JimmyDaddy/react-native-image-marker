@@ -267,7 +267,25 @@ target_include_directories(react_codegen_RNImageMarkerSpec PUBLIC .)
 #ifndef RNIMAGEMARKERSPE_H
 #define RNIMAGEMARKERSPE_H
 
-// Empty header - no Codegen types needed in Legacy mode
+#include <memory>
+#include <string>
+
+// Forward declarations for React Native types
+namespace facebook {
+namespace react {
+class TurboModule;
+class JavaTurboModule;
+} // namespace react
+} // namespace facebook
+
+// Stub function declaration to satisfy autolinking
+// In Legacy mode, this function will never be called
+inline std::shared_ptr<facebook::react::TurboModule> RNImageMarkerSpec_ModuleProvider(
+    const std::string &moduleName,
+    const facebook::react::JavaTurboModule::InitParams &params) {
+  // Return nullptr - this should never be called in Legacy mode
+  return nullptr;
+}
 
 #endif // RNIMAGEMARKERSPE_H
 """
