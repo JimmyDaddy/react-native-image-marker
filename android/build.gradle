@@ -237,7 +237,8 @@ android {
         def jniCodegenDir = file("${project.buildDir}/generated/source/codegen/jni")
         if (!jniCodegenDir.exists()) {
           jniCodegenDir.mkdirs()
-          // Create a minimal CMakeLists.txt to satisfy CMake
+          
+          // Create a minimal CMakeLists.txt with a STATIC library (not INTERFACE)
           def cmakeFile = new File(jniCodegenDir, "CMakeLists.txt")
           cmakeFile.text = """# Empty CMakeLists.txt for Legacy Architecture
 # This file is created to satisfy autolinking requirements
@@ -246,8 +247,15 @@ android {
 cmake_minimum_required(VERSION 3.13)
 project(react_codegen_RNImageMarkerSpec)
 
-# Empty library target to satisfy autolinking
-add_library(react_codegen_RNImageMarkerSpec INTERFACE)
+# Create a dummy source file for the static library
+set(DUMMY_SOURCE_FILE "\${CMAKE_CURRENT_BINARY_DIR}/dummy.cpp")
+file(WRITE "\${DUMMY_SOURCE_FILE}" "// Dummy file for Legacy Architecture\\n")
+
+# Create a static library target (not INTERFACE) to satisfy autolinking
+add_library(react_codegen_RNImageMarkerSpec STATIC "\${DUMMY_SOURCE_FILE}")
+
+# Set minimal properties
+target_include_directories(react_codegen_RNImageMarkerSpec PUBLIC .)
 """
           println "Created empty JNI codegen directory with CMakeLists.txt for Legacy Architecture: ${jniCodegenDir}"
         }
