@@ -38,11 +38,28 @@ react-native-image-marker/
 │   └── ImageMarkerTurboModule/   # TurboModule 实现
 ├── android/                      # Android 原生实现
 │   └── src/main/java/com/jimmydaddy/imagemarker/
+├── docs/                         # 文档目录
+│   └── dev/                      # 开发相关文档 (问题修复、优化说明等)
 ├── example/                      # 示例应用 (Legacy)
 ├── example-0.73/                 # 示例应用 (New Architecture)
 ├── expo-example/                 # Expo 示例应用
 └── .kiro/specs/                  # 规范驱动开发文档
 ```
+
+### 3.1 文档组织规范
+- **开发文档位置**: 所有项目开发相关的文档必须放在 `docs/dev/` 目录下
+- **开发文档类型**:
+  - 问题修复说明 (如 `KOTLIN_VERSION_FIX.md`)
+  - 优化说明文档 (如 `CI_OPTIMIZATION.md`)
+  - 功能实现总结 (如 `ENUM_KEY_FIX_SUMMARY.md`)
+  - 架构变更记录
+  - 性能优化记录
+- **用户文档位置**: 用户面向的文档保留在项目根目录
+  - `README.md`: 项目介绍和使用指南
+  - `CONTRIBUTING.md`: 贡献指南
+  - `CHANGELOG.md`: 版本变更日志
+  - `LICENSE`: 许可证
+- **命名规范**: 开发文档使用大写字母和下划线，如 `FEATURE_NAME.md`
 
 ## 4. 编码规范
 
