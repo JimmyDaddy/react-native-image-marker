@@ -36,6 +36,13 @@ type RunMode = 'anchorOffset' | 'absoluteXY';
 type OffsetValue = number | string;
 type AppTab = 'tests' | 'compose' | 'advanced';
 type FeatureVariant = 'orientation' | 'base64';
+type ArchitectureRuntime = {
+  hasTurboModuleProxy: boolean;
+  hasFabricUIManager: boolean;
+  isBridgeless: boolean;
+  modeLabel: string;
+  isNewArchitecture: boolean;
+};
 
 export type ImageMarkerLabAssets = {
   icon: unknown;
@@ -110,6 +117,26 @@ const appTabs: Array<{ label: string; value: AppTab }> = [
 ];
 
 const exampleFontName = 'MaShanZheng-Regular';
+
+function getArchitectureRuntime(): ArchitectureRuntime {
+  const runtime = globalThis as typeof globalThis & {
+    __turboModuleProxy?: unknown;
+    nativeFabricUIManager?: unknown;
+    RN$Bridgeless?: unknown;
+  };
+  const hasTurboModuleProxy = typeof runtime.__turboModuleProxy === 'function';
+  const hasFabricUIManager = runtime.nativeFabricUIManager != null;
+  const isBridgeless = runtime.RN$Bridgeless === true;
+  const isNewArchitecture = hasTurboModuleProxy && hasFabricUIManager;
+
+  return {
+    hasTurboModuleProxy,
+    hasFabricUIManager,
+    isBridgeless,
+    isNewArchitecture,
+    modeLabel: isNewArchitecture ? 'New architecture' : 'Legacy bridge',
+  };
+}
 
 const normalizeOffset = (value: OffsetValue) => {
   if (typeof value === 'string' && value.trim() === '') {
@@ -1138,6 +1165,105 @@ function TabBar(props: { value: AppTab; onChange: (value: AppTab) => void }) {
   );
 }
 
+function ArchitectureSignal(props: { label: string; active: boolean }) {
+  return (
+    <View
+      accessibilityLabel={`${props.label} ${props.active ? 'on' : 'off'}`}
+      style={s.archSignal}
+    >
+      <View
+        style={[
+          s.archSignalDot,
+          props.active ? s.archSignalDotOn : s.archSignalDotOff,
+        ]}
+      />
+      <Text style={s.archSignalLabel}>{props.label}</Text>
+      <Text
+        style={[
+          s.archSignalValue,
+          props.active ? s.archSignalValueOn : s.archSignalValueOff,
+        ]}
+      >
+        {props.active ? 'on' : 'off'}
+      </Text>
+    </View>
+  );
+}
+
+function ArchitecturePanel() {
+  const runtime = useMemo(getArchitectureRuntime, []);
+
+  return (
+    <View
+      accessibilityLabel={`runtime architecture ${runtime.modeLabel}`}
+      accessible
+      style={s.archPanel}
+      testID="runtime-architecture-status"
+    >
+      <View style={s.archHeader}>
+        <View>
+          <Text style={s.archEyebrow}>Runtime</Text>
+          <Text style={s.archTitle}>Architecture status</Text>
+        </View>
+        <View
+          style={[
+            s.archModePill,
+            runtime.isNewArchitecture
+              ? s.archModePillNew
+              : s.archModePillLegacy,
+          ]}
+        >
+          <Text
+            style={[
+              s.archModeText,
+              runtime.isNewArchitecture
+                ? s.archModeTextNew
+                : s.archModeTextLegacy,
+            ]}
+            numberOfLines={1}
+          >
+            {runtime.modeLabel}
+          </Text>
+        </View>
+      </View>
+      <View style={s.archSignals}>
+        <ArchitectureSignal
+          label="TurboModule"
+          active={runtime.hasTurboModuleProxy}
+        />
+        <ArchitectureSignal
+          label="Fabric renderer"
+          active={runtime.hasFabricUIManager}
+        />
+        <ArchitectureSignal label="Bridgeless" active={runtime.isBridgeless} />
+      </View>
+    </View>
+  );
+}
+
+function TabPage(props: {
+  show: boolean;
+  uri: string;
+  fileSize: string;
+  onClear: () => void;
+  compactPreview?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <>
+      <ArchitecturePanel />
+      <PreviewPanel
+        compact={props.compactPreview}
+        show={props.show}
+        uri={props.uri}
+        fileSize={props.fileSize}
+        onClear={props.onClear}
+      />
+      {props.children}
+    </>
+  );
+}
+
 function PreviewPanel(props: {
   show: boolean;
   uri: string;
@@ -1231,7 +1357,12 @@ function ImageMarkerLab(props: ImageMarkerLabProps) {
         </View>
 
         {activeTab === 'tests' ? (
-          <>
+          <TabPage
+            show={state.show}
+            uri={state.uri}
+            fileSize={state.fileSize}
+            onClear={actions.clearResult}
+          >
             <Section title="Feature checks">
               <View style={s.featureList}>
                 <FeatureCard
@@ -1261,13 +1392,6 @@ function ImageMarkerLab(props: ImageMarkerLabProps) {
               </View>
             </Section>
 
-            <PreviewPanel
-              show={state.show}
-              uri={state.uri}
-              fileSize={state.fileSize}
-              onClear={actions.clearResult}
-            />
-
             <Section title="API mode checks">
               <View style={s.controlPanel}>
                 <View style={s.runRow}>
@@ -1287,19 +1411,17 @@ function ImageMarkerLab(props: ImageMarkerLabProps) {
                 </View>
               </View>
             </Section>
-          </>
+          </TabPage>
         ) : null}
 
         {activeTab === 'compose' ? (
-          <>
-            <PreviewPanel
-              compact
-              show={state.show}
-              uri={state.uri}
-              fileSize={state.fileSize}
-              onClear={actions.clearResult}
-            />
-
+          <TabPage
+            compactPreview
+            show={state.show}
+            uri={state.uri}
+            fileSize={state.fileSize}
+            onClear={actions.clearResult}
+          >
             <Section title="Watermark">
               <View style={s.controlPanel}>
                 <View style={s.controlRow}>
@@ -1392,19 +1514,17 @@ function ImageMarkerLab(props: ImageMarkerLabProps) {
                 </View>
               </View>
             </Section>
-          </>
+          </TabPage>
         ) : null}
 
         {activeTab === 'advanced' ? (
-          <>
-            <PreviewPanel
-              compact
-              show={state.show}
-              uri={state.uri}
-              fileSize={state.fileSize}
-              onClear={actions.clearResult}
-            />
-
+          <TabPage
+            compactPreview
+            show={state.show}
+            uri={state.uri}
+            fileSize={state.fileSize}
+            onClear={actions.clearResult}
+          >
             <Section title="Input source">
               <View style={s.controlPanel}>
                 <View style={s.controlRow}>
@@ -1496,7 +1616,7 @@ function ImageMarkerLab(props: ImageMarkerLabProps) {
                 </View>
               </View>
             </Section>
-          </>
+          </TabPage>
         ) : null}
       </ScrollView>
 
@@ -1696,6 +1816,105 @@ const s = StyleSheet.create({
   },
   tabTextSelected: {
     color: '#FFFFFF',
+  },
+  archPanel: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#DCE5EA',
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 12,
+    padding: 10,
+  },
+  archHeader: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  archEyebrow: {
+    color: '#64748B',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0,
+    textTransform: 'uppercase',
+  },
+  archTitle: {
+    color: '#0F172A',
+    fontSize: 16,
+    fontWeight: '800',
+    marginTop: 2,
+  },
+  archModePill: {
+    borderRadius: 7,
+    borderWidth: 1,
+    marginLeft: 10,
+    maxWidth: width * 0.48,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
+  archModePillNew: {
+    backgroundColor: '#DCFCE7',
+    borderColor: '#BBF7D0',
+  },
+  archModePillLegacy: {
+    backgroundColor: '#FEF3C7',
+    borderColor: '#FDE68A',
+  },
+  archModeText: {
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  archModeTextNew: {
+    color: '#166534',
+  },
+  archModeTextLegacy: {
+    color: '#92400E',
+  },
+  archSignals: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: -3,
+    marginVertical: -3,
+  },
+  archSignal: {
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderColor: '#E2E8F0',
+    borderRadius: 7,
+    borderWidth: 1,
+    flexDirection: 'row',
+    margin: 3,
+    minHeight: 32,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+  },
+  archSignalDot: {
+    borderRadius: 4,
+    height: 8,
+    marginRight: 6,
+    width: 8,
+  },
+  archSignalDotOn: {
+    backgroundColor: '#16A34A',
+  },
+  archSignalDotOff: {
+    backgroundColor: '#CBD5E1',
+  },
+  archSignalLabel: {
+    color: '#334155',
+    fontSize: 12,
+    fontWeight: '700',
+    marginRight: 6,
+  },
+  archSignalValue: {
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  archSignalValueOn: {
+    color: '#15803D',
+  },
+  archSignalValueOff: {
+    color: '#64748B',
   },
   previewPanel: {
     backgroundColor: '#FFFFFF',
