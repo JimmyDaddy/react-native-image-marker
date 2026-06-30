@@ -22,7 +22,10 @@ class ImageOptions: NSObject {
         }
         self.src = src
         self.rnSrc = RNImageSRC(dicOpts: src)
-        self.uri = src["uri"] as! String
+        guard let uri = src["uri"] as? String, !uri.isEmpty else {
+            throw NSError(domain: ErrorDomainEnum.PARAMS_REQUIRED.rawValue, code: 0, userInfo: [NSLocalizedDescriptionKey: "image uri is required"])
+        }
+        self.uri = uri
         self.scale = opts["scale"] as? CGFloat ?? 1.0
         self.rotate = opts["rotate"] as? CGFloat ?? 0
         self.alpha = opts["alpha"] as? CGFloat ?? 1.0

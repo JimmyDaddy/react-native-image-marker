@@ -152,33 +152,33 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         
         for textOpts in opts.watermarkTexts {
             context.saveGState()
-            var font = textOpts.style!.resolvedFont(backgroundWidth: w)
-            if textOpts.style!.italic && textOpts.style!.bold {
+            var font = textOpts.style.resolvedFont(backgroundWidth: w)
+            if textOpts.style.italic && textOpts.style.bold {
                 let boldItalicFontDescriptor = font.fontDescriptor.withSymbolicTraits([.traitBold, .traitItalic])
                 font = UIFont(descriptor: boldItalicFontDescriptor!, size: font.pointSize)
-            } else if textOpts.style!.italic {
+            } else if textOpts.style.italic {
                 let italicFontDescriptor = font.fontDescriptor.withSymbolicTraits(.traitItalic)
                 font = UIFont(descriptor: italicFontDescriptor!, size: font.pointSize)
-            } else if textOpts.style!.bold {
+            } else if textOpts.style.bold {
                 let boldFontDescriptor = font.fontDescriptor.withSymbolicTraits(.traitBold)
                 font = UIFont(descriptor: boldFontDescriptor!, size: font.pointSize)
             }
             
             var attributes: [NSAttributedString.Key: Any] = [
                 .font: font as Any,   //设置字体
-                .foregroundColor: textOpts.style!.color as Any,      //设置字体颜色
+                .foregroundColor: textOpts.style.color as Any,      //设置字体颜色
             ]
             
-            if let shadow = textOpts.style!.shadow {
+            if let shadow = textOpts.style.shadow {
                 attributes[.shadow] = shadow
             }
-            if textOpts.style!.underline {
+            if textOpts.style.underline {
                 attributes[.underlineStyle] = NSUnderlineStyle.single.rawValue
             }
-            if textOpts.style!.strikeThrough {
+            if textOpts.style.strikeThrough {
                 attributes[.strikethroughStyle] = NSUnderlineStyle.single.rawValue
             }
-            if let textAlign = textOpts.style!.textAlign {
+            if let textAlign = textOpts.style.textAlign {
                 let paragraphStyle = NSMutableParagraphStyle()
                 switch textAlign {
                 case "right":
@@ -190,8 +190,8 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
                 }
                 attributes[.paragraphStyle] = paragraphStyle
             }
-            if textOpts.style!.skewX != 0 {
-                attributes[.obliqueness] = textOpts.style!.skewX
+            if textOpts.style.skewX != 0 {
+                attributes[.obliqueness] = textOpts.style.skewX
             }
             
             let attributedText = NSAttributedString(string: textOpts.text, attributes: attributes)
@@ -232,28 +232,28 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
                 posY = Utils.parseSpreadValue(v: textOpts.Y, relativeTo: CGFloat(h)) ?? margin
             }
             
-            if textOpts.style!.rotate != 0 {
+            if textOpts.style.rotate != 0 {
                 context.saveGState()
-                let rotation = CGAffineTransform(rotationAngle: CGFloat(textOpts.style!.rotate) * .pi / 180)
+                let rotation = CGAffineTransform(rotationAngle: CGFloat(textOpts.style.rotate) * .pi / 180)
                 let textRectWithPos = CGRect(x: CGFloat(posX), y: CGFloat(posY), width: size.width, height: size.height)
                 context.translateBy(x: textRectWithPos.midX, y: textRectWithPos.midY)
                 context.concatenate(rotation)
                 context.translateBy(x: -( textRectWithPos.midX), y: -(textRectWithPos.midY))
             }
             
-            if let textBackground = textOpts.style!.textBackground {
-                let bgEdgeInsets = textOpts.style?.textBackground?.toEdgeInsets(width: CGFloat(w), height: CGFloat(h))
+            if let textBackground = textOpts.style.textBackground {
+                let bgEdgeInsets = textBackground.toEdgeInsets(width: CGFloat(w), height: CGFloat(h))
                 context.setFillColor(textBackground.colorBg!.cgColor)
-                let stretchX = (bgEdgeInsets?.left ?? 0) + (bgEdgeInsets?.right ?? 0);
-                let stretchY = (bgEdgeInsets?.top ?? 0) + (bgEdgeInsets?.bottom ?? 0);
-                var bgRect = CGRect(x: CGFloat(CGFloat(posX) - (bgEdgeInsets?.left ?? 0)), y: CGFloat(CGFloat(posY) - (bgEdgeInsets?.top ?? 0)), width: size.width + stretchX, height: size.height + stretchY)
+                let stretchX = bgEdgeInsets.left + bgEdgeInsets.right;
+                let stretchY = bgEdgeInsets.top + bgEdgeInsets.bottom;
+                var bgRect = CGRect(x: CGFloat(CGFloat(posX) - bgEdgeInsets.left), y: CGFloat(CGFloat(posY) - bgEdgeInsets.top), width: size.width + stretchX, height: size.height + stretchY)
                 if textBackground.typeBg == "stretchX" {
-                    bgRect = CGRect(x: 0, y: CGFloat(posY) - (bgEdgeInsets?.top ?? 0), width: CGFloat(w), height: size.height + stretchY)
+                    bgRect = CGRect(x: 0, y: CGFloat(posY) - bgEdgeInsets.top, width: CGFloat(w), height: size.height + stretchY)
                 } else if textBackground.typeBg == "stretchY" {
-                    bgRect = CGRect(x: CGFloat(CGFloat(posX) - (bgEdgeInsets?.left ?? 0)), y: 0, width: size.width + stretchX, height: CGFloat(h))
+                    bgRect = CGRect(x: CGFloat(CGFloat(posX) - bgEdgeInsets.left), y: 0, width: size.width + stretchX, height: CGFloat(h))
                 }
                 
-                bgRect.inset(by: bgEdgeInsets!)
+                bgRect.inset(by: bgEdgeInsets)
                 
                 if !Utils.isNULL(textBackground.cornerRadius) {
                     let path = textBackground.cornerRadius!.radiusPath(rect: bgRect)
@@ -388,7 +388,6 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
     @objc(markWithText:resolver:rejecter:)
     func mark(withText opts: [AnyHashable: Any], resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) -> Void {
         guard let markOpts = MarkTextOptions.checkTextParams(opts, rejecter: rejecter) else {
-            rejecter(ErrorDomainEnum.PARAMS_INVALID.rawValue, "opts invalid", nil)
             return
         }
         Task(priority: .userInitiated) {
@@ -411,7 +410,6 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
     @objc(markWithImage:resolver:rejecter:)
     func mark(withImage opts: [AnyHashable: Any], resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) -> Void {
         guard let markOpts = MarkImageOptions.checkImageParams(opts, rejecter: rejecter) else {
-            rejecter(ErrorDomainEnum.PARAMS_INVALID.rawValue, "opts invalid", nil)
             return
         }
         Task(priority: .userInitiated) {

@@ -15,15 +15,18 @@ class MarkImageOptions: Options {
     override init(dicOpts opts: [AnyHashable: Any]) throws {
         try super.init(dicOpts: opts)
         let watermarkImageOpts = opts["watermarkImage"]
-        let watermarkImagesOpts = opts["watermarkImages"] as? [[AnyHashable: Any]]
-        if Utils.isNULL(watermarkImageOpts) && (Utils.isNULL(watermarkImagesOpts) || watermarkImagesOpts!.count <= 0)  {
+        let watermarkImagesOpts = opts["watermarkImages"] as? [[AnyHashable: Any]] ?? []
+        if Utils.isNULL(watermarkImageOpts) && watermarkImagesOpts.isEmpty  {
             throw NSError(domain: ErrorDomainEnum.PARAMS_REQUIRED.rawValue, code: 0, userInfo: [NSLocalizedDescriptionKey: "marker image is required"])
         }
-        if watermarkImagesOpts!.count > 0 {
-            self.watermarkImages = try watermarkImagesOpts!.map { try WatermarkImageOptions(dicOpts: $0) }
+        if !watermarkImagesOpts.isEmpty {
+            self.watermarkImages = try watermarkImagesOpts.map { try WatermarkImageOptions(dicOpts: $0) }
         }
         if (!Utils.isNULL(watermarkImageOpts)){
-            let singleImageOptions = try ImageOptions(dicOpts: watermarkImageOpts as! [AnyHashable : Any])
+            guard let watermarkImageOpts = watermarkImageOpts as? [AnyHashable: Any] else {
+                throw NSError(domain: ErrorDomainEnum.PARAMS_INVALID.rawValue, code: 0, userInfo: [NSLocalizedDescriptionKey: "watermarkImage is invalid"])
+            }
+            let singleImageOptions = try ImageOptions(dicOpts: watermarkImageOpts)
             var singleX = "20.0"
             var singleY = "20.0"
             var singlePosition: MarkerPositionEnum = .none

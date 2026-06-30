@@ -21,19 +21,34 @@ class CornerRadius: NSObject {
             switch key {
             case "topLeft" as String:
                 if Utils.isNULL(cornerRadius) { break; }
-                self.topLeft = try Radius(dicOpts: cornerRadius as! [AnyHashable : Any])
+                guard let cornerRadius = cornerRadius as? [AnyHashable: Any] else {
+                    throw NSError(domain: ErrorDomainEnum.PARAMS_INVALID.rawValue, code: 0, userInfo: [NSLocalizedDescriptionKey: "cornerRadius.topLeft is invalid"])
+                }
+                self.topLeft = try Radius(dicOpts: cornerRadius)
             case "topRight" as String:
                 if Utils.isNULL(cornerRadius) { break; }
-                self.topRight = try Radius(dicOpts: cornerRadius as! [AnyHashable : Any])
+                guard let cornerRadius = cornerRadius as? [AnyHashable: Any] else {
+                    throw NSError(domain: ErrorDomainEnum.PARAMS_INVALID.rawValue, code: 0, userInfo: [NSLocalizedDescriptionKey: "cornerRadius.topRight is invalid"])
+                }
+                self.topRight = try Radius(dicOpts: cornerRadius)
             case "bottomLeft" as String:
                 if Utils.isNULL(cornerRadius) { break; }
-                self.bottomLeft = try Radius(dicOpts: cornerRadius as! [AnyHashable : Any])
+                guard let cornerRadius = cornerRadius as? [AnyHashable: Any] else {
+                    throw NSError(domain: ErrorDomainEnum.PARAMS_INVALID.rawValue, code: 0, userInfo: [NSLocalizedDescriptionKey: "cornerRadius.bottomLeft is invalid"])
+                }
+                self.bottomLeft = try Radius(dicOpts: cornerRadius)
             case "bottomRight" as String:
                 if Utils.isNULL(cornerRadius) { break; }
-                self.bottomRight = try Radius(dicOpts: cornerRadius as! [AnyHashable : Any])
+                guard let cornerRadius = cornerRadius as? [AnyHashable: Any] else {
+                    throw NSError(domain: ErrorDomainEnum.PARAMS_INVALID.rawValue, code: 0, userInfo: [NSLocalizedDescriptionKey: "cornerRadius.bottomRight is invalid"])
+                }
+                self.bottomRight = try Radius(dicOpts: cornerRadius)
             default:
                 if Utils.isNULL(cornerRadius) { break; }
-                all = try Radius(dicOpts: cornerRadius as! [AnyHashable : Any])
+                guard let cornerRadius = cornerRadius as? [AnyHashable: Any] else {
+                    throw NSError(domain: ErrorDomainEnum.PARAMS_INVALID.rawValue, code: 0, userInfo: [NSLocalizedDescriptionKey: "cornerRadius is invalid"])
+                }
+                all = try Radius(dicOpts: cornerRadius)
             }
         }
     }
