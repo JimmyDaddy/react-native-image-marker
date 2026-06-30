@@ -8,7 +8,7 @@ const LINKING_ERROR =
   '- You are not using Expo Go\n';
 
 /**
- * @description Position enum for text watermark and image watermark
+ * Position enum for text watermark and image watermark
  * @enum
  */
 export enum Position {
@@ -22,7 +22,7 @@ export enum Position {
 }
 
 /**
- * @description TextBackgroundType enum for text watermark
+ * TextBackgroundType enum for text watermark
  * @enum
  */
 export enum TextBackgroundType {
@@ -32,7 +32,7 @@ export enum TextBackgroundType {
 }
 
 /**
- * @description ImageFormat enum for save image format
+ * ImageFormat enum for save image format
  * @enum
  */
 export enum ImageFormat {
@@ -43,7 +43,7 @@ export enum ImageFormat {
 }
 
 /**
- * @description Padding style for text background
+ * Padding style for text background
  * @example
  * padding: 10
  * // or
@@ -59,7 +59,7 @@ export enum ImageFormat {
  */
 interface Padding {
   /**
-   * @description padding for text background
+   * padding for text background
    * @example
    * padding: 10
    * // or
@@ -77,7 +77,7 @@ interface Padding {
    */
   padding?: number | string;
   /**
-   * @description padding left for text background
+   * padding left for text background
    * @example
    * paddingLeft: 10
    * // or
@@ -85,23 +85,23 @@ interface Padding {
    */
   paddingLeft?: number | string;
   /**
-   * @description padding top for text background
-   * @example
-   * paddingTop: 10
-   * // or
-   * paddingTop: '10%'
-   */
-  paddingRight?: number | string;
-  /**
-   * @description padding right for text background
+   * padding right for text background
    * @example
    * paddingRight: 10
    * // or
    * paddingRight: '10%'
    */
+  paddingRight?: number | string;
+  /**
+   * padding top for text background
+   * @example
+   * paddingTop: 10
+   * // or
+   * paddingTop: '10%'
+   */
   paddingTop?: number | string;
   /**
-   * @description padding bottom for text background
+   * padding bottom for text background
    * @example
    * paddingBottom: 10
    * // or
@@ -109,7 +109,7 @@ interface Padding {
    */
   paddingBottom?: number | string;
   /**
-   * @description padding left and right (horizontal) for text background
+   * padding left and right (horizontal) for text background
    * @example
    * paddingHorizontal: 10
    * // or
@@ -118,7 +118,7 @@ interface Padding {
    **/
   paddingHorizontal?: number | string;
   /**
-   * @description padding top and bottom (vertical) for text background
+   * padding top and bottom (vertical) for text background
    * @example
    * paddingVertical: 10
    * // or
@@ -128,7 +128,7 @@ interface Padding {
   paddingVertical?: number | string;
 
   /**
-   * @description padding x, alias of paddingHorizontal
+   * padding x, alias of paddingHorizontal
    * @example
    * paddingX: 10
    * // or
@@ -137,7 +137,7 @@ interface Padding {
   paddingX?: number | string;
 
   /**
-   * @description padding y, alias of paddingVertical
+   * padding y, alias of paddingVertical
    * @example
    * paddingY: 10
    * // or
@@ -147,7 +147,7 @@ interface Padding {
 }
 
 /**
- * @description PositionOptions for text watermark and image watermark. When `position` is set, `X` and `Y` are treated as offsets from that anchor.
+ * PositionOptions for text watermark and image watermark. When `position` is set, `X` and `Y` are treated as offsets from that anchor.
  * @example
  * positionOptions: {
  *  X: 10,
@@ -176,7 +176,7 @@ export interface PositionOptions {
 }
 
 /**
- * @description TextStyle for text watermark
+ * TextStyle for text watermark
  * @example
  *  textStyle: {
  *    color: '#aacc22',
@@ -205,31 +205,31 @@ export interface PositionOptions {
  */
 export interface TextStyle {
   /**
-   * @description font color
+   * font color
    * @example
    *  color: '#aacc22'
    */
   color?: string;
   /**
-   * @description font name
+   * font name
    * @example
    *  fontName: 'Arial'
    */
   fontName?: string;
   /**
-   * @description font size used when rendering text onto the output image
+   * font size used when rendering text onto the output image
    * @example
    *  fontSize: 12
    */
   fontSize?: number;
   /**
-   * @description font size ratio relative to the background image width
+   * font size ratio relative to the background image width
    * @example
    *  fontSizeRatio: 0.03
    */
   fontSizeRatio?: number;
   /**
-   * @description text shadow style
+   * text shadow style
    * @example
    *  shadowStyle: {
    *    dx: 10,
@@ -240,7 +240,7 @@ export interface TextStyle {
    */
   shadowStyle?: ShadowLayerStyle | null;
   /**
-   * @description text background style
+   * text background style
    * @example
    *  textBackgroundStyle: {
    *    paddingX: 10,
@@ -251,48 +251,48 @@ export interface TextStyle {
    */
   textBackgroundStyle?: TextBackgroundStyle | null;
   /**
-   * @description text underline style
+   * text underline style
    * @defaultValue false
    * @example
    *  underline: true
    */
   underline?: boolean;
   /**
-   * @description css italic with degree, you can use italic instead
+   * css italic with degree, you can use italic instead
    * @example
    *  skewX: 45
    */
   skewX?: number;
   /**
-   * @description text stroke
+   * text stroke
    * @defaultValue false
    * @example
    *  strikeThrough: true
    */
   strikeThrough?: boolean;
   /**
-   * @description text align
+   * text align
    * @defaultValue 'left'
    * @example
    *  textAlign: 'left'
    */
   textAlign?: 'left' | 'center' | 'right';
   /**
-   * @description text italic
+   * text italic
    * @defaultValue false
    * @example
    *  italic: true
    */
   italic?: boolean;
   /**
-   * @description text bold
+   * text bold
    * @defaultValue false
    * @example
    *  bold: true
    */
   bold?: boolean;
   /**
-   * @description rotate text
+   * rotate text
    * @defaultValue 0
    * @example
    *  rotate: 45
@@ -301,7 +301,7 @@ export interface TextStyle {
 }
 
 /**
- * @description ShadowLayer style for text watermark
+ * ShadowLayer style for text watermark
  * @example
  * shadowStyle: {
  *  dx: 10,
@@ -312,25 +312,25 @@ export interface TextStyle {
  */
 export interface ShadowLayerStyle {
   /**
-   * @description shadow offset x
+   * shadow offset x
    * @example
    *  dx: 10
    */
   dx: number;
   /**
-   * @description shadow offset y
+   * shadow offset y
    * @example
    *  dy: 10
    **/
   dy: number;
   /**
-   * @description shadow radius
+   * shadow radius
    * @example
    *  radius: 10
    **/
   radius: number;
   /**
-   * @description shadow color
+   * shadow color
    * @example
    * color: '#aacc22'
    **/
@@ -351,7 +351,7 @@ export interface CornerRadius {
 }
 
 /**
- * @description background style for text watermark
+ * background style for text watermark
  * > thanks [@onka13](https://github.com/onka13) for [#38](https://github.com/JimmyDaddy/react-native-image-marker/pull/38)
  * @example
  * textBackgroundStyle: {
@@ -383,21 +383,21 @@ export interface CornerRadius {
  */
 export interface TextBackgroundStyle extends Padding {
   /**
-   * @description background type
+   * background type
    * @defaultValue TextBackgroundType.stretchX
    * @example
    *  type: TextBackgroundType.stretchX
    **/
   type?: TextBackgroundType | null;
   /**
-   * @description background color
+   * background color
    * @example
    * color: '#aacc22'
    **/
   color: string;
 
   /**
-   * @description background corner radius
+   * background corner radius
    * @example
    * cornerRadius: {
    *  topLeft: {
@@ -422,7 +422,7 @@ export interface TextBackgroundStyle extends Padding {
 }
 
 /**
- * @description Text options for text watermark
+ * Text options for text watermark
  * @example
  *  text: 'hello world',
  *  positionOptions: {
@@ -458,14 +458,14 @@ export interface TextBackgroundStyle extends Padding {
  */
 export interface TextOptions {
   /**
-   * @description text content
+   * text content
    * @example
    * text: 'hello world'
    **/
   text: string;
   /**
    * @deprecated since 1.2.4 use position instead
-   * @description text position options
+   * text position options
    * @example
    *  positionOptions: {
    *   X: 10,
@@ -477,7 +477,7 @@ export interface TextOptions {
   positionOptions?: PositionOptions;
 
   /**
-   * @description text position options
+   * text position options
    * @example
    *  positionOptions: {
    *   X: 10,
@@ -489,7 +489,7 @@ export interface TextOptions {
   position?: PositionOptions;
 
   /**
-   * @description text style
+   * text style
    * @example
    * style: {
    *  color: '#aacc22',
@@ -521,7 +521,7 @@ export interface TextOptions {
 }
 
 /**
- * @description Options for text watermark
+ * Options for text watermark
  * @example
  *  backgroundImage: {
  *    src: require('./images/logo.png'),
@@ -571,7 +571,7 @@ export interface TextOptions {
 export interface TextMarkOptions {
   /**
    * FIXME: ImageSourcePropType type define bug
-   * @description background image options
+   * background image options
    * @example
    * backgroundImage: {
    *  src: require('./images/logo.png'),
@@ -582,7 +582,7 @@ export interface TextMarkOptions {
    **/
   backgroundImage: ImageOptions;
   /**
-   * @description text options
+   * text options
    * @example
    * watermarkTexts: [
    * {
@@ -622,20 +622,20 @@ export interface TextMarkOptions {
    **/
   watermarkTexts: TextOptions[];
   /**
-   * @description image quality `0-100`, `100` is best quality. If you want the quality to have more effect, try to set the image export format to the compressible format `jpg`. see #159
+   * image quality `0-100`, `100` is best quality. If you want the quality to have more effect, try to set the image export format to the compressible format `jpg`. see #159
    * @defaultValue 100
    * @example
    * quality: 100
    */
   quality?: number;
   /**
-   * @description save image name
+   * save image name
    * @example
    * filename: 'test'
    **/
   filename?: string;
   /**
-   * @description save image format
+   * save image format
    * @defaultValue `jpg`
    * @example
    * saveFormat: ImageFormat.png
@@ -643,7 +643,7 @@ export interface TextMarkOptions {
   saveFormat?: ImageFormat;
   /**
    * @deprecated since 1.2.0
-   * @description max image size see #49 #42
+   * max image size see #49 #42
    * android only
    * **need RN version >= 0.60.0**,  fresco `MaxBitmapSize` [`ImagePipelineConfig.Builder.experiment().setMaxBitmapSize()`](https://github.com/facebook/fresco/blob/08ca5f40cc0b60b4db16d15e45552cafeae39ccb/imagepipeline/src/main/java/com/facebook/imagepipeline/core/ImagePipelineExperiments.java#L282), see [#49](https://github.com/JimmyDaddy/react-native-image-marker/issues/49#issuecomment-535303838)
    * @defaultValue 2048
@@ -654,7 +654,7 @@ export interface TextMarkOptions {
 }
 
 /**
- * @description Image options for background image or watermark image
+ * Image options for background image or watermark image
  * @example
  * {
  *  src: require('./images/logo.png'),
@@ -665,27 +665,27 @@ export interface TextMarkOptions {
  */
 export interface ImageOptions {
   /**
-   * @description image src, local image
+   * image src, local image
    * @example
    * src: require('./images/logo.png')
    */
   src: any;
   /**
-   * @description image scale `>0`
+   * image scale `>0`
    * @defaultValue 1
    * @example
    * scale: 1
    */
   scale?: number;
   /**
-   * @description rotate image rotate `0-360`
+   * rotate image rotate `0-360`
    * @defaultValue 0
    * @example
    * rotate: 45
    */
   rotate?: number;
   /**
-   * @description transparent of background image `0 - 1`
+   * transparent of background image `0 - 1`
    * @defaultValue 1
    * @example
    * alpha: 0.5
@@ -694,7 +694,7 @@ export interface ImageOptions {
 }
 
 /**
- * @description Text options for image watermark
+ * Text options for image watermark
  * @example
  *  src: require('./images/logo.png'),
  *  scale: 0.5,
@@ -712,7 +712,7 @@ export interface WatermarkImageOptions extends ImageOptions {
 }
 
 /**
- * @description Text options for image watermark
+ * Text options for image watermark
  * @example
  *
  *  backgroundImage: {
@@ -750,7 +750,7 @@ export interface WatermarkImageOptions extends ImageOptions {
 export interface ImageMarkOptions {
   /**
    * FIXME: ImageSourcePropType type define bug
-   * @description background image options
+   * background image options
    * @example
    *  backgroundImage: {
    *    src: require('./images/bg.png'),
@@ -763,7 +763,7 @@ export interface ImageMarkOptions {
   /**
    * @since 1.1.0
    * @deprecated use watermarkImages instead
-   * @description watermark image options
+   * watermark image options
    * @example
    *  watermarkImage: {
    *    src: require('./images/logo.png'),
@@ -776,7 +776,7 @@ export interface ImageMarkOptions {
   /**
    * @since 1.1.0
    * @deprecated use watermarkImages instead
-   * @description watermark position options
+   * watermark position options
    * @example
    * watermarkPositions: {
    *  X: 10,
@@ -784,24 +784,24 @@ export interface ImageMarkOptions {
    *  // or
    *  position: Position.center
    * }
-   * @note use watermarkImages instead
+   * Note: use watermarkImages instead
    */
   watermarkPositions?: PositionOptions; // watermark position options see @PositionOptions
   /**
-   * @description image quality `0-1`
+   * image quality `0-1`
    * @defaultValue 1
    * @example
    * quality: 1
    */
   quality?: number;
   /**
-   * @description save image name
+   * save image name
    * @example
    * filename: 'test'
    **/
   filename?: string;
   /**
-   * @description save image format
+   * save image format
    * @defaultValue `jpg`
    * @example
    * saveFormat: ImageFormat.jpg
@@ -809,7 +809,7 @@ export interface ImageMarkOptions {
   saveFormat?: ImageFormat;
   /**
    * @deprecated since 1.2.0
-   * @description max image size see #49 #42
+   * max image size see #49 #42
    * android only
    * **need RN version >= 0.60.0**,  fresco `MaxBitmapSize` [`ImagePipelineConfig.Builder.experiment().setMaxBitmapSize()`](https://github.com/facebook/fresco/blob/08ca5f40cc0b60b4db16d15e45552cafeae39ccb/imagepipeline/src/main/java/com/facebook/imagepipeline/core/ImagePipelineExperiments.java#L282), see [#49](https://github.com/JimmyDaddy/react-native-image-marker/issues/49#issuecomment-535303838)
    * @defaultValue 2048
@@ -818,7 +818,7 @@ export interface ImageMarkOptions {
    */
   maxSize?: number;
   /**
-   * @description watermark images
+   * watermark images
    * @example
    * watermarkImages: [
    * {
@@ -852,7 +852,7 @@ class Marker {
   /** @ignore ignore constructors for typedoc only */
   constructor() {}
   /**
-   * @description mark text on image
+   * mark text on image
    * @param options
    * @returns {Promise<string>} image url or base64 string
    * @example
@@ -960,7 +960,7 @@ class Marker {
   }
 
   /**
-   * @description mark image on background image
+   * mark image on background image
    * @param options
    * @returns {Promise<string>} image url or base64 string
    * @example

@@ -7,6 +7,7 @@
     "ios": "react-native run-ios",
     "start": "react-native start",
     "pods": "pod-install",
+    "pods:new-arch": "cd ios && RCT_NEW_ARCH_ENABLED=1 NO_FLIPPER=1 pod install",
     "m1-pods": "cd ios && arch -x86_64 pod install"
   },
   "dependencies": {

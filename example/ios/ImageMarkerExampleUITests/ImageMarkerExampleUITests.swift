@@ -24,16 +24,26 @@ final class ImageMarkerExampleUITests: XCTestCase {
   }
 
   func testApp() throws {
-    // UI tests must launch the application that they test.
     let app = XCUIApplication()
     app.launch()
-    sleep(5)
-    var ele = app.textFields["100"]
-    XCTAssert(ele.exists)
-    ele = app.staticTexts["watermark type:"]
-    XCTAssert(ele.exists)
-    ele = app.staticTexts["background image format:"]
-    XCTAssert(ele.exists)
+    XCTAssertTrue(app.staticTexts["Image Marker Lab"].waitForExistence(timeout: 45))
+    XCTAssertTrue(app.staticTexts["Feature checks"].exists)
+    XCTAssertTrue(app.buttons["feature-text-anchor-offset"].exists)
+    XCTAssertTrue(app.buttons["feature-image-anchor-offset"].exists)
+    XCTAssertTrue(app.buttons["feature-orientation-normalization"].exists)
+  }
+
+  func testTextAnchorOffsetFeatureProducesPreview() throws {
+    let app = XCUIApplication()
+    app.launch()
+
+    XCTAssertTrue(app.staticTexts["Image Marker Lab"].waitForExistence(timeout: 45))
+    let featureCard = app.buttons["feature-text-anchor-offset"]
+    XCTAssertTrue(featureCard.waitForExistence(timeout: 15))
+    featureCard.tap()
+
+    XCTAssertTrue(app.staticTexts["Text anchor offset"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.otherElements["result-preview-ready"].waitForExistence(timeout: 15))
   }
 
   func testLaunchPerformance() throws {

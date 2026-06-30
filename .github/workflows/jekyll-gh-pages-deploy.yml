@@ -4,12 +4,17 @@ on:
   pull_request:
     types: [closed]
     paths:
-      - "src/**"
-      - "assets/**"
-      - "README.MD"
-      - "README.0.9.2.MD"
-      - "README.1.1.x.MD"
-      - "tsconfig.doc.json"
+      - 'src/**'
+      - 'assets/**'
+      - 'README.MD'
+      - 'README.0.9.2.MD'
+      - 'README.1.1.x.MD'
+      - 'docs/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'scripts/copy-doc-assets.js'
+      - 'tsconfig.doc.json'
+      - '.github/workflows/jekyll-gh-pages-deploy.yml'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -24,19 +29,19 @@ permissions:
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 # However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
 concurrency:
-  group: "pages"
+  group: 'pages'
   cancel-in-progress: false
 
 jobs:
   # Build job
   build:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v4
         with:
           node-version: 16
       - name: Install dependencies
@@ -46,21 +51,21 @@ jobs:
         run: npm run docs
 
       - name: Setup Pages
-        uses: actions/configure-pages@v3
-      - name: Build with Jekyll
+        uses: actions/configure-pages@v5
+      - name: Build latest with Jekyll
         uses: actions/jekyll-build-pages@v1
         with:
           source: ./docs/latest
           destination: ./_site
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1
-      - name: Build with Jekyll v1.0.1
+      - name: Build v1.0.x with Jekyll
         uses: actions/jekyll-build-pages@v1
         with:
           source: ./docs/v1.0.x
           destination: ./_site/v1.0.x
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./_site
 
   # Deployment job
   deploy:
@@ -72,4 +77,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v2
+        uses: actions/deploy-pages@v4

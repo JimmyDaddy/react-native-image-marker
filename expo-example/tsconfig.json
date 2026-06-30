@@ -1,6 +1,16 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "filesize": ["./node_modules/filesize"],
+      "react-native-image-marker": [
+        "./node_modules/react-native-image-marker/src/index"
+      ],
+      "react-native-toast-message": [
+        "./node_modules/react-native-toast-message"
+      ]
+    },
     "strict": true
   }
 }

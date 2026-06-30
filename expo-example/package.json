@@ -20,7 +20,7 @@
     "filesize": "^10.1.0",
     "react": "18.2.0",
     "react-native": "0.73.2",
-    "react-native-image-marker": "*",
+    "react-native-image-marker": "link:..",
     "react-native-toast-message": "^2.2.0"
   },
   "devDependencies": {

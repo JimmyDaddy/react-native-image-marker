@@ -1,2 +1,6 @@
+const { createRunOncePlugin, withPlugins } = require('@expo/config-plugins');
+const pkg = require('./package.json');
 
-module.exports = require('./lib/commonjs/expo-plugin/withImageMarker');
+const withImageMarker = (config) => withPlugins(config, []);
+
+module.exports = createRunOncePlugin(withImageMarker, pkg.name, pkg.version);
