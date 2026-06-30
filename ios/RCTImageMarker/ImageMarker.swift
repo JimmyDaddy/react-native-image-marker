@@ -28,7 +28,7 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
                     try await withUnsafeThrowingContinuation { continuation -> Void in
                         if Utils.isBase64(img.uri) {
                             if let image = UIImage.transBase64(img.uri) {
-                                continuation.resume(returning: (index, image))
+                                continuation.resume(returning: (index, image.normalizedForImageMarker()))
                             } else {
                                 let error = NSError(domain: ErrorDomainEnum.BASE.rawValue, code: 3, userInfo: [NSLocalizedDescriptionKey: "Failed to load image"])
                                 continuation.resume(throwing: error)
@@ -47,7 +47,7 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
                                 print("Loaded image: ", img.uri)
 
                                 if let loadedImage = loadedImage {
-                                    continuation.resume(returning: (index, loadedImage))
+                                    continuation.resume(returning: (index, loadedImage.normalizedForImageMarker()))
                                 } else if let error = error {
                                     continuation.resume(throwing: error)
                                 } else {

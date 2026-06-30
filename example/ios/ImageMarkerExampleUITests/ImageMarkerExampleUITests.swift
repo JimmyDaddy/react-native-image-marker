@@ -6,6 +6,7 @@
 //
 
 import XCTest
+import UIKit
 
 final class ImageMarkerExampleUITests: XCTestCase {
 
@@ -41,6 +42,38 @@ final class ImageMarkerExampleUITests: XCTestCase {
       measure(metrics: [XCTApplicationLaunchMetric()]) {
         XCUIApplication().launch()
       }
+    }
+  }
+
+  func testNormalizesUIImageOrientationBeforeCGImageRendering() throws {
+    let sourceImage = makeTestImage(size: CGSize(width: 12, height: 8))
+    let orientedImage = UIImage(
+      cgImage: sourceImage.cgImage!,
+      scale: sourceImage.scale,
+      orientation: .right
+    )
+
+    let normalizedImage = orientedImage.normalizedForImageMarker()
+
+    XCTAssertEqual(normalizedImage.imageOrientation, .up)
+    XCTAssertEqual(normalizedImage.scale, orientedImage.scale)
+    XCTAssertEqual(normalizedImage.size, orientedImage.size)
+    XCTAssertNotNil(normalizedImage.cgImage)
+  }
+
+  func testKeepsAlreadyUprightUIImageInstance() throws {
+    let image = makeTestImage(size: CGSize(width: 12, height: 8))
+
+    XCTAssertTrue(image.normalizedForImageMarker() === image)
+  }
+
+  private func makeTestImage(size: CGSize) -> UIImage {
+    let renderer = UIGraphicsImageRenderer(size: size)
+    return renderer.image { context in
+      UIColor.red.setFill()
+      context.fill(CGRect(x: 0, y: 0, width: size.width / 2, height: size.height))
+      UIColor.blue.setFill()
+      context.fill(CGRect(x: size.width / 2, y: 0, width: size.width / 2, height: size.height))
     }
   }
 }
