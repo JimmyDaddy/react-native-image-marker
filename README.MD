@@ -107,16 +107,37 @@ yarn add react-native-image-marker
 
 #### Expo
 
+This package includes native iOS and Android code, so it does not work in Expo Go. Use a development build, `expo run:*`, or EAS Build after prebuild.
+
 ```shell
 # install
 npx expo install react-native-image-marker
+```
 
-# compile
+Add the package plugin entry to your Expo config, matching the Expo example in this repository:
+
+```json
+{
+  "expo": {
+    "plugins": ["react-native-image-marker"]
+  }
+}
+```
+
+Then generate and build the native projects so Expo can link the native module:
+
+```shell
 npx expo prebuild
 
-eas build
+# local native builds
+npx expo run:android
+npx expo run:ios
 
+# or cloud builds
+eas build
 ```
+
+If you add the package to an existing Expo project, rebuild the native app after `prebuild`; reloading Expo Go or Metro is not enough for native modules.
 
 ## Compatibility
 
