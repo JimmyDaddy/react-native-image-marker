@@ -480,7 +480,7 @@ jobs:
           path: ${{ github.workspace }}/example/android/app/build/reports
 
   ios-build-test:
-    runs-on: macos-latest
+    runs-on: macos-15
     env:
       NO_FLIPPER: '1'
     needs: [changes, install-dep]
