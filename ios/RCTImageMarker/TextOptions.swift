@@ -14,7 +14,7 @@ class TextOptions: NSObject {
     var Y: String?
     var position: MarkerPositionEnum = .none
     var text: String
-    var style: TextStyle?
+    var style: TextStyle
 
     init(dicOpts opts: [AnyHashable: Any]) throws {
         guard let text = opts["text"] as? String else {
@@ -28,6 +28,7 @@ class TextOptions: NSObject {
         }
 
         self.text = text
-        self.style = try? TextStyle(dicOpts: (opts["style"] as? [AnyHashable: Any])!)
+        let styleOpts = opts["style"] as? [AnyHashable: Any] ?? [:]
+        self.style = try TextStyle(dicOpts: styleOpts)
     }
 }

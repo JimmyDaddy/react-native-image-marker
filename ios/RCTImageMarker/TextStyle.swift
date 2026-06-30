@@ -25,7 +25,11 @@ class TextStyle: NSObject {
     var textAlign: String?
 
     init(dicOpts opts: [AnyHashable: Any]) throws {
-        self.color = UIColor(hex: opts["color"] as! String) ?? UIColor.clear
+        if let color = opts["color"] as? String {
+            self.color = UIColor(hex: color) ?? UIColor.clear
+        } else {
+            self.color = UIColor.clear
+        }
         if let shadowStyle = opts["shadowStyle"] as? [AnyHashable: Any] {
             self.shadow = Utils.getShadowStyle(shadowStyle)
         } else {
@@ -47,7 +51,7 @@ class TextStyle: NSObject {
     }
 
     func resolvedFont(backgroundWidth: CGFloat) -> UIFont {
-        let resolvedSize = fontSizeRatio != nil ? backgroundWidth * fontSizeRatio! : fontSize
+        let resolvedSize = fontSizeRatio.map { backgroundWidth * $0 } ?? fontSize
         return UIFont(name: fontName ?? "", size: resolvedSize) ?? UIFont.systemFont(ofSize: resolvedSize)
     }
 }

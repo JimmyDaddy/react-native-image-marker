@@ -21,9 +21,15 @@ class TextBackground: Padding {
         }
         try super.init(paddingData: textBackground)
         self.typeBg = textBackground["type"] as? String
-        self.colorBg = UIColor(hex: textBackground["color"] as! String) ?? UIColor.clear
+        guard let color = textBackground["color"] as? String else {
+            throw NSError(domain: ErrorDomainEnum.PARAMS_REQUIRED.rawValue, code: 0, userInfo: [NSLocalizedDescriptionKey: "text background color is required"])
+        }
+        self.colorBg = UIColor(hex: color) ?? UIColor.clear
         if textBackground.keys.contains("cornerRadius") {
-            self.cornerRadius = try CornerRadius(dicOpts: textBackground["cornerRadius"] as! [AnyHashable : Any])
+            guard let cornerRadius = textBackground["cornerRadius"] as? [AnyHashable: Any] else {
+                throw NSError(domain: ErrorDomainEnum.PARAMS_INVALID.rawValue, code: 0, userInfo: [NSLocalizedDescriptionKey: "cornerRadius is invalid"])
+            }
+            self.cornerRadius = try CornerRadius(dicOpts: cornerRadius)
         }
     }
 }
