@@ -8,6 +8,20 @@
 import UIKit
 
 extension UIImage {
+    func normalizedForImageMarker() -> UIImage {
+        guard imageOrientation != .up else {
+            return self
+        }
+
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = scale
+        format.opaque = false
+        let renderer = UIGraphicsImageRenderer(size: size, format: format)
+        return renderer.image { _ in
+            draw(in: CGRect(origin: .zero, size: size))
+        }
+    }
+
     func rotatedImageWithTransformAndCorp(_ rotate: CGFloat, croppedToRect rect: CGRect) -> UIImage {
         let rotation = CGAffineTransform(rotationAngle: rotate * .pi / 180)
         let rotatedImage = rotatedImageWithTransform(rotation)

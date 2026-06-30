@@ -16,6 +16,7 @@
 		93F7B1DDABE441E6B6212F21 /* MaShanZheng-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 50CB977CE5BF44179F12CFF5 /* MaShanZheng-Regular.ttf */; };
 		A119E9E12B162437000C0527 /* ImageMarkerExampleUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A119E9E02B162437000C0527 /* ImageMarkerExampleUITests.swift */; };
 		A119E9E32B162437000C0527 /* ImageMarkerExampleUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A119E9E22B162437000C0527 /* ImageMarkerExampleUITestsLaunchTests.swift */; };
+		D08944733B654D0E986F9F68 /* UIImageEdit.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6F06930265B472194E651B7 /* UIImageEdit.swift */; };
 		F95A8E69C66343EEB9A8D9DC /* RubikBurned-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E3DA1B9696844B35AAE670BD /* RubikBurned-Regular.ttf */; };
 /* End PBXBuildFile section */
 
@@ -47,6 +48,7 @@
 		A119E9DE2B162437000C0527 /* ImageMarkerExampleUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ImageMarkerExampleUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A119E9E02B162437000C0527 /* ImageMarkerExampleUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageMarkerExampleUITests.swift; sourceTree = "<group>"; };
 		A119E9E22B162437000C0527 /* ImageMarkerExampleUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageMarkerExampleUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		B6F06930265B472194E651B7 /* UIImageEdit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = UIImageEdit.swift; path = "../../../ios/RCTImageMarker/UIImageEdit.swift"; sourceTree = "<group>"; };
 		E3DA1B9696844B35AAE670BD /* RubikBurned-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "RubikBurned-Regular.ttf"; path = "../assets/fonts/RubikBurned-Regular.ttf"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
@@ -131,6 +133,7 @@
 			children = (
 				A119E9E02B162437000C0527 /* ImageMarkerExampleUITests.swift */,
 				A119E9E22B162437000C0527 /* ImageMarkerExampleUITestsLaunchTests.swift */,
+				B6F06930265B472194E651B7 /* UIImageEdit.swift */,
 			);
 			path = ImageMarkerExampleUITests;
 			sourceTree = "<group>";
@@ -406,6 +409,7 @@
 			files = (
 				A119E9E12B162437000C0527 /* ImageMarkerExampleUITests.swift in Sources */,
 				A119E9E32B162437000C0527 /* ImageMarkerExampleUITestsLaunchTests.swift in Sources */,
+				D08944733B654D0E986F9F68 /* UIImageEdit.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
