@@ -177,7 +177,27 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         }
         return origin
     }
-        
+
+    private func fontWithTraits(_ font: UIFont, bold: Bool, italic: Bool) -> UIFont {
+        guard bold || italic else {
+            return font
+        }
+
+        var traits = font.fontDescriptor.symbolicTraits
+        if bold {
+            traits.insert(.traitBold)
+        }
+        if italic {
+            traits.insert(.traitItalic)
+        }
+
+        guard let descriptor = font.fontDescriptor.withSymbolicTraits(traits) else {
+            return font
+        }
+
+        return UIFont(descriptor: descriptor, size: font.pointSize)
+    }
+
     func markImgWithText(_ image: UIImage, _ opts: MarkTextOptions) -> UIImage? {
 
         var bg = image;
@@ -210,17 +230,11 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         
         for textOpts in opts.watermarkTexts {
             context.saveGState()
-            var font = textOpts.style.resolvedFont(backgroundWidth: w)
-            if textOpts.style.italic && textOpts.style.bold {
-                let boldItalicFontDescriptor = font.fontDescriptor.withSymbolicTraits([.traitBold, .traitItalic])
-                font = UIFont(descriptor: boldItalicFontDescriptor!, size: font.pointSize)
-            } else if textOpts.style.italic {
-                let italicFontDescriptor = font.fontDescriptor.withSymbolicTraits(.traitItalic)
-                font = UIFont(descriptor: italicFontDescriptor!, size: font.pointSize)
-            } else if textOpts.style.bold {
-                let boldFontDescriptor = font.fontDescriptor.withSymbolicTraits(.traitBold)
-                font = UIFont(descriptor: boldFontDescriptor!, size: font.pointSize)
-            }
+            let font = fontWithTraits(
+                textOpts.style.resolvedFont(backgroundWidth: w),
+                bold: textOpts.style.bold,
+                italic: textOpts.style.italic
+            )
             
             var attributes: [NSAttributedString.Key: Any] = [
                 .font: font as Any,   //设置字体
