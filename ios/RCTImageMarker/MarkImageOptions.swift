@@ -27,13 +27,13 @@ class MarkImageOptions: Options {
                 throw NSError(domain: ErrorDomainEnum.PARAMS_INVALID.rawValue, code: 0, userInfo: [NSLocalizedDescriptionKey: "watermarkImage is invalid"])
             }
             let singleImageOptions = try ImageOptions(dicOpts: watermarkImageOpts)
-            var singleX = "20.0"
-            var singleY = "20.0"
+            var singleX: String? = "20.0"
+            var singleY: String? = "20.0"
             var singlePosition: MarkerPositionEnum = .none
             let singleImagePositionOpts = opts["watermarkPositions"] as? [AnyHashable: Any]
             if let positionOpts = singleImagePositionOpts, !Utils.isNULL(singleImagePositionOpts) {
-                singleX = Utils.handleDynamicToString(v: positionOpts["X"])
-                singleY = Utils.handleDynamicToString(v: positionOpts["Y"])
+                singleX = Utils.isNULL(positionOpts["X"]) ? nil : Utils.handleDynamicToString(v: positionOpts["X"])
+                singleY = Utils.isNULL(positionOpts["Y"]) ? nil : Utils.handleDynamicToString(v: positionOpts["Y"])
                 singlePosition = positionOpts["position"] != nil ? RCTConvert.MarkerPosition(positionOpts["position"]) : .none
             }
             let watermarkImageOptions = WatermarkImageOptions(watermarkImage: singleImageOptions, X: singleX, Y: singleY, position: singlePosition)

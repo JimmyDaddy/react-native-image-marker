@@ -126,6 +126,8 @@ data class TextOptions(val options: ReadableMap) {
     if (positionEnum != null) {
       position = Position.getTextPosition(
         positionEnum,
+        x,
+        y,
         maxWidth,
         maxHeight,
         textWidth,

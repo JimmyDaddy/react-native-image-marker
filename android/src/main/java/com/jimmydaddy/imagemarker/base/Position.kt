@@ -6,6 +6,8 @@ package com.jimmydaddy.imagemarker.base
 data class Position(var x: Float, var y: Float) {
 
   companion object {
+    private const val DEFAULT_POSITION_MARGIN = 20f
+
     fun getTextPosition(
       position: String?,
       margin: Int,
@@ -47,6 +49,28 @@ data class Position(var x: Float, var y: Float) {
           (height - textHeight - margin).toFloat()
         )
       }
+    }
+
+    fun getTextPosition(
+      position: PositionEnum?,
+      offsetX: String?,
+      offsetY: String?,
+      width: Int,
+      height: Int,
+      textWidth: Int,
+      textHeight: Int
+    ): Position {
+      val resolvedPosition = getTextPosition(position, width, height, textWidth, textHeight)
+      return applyOffsets(
+        resolvedPosition,
+        position,
+        offsetX,
+        offsetY,
+        width,
+        height,
+        textWidth,
+        textHeight
+      )
     }
 
     fun getTextPosition(
@@ -93,6 +117,29 @@ data class Position(var x: Float, var y: Float) {
 
         else -> Position(margin.toFloat(), margin.toFloat())
       }
+    }
+
+    @JvmStatic
+    fun getImageRectFromPosition(
+      position: PositionEnum?,
+      offsetX: String?,
+      offsetY: String?,
+      width: Int,
+      height: Int,
+      imageWidth: Int,
+      imageHeight: Int
+    ): Position {
+      val resolvedPosition = getImageRectFromPosition(position, width, height, imageWidth, imageHeight)
+      return applyOffsets(
+        resolvedPosition,
+        position,
+        offsetX,
+        offsetY,
+        imageWidth,
+        imageHeight,
+        width,
+        height
+      )
     }
 
     fun getImageRectFromPosition(
@@ -145,6 +192,72 @@ data class Position(var x: Float, var y: Float) {
       return pos
     }
 
+    private fun applyOffsets(
+      resolvedPosition: Position,
+      position: PositionEnum?,
+      offsetX: String?,
+      offsetY: String?,
+      canvasWidth: Int,
+      canvasHeight: Int,
+      itemWidth: Int,
+      itemHeight: Int
+    ): Position {
+      val x = offsetX?.let { Utils.parseSpreadValue(it, canvasWidth.toFloat()) }
+      val y = offsetY?.let { Utils.parseSpreadValue(it, canvasHeight.toFloat()) }
+
+      if (position == null) {
+        if (x != null) {
+          resolvedPosition.x = x
+        }
+        if (y != null) {
+          resolvedPosition.y = y
+        }
+        return resolvedPosition
+      }
+
+      when (position) {
+        PositionEnum.TOP_LEFT -> {
+          if (x != null) resolvedPosition.x = x
+          if (y != null) resolvedPosition.y = y
+        }
+
+        PositionEnum.TOP_CENTER -> {
+          if (x != null) resolvedPosition.x = centered(canvasWidth, itemWidth) + x
+          if (y != null) resolvedPosition.y = y
+        }
+
+        PositionEnum.TOP_RIGHT -> {
+          if (x != null) resolvedPosition.x = canvasWidth - itemWidth - x
+          if (y != null) resolvedPosition.y = y
+        }
+
+        PositionEnum.CENTER -> {
+          if (x != null) resolvedPosition.x = centered(canvasWidth, itemWidth) + x
+          if (y != null) resolvedPosition.y = centered(canvasHeight, itemHeight) + y
+        }
+
+        PositionEnum.BOTTOM_LEFT -> {
+          if (x != null) resolvedPosition.x = x
+          if (y != null) resolvedPosition.y = canvasHeight - itemHeight - y
+        }
+
+        PositionEnum.BOTTOM_CENTER -> {
+          if (x != null) resolvedPosition.x = centered(canvasWidth, itemWidth) + x
+          if (y != null) resolvedPosition.y = canvasHeight - itemHeight - y
+        }
+
+        PositionEnum.BOTTOM_RIGHT -> {
+          if (x != null) resolvedPosition.x = canvasWidth - itemWidth - x
+          if (y != null) resolvedPosition.y = canvasHeight - itemHeight - y
+        }
+      }
+      return resolvedPosition
+    }
+
+    private fun centered(canvasSize: Int, itemSize: Int): Float {
+      return ((canvasSize - itemSize) / 2).toFloat()
+    }
+
     @JvmStatic
     fun getImageRectFromPosition(
       position: PositionEnum?,
@@ -153,8 +266,8 @@ data class Position(var x: Float, var y: Float) {
       imageWidth: Int,
       imageHeight: Int
     ): Position {
-      var left = 20
-      var top = 20
+      var left = DEFAULT_POSITION_MARGIN.toInt()
+      var top = DEFAULT_POSITION_MARGIN.toInt()
       val right = imageWidth - width
       val pos = Position(left.toFloat(), top.toFloat())
       if (position == null) {
