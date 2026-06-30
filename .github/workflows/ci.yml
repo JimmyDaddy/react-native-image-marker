@@ -333,6 +333,13 @@ jobs:
           distribution: 'zulu'
           java-version: 17
 
+      - name: Install npm dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true' && steps.verify-android-changed-files.outputs.any_changed == 'true'
+        run: |
+          npm install
+          cd example
+          npm install
+
       - name: Install Gradle dependencies
         if: steps.cache-gradle.outputs.cache-hit != 'true' && steps.verify-android-changed-files.outputs.any_changed == 'true'
         run: |
@@ -541,6 +548,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+
+      - name: Install npm dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true' && steps.verify-iOS-changed-files.outputs.any_changed == 'true'
+        run: |
+          npm install
+          cd example
+          npm install
 
       - name: Install Pods
         if: steps.cache-pods.outputs.cache-hit != 'true' && steps.verify-iOS-changed-files.outputs.any_changed == 'true'
