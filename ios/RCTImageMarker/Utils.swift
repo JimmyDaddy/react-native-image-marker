@@ -65,13 +65,13 @@ class Utils: NSObject {
     static func stringToInt(_ string: String) -> UInt32 {
         if string.count == 1 {
             let hexChar = string[string.startIndex]
-            var intCh: UInt32 = getCharInt(hexChar)
+            let intCh: UInt32 = getCharInt(hexChar)
             return intCh * 2
         } else {
             let hexChar1 = string[string.startIndex]
-            var intCh1: UInt32 = getCharInt(hexChar1)
+            let intCh1: UInt32 = getCharInt(hexChar1)
             let hexChar2 = string[string.index(after: string.startIndex)]
-            var intCh2: UInt32 = getCharInt(hexChar2)
+            let intCh2: UInt32 = getCharInt(hexChar2)
             return intCh1 + intCh2
         }
     }
@@ -99,7 +99,7 @@ class Utils: NSObject {
             shadow.shadowBlurRadius = CGFloat(truncating: RCTConvert.nsNumber(shadowStyle["radius"]))
             shadow.shadowOffset = CGSize(width: CGFloat(truncating: RCTConvert.nsNumber(shadowStyle["dx"])), height: CGFloat(truncating: RCTConvert.nsNumber(shadowStyle["dy"])))
             let color = getColor(RCTConvert.nsString(shadowStyle["color"]))
-            shadow.shadowColor = color != nil ? color : UIColor.gray
+            shadow.shadowColor = color
             return shadow
         } else {
             return nil

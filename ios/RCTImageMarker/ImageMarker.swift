@@ -200,7 +200,7 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
 
     func markImgWithText(_ image: UIImage, _ opts: MarkTextOptions) -> UIImage? {
 
-        var bg = image;
+        let bg = image;
         let w = bg.size.width
         let h = bg.size.height
         UIGraphicsBeginImageContextWithOptions(bg.size, false, opts.backgroundImage.scale)
@@ -326,98 +326,31 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
     }
     
     func markImage(with image: UIImage, waterImages: [UIImage], options: MarkImageOptions) -> UIImage? {
-
-        let bg = image;
-        let w = bg.size.width
-        let h = bg.size.height
-        UIGraphicsBeginImageContextWithOptions(bg.size, false, options.backgroundImage.scale)
-        
-        let canvasRect = CGRect(x: 0, y: 0, width: CGFloat(w), height: CGFloat(h))
-        let transform = CGAffineTransform(translationX: 0, y: canvasRect.height)
-            .scaledBy(x: 1, y: -1)
-        var context: CGContext?
-        if options.backgroundImage.alpha != 1.0 {
-            UIGraphicsBeginImageContextWithOptions(image.size, false, options.backgroundImage.scale)
-            context = UIGraphicsGetCurrentContext()
-            context?.saveGState()
-            context?.concatenate(transform)
-            
-            context?.beginTransparencyLayer(auxiliaryInfo: nil)
-            context?.setAlpha(options.backgroundImage.alpha)
-            context?.setBlendMode(.multiply)
-        
-            context?.draw(image.cgImage!, in: canvasRect)
-            context?.endTransparencyLayer()
-            context?.setBlendMode(.normal)
-            context?.restoreGState()
-        } else {
-            context = UIGraphicsGetCurrentContext()
-            context?.saveGState()
-            context?.concatenate(transform)
-            context?.draw(image.cgImage!, in: canvasRect)
-            context?.restoreGState()
-        }
-        
-        for (index, waterImage) in waterImages.enumerated() {
-            context?.saveGState()
-            let watermarkOptions = options.watermarkImages[index];
-            var markerImg = waterImage;
-            if (options.backgroundImage.scale > 0) {
-                markerImg = UIImage(cgImage: waterImage.cgImage!, scale: 1 / watermarkOptions.imageOption.scale, orientation: waterImage.imageOrientation)
+        let watermarks = waterImages.enumerated().compactMap { index, waterImage -> ImageMarkerImageWatermark? in
+            guard options.watermarkImages.indices.contains(index) else {
+                return nil
             }
 
-            let ww = markerImg.size.width
-            let wh = markerImg.size.height
-            
-            let diagonal = sqrt(pow(ww, 2) + pow(wh, 2)) // 计算对角线长度
-            let size = CGSize(width: CGFloat(diagonal), height: CGFloat(diagonal))
-            let origin = markerOrigin(
-                position: watermarkOptions.position,
+            let watermarkOptions = options.watermarkImages[index]
+            let position = ImageMarkerRenderPosition(rawValue: watermarkOptions.position.rawValue as String) ?? .none
+            return ImageMarkerImageWatermark(
+                image: waterImage,
+                position: position,
                 offsetX: watermarkOptions.X,
                 offsetY: watermarkOptions.Y,
-                canvasSize: CGSize(width: w, height: h),
-                itemSize: CGSize(width: ww, height: wh)
+                scale: watermarkOptions.imageOption.scale,
+                rotate: watermarkOptions.imageOption.rotate,
+                alpha: watermarkOptions.imageOption.alpha
             )
-            var rect = CGRect(origin: origin, size: size)
-            
-            UIGraphicsBeginImageContextWithOptions(CGSize(width: diagonal, height: diagonal), false, 1)
-            let markerContext = UIGraphicsGetCurrentContext()
-            markerContext?.saveGState()
-            
-            if watermarkOptions.imageOption.alpha != 1.0 {
-                markerContext?.beginTransparencyLayer(auxiliaryInfo: nil)
-                markerContext?.setAlpha(watermarkOptions.imageOption.alpha)
-                markerContext?.setBlendMode(.multiply)
-                let markerImage = markerImg.rotatedImageWithTransform(watermarkOptions.imageOption.rotate)
-                let originPoint = CGPoint(x: 0, y: rect.height - markerImage.size.height)
-                markerContext?.draw(markerImage.cgImage!, in: CGRect(origin: originPoint, size: CGSize(width: markerImage.size.width, height: markerImage.size.height)))
-                markerContext?.endTransparencyLayer()
-
-            } else {
-                let markerImage = markerImg.rotatedImageWithTransform(watermarkOptions.imageOption.rotate)
-                let originPoint = CGPoint(x: 0, y: rect.height - markerImage.size.height)
-                markerContext?.draw(markerImage.cgImage!, in: CGRect(origin: originPoint, size: CGSize(width: markerImage.size.width, height: markerImage.size.height)))
-            }
-            markerContext?.restoreGState()
-
-            let waterImageRes = UIGraphicsGetImageFromCurrentImageContext()!
-//            if watermarkOptions.imageOption.scale > 0 {
-//                rect = CGRect(
-//                    x: rect.origin.x,
-//                    y: rect.origin.y,
-//                    width: rect.size.width * watermarkOptions.imageOption.scale,
-//                    height: rect.size.height * watermarkOptions.imageOption.scale
-//                )
-//            }
-            context?.draw(waterImageRes.cgImage!, in: rect)
-            UIGraphicsEndImageContext()
-            context?.restoreGState()
         }
-        
-        var newImage = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
-        newImage = newImage?.rotatedImageWithTransform(options.backgroundImage.rotate)
-        return newImage
+
+        return ImageMarkerRenderer.renderImageWatermarks(
+            background: image,
+            watermarks: watermarks,
+            backgroundScale: options.backgroundImage.scale,
+            backgroundRotate: options.backgroundImage.rotate,
+            backgroundAlpha: options.backgroundImage.alpha
+        )
     }
     
     @objc(markWithText:resolver:rejecter:)

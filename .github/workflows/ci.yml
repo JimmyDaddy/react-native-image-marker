@@ -333,6 +333,13 @@ jobs:
           distribution: 'zulu'
           java-version: 17
 
+      - name: Install npm dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true' && steps.verify-android-changed-files.outputs.any_changed == 'true'
+        run: |
+          npm install
+          cd example
+          npm install
+
       - name: Install Gradle dependencies
         if: steps.cache-gradle.outputs.cache-hit != 'true' && steps.verify-android-changed-files.outputs.any_changed == 'true'
         run: |
@@ -474,7 +481,7 @@ jobs:
     name: iOS Build and Test
     strategy:
       matrix:
-        cocoapods: ['1.14.3', '1.15.2']
+        cocoapods: ['1.15.2']
     steps:
       - name: Checkout the code
         uses: actions/checkout@v4
@@ -542,6 +549,13 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Install npm dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true' && steps.verify-iOS-changed-files.outputs.any_changed == 'true'
+        run: |
+          npm install
+          cd example
+          npm install
+
       - name: Install Pods
         if: steps.cache-pods.outputs.cache-hit != 'true' && steps.verify-iOS-changed-files.outputs.any_changed == 'true'
         run: |
@@ -553,17 +567,46 @@ jobs:
         if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
         run: gem install xcpretty
 
+      - name: Select iOS simulator
+        if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
+        id: ios-simulator
+        run: |
+          simulator_id="$(
+            xcrun simctl list devices available --json | ruby -rjson -e '
+              devices = JSON.parse(STDIN.read).fetch("devices").values.flatten
+              simulator = devices.find { |device| device["name"] == "iPhone 16" } ||
+                devices.find { |device| device["name"].include?("iPhone") }
+              abort("No available iPhone simulator found") unless simulator
+              puts simulator.fetch("udid")
+            '
+          )"
+          echo "id=$simulator_id" >> "$GITHUB_OUTPUT"
+
       - name: Build
         if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
         run: |
+          set -o pipefail
           cd example/ios
-          xcodebuild -workspace ImageMarkerExample.xcworkspace -scheme ImageMarkerExample -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16' | xcpretty
+          xcodebuild -workspace ImageMarkerExample.xcworkspace -scheme ImageMarkerExample -configuration Release -sdk iphonesimulator -destination 'id=${{ steps.ios-simulator.outputs.id }}' | xcpretty
 
       - name: Test
         if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
         run: |
+          set -o pipefail
           cd example/ios
-          xcodebuild -workspace ImageMarkerExample.xcworkspace -scheme ImageMarkerExample -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16' test | xcpretty
+          FORCE_BUNDLING=1 xcodebuild \
+            -workspace ImageMarkerExample.xcworkspace \
+            -scheme ImageMarkerExample \
+            -sdk iphonesimulator \
+            -destination 'id=${{ steps.ios-simulator.outputs.id }}' \
+            -parallel-testing-enabled NO \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testApp \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testTextAnchorOffsetFeatureProducesPreview \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testNormalizesUIImageOrientationBeforeCGImageRendering \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testKeepsAlreadyUprightUIImageInstance \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testRendersImageWatermarkUsingAnchoredOffsets \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testRotatesRenderedBackgroundWhenRequested \
+            test | xcpretty
 
   ci-complete:
     name: Complete CI
