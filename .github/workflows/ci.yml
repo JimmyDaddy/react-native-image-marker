@@ -481,7 +481,7 @@ jobs:
     name: iOS Build and Test
     strategy:
       matrix:
-        cocoapods: ['1.14.3', '1.15.2']
+        cocoapods: ['1.15.2']
     steps:
       - name: Checkout the code
         uses: actions/checkout@v4

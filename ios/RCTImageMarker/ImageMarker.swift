@@ -200,7 +200,7 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
 
     func markImgWithText(_ image: UIImage, _ opts: MarkTextOptions) -> UIImage? {
 
-        var bg = image;
+        let bg = image;
         let w = bg.size.width
         let h = bg.size.height
         UIGraphicsBeginImageContextWithOptions(bg.size, false, opts.backgroundImage.scale)
