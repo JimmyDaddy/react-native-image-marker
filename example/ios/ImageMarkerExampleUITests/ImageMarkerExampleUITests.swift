@@ -26,22 +26,23 @@ final class ImageMarkerExampleUITests: XCTestCase {
   func testApp() throws {
     let app = XCUIApplication()
     app.launch()
-    XCTAssertTrue(app.staticTexts["Manual test bench"].waitForExistence(timeout: 10))
-    XCTAssertTrue(app.staticTexts["Regression cases"].exists)
-    XCTAssertTrue(app.buttons["regression-text-anchor-offset"].exists)
-    XCTAssertTrue(app.buttons["regression-image-anchor-offset"].exists)
-    XCTAssertTrue(app.buttons["regression-ios-orientation"].exists)
+    XCTAssertTrue(app.staticTexts["Image Marker Lab"].waitForExistence(timeout: 45))
+    XCTAssertTrue(app.staticTexts["Feature checks"].exists)
+    XCTAssertTrue(app.buttons["feature-text-anchor-offset"].exists)
+    XCTAssertTrue(app.buttons["feature-image-anchor-offset"].exists)
+    XCTAssertTrue(app.buttons["feature-orientation-normalization"].exists)
   }
 
-  func testTextAnchorOffsetRegressionProducesPreview() throws {
+  func testTextAnchorOffsetFeatureProducesPreview() throws {
     let app = XCUIApplication()
     app.launch()
 
-    let regressionCard = app.buttons["regression-text-anchor-offset"]
-    XCTAssertTrue(regressionCard.waitForExistence(timeout: 10))
-    regressionCard.tap()
+    XCTAssertTrue(app.staticTexts["Image Marker Lab"].waitForExistence(timeout: 45))
+    let featureCard = app.buttons["feature-text-anchor-offset"]
+    XCTAssertTrue(featureCard.waitForExistence(timeout: 15))
+    featureCard.tap()
 
-    XCTAssertTrue(app.staticTexts["#270 text anchor offset"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["Text anchor offset"].waitForExistence(timeout: 5))
     XCTAssertTrue(app.otherElements["result-preview-ready"].waitForExistence(timeout: 15))
   }
 
