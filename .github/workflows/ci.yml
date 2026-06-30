@@ -9,10 +9,141 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    name: Detect changes
+    outputs:
+      android: ${{ steps.filter.outputs.android }}
+      ios: ${{ steps.filter.outputs.ios }}
+      js: ${{ steps.filter.outputs.js }}
+      native: ${{ steps.filter.outputs.native }}
+      security: ${{ steps.filter.outputs.security }}
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Classify changed files
+        id: filter
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python3 <<'PY'
+          import fnmatch
+          import os
+          import subprocess
+
+          def changed_files():
+              if os.environ["EVENT_NAME"] == "workflow_dispatch":
+                  return None
+
+              base = os.environ.get("BASE_SHA")
+              head = os.environ.get("HEAD_SHA") or "HEAD"
+              if not base:
+                  return None
+
+              try:
+                  output = subprocess.check_output(
+                      ["git", "diff", "--name-only", base, head],
+                      text=True,
+                  )
+              except subprocess.CalledProcessError:
+                  output = subprocess.check_output(
+                      ["git", "diff", "--name-only", base, "HEAD"],
+                      text=True,
+                  )
+
+              return [line for line in output.splitlines() if line]
+
+          files = changed_files()
+          all_jobs = files is None
+
+          def matches(path, patterns):
+              return any(fnmatch.fnmatch(path, pattern) for pattern in patterns)
+
+          def any_changed(include, exclude=()):
+              if all_jobs:
+                  return True
+              return any(
+                  matches(path, include) and not matches(path, exclude)
+                  for path in files
+              )
+
+          android = any_changed(
+              [
+                  "android/**",
+                  "src/**",
+                  "assets/**",
+                  "package.json",
+                  "package-lock.json",
+                  ".github/workflows/ci.yml",
+                  "example/e2e/**",
+              ],
+              ["example/ios/**"],
+          )
+          ios = any_changed(
+              [
+                  "ios/**",
+                  "src/**",
+                  "assets/**",
+                  "package.json",
+                  "package-lock.json",
+                  "react-native-image-marker.podspec",
+                  ".github/workflows/ci.yml",
+                  "example/e2e/**",
+              ],
+              ["example/android/**"],
+          )
+          js = any_changed(
+              [
+                  "src/**",
+                  "package.json",
+                  "package-lock.json",
+                  "tsconfig*.json",
+                  "lefthook.yml",
+              ]
+          )
+          security = any_changed(
+              [
+                  "package.json",
+                  "package-lock.json",
+                  "example/package.json",
+                  "example/package-lock.json",
+                  "expo-example/package.json",
+                  "expo-example/package-lock.json",
+                  "react-native-image-marker.podspec",
+                  "android/build.gradle",
+                  "android/gradle.properties",
+                  "android/gradle/wrapper/**",
+                  "example/android/build.gradle",
+                  "example/android/app/build.gradle",
+                  "example/android/gradle.properties",
+                  "example/android/gradle/wrapper/**",
+                  "ios/Podfile",
+                  "example/ios/Podfile",
+              ]
+          )
+          results = {
+              "android": android,
+              "ios": ios,
+              "js": js,
+              "native": android or ios,
+              "security": security,
+          }
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              for key, value in results.items():
+                  print(f"{key}={'true' if value else 'false'}", file=output)
+          PY
 
   security:
     runs-on: ubuntu-latest
     name: Security & Dependency Review
+    needs: changes
+    if: needs.changes.outputs.security == 'true'
     steps:
       - name: Checkout the code
         uses: actions/checkout@v4
@@ -35,11 +166,39 @@ jobs:
         run: npm audit --audit-level=moderate
         continue-on-error: true
 
+  js-check:
+    runs-on: ubuntu-latest
+    name: JS Typecheck and Test
+    needs: changes
+    if: needs.changes.outputs.js == 'true'
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v4
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test -- --runInBand
+
+      - name: Build package
+        run: npm run prepack
+
   install-dep:
     runs-on: macos-latest
     env:
       NO_FLIPPER: '1'
     name: Install dependencies
+    needs: changes
+    if: needs.changes.outputs.native == 'true'
     steps:
     - name: Checkout the code
       uses: actions/checkout@v4
@@ -92,7 +251,8 @@ jobs:
   android-build:
     runs-on: macos-latest
     name: Android Build
-    needs: install-dep
+    needs: [changes, install-dep]
+    if: needs.changes.outputs.android == 'true'
     steps:
     - name: Checkout the code
       uses: actions/checkout@v4
@@ -176,7 +336,8 @@ jobs:
 
   android-api-level-test:
     runs-on: ubuntu-latest
-    needs: android-build
+    needs: [changes, android-build]
+    if: needs.changes.outputs.android == 'true'
     name: Android Test
     strategy:
       fail-fast: false
@@ -273,7 +434,8 @@ jobs:
     runs-on: macos-latest
     env:
       NO_FLIPPER: '1'
-    needs: install-dep
+    needs: [changes, install-dep]
+    if: needs.changes.outputs.ios == 'true'
     name: iOS Build and Test
     strategy:
       matrix:
@@ -291,6 +453,7 @@ jobs:
           src/**
           assets/**
           package.json
+          .github/workflows/ci.yml
           !example/android/**
           example/e2e/**
 
@@ -359,7 +522,7 @@ jobs:
 
   ci-complete:
     name: Complete CI
-    needs: [security, android-build, android-api-level-test, ios-build-test]
+    needs: [changes, security, js-check, install-dep, android-build, android-api-level-test, ios-build-test]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     steps:
