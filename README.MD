@@ -34,6 +34,7 @@
   * [React Native](#react-native)
   * [Expo](#expo)
 * [Compatibility](#compatibility)
+* [Fonts](#fonts)
 
 * <details>
   <summary><a href="#usage">Usage</a></summary>
@@ -126,6 +127,16 @@ eas build
 | < 0.60.0             | v0.5.2 or earlier                 |
 
 > ***Note: This table is only applicable to major versions of react-native-image-marker. Patch versions should be backwards compatible.***
+
+## Fonts
+
+`react-native-image-marker` does not bundle a fixed font list. The `style.fontName` value is resolved by the native platform:
+
+* iOS uses `UIFont(name:size:)`. Use the font's registered PostScript name, and make sure custom fonts are included in the iOS app bundle.
+* Android uses React Native's `ReactFontManager`. Use a system font family or a custom font linked into the Android app assets, usually under `android/app/src/main/assets/fonts`.
+* If `fontName` is omitted or cannot be resolved, the native code falls back to the platform default font.
+
+For custom fonts, first confirm the font renders in your React Native app, then pass the same native font family or PostScript name to `fontName`.
 
 ## Usage
 
