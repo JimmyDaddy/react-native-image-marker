@@ -1,5 +1,31 @@
 # Changelog
 
+## <small>1.2.12 (2026-06-30)</small>
+
+* test: add native functional coverage (#290) ([90dbfa4](https://github.com/JimmyDaddy/react-native-image-marker/commit/90dbfa4)), closes [#290](https://github.com/JimmyDaddy/react-native-image-marker/issues/290)
+* feat: support position offsets (#285) ([85d9644](https://github.com/JimmyDaddy/react-native-image-marker/commit/85d9644)), closes [#285](https://github.com/JimmyDaddy/react-native-image-marker/issues/285)
+* feat(example): add shared image marker lab (#289) ([8dab7b4](https://github.com/JimmyDaddy/react-native-image-marker/commit/8dab7b4)), closes [#289](https://github.com/JimmyDaddy/react-native-image-marker/issues/289)
+* fix: move patch tooling to dev dependencies (#277) ([9f74cdb](https://github.com/JimmyDaddy/react-native-image-marker/commit/9f74cdb)), closes [#277](https://github.com/JimmyDaddy/react-native-image-marker/issues/277)
+* fix: normalize ios image orientation (#287) ([2497f58](https://github.com/JimmyDaddy/react-native-image-marker/commit/2497f58)), closes [#287](https://github.com/JimmyDaddy/react-native-image-marker/issues/287)
+* fix: preserve android named colors (#278) ([2208a15](https://github.com/JimmyDaddy/react-native-image-marker/commit/2208a15)), closes [#278](https://github.com/JimmyDaddy/react-native-image-marker/issues/278)
+* fix: propagate image loading errors via rejecter on iOS (#267) ([7e9bb86](https://github.com/JimmyDaddy/react-native-image-marker/commit/7e9bb86)), closes [#267](https://github.com/JimmyDaddy/react-native-image-marker/issues/267)
+* fix: scope root typecheck to library sources (#288) ([dc48a11](https://github.com/JimmyDaddy/react-native-image-marker/commit/dc48a11)), closes [#288](https://github.com/JimmyDaddy/react-native-image-marker/issues/288)
+* fix: support responsive watermark font sizing (#282) ([a9643f4](https://github.com/JimmyDaddy/react-native-image-marker/commit/a9643f4)), closes [#282](https://github.com/JimmyDaddy/react-native-image-marker/issues/282)
+* fix: use react native pod dependency helper (#286) ([98a422a](https://github.com/JimmyDaddy/react-native-image-marker/commit/98a422a)), closes [#286](https://github.com/JimmyDaddy/react-native-image-marker/issues/286)
+* fix(android): remove deprecated jcenter repository (#262) ([6f665ce](https://github.com/JimmyDaddy/react-native-image-marker/commit/6f665ce)), closes [#262](https://github.com/JimmyDaddy/react-native-image-marker/issues/262)
+* fix(ios): guard against nil markOpts and request to prevent EXC_BREAKPOINT crashes (#271) ([1323326](https://github.com/JimmyDaddy/react-native-image-marker/commit/1323326)), closes [#271](https://github.com/JimmyDaddy/react-native-image-marker/issues/271)
+* fix(ios): reject malformed marker inputs (#284) ([df8d9f5](https://github.com/JimmyDaddy/react-native-image-marker/commit/df8d9f5)), closes [#284](https://github.com/JimmyDaddy/react-native-image-marker/issues/284)
+* docs: clarify font support (#279) ([da1eabf](https://github.com/JimmyDaddy/react-native-image-marker/commit/da1eabf)), closes [#279](https://github.com/JimmyDaddy/react-native-image-marker/issues/279)
+* docs: expand expo installation guide (#280) ([c9ae370](https://github.com/JimmyDaddy/react-native-image-marker/commit/c9ae370)), closes [#280](https://github.com/JimmyDaddy/react-native-image-marker/issues/280)
+* ci: bump Cocoapods version from 1.15.0 to 1.15.2 in the iOS build matrix (#266) ([f12c10b](https://github.com/JimmyDaddy/react-native-image-marker/commit/f12c10b)), closes [#266](https://github.com/JimmyDaddy/react-native-image-marker/issues/266)
+* ci: change macos-13 pipline image to macos-14 (#263) ([9362fc4](https://github.com/JimmyDaddy/react-native-image-marker/commit/9362fc4)), closes [#263](https://github.com/JimmyDaddy/react-native-image-marker/issues/263)
+* ci: stabilize android emulator tests (#283) ([b7b590a](https://github.com/JimmyDaddy/react-native-image-marker/commit/b7b590a)), closes [#283](https://github.com/JimmyDaddy/react-native-image-marker/issues/283)
+* ci: update npm publish workflow to Node.js 24, newer actions, and OIDC permissions (#265) ([db893db](https://github.com/JimmyDaddy/react-native-image-marker/commit/db893db)), closes [#265](https://github.com/JimmyDaddy/react-native-image-marker/issues/265)
+* chore: add workflow_dispatch trigger to npm-publish.yml ([27951a8](https://github.com/JimmyDaddy/react-native-image-marker/commit/27951a8))
+* chore: release 1.2.11 (#268) ([515cc2c](https://github.com/JimmyDaddy/react-native-image-marker/commit/515cc2c)), closes [#268](https://github.com/JimmyDaddy/react-native-image-marker/issues/268)
+* chore: update dev dep ([db37b64](https://github.com/JimmyDaddy/react-native-image-marker/commit/db37b64))
+* cd/bump v 1.2.10 (#264) ([7ffef10](https://github.com/JimmyDaddy/react-native-image-marker/commit/7ffef10)), closes [#264](https://github.com/JimmyDaddy/react-native-image-marker/issues/264)
+
 ## [1.2.11](///compare/v1.2.10...v1.2.11) (2026-01-31)
 
 ### Bug Fixes
