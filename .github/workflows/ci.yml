@@ -106,6 +106,7 @@ jobs:
           src/**
           assets/**
           package.json
+          .github/workflows/ci.yml
           !example/ios/**
           example/e2e/**
 
@@ -174,10 +175,11 @@ jobs:
         path:  ${{ github.workspace }}/example/android/app-release-${{ github.sha }}.apk
 
   android-api-level-test:
-    runs-on: macos-14
+    runs-on: ubuntu-latest
     needs: android-build
     name: Android Test
     strategy:
+      fail-fast: false
       matrix:
         api-level: [24, 31]
         target: [default]
@@ -194,6 +196,7 @@ jobs:
             src/**
             assets/**
             package.json
+            .github/workflows/ci.yml
             !example/ios/**
             example/e2e/**
 
@@ -234,6 +237,20 @@ jobs:
           distribution: 'zulu'
           java-version: 17
 
+      - name: Install npm dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true' && steps.verify-android-changed-files.outputs.any_changed == 'true'
+        run: |
+          npm install
+          cd example
+          npm install
+
+      - name: Enable KVM group perms
+        if: steps.verify-android-changed-files.outputs.any_changed == 'true'
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
       - name: Instrumentation Tests
         uses: reactivecircus/android-emulator-runner@v2
         if: steps.verify-android-changed-files.outputs.any_changed == 'true'
@@ -249,7 +266,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: steps.verify-android-changed-files.outputs.any_changed == 'true'
         with:
-          name: Test-Reports
+          name: Test-Reports-api-${{ matrix.api-level }}
           path:  ${{ github.workspace }}/example/android/app/build/reports
 
   ios-build-test:
