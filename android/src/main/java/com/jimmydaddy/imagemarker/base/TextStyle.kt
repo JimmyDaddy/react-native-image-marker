@@ -8,6 +8,12 @@ data class TextStyle(val options: ReadableMap?) {
   var color: String? = if (null != options!!.getString("color")) options.getString("color") else null
   var fontName: String? = if (null != options?.getString("fontName")) options.getString("fontName") else null
   var fontSize: Float = if (options?.hasKey("fontSize") == true) options.getDouble("fontSize").toFloat() else DEFAULT_FONT_SIZE
+  var fontSizeRatio: Float? =
+    if (options?.hasKey("fontSizeRatio") == true && !options.isNull("fontSizeRatio")) {
+      options.getDouble("fontSizeRatio").toFloat()
+    } else {
+      null
+    }
   var shadowLayerStyle: ShadowLayerStyle?
   var textBackgroundStyle: TextBackgroundStyle?
   var underline: Boolean = if (options?.hasKey("underline") == true) options.getBoolean("underline") else false
@@ -31,5 +37,9 @@ data class TextStyle(val options: ReadableMap?) {
         else -> Align.LEFT
       }
     }
+  }
+
+  fun resolveFontSize(backgroundWidth: Int): Float {
+    return fontSizeRatio?.let { backgroundWidth * it } ?: fontSize
   }
 }

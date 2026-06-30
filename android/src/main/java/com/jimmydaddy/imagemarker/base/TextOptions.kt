@@ -74,7 +74,7 @@ data class TextOptions(val options: ReadableMap) {
 //      style.fontSize,
 //      context.resources.displayMetrics
 //    )
-    val textSize = style.fontSize
+    val textSize = style.resolveFontSize(maxWidth)
     textPaint.isAntiAlias = true
     textPaint.textSize = textSize
     Log.i(Constants.IMAGE_MARKER_TAG, "textSize: " + textSize + " fontSize: " + style.fontSize + " displayMetrics: " + context.resources.displayMetrics)

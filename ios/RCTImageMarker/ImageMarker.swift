@@ -148,16 +148,16 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         
         for textOpts in opts.watermarkTexts {
             context.saveGState()
-            var font = textOpts.style!.font
+            var font = textOpts.style!.resolvedFont(backgroundWidth: w)
             if textOpts.style!.italic && textOpts.style!.bold {
-                let boldItalicFontDescriptor = textOpts.style!.font!.fontDescriptor.withSymbolicTraits([.traitBold, .traitItalic])
-                font = UIFont(descriptor: boldItalicFontDescriptor!, size: font!.pointSize)
+                let boldItalicFontDescriptor = font.fontDescriptor.withSymbolicTraits([.traitBold, .traitItalic])
+                font = UIFont(descriptor: boldItalicFontDescriptor!, size: font.pointSize)
             } else if textOpts.style!.italic {
-                let italicFontDescriptor = textOpts.style!.font!.fontDescriptor.withSymbolicTraits(.traitItalic)
-                font = UIFont(descriptor: italicFontDescriptor!, size: font!.pointSize)
+                let italicFontDescriptor = font.fontDescriptor.withSymbolicTraits(.traitItalic)
+                font = UIFont(descriptor: italicFontDescriptor!, size: font.pointSize)
             } else if textOpts.style!.bold {
-                let boldFontDescriptor = textOpts.style!.font!.fontDescriptor.withSymbolicTraits(.traitBold)
-                font = UIFont(descriptor: boldFontDescriptor!, size: font!.pointSize)
+                let boldFontDescriptor = font.fontDescriptor.withSymbolicTraits(.traitBold)
+                font = UIFont(descriptor: boldFontDescriptor!, size: font.pointSize)
             }
             
             var attributes: [NSAttributedString.Key: Any] = [
