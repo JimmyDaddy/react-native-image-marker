@@ -16,9 +16,7 @@ import com.jimmydaddy.imagemarker.base.Constants.BASE64
 import com.jimmydaddy.imagemarker.base.Constants.IMAGE_MARKER_TAG
 import com.jimmydaddy.imagemarker.base.MarkImageOptions
 import com.jimmydaddy.imagemarker.base.MarkTextOptions
-import com.jimmydaddy.imagemarker.base.Position.Companion.getImageRectFromPosition
 import com.jimmydaddy.imagemarker.base.SaveFormat
-import com.jimmydaddy.imagemarker.base.Utils
 import com.jimmydaddy.imagemarker.base.Utils.Companion.getBlankBitmap
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -54,49 +52,12 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
     var bos: BufferedOutputStream? = null
     var icon: Bitmap? = null
     try {
-
-      // 原图生成 - start
-      val height = bg!!.height
-      val width = bg.width
-      icon = getBlankBitmap(width, height)
-      val canvas = Canvas(icon!!)
-      canvas.save()
-      canvas.drawBitmap(bg, 0f, 0f, opts.backgroundImage.applyStyle())
-      canvas.restore()
-      // 原图生成 - end
-      for (i in opts.watermarkImages.indices) {
-        canvas.save()
-        val markOpts = opts.watermarkImages[i]
-        var markerBitmap = markers[i]
-        if (markOpts.imageOption.rotate != 0f) {
-          markerBitmap = ImageProcess.rotate(markerBitmap!!, markOpts.imageOption.rotate)
-        }
-        if (markOpts.positionEnum != null) {
-          val pos = getImageRectFromPosition(
-            markOpts.positionEnum,
-            markOpts.x,
-            markOpts.y,
-            markerBitmap!!.width,
-            markerBitmap.height,
-            width,
-            height
-          )
-          canvas.drawBitmap(markerBitmap, pos.x, pos.y, markOpts.imageOption.applyStyle())
-        } else {
-          canvas.drawBitmap(
-            markerBitmap!!,
-            Utils.parseSpreadValue(markOpts.x, width.toFloat()),
-            Utils.parseSpreadValue(markOpts.y, height.toFloat()),
-            markOpts.imageOption.applyStyle()
-          )
-        }
-        canvas.restore()
-
-        if (!markerBitmap.isRecycled) {
-          markerBitmap.recycle()
-          System.gc()
-        }
-      }
+      icon = ImageMarkerRenderer.renderImageWatermarks(
+        bg!!,
+        markers,
+        opts,
+        recycleMarkerBitmaps = true
+      )
 
       // 保存
       // canvas.save(Canvas.ALL_SAVE_FLAG);
@@ -105,9 +66,6 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
         System.gc()
       }
 
-      if (opts.backgroundImage.rotate != 0f) {
-        icon = ImageProcess.rotate(icon, opts.backgroundImage.rotate)
-      }
       // export base64
       if (dest == BASE64) {
         val base64Stream = ByteArrayOutputStream()

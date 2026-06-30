@@ -553,17 +553,34 @@ jobs:
         if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
         run: gem install xcpretty
 
+      - name: Select iOS simulator
+        if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
+        id: ios-simulator
+        run: |
+          simulator_id="$(
+            xcrun simctl list devices available --json | ruby -rjson -e '
+              devices = JSON.parse(STDIN.read).fetch("devices").values.flatten
+              simulator = devices.find { |device| device["name"] == "iPhone 16" } ||
+                devices.find { |device| device["name"].include?("iPhone") }
+              abort("No available iPhone simulator found") unless simulator
+              puts simulator.fetch("udid")
+            '
+          )"
+          echo "id=$simulator_id" >> "$GITHUB_OUTPUT"
+
       - name: Build
         if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
         run: |
+          set -o pipefail
           cd example/ios
-          xcodebuild -workspace ImageMarkerExample.xcworkspace -scheme ImageMarkerExample -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16' | xcpretty
+          xcodebuild -workspace ImageMarkerExample.xcworkspace -scheme ImageMarkerExample -configuration Release -sdk iphonesimulator -destination 'id=${{ steps.ios-simulator.outputs.id }}' | xcpretty
 
       - name: Test
         if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
         run: |
+          set -o pipefail
           cd example/ios
-          xcodebuild -workspace ImageMarkerExample.xcworkspace -scheme ImageMarkerExample -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16' test | xcpretty
+          FORCE_BUNDLING=1 xcodebuild -workspace ImageMarkerExample.xcworkspace -scheme ImageMarkerExample -sdk iphonesimulator -destination 'id=${{ steps.ios-simulator.outputs.id }}' test | xcpretty
 
   ci-complete:
     name: Complete CI

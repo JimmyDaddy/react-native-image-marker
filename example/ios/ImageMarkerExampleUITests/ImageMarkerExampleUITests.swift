@@ -77,6 +77,67 @@ final class ImageMarkerExampleUITests: XCTestCase {
     XCTAssertTrue(image.normalizedForImageMarker() === image)
   }
 
+  func testRendersImageWatermarkUsingAnchoredOffsets() throws {
+    let background = makeSolidImage(size: CGSize(width: 80, height: 60), color: .red)
+    let watermark = makeSolidImage(size: CGSize(width: 10, height: 10), color: .blue)
+
+    let renderedImage = try XCTUnwrap(
+      ImageMarkerRenderer.renderImageWatermarks(
+        background: background,
+        watermarks: [
+          ImageMarkerImageWatermark(
+            image: watermark,
+            position: .topRight,
+            offsetX: "5",
+            offsetY: "4",
+            scale: 1,
+            rotate: 0,
+            alpha: 1
+          ),
+        ],
+        backgroundScale: 1,
+        backgroundRotate: 0,
+        backgroundAlpha: 1
+      )
+    )
+
+    XCTAssertEqual(renderedImage.size.width, background.size.width, accuracy: 0.01)
+    XCTAssertEqual(renderedImage.size.height, background.size.height, accuracy: 0.01)
+    XCTAssertGreaterThan(
+      bluePixelCount(in: renderedImage, xRange: 65..<80, yRange: 4..<20),
+      20
+    )
+    XCTAssertEqual(bluePixelCount(in: renderedImage, xRange: 0..<40, yRange: 0..<30), 0)
+  }
+
+  func testRotatesRenderedBackgroundWhenRequested() throws {
+    let background = makeSolidImage(size: CGSize(width: 30, height: 20), color: .red)
+    let watermark = makeSolidImage(size: CGSize(width: 5, height: 5), color: .blue)
+
+    let renderedImage = try XCTUnwrap(
+      ImageMarkerRenderer.renderImageWatermarks(
+        background: background,
+        watermarks: [
+          ImageMarkerImageWatermark(
+            image: watermark,
+            position: .topLeft,
+            offsetX: "0",
+            offsetY: "0",
+            scale: 1,
+            rotate: 0,
+            alpha: 1
+          ),
+        ],
+        backgroundScale: 1,
+        backgroundRotate: 90,
+        backgroundAlpha: 1
+      )
+    )
+
+    XCTAssertEqual(renderedImage.size.width, background.size.height, accuracy: 1)
+    XCTAssertEqual(renderedImage.size.height, background.size.width, accuracy: 1)
+  }
+
   private func makeTestImage(size: CGSize) -> UIImage {
     let renderer = UIGraphicsImageRenderer(size: size)
     return renderer.image { context in
@@ -85,5 +146,70 @@ final class ImageMarkerExampleUITests: XCTestCase {
       UIColor.blue.setFill()
       context.fill(CGRect(x: size.width / 2, y: 0, width: size.width / 2, height: size.height))
     }
+  }
+
+  private func makeSolidImage(size: CGSize, color: UIColor) -> UIImage {
+    let format = UIGraphicsImageRendererFormat.default()
+    format.scale = 1
+    let renderer = UIGraphicsImageRenderer(size: size, format: format)
+    return renderer.image { context in
+      color.setFill()
+      context.fill(CGRect(origin: .zero, size: size))
+    }
+  }
+
+  private func bluePixelCount(in image: UIImage, xRange: Range<Int>, yRange: Range<Int>) -> Int {
+    guard let bytes = rgbaBytes(for: image) else {
+      XCTFail("Expected readable rendered image bytes")
+      return 0
+    }
+
+    let width = Int(image.size.width * image.scale)
+    let height = Int(image.size.height * image.scale)
+    var count = 0
+    for y in yRange where y >= 0 && y < height {
+      for x in xRange where x >= 0 && x < width {
+        let index = (y * width + x) * 4
+        let red = bytes[index]
+        let green = bytes[index + 1]
+        let blue = bytes[index + 2]
+        if blue > 160 && red < 100 && green < 100 {
+          count += 1
+        }
+      }
+    }
+    return count
+  }
+
+  private func rgbaBytes(for image: UIImage) -> [UInt8]? {
+    guard let cgImage = image.cgImage else {
+      return nil
+    }
+
+    let width = Int(image.size.width * image.scale)
+    let height = Int(image.size.height * image.scale)
+    let bytesPerPixel = 4
+    let bytesPerRow = width * bytesPerPixel
+    var bytes = [UInt8](repeating: 0, count: height * bytesPerRow)
+    let colorSpace = CGColorSpaceCreateDeviceRGB()
+    let bitmapInfo = CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue
+
+    bytes.withUnsafeMutableBytes { rawBuffer in
+      guard let context = CGContext(
+        data: rawBuffer.baseAddress,
+        width: width,
+        height: height,
+        bitsPerComponent: 8,
+        bytesPerRow: bytesPerRow,
+        space: colorSpace,
+        bitmapInfo: bitmapInfo
+      ) else {
+        return
+      }
+      context.interpolationQuality = .none
+      context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+    }
+
+    return bytes
   }
 }
