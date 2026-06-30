@@ -38,6 +38,7 @@
 * <details>
   <summary><a href="#usage">Usage</a></summary>
 
+    * [Responsive watermark size](#responsive-watermark-size)
     * [Text background fit](#text-background-fit)
     * [Text background stretchX](#text-background-stretchx)
     * [Text background stretchY](#text-background-stretchy)
@@ -128,6 +129,44 @@ eas build
 > ***Note: This table is only applicable to major versions of react-native-image-marker. Patch versions should be backwards compatible.***
 
 ## Usage
+
+### Responsive watermark size
+
+`fontSize` is applied to the output bitmap. If two background images have different pixel dimensions, the same `fontSize` will occupy a different percentage of each image.
+
+To keep the visual size consistent across different image resolutions, calculate `fontSize` from the background image dimensions before calling `markText`. If your image picker or API response already includes the image width, use that value directly; otherwise you can read it with React Native's `Image.getSize`:
+
+```typescript
+import { Image } from 'react-native';
+
+const backgroundImageWidth = await new Promise<number>((resolve, reject) => {
+  Image.getSize(imageUri, (width) => resolve(width), reject);
+});
+
+const fontSize = Math.round(backgroundImageWidth * 0.03);
+
+await Marker.markText({
+  backgroundImage: {
+    src: imageUri,
+    scale: 1,
+  },
+  watermarkTexts: [
+    {
+      text: 'watermark',
+      positionOptions: {
+        position: Position.center,
+      },
+      style: {
+        color: '#ffffff',
+        fontName: 'Arial',
+        fontSize,
+      },
+    },
+  ],
+});
+```
+
+Choose the multiplier for your design. For example, `0.03` means the text size is about 3% of the image width.
 
 ### Text background fit
 

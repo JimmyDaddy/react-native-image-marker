@@ -211,7 +211,7 @@ export interface TextStyle {
    */
   fontName?: string;
   /**
-   * @description font size, Android use `sp`, iOS use `pt`
+   * @description font size used when rendering text onto the output image
    * @example
    *  fontSize: 12
    */
