@@ -1,8 +1,9 @@
 name: Deploy Jekyll with GitHub Pages
 
 on:
-  pull_request:
-    types: [closed]
+  push:
+    branches:
+      - master
     paths:
       - 'src/**'
       - 'assets/**'
@@ -24,7 +25,6 @@ permissions:
   contents: write
   pages: write
   id-token: write
-  pull-requests: write
 
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 # However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
@@ -36,7 +36,6 @@ jobs:
   # Build job
   build:
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
     steps:
       - name: Checkout
         uses: actions/checkout@v4

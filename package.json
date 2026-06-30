@@ -51,7 +51,10 @@
     "watermark",
     "icon"
   ],
-  "repository": "https://github.com/JimmyDaddy/react-native-image-marker",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JimmyDaddy/react-native-image-marker.git"
+  },
   "author": "jimmydaddy <heyjimmygo@gmail.com> (https://github.com/JimmyDaddy)",
   "license": "MIT",
   "bugs": {
