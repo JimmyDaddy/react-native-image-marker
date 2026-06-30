@@ -78,7 +78,10 @@ class Utils {
     }
 
     fun transRGBColor(color: String?): String {
-      val colorStr = color!!.substring(1)
+      if (color == null || !color.startsWith("#")) {
+        return color ?: ""
+      }
+      val colorStr = color.substring(1)
       if (colorStr.length == 3) {
         var fullColor = ""
         for (i in colorStr.indices) {
