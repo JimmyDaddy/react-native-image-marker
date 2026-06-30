@@ -2,11 +2,62 @@ table {
   border-collapse: collapse;
 }
 
-table, th, td {
+table,
+th,
+td {
   border: 2px solid var(--color-accent);
   padding: 16px;
 }
 
-table, th {
+table,
+th {
   font-weight: bold;
+}
+
+table.example-gallery {
+  border-collapse: separate;
+  border-spacing: 16px;
+  border: 0;
+  margin: 24px 0;
+}
+
+table.example-gallery td {
+  width: 50%;
+  border: 1px solid var(--color-accent);
+  border-radius: 8px;
+  padding: 14px;
+  vertical-align: top;
+  background: var(--color-background-secondary, var(--color-background));
+  font-weight: normal;
+}
+
+table.example-gallery strong {
+  display: block;
+  margin-bottom: 10px;
+}
+
+table.example-gallery img {
+  display: block;
+  width: 100%;
+  max-width: 280px;
+  height: auto;
+  border-radius: 8px;
+}
+
+@media (max-width: 640px) {
+  table.example-gallery,
+  table.example-gallery tbody,
+  table.example-gallery tr,
+  table.example-gallery td {
+    display: block;
+    width: 100%;
+  }
+
+  table.example-gallery {
+    border-spacing: 0;
+  }
+
+  table.example-gallery td {
+    margin-bottom: 16px;
+  }
 }

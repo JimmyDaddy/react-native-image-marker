@@ -1,9 +1,14 @@
-
 {
   "extends": "./tsconfig",
-  "exclude": ["example", "expo-example"],
+  "exclude": [
+    "example",
+    "expo-example",
+    "**/__tests__/**",
+    "**/*.test.ts",
+    "**/*.test.tsx"
+  ],
   "typedocOptions": {
-    "exclude": [ "**/node_modules/**/*.*", "example/", "expo-example/" ],
+    "exclude": ["**/node_modules/**/*.*", "example/", "expo-example/"],
     "entryPoints": ["src/index.ts"],
     "readme": "./README.MD",
     "name": "image marker for rn",
@@ -11,6 +16,6 @@
     "excludeExternals": true,
     "excludePrivate": true,
     "plugin": ["typedoc-plugin-rename-defaults"],
-    "customCss": "./docs/custom.css",
+    "customCss": "./docs/custom.css"
   }
 }

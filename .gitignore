@@ -73,6 +73,7 @@ android/keystores/debug.keystore
 lib/
 
 docs/**/*.html
+!docs/latest/**/*.html
 
 # testing
 /coverage
