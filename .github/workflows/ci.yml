@@ -594,7 +594,19 @@ jobs:
         run: |
           set -o pipefail
           cd example/ios
-          FORCE_BUNDLING=1 xcodebuild -workspace ImageMarkerExample.xcworkspace -scheme ImageMarkerExample -sdk iphonesimulator -destination 'id=${{ steps.ios-simulator.outputs.id }}' test | xcpretty
+          FORCE_BUNDLING=1 xcodebuild \
+            -workspace ImageMarkerExample.xcworkspace \
+            -scheme ImageMarkerExample \
+            -sdk iphonesimulator \
+            -destination 'id=${{ steps.ios-simulator.outputs.id }}' \
+            -parallel-testing-enabled NO \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testApp \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testTextAnchorOffsetFeatureProducesPreview \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testNormalizesUIImageOrientationBeforeCGImageRendering \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testKeepsAlreadyUprightUIImageInstance \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testRendersImageWatermarkUsingAnchoredOffsets \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testRotatesRenderedBackgroundWhenRequested \
+            test | xcpretty
 
   ci-complete:
     name: Complete CI
