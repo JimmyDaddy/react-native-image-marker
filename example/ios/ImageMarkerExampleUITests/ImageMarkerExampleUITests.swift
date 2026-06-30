@@ -24,16 +24,25 @@ final class ImageMarkerExampleUITests: XCTestCase {
   }
 
   func testApp() throws {
-    // UI tests must launch the application that they test.
     let app = XCUIApplication()
     app.launch()
-    sleep(5)
-    var ele = app.textFields["100"]
-    XCTAssert(ele.exists)
-    ele = app.staticTexts["watermark type:"]
-    XCTAssert(ele.exists)
-    ele = app.staticTexts["background image format:"]
-    XCTAssert(ele.exists)
+    XCTAssertTrue(app.staticTexts["Manual test bench"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["Regression cases"].exists)
+    XCTAssertTrue(app.buttons["regression-text-anchor-offset"].exists)
+    XCTAssertTrue(app.buttons["regression-image-anchor-offset"].exists)
+    XCTAssertTrue(app.buttons["regression-ios-orientation"].exists)
+  }
+
+  func testTextAnchorOffsetRegressionProducesPreview() throws {
+    let app = XCUIApplication()
+    app.launch()
+
+    let regressionCard = app.buttons["regression-text-anchor-offset"]
+    XCTAssertTrue(regressionCard.waitForExistence(timeout: 10))
+    regressionCard.tap()
+
+    XCTAssertTrue(app.staticTexts["#270 text anchor offset"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.otherElements["result-preview-ready"].waitForExistence(timeout: 15))
   }
 
   func testLaunchPerformance() throws {
