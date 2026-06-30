@@ -74,6 +74,8 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
         if (markOpts.positionEnum != null) {
           val pos = getImageRectFromPosition(
             markOpts.positionEnum,
+            markOpts.x,
+            markOpts.y,
             markerBitmap!!.width,
             markerBitmap.height,
             width,

@@ -119,6 +119,64 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
             return fullPath
         }
     }
+
+    private func markerOrigin(
+        position: MarkerPositionEnum,
+        offsetX: String?,
+        offsetY: String?,
+        canvasSize: CGSize,
+        itemSize: CGSize
+    ) -> CGPoint {
+        let margin = CGFloat(20)
+        if position == .none {
+            return CGPoint(
+                x: Utils.parseSpreadValue(v: offsetX, relativeTo: canvasSize.width) ?? margin,
+                y: Utils.parseSpreadValue(v: offsetY, relativeTo: canvasSize.height) ?? margin
+            )
+        }
+
+        var origin: CGPoint
+        switch position {
+        case .topLeft:
+            origin = CGPoint(x: margin, y: margin)
+        case .topCenter:
+            origin = CGPoint(x: (canvasSize.width - itemSize.width) / 2, y: margin)
+        case .topRight:
+            origin = CGPoint(x: canvasSize.width - itemSize.width - margin, y: margin)
+        case .bottomLeft:
+            origin = CGPoint(x: margin, y: canvasSize.height - itemSize.height - margin)
+        case .bottomCenter:
+            origin = CGPoint(x: (canvasSize.width - itemSize.width) / 2, y: canvasSize.height - itemSize.height - margin)
+        case .bottomRight:
+            origin = CGPoint(x: canvasSize.width - itemSize.width - margin, y: canvasSize.height - itemSize.height - margin)
+        case .center:
+            origin = CGPoint(x: (canvasSize.width - itemSize.width) / 2, y: (canvasSize.height - itemSize.height) / 2)
+        case .none:
+            origin = CGPoint(x: margin, y: margin)
+        }
+
+        if let parsedX = Utils.parseSpreadValue(v: offsetX, relativeTo: canvasSize.width) {
+            switch position {
+            case .topRight, .bottomRight:
+                origin.x = canvasSize.width - itemSize.width - parsedX
+            case .topCenter, .bottomCenter, .center:
+                origin.x = (canvasSize.width - itemSize.width) / 2 + parsedX
+            default:
+                origin.x = parsedX
+            }
+        }
+        if let parsedY = Utils.parseSpreadValue(v: offsetY, relativeTo: canvasSize.height) {
+            switch position {
+            case .bottomLeft, .bottomCenter, .bottomRight:
+                origin.y = canvasSize.height - itemSize.height - parsedY
+            case .center:
+                origin.y = (canvasSize.height - itemSize.height) / 2 + parsedY
+            default:
+                origin.y = parsedY
+            }
+        }
+        return origin
+    }
         
     func markImgWithText(_ image: UIImage, _ opts: MarkTextOptions) -> UIImage? {
 
@@ -200,37 +258,15 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
             let textRect = attributedText.boundingRect(with: maxSize, options: .usesLineFragmentOrigin, context: nil)
             let size = textRect.size
             
-            let margin = CGFloat(20)
-            var posX = margin
-            var posY = margin
-            if textOpts.position != .none {
-                switch textOpts.position {
-                    case .topLeft:
-                        posX = margin
-                        posY = margin
-                    case .topCenter:
-                        posX = CGFloat((w - size.width) / 2)
-                    case .topRight:
-                        posX = CGFloat(w - size.width - margin)
-                    case .bottomLeft:
-                        posY = CGFloat(h - size.height - margin)
-                    case .bottomCenter:
-                        posX = CGFloat((w - size.width) / 2)
-                        posY = CGFloat(h - size.height - margin)
-                    case .bottomRight:
-                        posX = CGFloat(w - size.width - margin)
-                        posY = CGFloat(h - size.height - margin)
-                    case .center:
-                        posX = CGFloat((w - size.width) / 2)
-                        posY = CGFloat((h - size.height) / 2)
-                    case .none:
-                        posX = margin
-                        posY = margin
-                }
-            } else {
-                posX = Utils.parseSpreadValue(v: textOpts.X, relativeTo: CGFloat(w)) ?? margin
-                posY = Utils.parseSpreadValue(v: textOpts.Y, relativeTo: CGFloat(h)) ?? margin
-            }
+            let origin = markerOrigin(
+                position: textOpts.position,
+                offsetX: textOpts.X,
+                offsetY: textOpts.Y,
+                canvasSize: CGSize(width: w, height: h),
+                itemSize: size
+            )
+            let posX = origin.x
+            let posY = origin.y
             
             if textOpts.style.rotate != 0 {
                 context.saveGState()
@@ -321,29 +357,14 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
             
             let diagonal = sqrt(pow(ww, 2) + pow(wh, 2)) // 计算对角线长度
             let size = CGSize(width: CGFloat(diagonal), height: CGFloat(diagonal))
-            var rect: CGRect
-            if watermarkOptions.position != .none {
-                switch watermarkOptions.position {
-                    case .topLeft:
-                        rect = CGRect(origin: CGPoint(x: 20, y: 20), size: size)
-                    case .topCenter:
-                        rect = CGRect(origin: CGPoint(x: (w - ww) / 2, y: 20), size: size)
-                    case .topRight:
-                        rect = CGRect(origin: CGPoint(x: w - ww - 20, y: 20), size: size)
-                    case .bottomLeft:
-                        rect = CGRect(origin: CGPoint(x: 20, y: h - wh - 20), size: size)
-                    case .bottomCenter:
-                        rect = CGRect(origin: CGPoint(x: (w - ww) / 2, y: h - wh - 20), size: size)
-                    case .bottomRight:
-                        rect = CGRect(origin: CGPoint(x: w - ww - 20, y: h - wh - 20), size: size)
-                    case .center:
-                        rect = CGRect(origin: CGPoint(x: (w - ww) / 2, y: (h - wh) / 2), size: size)
-                    default:
-                        rect = CGRect(origin: CGPoint(x: 20, y: 20), size: size)
-                    }
-            } else {
-                rect = CGRect(x: Utils.parseSpreadValue(v: watermarkOptions.X, relativeTo: w) ?? 20, y: Utils.parseSpreadValue(v: watermarkOptions.Y, relativeTo: h) ?? 20, width: diagonal, height: diagonal)
-            }
+            let origin = markerOrigin(
+                position: watermarkOptions.position,
+                offsetX: watermarkOptions.X,
+                offsetY: watermarkOptions.Y,
+                canvasSize: CGSize(width: w, height: h),
+                itemSize: CGSize(width: ww, height: wh)
+            )
+            var rect = CGRect(origin: origin, size: size)
             
             UIGraphicsBeginImageContextWithOptions(CGSize(width: diagonal, height: diagonal), false, 1)
             let markerContext = UIGraphicsGetCurrentContext()

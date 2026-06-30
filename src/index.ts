@@ -147,7 +147,7 @@ interface Padding {
 }
 
 /**
- * @description PositionOptions for text watermark and image watermark, if you set position you don't need to set X and Y
+ * @description PositionOptions for text watermark and image watermark. When `position` is set, `X` and `Y` are treated as offsets from that anchor.
  * @example
  * positionOptions: {
  *  X: 10,
@@ -156,6 +156,12 @@ interface Padding {
  * // or
  * positionOptions: {
  *  position: Position.topLeft,
+ * }
+ * // or
+ * positionOptions: {
+ *  position: Position.topRight,
+ *  X: 60, // 60px from the right edge
+ *  Y: 60, // 60px from the top edge
  * }
  * // or
  * positionOptions: {

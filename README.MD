@@ -515,6 +515,8 @@ Marker.markText({
     text: 'text marker normal',
     position: {
       position: Position.topRight,
+      X: 60,
+      Y: 60,
     },
     style: {
       color: '#6450B0',
@@ -661,6 +663,8 @@ Marker.markImage({
     src: require('./images/watermark1.png'),
     position: {
       position: Position.topRight,
+      X: 60,
+      Y: 60,
     },
   }, {
     src: require('./images/watermark2.png'),
