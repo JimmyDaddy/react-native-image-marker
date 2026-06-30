@@ -353,31 +353,31 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         )
     }
     
-    @objc(markWithText:resolver:rejecter:)
-    func mark(withText opts: [AnyHashable: Any], resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) -> Void {
-        guard let markOpts = MarkTextOptions.checkTextParams(opts, rejecter: rejecter) else {
+    @objc(markWithText:resolve:reject:)
+    func mark(withText opts: [AnyHashable: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
+        guard let markOpts = MarkTextOptions.checkTextParams(opts, rejecter: reject) else {
             return
         }
         Task(priority: .userInitiated) {
             do {
                 let images = try await self.loadImages(with: [markOpts.backgroundImage])
                 guard let scaledImage = self.markImgWithText(images[0], markOpts) else {
-                    rejecter("error", "Failed to render watermarked image", nil)
+                    reject("error", "Failed to render watermarked image", nil)
                     return
                 }
                 let res = self.saveImageForMarker(scaledImage, with: markOpts)
-                resolver(res)
+                resolve(res)
                 print("Loaded images: \(images)")
             } catch {
                 print("Failed to load images, error: \(error).")
-                rejecter("error", error.localizedDescription, error)
+                reject("error", error.localizedDescription, error)
             }
         }
     }
     
-    @objc(markWithImage:resolver:rejecter:)
-    func mark(withImage opts: [AnyHashable: Any], resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) -> Void {
-        guard let markOpts = MarkImageOptions.checkImageParams(opts, rejecter: rejecter) else {
+    @objc(markWithImage:resolve:reject:)
+    func mark(withImage opts: [AnyHashable: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
+        guard let markOpts = MarkImageOptions.checkImageParams(opts, rejecter: reject) else {
             return
         }
         Task(priority: .userInitiated) {
@@ -385,15 +385,15 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
                 let waterImages = markOpts.watermarkImages.map { $0.imageOption }
                 var images = try await self.loadImages(with: [markOpts.backgroundImage] + waterImages)
                 guard let scaledImage = self.markImage(with: images.remove(at: 0), waterImages: images, options: markOpts) else {
-                    rejecter("error", "Failed to render watermarked image", nil)
+                    reject("error", "Failed to render watermarked image", nil)
                     return
                 }
                 let res = self.saveImageForMarker(scaledImage, with: markOpts)
-                resolver(res)
+                resolve(res)
                 print("Loaded images: \(images), waterImages: \(waterImages)")
             } catch {
                 print("Failed to load images, error: \(error).")
-                rejecter("error", error.localizedDescription, error)
+                reject("error", error.localizedDescription, error)
             }
         }
     }

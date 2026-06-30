@@ -10,10 +10,10 @@
 @interface RCT_EXTERN_MODULE(ImageMarker, NSObject)
 
 RCT_EXTERN_METHOD(markWithImage: (nonnull NSDictionary *) opts
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
 RCT_EXTERN_METHOD(markWithText: (nonnull NSDictionary *) opts
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
 
 @end

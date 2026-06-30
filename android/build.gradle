@@ -62,6 +62,9 @@ android {
     targetCompatibility JavaVersion.VERSION_1_8
   }
 
+  if (!isNewArchitectureEnabled()) {
+    sourceSets.main.java.srcDirs += ["src/oldarch/java"]
+  }
 }
 
 repositories {
@@ -93,4 +96,3 @@ if (isNewArchitectureEnabled()) {
     codegenJavaPackageName = "com.jimmydaddy.imagemarker"
   }
 }
-

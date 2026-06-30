@@ -367,6 +367,13 @@ jobs:
           name: app-release-${{ github.sha }}.apk
           path: ${{ github.workspace }}/example/android/app-release-${{ github.sha }}.apk
 
+      - name: Build APK New Architecture
+        if: steps.verify-android-changed-files.outputs.any_changed == 'true'
+        run: |
+          cd example/android
+          ./gradlew clean
+          ./gradlew -PnewArchEnabled=true assembleDebug --stacktrace
+
   android-api-level-test:
     runs-on: ubuntu-latest
     needs: [changes, android-build]
@@ -527,7 +534,7 @@ jobs:
         if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
         with:
           path: example/ios/Pods
-          key: ${{ runner.os }}-pods-${{ matrix.cocoapods }}-${{ hashFiles('**/Podfile.lock') }}
+          key: ${{ runner.os }}-pods-${{ matrix.cocoapods }}-${{ hashFiles('example/ios/Podfile', 'react-native-image-marker.podspec', 'package.json', 'ios/**/*', 'src/NativeImageMarker.ts') }}
           restore-keys: |
             ${{ runner.os }}-pods-${{ matrix.cocoapods }}-
             ${{ runner.os }}-pods-
@@ -557,10 +564,12 @@ jobs:
           npm install
 
       - name: Install Pods
-        if: steps.cache-pods.outputs.cache-hit != 'true' && steps.verify-iOS-changed-files.outputs.any_changed == 'true'
+        if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
         run: |
           cd example/ios
-          pod cache clean --all
+          if [ "${{ steps.cache-pods.outputs.cache-hit }}" != "true" ]; then
+            pod cache clean --all
+          fi
           pod install
 
       - name: Install xcpretty
@@ -587,7 +596,11 @@ jobs:
         run: |
           set -o pipefail
           cd example/ios
-          xcodebuild -workspace ImageMarkerExample.xcworkspace -scheme ImageMarkerExample -configuration Release -sdk iphonesimulator -destination 'id=${{ steps.ios-simulator.outputs.id }}' | xcpretty
+          xcodebuild -workspace ImageMarkerExample.xcworkspace -scheme ImageMarkerExample -configuration Release -sdk iphonesimulator -destination 'id=${{ steps.ios-simulator.outputs.id }}' 2>&1 | tee xcodebuild-build.log | xcpretty || {
+            status=$?
+            tail -n 200 xcodebuild-build.log
+            exit $status
+          }
 
       - name: Test
         if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
@@ -606,7 +619,28 @@ jobs:
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testKeepsAlreadyUprightUIImageInstance \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testRendersImageWatermarkUsingAnchoredOffsets \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testRotatesRenderedBackgroundWhenRequested \
-            test | xcpretty
+            test 2>&1 | tee xcodebuild-test.log | xcpretty || {
+              status=$?
+              tail -n 200 xcodebuild-test.log
+              exit $status
+            }
+
+      - name: Install Pods New Architecture
+        if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
+        run: |
+          cd example/ios
+          RCT_NEW_ARCH_ENABLED=1 NO_FLIPPER=1 pod install
+
+      - name: Build New Architecture
+        if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
+        run: |
+          set -o pipefail
+          cd example/ios
+          RCT_NEW_ARCH_ENABLED=1 xcodebuild -workspace ImageMarkerExample.xcworkspace -scheme ImageMarkerExample -configuration Debug -sdk iphonesimulator -destination 'id=${{ steps.ios-simulator.outputs.id }}' 2>&1 | tee xcodebuild-new-arch-build.log | xcpretty || {
+            status=$?
+            tail -n 200 xcodebuild-new-arch-build.log
+            exit $status
+          }
 
   ci-complete:
     name: Complete CI

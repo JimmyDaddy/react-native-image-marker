@@ -9,7 +9,6 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
 import com.jimmydaddy.imagemarker.base.Constants.BASE64
@@ -31,13 +30,9 @@ import java.util.UUID
 /**
  * Created by jimmydaddy on 2017/3/6.
  */
-class ImageMarkerManager(private val context: ReactApplicationContext) : ReactContextBaseJavaModule(
+class ImageMarkerManager(private val context: ReactApplicationContext) : NativeImageMarkerSpec(
   context
 ) {
-  override fun getName(): String {
-    return NAME
-  }
-
   private fun getSaveFormat(saveFormat: SaveFormat?): CompressFormat {
     return if (saveFormat != null && saveFormat === SaveFormat.PNG) CompressFormat.PNG else CompressFormat.JPEG
   }
@@ -177,11 +172,11 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
   @OptIn(DelicateCoroutinesApi::class)
   @RequiresApi(Build.VERSION_CODES.N)
   @ReactMethod
-  fun markWithText(
-    opts: ReadableMap?,
+  override fun markWithText(
+    options: ReadableMap,
     promise: Promise
   ) {
-    val markOpts = MarkTextOptions.checkParams(opts!!, promise) ?: return
+    val markOpts = MarkTextOptions.checkParams(options, promise) ?: return
     Log.d(IMAGE_MARKER_TAG, "uri: " + markOpts.backgroundImage.uri)
     Log.d(IMAGE_MARKER_TAG, "src: " + markOpts.backgroundImage.src.toString())
     GlobalScope.launch(Dispatchers.Main) {
@@ -205,11 +200,11 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : ReactCo
   @OptIn(DelicateCoroutinesApi::class)
   @RequiresApi(Build.VERSION_CODES.N)
   @ReactMethod
-  fun markWithImage(
-    opts: ReadableMap?,
+  override fun markWithImage(
+    options: ReadableMap,
     promise: Promise
   ) {
-    val markOpts = MarkImageOptions.checkParams(opts!!, promise) ?: return
+    val markOpts = MarkImageOptions.checkParams(options, promise) ?: return
     GlobalScope.launch(Dispatchers.Main) {
       try {
         val markers = markOpts.watermarkImages.map { it.imageOption }

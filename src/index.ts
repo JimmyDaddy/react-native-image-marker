@@ -1,4 +1,5 @@
 import { NativeModules, Platform, Image } from 'react-native';
+import NativeImageMarker from './NativeImageMarker';
 
 const { resolveAssetSource } = Image;
 const LINKING_ERROR =
@@ -837,16 +838,17 @@ export interface ImageMarkOptions {
   watermarkImages: Array<WatermarkImageOptions>;
 }
 
-const ImageMarker = NativeModules.ImageMarker
-  ? NativeModules.ImageMarker
-  : new Proxy(
-      {},
-      {
-        get() {
-          throw new Error(LINKING_ERROR);
-        },
-      }
-    );
+const ImageMarker =
+  NativeImageMarker ??
+  NativeModules.ImageMarker ??
+  new Proxy(
+    {},
+    {
+      get() {
+        throw new Error(LINKING_ERROR);
+      },
+    }
+  );
 
 class Marker {
   /** @ignore ignore constructors for typedoc only */

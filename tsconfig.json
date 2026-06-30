@@ -28,5 +28,11 @@
     "target": "esnext"
   },
   "include": ["src/**/*"],
-  "exclude": ["example", "expo-example", "**/__tests__/**", "**/*.test.ts", "**/*.test.tsx"]
+  "exclude": [
+    "example",
+    "expo-example",
+    "**/__tests__/**",
+    "**/*.test.ts",
+    "**/*.test.tsx"
+  ]
 }
