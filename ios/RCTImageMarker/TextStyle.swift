@@ -13,7 +13,9 @@ class TextStyle: NSObject {
     var color: UIColor?
     var shadow: NSShadow?
     var textBackground: TextBackground?
-    var font: UIFont?
+    var fontName: String?
+    var fontSize: CGFloat = 14.0
+    var fontSizeRatio: CGFloat?
     var skewX: CGFloat = 0.0
     var underline: Bool = false
     var strikeThrough: Bool = false
@@ -30,11 +32,9 @@ class TextStyle: NSObject {
             self.shadow = nil
         }
         self.textBackground = try TextBackground(textBackgroundStyle: (opts["textBackgroundStyle"] as? [AnyHashable : Any]))
-        let fontSize = opts["fontSize"] != nil ? RCTConvert.cgFloat(opts["fontSize"]) : 14.0
-        self.font = UIFont(name: opts["fontName"] as? String ?? "", size: fontSize)
-        if self.font == nil {
-            self.font = UIFont.systemFont(ofSize: fontSize)
-        }
+        self.fontName = opts["fontName"] as? String
+        self.fontSize = opts["fontSize"] != nil ? RCTConvert.cgFloat(opts["fontSize"]) : 14.0
+        self.fontSizeRatio = opts["fontSizeRatio"] != nil ? RCTConvert.cgFloat(opts["fontSizeRatio"]) : nil
         self.skewX = RCTConvert.cgFloat(opts["skewX"])
         self.underline = RCTConvert.bool(opts["underline"])
         self.strikeThrough = RCTConvert.bool(opts["strikeThrough"])
@@ -44,5 +44,10 @@ class TextStyle: NSObject {
         self.textAlign = opts["textAlign"] as? String
 
         super.init()
+    }
+
+    func resolvedFont(backgroundWidth: CGFloat) -> UIFont {
+        let resolvedSize = fontSizeRatio != nil ? backgroundWidth * fontSizeRatio! : fontSize
+        return UIFont(name: fontName ?? "", size: resolvedSize) ?? UIFont.systemFont(ofSize: resolvedSize)
     }
 }

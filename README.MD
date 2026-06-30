@@ -39,6 +39,7 @@
 * <details>
   <summary><a href="#usage">Usage</a></summary>
 
+    * [Responsive watermark size](#responsive-watermark-size)
     * [Text background fit](#text-background-fit)
     * [Text background stretchX](#text-background-stretchx)
     * [Text background stretchY](#text-background-stretchy)
@@ -139,6 +140,36 @@ eas build
 For custom fonts, first confirm the font renders in your React Native app, then pass the same native font family or PostScript name to `fontName`.
 
 ## Usage
+
+### Responsive watermark size
+
+`fontSize` is applied to the output bitmap. If two background images have different pixel dimensions, the same `fontSize` will occupy a different percentage of each image.
+
+To keep the visual size consistent across different image resolutions, set `fontSizeRatio`. The native renderer calculates the actual font size from the background image width before drawing the text:
+
+```typescript
+await Marker.markText({
+  backgroundImage: {
+    src: imageUri,
+    scale: 1,
+  },
+  watermarkTexts: [
+    {
+      text: 'watermark',
+      positionOptions: {
+        position: Position.center,
+      },
+      style: {
+        color: '#ffffff',
+        fontName: 'Arial',
+        fontSizeRatio: 0.03,
+      },
+    },
+  ],
+});
+```
+
+Choose the multiplier for your design. For example, `0.03` means the text size is about 3% of the background image width. If both `fontSizeRatio` and `fontSize` are set, `fontSizeRatio` is used.
 
 ### Text background fit
 
