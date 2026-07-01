@@ -86,6 +86,9 @@ describe('Marker JS wrapper', () => {
     expect(nativeOptions.watermarkTexts[0]).not.toHaveProperty(
       'positionOptions'
     );
+    expect(options.backgroundImage.src).toBe('file:///tmp/background.png');
+    expect(options.watermarkTexts[0]).toHaveProperty('positionOptions');
+    expect(options.watermarkTexts[0]).not.toHaveProperty('position');
   });
 
   it('resolves markImage assets and preserves explicit maxSize', async () => {
@@ -136,6 +139,19 @@ describe('Marker JS wrapper', () => {
       uri: 'file:///tmp/watermark.png',
       __packager_asset: false,
     });
+    expect(options.backgroundImage.src).toBe(10);
+    expect(options.watermarkImage.src).toBe('file:///tmp/legacy-watermark.png');
+    expect(options.watermarkImages[0].src).toBe('file:///tmp/watermark.png');
+  });
+
+  it('rejects markImage calls without any image watermark', () => {
+    expect(() =>
+      Marker.markImage({
+        backgroundImage: {
+          src: 'file:///tmp/background.png',
+        },
+      } as any)
+    ).toThrow('please set mark image!');
   });
 
   it('rejects image watermark entries without a source', () => {

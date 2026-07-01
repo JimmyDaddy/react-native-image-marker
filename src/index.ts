@@ -1,7 +1,12 @@
-import { NativeModules, Platform, Image } from 'react-native';
+import { NativeModules, Platform } from 'react-native';
+import type { Spec } from './NativeImageMarker';
 import NativeImageMarker from './NativeImageMarker';
+import {
+  createNativeMarkOptions,
+  normalizeImageMarkOptions,
+  normalizeTextMarkOptions,
+} from './normalize';
 
-const { resolveAssetSource } = Image;
 const LINKING_ERROR =
   `The package 'react-native-image-marker' doesn't seem to be linked. Make sure: \n\n` +
   Platform.select({ ios: "- You have run 'pod install'\n", default: '' }) +
@@ -932,191 +937,17 @@ export interface MarkOptions {
   maxSize?: number;
 }
 
-const ImageMarker =
-  NativeImageMarker ??
-  NativeModules.ImageMarker ??
-  new Proxy(
-    {},
-    {
-      get() {
-        throw new Error(LINKING_ERROR);
-      },
-    }
-  );
-
-type OutputOptions = Pick<
-  MarkOptions,
-  'quality' | 'filename' | 'saveFormat' | 'maxSize'
->;
-
-function clonePositionOptions(
-  position?: PositionOptions
-): PositionOptions | undefined {
-  return position ? { ...position } : position;
-}
-
-function cloneCornerRadius(
-  cornerRadius?: CornerRadius
-): CornerRadius | undefined {
-  if (!cornerRadius) {
-    return cornerRadius;
-  }
-
-  return {
-    topLeft: cornerRadius.topLeft ? { ...cornerRadius.topLeft } : undefined,
-    topRight: cornerRadius.topRight ? { ...cornerRadius.topRight } : undefined,
-    bottomLeft: cornerRadius.bottomLeft
-      ? { ...cornerRadius.bottomLeft }
-      : undefined,
-    bottomRight: cornerRadius.bottomRight
-      ? { ...cornerRadius.bottomRight }
-      : undefined,
-    all: cornerRadius.all ? { ...cornerRadius.all } : undefined,
-  };
-}
-
-function cloneTextBackgroundStyle(
-  style?: TextBackgroundStyle | null
-): TextBackgroundStyle | null | undefined {
-  if (!style) {
-    return style;
-  }
-
-  return {
-    ...style,
-    cornerRadius: cloneCornerRadius(style.cornerRadius),
-  };
-}
-
-function cloneTextStyle(style?: TextStyle): TextStyle | undefined {
-  if (!style) {
-    return style;
-  }
-
-  return {
-    ...style,
-    shadowStyle: style.shadowStyle
-      ? { ...style.shadowStyle }
-      : style.shadowStyle,
-    textBackgroundStyle: cloneTextBackgroundStyle(style.textBackgroundStyle),
-  };
-}
-
-function cloneTextWatermarks(watermarkTexts: TextOptions[]): TextOptions[] {
-  return watermarkTexts.map((textOptions) => ({
-    ...textOptions,
-    position: clonePositionOptions(textOptions.position),
-    positionOptions: clonePositionOptions(textOptions.positionOptions),
-    style: cloneTextStyle(textOptions.style),
-  }));
-}
-
-function cloneImageOptions<T extends ImageOptions | undefined>(
-  imageOptions: T
-): T {
-  return imageOptions ? ({ ...imageOptions } as T) : imageOptions;
-}
-
-function cloneImageWatermarks(
-  watermarkImages: WatermarkImageOptions[]
-): WatermarkImageOptions[] {
-  return watermarkImages.map((imageOptions) => ({
-    ...imageOptions,
-    position: clonePositionOptions(imageOptions.position),
-  }));
-}
-
-function getOutputOptions(options: MarkOptions): OutputOptions {
-  const outputOptions: OutputOptions = {};
-
-  if (options.quality !== undefined) {
-    outputOptions.quality = options.quality;
-  }
-  if (options.filename !== undefined) {
-    outputOptions.filename = options.filename;
-  }
-  if (options.saveFormat !== undefined) {
-    outputOptions.saveFormat = options.saveFormat;
-  }
-  if (options.maxSize !== undefined) {
-    outputOptions.maxSize = options.maxSize;
-  }
-
-  return outputOptions;
-}
-
-function resolveImageSource(src: any) {
-  let srcObj: any = resolveAssetSource(src);
-  if (!srcObj) {
-    srcObj = {
-      uri: src,
-      __packager_asset: false,
-    };
-  }
-  return srcObj;
-}
-
-function createTextLayer(textOptions: TextOptions): TextWatermarkLayer {
-  return {
-    ...textOptions,
-    type: 'text',
-    position:
-      clonePositionOptions(
-        textOptions.position || textOptions.positionOptions
-      ) || {},
-    style: cloneTextStyle(textOptions.style),
-  };
-}
-
-function createImageLayer(
-  imageOptions: WatermarkImageOptions
-): ImageWatermarkLayer {
-  return {
-    ...imageOptions,
-    type: 'image',
-    src: resolveImageSource(imageOptions.src),
-    position: clonePositionOptions(imageOptions.position) || {},
-  };
-}
-
-function createWatermarkLayers(options: MarkOptions): WatermarkLayer[] {
-  if ((options.watermarks?.length ?? 0) > 0) {
-    return options.watermarks!.map((layer) => {
-      if (layer.type === 'text') {
-        return createTextLayer(layer);
+function getImageMarker(): Spec {
+  return (NativeImageMarker ??
+    NativeModules.ImageMarker ??
+    new Proxy(
+      {},
+      {
+        get() {
+          throw new Error(LINKING_ERROR);
+        },
       }
-      return createImageLayer(layer);
-    });
-  }
-
-  const layers: WatermarkLayer[] = [
-    ...cloneTextWatermarks(options.watermarkTexts ?? []).map(createTextLayer),
-    ...cloneImageWatermarks(options.watermarkImages ?? []).map(
-      createImageLayer
-    ),
-  ];
-
-  if (options.watermarkImage?.src) {
-    layers.push(
-      createImageLayer({
-        ...cloneImageOptions(options.watermarkImage),
-        position: clonePositionOptions(options.watermarkPositions),
-      })
-    );
-  }
-
-  return layers;
-}
-
-function createNativeMarkOptions(options: MarkOptions): MarkOptions {
-  return {
-    backgroundImage: {
-      ...cloneImageOptions(options.backgroundImage),
-      src: resolveImageSource(options.backgroundImage.src),
-    },
-    watermarks: createWatermarkLayers(options),
-    ...getOutputOptions(options),
-  };
+    )) as Spec;
 }
 
 class Marker {
@@ -1208,30 +1039,17 @@ class Marker {
    * await ImageMarker.markText(options);
    */
   static markText(options: TextMarkOptions): Promise<string> {
-    const { backgroundImage } = options;
+    const { backgroundImage, watermarkTexts } = options;
 
     if (!backgroundImage || !backgroundImage.src) {
       throw new Error('please set image!');
     }
 
-    let srcObj: any = resolveAssetSource(backgroundImage.src);
-    if (!srcObj) {
-      srcObj = {
-        uri: backgroundImage.src,
-        __packager_asset: false,
-      };
+    if (!watermarkTexts || watermarkTexts.length === 0) {
+      throw new Error('please set watermark text!');
     }
 
-    options.watermarkTexts.forEach((item) => {
-      item.position = item.position || item.positionOptions;
-      delete item.positionOptions;
-    });
-
-    options.backgroundImage.src = srcObj;
-    // let mShadowStyle = shadowStyle || {};
-    // let mTextBackgroundStyle = textBackgroundStyle || {};
-    options.maxSize = options.maxSize || 2048;
-    return ImageMarker.markWithText(options);
+    return getImageMarker().markWithText(normalizeTextMarkOptions(options));
   }
 
   /**
@@ -1284,61 +1102,19 @@ class Marker {
    * await ImageMarker.markImage(options);
    */
   static markImage(options: ImageMarkOptions): Promise<string> {
-    const {
-      backgroundImage,
-      watermarkImage = {} as any,
-      watermarkImages = [],
-    } = options;
+    const { backgroundImage, watermarkImage, watermarkImages = [] } = options;
 
     if (!backgroundImage || !backgroundImage.src) {
       throw new Error('please set image!');
     }
-    if (
-      (!watermarkImage || !watermarkImage.src) &&
-      watermarkImages.some((item) => !item.src)
-    ) {
+    if (!watermarkImage?.src && watermarkImages.length === 0) {
+      throw new Error('please set mark image!');
+    }
+    if (watermarkImages.some((item) => !item.src)) {
       throw new Error('please set mark image!');
     }
 
-    let srcObj: any = resolveAssetSource(backgroundImage.src);
-    if (!srcObj) {
-      srcObj = {
-        uri: backgroundImage.src,
-        __packager_asset: false,
-      };
-    }
-
-    if (watermarkImage && options.watermarkImage) {
-      let markerObj: any = resolveAssetSource(watermarkImage.src);
-      if (!markerObj) {
-        markerObj = {
-          uri: watermarkImage.src,
-          __packager_asset: false,
-        };
-      }
-
-      options.watermarkImage.src = markerObj;
-    }
-
-    if (watermarkImages.length > 0) {
-      for (const myWi of watermarkImages) {
-        let markerObj: any = resolveAssetSource(myWi.src);
-        if (!markerObj) {
-          markerObj = {
-            uri: myWi.src,
-            __packager_asset: false,
-          };
-        }
-        myWi.src = markerObj;
-      }
-    } else {
-      options.watermarkImages = [];
-    }
-
-    options.backgroundImage.src = srcObj;
-    options.maxSize = options.maxSize || 2048;
-
-    return ImageMarker.markWithImage(options);
+    return getImageMarker().markWithImage(normalizeImageMarkOptions(options));
   }
 
   /**
@@ -1380,9 +1156,7 @@ class Marker {
     if (!nativeOptions.watermarks || nativeOptions.watermarks.length === 0) {
       throw new Error('please set watermark text or image!');
     }
-    nativeOptions.maxSize = nativeOptions.maxSize || 2048;
-
-    return ImageMarker.markWithWatermarks(nativeOptions);
+    return getImageMarker().markWithWatermarks(nativeOptions);
   }
 }
 
