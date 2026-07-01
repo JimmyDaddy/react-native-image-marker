@@ -1,5 +1,9 @@
 # Changelog
 
+## <small>1.4.1 (2026-07-01)</small>
+
+* fix: keep scaled image watermarks sharp (#295) ([a5d7112](https://github.com/JimmyDaddy/react-native-image-marker/commit/a5d7112)), closes [#295](https://github.com/JimmyDaddy/react-native-image-marker/issues/295)
+
 ## 1.4.0 (2026-07-01)
 
 * feat: add native layered watermark renderer (#293) ([50fc255](https://github.com/JimmyDaddy/react-native-image-marker/commit/50fc255)), closes [#293](https://github.com/JimmyDaddy/react-native-image-marker/issues/293)
