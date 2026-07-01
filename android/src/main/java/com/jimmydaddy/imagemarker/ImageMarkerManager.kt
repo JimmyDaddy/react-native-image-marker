@@ -269,7 +269,8 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : NativeI
           markOpts.backgroundImage,
         ).plus(markers)
         val bitmaps = MarkerImageLoader(context, markOpts.maxSize).loadImages(
-          concatenatedArray
+          concatenatedArray,
+          listOf(true).plus(List(markers.size) { false })
         )
         val bg = bitmaps[0]
         val markerBitmaps = bitmaps.subList(1, bitmaps.lastIndex + 1)
@@ -298,7 +299,8 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : NativeI
           markOpts.backgroundImage,
         ).plus(markers)
         val bitmaps = MarkerImageLoader(context, markOpts.maxSize).loadImages(
-          concatenatedArray
+          concatenatedArray,
+          listOf(true).plus(List(markers.size) { false })
         )
         val bg = bitmaps[0]
         val markerBitmaps = bitmaps.subList(1, bitmaps.lastIndex + 1)

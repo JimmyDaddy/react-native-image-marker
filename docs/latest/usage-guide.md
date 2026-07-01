@@ -19,6 +19,7 @@ This guide keeps the full visual cookbook for react-native-image-marker. Start f
 - [Multiple text watermarks](#multiple-text-watermarks)
 - [Text rotation](#text-rotation)
 - [Icon watermarks](#icon-watermarks)
+- [Sharp QR and icon watermarks](#sharp-qr-and-icon-watermarks)
 - [Multiple icon watermarks](#multiple-icon-watermarks)
 - [Mixed text and icon watermarks](#mixed-text-and-icon-watermarks)
 - [Background rotation](#background-rotation)
@@ -509,6 +510,34 @@ Marker.markImage({
 ```
 
 </details>
+
+### Sharp QR and icon watermarks
+
+When the watermark is a QR code, barcode, pixel-art asset, or line-art logo, use PNG output so the saved image keeps hard edges. JPEG output can add compression artifacts even when `quality` is high.
+
+Set the final watermark size with the image watermark `scale` field. The native renderer applies that scale while drawing the watermark, which keeps small, high-contrast assets sharper than pre-compressing the watermark source.
+
+```typescript
+import Marker, { ImageFormat, Position } from "react-native-image-marker"
+
+Marker.markImage({
+  backgroundImage: {
+    src: require('./images/test.jpg'),
+    scale: 1,
+  },
+  watermarkImages: [{
+    src: 'data:image/png;base64,iVBORw0KGgo...',
+    position: {
+      position: Position.bottomRight,
+      X: 24,
+      Y: 24,
+    },
+    scale: 0.25,
+  }],
+  saveFormat: ImageFormat.png,
+  quality: 100,
+})
+```
 
 ### Multiple icon watermarks
 

@@ -295,6 +295,12 @@ await Marker.markText({
 });
 ```
 
+### Keep QR and Icon Watermarks Sharp
+
+For QR codes, barcodes, pixel art, and line-art logos, prefer `saveFormat: ImageFormat.png`. JPEG can add compression artifacts even with `quality: 100`, while PNG keeps hard edges intact.
+
+Image watermarks are scaled natively from their `scale` value before rendering, so choose the final output size with `scale` instead of pre-compressing the source image.
+
 ### Use a Responsive Text Size
 
 Use `fontSizeRatio` when the same watermark should scale with different background image widths.
