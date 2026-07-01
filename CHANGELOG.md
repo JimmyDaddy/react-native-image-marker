@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.0 (2026-07-01)
+
+* feat: add new architecture codegen support (#291) ([26011b6](https://github.com/JimmyDaddy/react-native-image-marker/commit/26011b6)), closes [#291](https://github.com/JimmyDaddy/react-native-image-marker/issues/291)
+* ci: enable npm trusted publishing ([ac889c7](https://github.com/JimmyDaddy/react-native-image-marker/commit/ac889c7))
+* ci: fix pages deployment trigger ([0f4df9c](https://github.com/JimmyDaddy/react-native-image-marker/commit/0f4df9c))
+
 ## <small>1.2.12 (2026-06-30)</small>
 
 * test: add native functional coverage (#290) ([90dbfa4](https://github.com/JimmyDaddy/react-native-image-marker/commit/90dbfa4)), closes [#290](https://github.com/JimmyDaddy/react-native-image-marker/issues/290)
