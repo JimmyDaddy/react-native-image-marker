@@ -23,12 +23,19 @@ class MarkImageOptions(options: ReadableMap) : Options(options) {
     }
     if (markerImageOpts != null) {
       val marker = ImageOptions(markerImageOpts)
-      val positionOptions =
-        if (null != options.getMap("watermarkPositions")) options.getMap("watermarkPositions") else null
-      val x = if (positionOptions!!.hasKey("X")) Utils.handleDynamicToString(positionOptions.getDynamic("X")) else null
-      val y = if (positionOptions.hasKey("Y")) Utils.handleDynamicToString(positionOptions.getDynamic("Y")) else null
+      val positionOptions = options.getMap("watermarkPositions")
+      val x = if (positionOptions?.hasKey("X") == true) {
+        Utils.handleDynamicToString(positionOptions.getDynamic("X"))
+      } else {
+        null
+      }
+      val y = if (positionOptions?.hasKey("Y") == true) {
+        Utils.handleDynamicToString(positionOptions.getDynamic("Y"))
+      } else {
+        null
+      }
       val positionEnum =
-        if (null != positionOptions.getString("position")) PositionEnum.getPosition(
+        if (positionOptions?.getString("position") != null) PositionEnum.getPosition(
           positionOptions.getString("position")
         ) else null
       val markerOpts = WatermarkImageOptions(marker, x, y, positionEnum)

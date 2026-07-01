@@ -19,7 +19,8 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
     func loadImages(with imageOptions: [ImageOptions]) async throws -> [UIImage] {
         let className = "RCTImageLoader"
         let classType: AnyClass? = NSClassFromString(className)
-        guard let imageLoader = self.bridge.module(for: classType) as? RCTImageLoader else {
+        guard let bridge = self.bridge,
+              let imageLoader = bridge.module(for: classType) as? RCTImageLoader else {
             throw NSError(domain: ErrorDomainEnum.BASE.rawValue, code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to get ImageLoader module"])
         }
         let images = try await withThrowingTaskGroup(of: (Int, UIImage).self) { group in
@@ -39,13 +40,10 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
                                 continuation.resume(throwing: error)
                                 return
                             }
-                            imageLoader.loadImage(with: request, size: CGSizeMake(img.rnSrc.width, img.rnSrc.height), scale: img.rnSrc.scale, clipped: false, resizeMode: RCTResizeMode.cover) { progress, total in
-                                print("Loading image: \(img.uri) progress: \(progress) total\(total)")
-                            } partialLoad: { loadedImage in
+                            imageLoader.loadImage(with: request, size: CGSizeMake(img.rnSrc.width, img.rnSrc.height), scale: img.rnSrc.scale, clipped: false, resizeMode: RCTResizeMode.cover) { _, _ in
+                            } partialLoad: { _ in
                                 //
                             } completionBlock: { error, loadedImage in
-                                print("Loaded image: ", img.uri)
-
                                 if let loadedImage = loadedImage {
                                     continuation.resume(returning: (index, loadedImage.normalizedForImageMarker()))
                                 } else if let error = error {
@@ -87,18 +85,25 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
     }
     
     public static func moduleName() -> String! {
-        return "ImageMarker";
+        return "ImageMarker"
     }
     
-    func saveImageForMarker(_ image: UIImage, with opts: Options) -> String? {
+    private func markerError(_ message: String) -> NSError {
+        return NSError(domain: ErrorDomainEnum.BASE.rawValue, code: 1, userInfo: [NSLocalizedDescriptionKey: message])
+    }
+
+    func saveImageForMarker(_ image: UIImage, with opts: Options) throws -> String {
         let fullPath = generateCacheFilePathForMarker(Utils.getExt(opts.saveFormat), opts.filename)
         if let saveFormat = opts.saveFormat, saveFormat == "base64" {
-            let base64String = image.pngData()?.base64EncodedString(options: .lineLength64Characters)
-            return "data:image/png;base64,\(base64String ?? "")"
+            guard let imageData = image.pngData() else {
+                throw markerError("Failed to encode image as PNG")
+            }
+            return "data:image/png;base64,\(imageData.base64EncodedString(options: .lineLength64Characters))"
         }
-        let data = Utils.isPng(opts.saveFormat) ? image.pngData() : image.jpegData(compressionQuality: CGFloat(opts.quality) / 100.0)
-        let fileManager = FileManager.default
-        fileManager.createFile(atPath: fullPath, contents: data, attributes: nil)
+        guard let data = Utils.isPng(opts.saveFormat) ? image.pngData() : image.jpegData(compressionQuality: CGFloat(opts.quality) / 100.0) else {
+            throw markerError("Failed to encode image")
+        }
+        try data.write(to: URL(fileURLWithPath: fullPath), options: .atomic)
         return fullPath
     }
     
@@ -265,7 +270,7 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
 
         if let textBackground = textOpts.style.textBackground {
             let bgEdgeInsets = textBackground.toEdgeInsets(width: w, height: h)
-            context.setFillColor(textBackground.colorBg!.cgColor)
+            context.setFillColor((textBackground.colorBg ?? UIColor.clear).cgColor)
             let stretchX = bgEdgeInsets.left + bgEdgeInsets.right
             let stretchY = bgEdgeInsets.top + bgEdgeInsets.bottom
             var bgRect = CGRect(
@@ -282,8 +287,8 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
 
             bgRect.inset(by: bgEdgeInsets)
 
-            if !Utils.isNULL(textBackground.cornerRadius) {
-                let path = textBackground.cornerRadius!.radiusPath(rect: bgRect)
+            if let cornerRadius = textBackground.cornerRadius {
+                let path = cornerRadius.radiusPath(rect: bgRect)
                 context.addPath(path.cgPath)
                 context.fillPath()
             } else {
@@ -297,130 +302,28 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
     }
 
     func markImgWithText(_ image: UIImage, _ opts: MarkTextOptions) -> UIImage? {
+        let canvasSize = image.size
+        UIGraphicsBeginImageContextWithOptions(canvasSize, false, opts.backgroundImage.scale)
+        defer {
+            UIGraphicsEndImageContext()
+        }
 
-        let bg = image;
-        let w = bg.size.width
-        let h = bg.size.height
-        UIGraphicsBeginImageContextWithOptions(bg.size, false, opts.backgroundImage.scale)
-        
-        guard let context = UIGraphicsGetCurrentContext() else {
+        guard let context = UIGraphicsGetCurrentContext(), let backgroundImage = image.cgImage else {
             return nil
         }
-        let canvasRect = CGRect(x: 0, y: 0, width: w, height: h)
 
-        context.saveGState()
-        
-        let transform = CGAffineTransform(translationX: 0, y: canvasRect.height)
-            .scaledBy(x: 1, y: -1)
-        context.concatenate(transform)
-        if opts.backgroundImage.alpha != 1.0 {
-            context.beginTransparencyLayer(auxiliaryInfo: nil)
-            context.setAlpha(opts.backgroundImage.alpha)
-            context.setBlendMode(.multiply)
-            context.draw(bg.cgImage!, in: canvasRect)
-            context.endTransparencyLayer()
-            context.setBlendMode(.normal)
-        } else {
-            context.draw(bg.cgImage!, in: canvasRect)
-        }
-        context.restoreGState()
+        ImageMarkerRenderer.drawBackground(
+            context: context,
+            image: backgroundImage,
+            rect: CGRect(origin: .zero, size: canvasSize),
+            alpha: opts.backgroundImage.alpha
+        )
 
-        
         for textOpts in opts.watermarkTexts {
-            context.saveGState()
-            let font = fontWithTraits(
-                textOpts.style.resolvedFont(backgroundWidth: w),
-                bold: textOpts.style.bold,
-                italic: textOpts.style.italic
-            )
-            
-            var attributes: [NSAttributedString.Key: Any] = [
-                .font: font as Any,   //设置字体
-                .foregroundColor: textOpts.style.color as Any,      //设置字体颜色
-            ]
-            
-            if let shadow = textOpts.style.shadow {
-                attributes[.shadow] = shadow
-            }
-            if textOpts.style.underline {
-                attributes[.underlineStyle] = NSUnderlineStyle.single.rawValue
-            }
-            if textOpts.style.strikeThrough {
-                attributes[.strikethroughStyle] = NSUnderlineStyle.single.rawValue
-            }
-            if let textAlign = textOpts.style.textAlign {
-                let paragraphStyle = NSMutableParagraphStyle()
-                switch textAlign {
-                case "right":
-                    paragraphStyle.alignment = .right
-                case "center":
-                    paragraphStyle.alignment = .center
-                default:
-                    paragraphStyle.alignment = .left
-                }
-                attributes[.paragraphStyle] = paragraphStyle
-            }
-            if textOpts.style.skewX != 0 {
-                attributes[.obliqueness] = textOpts.style.skewX
-            }
-            
-            let attributedText = NSAttributedString(string: textOpts.text, attributes: attributes)
-            
-            let maxSize = CGSize(width: w, height: h) // 最大宽度和高度
-            let textRect = attributedText.boundingRect(with: maxSize, options: .usesLineFragmentOrigin, context: nil)
-            let size = textRect.size
-            
-            let origin = markerOrigin(
-                position: textOpts.position,
-                offsetX: textOpts.X,
-                offsetY: textOpts.Y,
-                canvasSize: CGSize(width: w, height: h),
-                itemSize: size
-            )
-            let posX = origin.x
-            let posY = origin.y
-            
-            if textOpts.style.rotate != 0 {
-                context.saveGState()
-                let rotation = CGAffineTransform(rotationAngle: CGFloat(textOpts.style.rotate) * .pi / 180)
-                let textRectWithPos = CGRect(x: CGFloat(posX), y: CGFloat(posY), width: size.width, height: size.height)
-                context.translateBy(x: textRectWithPos.midX, y: textRectWithPos.midY)
-                context.concatenate(rotation)
-                context.translateBy(x: -( textRectWithPos.midX), y: -(textRectWithPos.midY))
-            }
-            
-            if let textBackground = textOpts.style.textBackground {
-                let bgEdgeInsets = textBackground.toEdgeInsets(width: CGFloat(w), height: CGFloat(h))
-                context.setFillColor(textBackground.colorBg!.cgColor)
-                let stretchX = bgEdgeInsets.left + bgEdgeInsets.right;
-                let stretchY = bgEdgeInsets.top + bgEdgeInsets.bottom;
-                var bgRect = CGRect(x: CGFloat(CGFloat(posX) - bgEdgeInsets.left), y: CGFloat(CGFloat(posY) - bgEdgeInsets.top), width: size.width + stretchX, height: size.height + stretchY)
-                if textBackground.typeBg == "stretchX" {
-                    bgRect = CGRect(x: 0, y: CGFloat(posY) - bgEdgeInsets.top, width: CGFloat(w), height: size.height + stretchY)
-                } else if textBackground.typeBg == "stretchY" {
-                    bgRect = CGRect(x: CGFloat(CGFloat(posX) - bgEdgeInsets.left), y: 0, width: size.width + stretchX, height: CGFloat(h))
-                }
-                
-                bgRect.inset(by: bgEdgeInsets)
-                
-                if !Utils.isNULL(textBackground.cornerRadius) {
-                    let path = textBackground.cornerRadius!.radiusPath(rect: bgRect)
-                    context.addPath(path.cgPath)
-                    context.fillPath()
-                } else {
-                    context.fill(bgRect)
-                }
-            }
-            
-            let rect = CGRect(origin: CGPoint(x: posX, y: posY), size: size)
-            attributedText.draw(in: rect)
-            context.restoreGState()
+            drawTextWatermark(textOpts, in: context, canvasSize: canvasSize)
         }
-        
-        var aimg = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
-        aimg = aimg?.rotatedImageWithTransform(opts.backgroundImage.rotate)
-        return aimg
+
+        return UIGraphicsGetImageFromCurrentImageContext()?.rotatedImageWithTransform(opts.backgroundImage.rotate)
     }
     
     func markImage(with image: UIImage, waterImages: [UIImage], options: MarkImageOptions) -> UIImage? {
@@ -461,23 +364,12 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
             return nil
         }
 
-        let canvasRect = CGRect(origin: .zero, size: canvasSize)
-        context.saveGState()
-
-        let transform = CGAffineTransform(translationX: 0, y: canvasRect.height)
-            .scaledBy(x: 1, y: -1)
-        context.concatenate(transform)
-        if options.backgroundImage.alpha != 1.0 {
-            context.beginTransparencyLayer(auxiliaryInfo: nil)
-            context.setAlpha(options.backgroundImage.alpha)
-            context.setBlendMode(.multiply)
-            context.draw(backgroundImage, in: canvasRect)
-            context.endTransparencyLayer()
-            context.setBlendMode(.normal)
-        } else {
-            context.draw(backgroundImage, in: canvasRect)
-        }
-        context.restoreGState()
+        ImageMarkerRenderer.drawBackground(
+            context: context,
+            image: backgroundImage,
+            rect: CGRect(origin: .zero, size: canvasSize),
+            alpha: options.backgroundImage.alpha
+        )
 
         var imageIndex = 0
         for layer in options.watermarkLayers {
@@ -521,11 +413,9 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
                     reject("error", "Failed to render watermarked image", nil)
                     return
                 }
-                let res = self.saveImageForMarker(scaledImage, with: markOpts)
+                let res = try self.saveImageForMarker(scaledImage, with: markOpts)
                 resolve(res)
-                print("Loaded images: \(images)")
             } catch {
-                print("Failed to load images, error: \(error).")
                 reject("error", error.localizedDescription, error)
             }
         }
@@ -544,11 +434,9 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
                     reject("error", "Failed to render watermarked image", nil)
                     return
                 }
-                let res = self.saveImageForMarker(scaledImage, with: markOpts)
+                let res = try self.saveImageForMarker(scaledImage, with: markOpts)
                 resolve(res)
-                print("Loaded images: \(images), waterImages: \(waterImages)")
             } catch {
-                print("Failed to load images, error: \(error).")
                 reject("error", error.localizedDescription, error)
             }
         }
@@ -567,11 +455,9 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
                     reject("error", "Failed to render watermarked image", nil)
                     return
                 }
-                let res = self.saveImageForMarker(scaledImage, with: markOpts)
+                let res = try self.saveImageForMarker(scaledImage, with: markOpts)
                 resolve(res)
-                print("Loaded images: \(images), waterImages: \(waterImages)")
             } catch {
-                print("Failed to load images, error: \(error).")
                 reject("error", error.localizedDescription, error)
             }
         }

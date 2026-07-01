@@ -4,21 +4,22 @@ import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReadableMap
 
 class MarkTextOptions(options: ReadableMap) : Options(options) {
-  lateinit var watermarkTexts: Array<TextOptions?>
+  var watermarkTexts: Array<TextOptions>
 
   init {
     val waterMarkTextsMap = options.getArray("watermarkTexts")
-    if (waterMarkTextsMap!!.size() > 0) {
-      watermarkTexts = arrayOfNulls(waterMarkTextsMap.size())
-      for (i in 0 until waterMarkTextsMap.size()) {
-        val textMap = waterMarkTextsMap.getMap(i)
-        textMap?.let {
-          watermarkTexts[i] = TextOptions(it)
-        } ?: run {
-          throw MarkerError(ErrorCode.NULL_MAP, "watermarkTexts[$i] is null")
-        }
-      }
+    if (waterMarkTextsMap == null || waterMarkTextsMap.size() <= 0) {
+      throw MarkerError(ErrorCode.PARAMS_REQUIRED, "watermarkTexts is required")
     }
+
+    val textOptions = arrayListOf<TextOptions>()
+    for (i in 0 until waterMarkTextsMap.size()) {
+      if (waterMarkTextsMap.isNull(i)) {
+        throw MarkerError(ErrorCode.NULL_MAP, "watermarkTexts[$i] is null")
+      }
+      textOptions.add(TextOptions(waterMarkTextsMap.getMap(i)))
+    }
+    watermarkTexts = textOptions.toTypedArray()
   }
 
   companion object {

@@ -107,16 +107,15 @@ class Utils: NSObject {
     }
 
     static func isPng(_ saveFormat: String?) -> Bool {
-        return saveFormat != nil && (saveFormat!.caseInsensitiveCompare("png") == .orderedSame)
+        return saveFormat?.caseInsensitiveCompare("png") == .orderedSame
     }
 
     static func getExt(_ saveFormat: String?) -> String {
-        let ext = saveFormat != nil && (saveFormat!.caseInsensitiveCompare("png") == .orderedSame) ? ".png" : ".jpg"
-        return ext
+        return isPng(saveFormat) ? ".png" : ".jpg"
     }
 
     static func isBase64(_ uri: String?) -> Bool {
-        return uri != nil ? uri!.hasPrefix("data:") : false
+        return uri?.hasPrefix("data:") ?? false
     }
 
     static func isNULL(_ obj: Any?) -> Bool {
@@ -134,12 +133,12 @@ class Utils: NSObject {
     }
 
     static func parseSpreadValue(v: String?, relativeTo length: CGFloat) -> CGFloat? {
-        if v == nil { return nil }
-        if v?.hasSuffix(String(describing: "%")) ?? false {
-            let percent = CGFloat(Double(v!.dropLast()) ?? 0) / 100
+        guard let v else { return nil }
+        if v.hasSuffix("%") {
+            let percent = CGFloat(Double(v.dropLast()) ?? 0) / 100
             return length * percent
         } else {
-            return CGFloat(Double(v!) ?? 0)
+            return CGFloat(Double(v) ?? 0)
         }
     }
 

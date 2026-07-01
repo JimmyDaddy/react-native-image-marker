@@ -3,3 +3,5 @@ lib
 docs
 
 base64.js
+example/src/bas64bg.js
+expo-example/assets/bas64bg.js

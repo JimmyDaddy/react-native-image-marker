@@ -16,12 +16,17 @@ import com.jimmydaddy.imagemarker.base.Constants.IMAGE_MARKER_TAG
 import com.jimmydaddy.imagemarker.base.MarkImageOptions
 import com.jimmydaddy.imagemarker.base.MarkTextOptions
 import com.jimmydaddy.imagemarker.base.MarkWatermarkOptions
+import com.jimmydaddy.imagemarker.base.MarkerError
+import com.jimmydaddy.imagemarker.base.Options
 import com.jimmydaddy.imagemarker.base.SaveFormat
 import com.jimmydaddy.imagemarker.base.Utils.Companion.getBlankBitmap
-import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.BufferedOutputStream
 import java.io.ByteArrayOutputStream
 import java.io.FileOutputStream
@@ -34,191 +39,182 @@ import java.util.UUID
 class ImageMarkerManager(private val context: ReactApplicationContext) : NativeImageMarkerSpec(
   context
 ) {
-  private fun getSaveFormat(saveFormat: SaveFormat?): CompressFormat {
-    return if (saveFormat != null && saveFormat === SaveFormat.PNG) CompressFormat.PNG else CompressFormat.JPEG
+  private val moduleScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+
+  override fun invalidate() {
+    moduleScope.cancel()
+    super.invalidate()
   }
 
-  private fun markImageByBitmap(
-    bg: Bitmap?,
-    markers: List<Bitmap?>,
-    dest: String,
-    opts: MarkImageOptions,
-    promise: Promise
+  private fun getSaveFormat(saveFormat: SaveFormat?): CompressFormat {
+    return if (saveFormat == SaveFormat.PNG) CompressFormat.PNG else CompressFormat.JPEG
+  }
+
+  private fun launchMarkerJob(
+    promise: Promise,
+    block: suspend () -> String
   ) {
-    var bos: BufferedOutputStream? = null
-    var icon: Bitmap? = null
-    try {
-      icon = ImageMarkerRenderer.renderImageWatermarks(
-        bg!!,
-        markers,
-        opts,
-        recycleMarkerBitmaps = true
-      )
-
-      // 保存
-      // canvas.save(Canvas.ALL_SAVE_FLAG);
-      if (!bg.isRecycled) {
-        bg.recycle()
-        System.gc()
-      }
-
-      // export base64
-      if (dest == BASE64) {
-        val base64Stream = ByteArrayOutputStream()
-        icon.compress(CompressFormat.PNG, opts.quality, base64Stream)
-        base64Stream.flush()
-        base64Stream.close()
-        val bitmapBytes = base64Stream.toByteArray()
-        val result = Base64.encodeToString(bitmapBytes, Base64.DEFAULT)
-        promise.resolve("data:image/png;base64,$result")
-      } else {
-        bos = BufferedOutputStream(FileOutputStream(dest))
-        icon.compress(getSaveFormat(opts.saveFormat), opts.quality, bos)
-        bos.flush()
-        bos.close()
-        //保存成功的
-        promise.resolve(dest)
-      }
-    } catch (e: Exception) {
-      e.printStackTrace()
-      promise.reject("error", e.message, e)
-    } finally {
-      if (bos != null) {
-        try {
-          bos.close()
-        } catch (e: IOException) {
-          e.printStackTrace()
-        }
-      }
-      if (icon != null && !icon.isRecycled) {
-        icon.recycle()
-        System.gc()
+    moduleScope.launch {
+      try {
+        promise.resolve(block())
+      } catch (e: CancellationException) {
+        Log.d(IMAGE_MARKER_TAG, "marker job cancelled")
+      } catch (e: Exception) {
+        Log.d(IMAGE_MARKER_TAG, "error: " + e.message)
+        promise.rejectMarkerError(e)
       }
     }
   }
 
-  /**
-   * @param bg
-   * @param dest
-   * @param opts
-   * @param promise
-   */
-  private fun markImageByText(
-    bg: Bitmap?,
+  private fun Promise.rejectMarkerError(error: Exception) {
+    error.printStackTrace()
+    if (error is MarkerError) {
+      reject(error.getErrorCode(), error.getErrMsg(), error)
+    } else {
+      reject("error", error.message, error)
+    }
+  }
+
+  private suspend fun markImageByBitmap(
+    bg: Bitmap,
+    markers: List<Bitmap>,
     dest: String,
-    opts: MarkTextOptions,
-    promise: Promise
-  ) {
-    var bos: BufferedOutputStream? = null
+    opts: MarkImageOptions
+  ): String {
     var icon: Bitmap? = null
     try {
-      val height = bg!!.height
+      icon = withContext(Dispatchers.Default) {
+        ImageMarkerRenderer.renderImageWatermarks(
+          bg,
+          markers,
+          opts,
+          recycleMarkerBitmaps = false
+        )
+      }
+      return writeResult(icon, dest, opts)
+    } finally {
+      recycleBitmap(icon)
+      recycleBitmap(bg)
+      recycleBitmaps(markers)
+    }
+  }
+
+  private suspend fun markImageByText(
+    bg: Bitmap,
+    dest: String,
+    opts: MarkTextOptions
+  ): String {
+    var icon: Bitmap? = null
+    try {
+      icon = withContext(Dispatchers.Default) {
+        renderTextWatermarks(bg, opts)
+      }
+      return writeResult(icon, dest, opts)
+    } finally {
+      recycleBitmap(icon)
+      recycleBitmap(bg)
+    }
+  }
+
+  private fun renderTextWatermarks(
+    bg: Bitmap,
+    opts: MarkTextOptions
+  ): Bitmap {
+    var icon: Bitmap? = null
+    try {
+      val height = bg.height
       val width = bg.width
       icon = getBlankBitmap(width, height)
-      //初始化画布 绘制的图像到icon上
-      val canvas = Canvas(icon!!)
+        ?: throw IllegalStateException("Failed to create output bitmap")
+      val canvas = Canvas(icon)
       canvas.save()
       canvas.drawBitmap(bg, 0f, 0f, opts.backgroundImage.applyStyle())
       canvas.restore()
-      if (!bg.isRecycled) {
-        bg.recycle()
-        System.gc()
-      }
+
       for (text in opts.watermarkTexts) {
-        //建立画笔
-        text!!.applyStyle(this.reactApplicationContext, canvas, width, height)
+        text.applyStyle(this.reactApplicationContext, canvas, width, height)
       }
 
       if (opts.backgroundImage.rotate != 0f) {
-        icon = ImageProcess.rotate(icon, opts.backgroundImage.rotate)
+        val rotatedIcon = ImageProcess.rotate(icon, opts.backgroundImage.rotate)
+        recycleBitmap(icon)
+        icon = rotatedIcon
       }
-      if (dest == BASE64) {
-        val base64Stream = ByteArrayOutputStream()
-        icon.compress(CompressFormat.PNG, opts.quality, base64Stream)
-        base64Stream.flush()
-        base64Stream.close()
-        val bitmapBytes = base64Stream.toByteArray()
-        val result = Base64.encodeToString(bitmapBytes, Base64.DEFAULT)
-        promise.resolve("data:image/png;base64,$result")
-      } else {
-        bos = BufferedOutputStream(FileOutputStream(dest))
-        icon.compress(getSaveFormat(opts.saveFormat), opts.quality, bos)
-        bos.flush()
-        bos.close()
-        //保存成功的
-        promise.resolve(dest)
-      }
+
+      return icon
     } catch (e: Exception) {
-      e.printStackTrace()
-      promise.reject("error", e.message, e)
-    } finally {
-      if (bos != null) {
-        try {
-          bos.close()
-        } catch (e: IOException) {
-          e.printStackTrace()
-        }
-      }
-      if (icon != null && !icon.isRecycled) {
-        icon.recycle()
-        System.gc()
-      }
+      recycleBitmap(icon)
+      throw e
     }
   }
 
-  private fun markImageByWatermarks(
-    bg: Bitmap?,
-    markers: List<Bitmap?>,
+  private suspend fun markImageByWatermarks(
+    bg: Bitmap,
+    markers: List<Bitmap>,
     dest: String,
-    opts: MarkWatermarkOptions,
-    promise: Promise
-  ) {
-    var bos: BufferedOutputStream? = null
+    opts: MarkWatermarkOptions
+  ): String {
     var icon: Bitmap? = null
     try {
-      icon = ImageMarkerRenderer.renderWatermarks(
-        bg!!,
-        markers,
-        opts,
-        this.reactApplicationContext,
-        recycleMarkerBitmaps = true
-      )
-
-      if (!bg.isRecycled) {
-        bg.recycle()
-        System.gc()
+      icon = withContext(Dispatchers.Default) {
+        ImageMarkerRenderer.renderWatermarks(
+          bg,
+          markers,
+          opts,
+          context,
+          recycleMarkerBitmaps = false
+        )
       }
-
-      if (dest == BASE64) {
-        val base64Stream = ByteArrayOutputStream()
-        icon.compress(CompressFormat.PNG, opts.quality, base64Stream)
-        base64Stream.flush()
-        base64Stream.close()
-        val bitmapBytes = base64Stream.toByteArray()
-        val result = Base64.encodeToString(bitmapBytes, Base64.DEFAULT)
-        promise.resolve("data:image/png;base64,$result")
-      } else {
-        bos = BufferedOutputStream(FileOutputStream(dest))
-        icon.compress(getSaveFormat(opts.saveFormat), opts.quality, bos)
-        bos.flush()
-        bos.close()
-        promise.resolve(dest)
-      }
-    } catch (e: Exception) {
-      e.printStackTrace()
-      promise.reject("error", e.message, e)
+      return writeResult(icon, dest, opts)
     } finally {
-      if (bos != null) {
-        try {
-          bos.close()
-        } catch (e: IOException) {
-          e.printStackTrace()
-        }
+      recycleBitmap(icon)
+      recycleBitmap(bg)
+      recycleBitmaps(markers)
+    }
+  }
+
+  private suspend fun writeResult(
+    icon: Bitmap,
+    dest: String,
+    opts: Options
+  ): String = withContext(Dispatchers.IO) {
+    if (dest == BASE64) {
+      return@withContext encodeBase64(icon, opts)
+    }
+
+    BufferedOutputStream(FileOutputStream(dest)).use { stream ->
+      if (!icon.compress(getSaveFormat(opts.saveFormat), opts.quality, stream)) {
+        throw IOException("Failed to encode marker image")
       }
-      if (icon != null && !icon.isRecycled) {
-        icon.recycle()
-        System.gc()
+      stream.flush()
+    }
+    dest
+  }
+
+  private fun encodeBase64(
+    icon: Bitmap,
+    opts: Options
+  ): String {
+    val bitmapBytes = ByteArrayOutputStream().use { stream ->
+      if (!icon.compress(CompressFormat.PNG, opts.quality, stream)) {
+        throw IOException("Failed to encode marker image")
       }
+      stream.flush()
+      stream.toByteArray()
+    }
+    val result = Base64.encodeToString(bitmapBytes, Base64.DEFAULT)
+    return "data:image/png;base64,$result"
+  }
+
+  private fun recycleBitmaps(bitmaps: List<Bitmap>) {
+    for (bitmap in bitmaps) {
+      recycleBitmap(bitmap)
+    }
+  }
+
+  private fun recycleBitmap(bitmap: Bitmap?) {
+    if (bitmap != null && !bitmap.isRecycled) {
+      bitmap.recycle()
     }
   }
 
@@ -226,7 +222,6 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : NativeI
    * @param opts
    * @param promise
    */
-  @OptIn(DelicateCoroutinesApi::class)
   @RequiresApi(Build.VERSION_CODES.N)
   @ReactMethod
   override fun markWithText(
@@ -236,25 +231,18 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : NativeI
     val markOpts = MarkTextOptions.checkParams(options, promise) ?: return
     Log.d(IMAGE_MARKER_TAG, "uri: " + markOpts.backgroundImage.uri)
     Log.d(IMAGE_MARKER_TAG, "src: " + markOpts.backgroundImage.src.toString())
-    GlobalScope.launch(Dispatchers.Main) {
-      try {
-        val bitmaps = MarkerImageLoader(context, markOpts.maxSize).loadImages(
-          listOf(
-            markOpts.backgroundImage,
-          )
+    launchMarkerJob(promise) {
+      val bitmaps = MarkerImageLoader(context, markOpts.maxSize).loadImages(
+        listOf(
+          markOpts.backgroundImage,
         )
-        val bg = bitmaps[0]
-        val dest = generateCacheFilePathForMarker(markOpts.filename, markOpts.saveFormat)
-        markImageByText(bg, dest, markOpts, promise)
-      } catch (e: Exception) {
-        Log.d(IMAGE_MARKER_TAG, "error：" + e.message)
-        e.printStackTrace()
-        promise.reject("error", e.message, e)
-      }
+      )
+      val bg = bitmaps[0]
+      val dest = generateCacheFilePathForMarker(markOpts.filename, markOpts.saveFormat)
+      markImageByText(bg, dest, markOpts)
     }
   }
 
-  @OptIn(DelicateCoroutinesApi::class)
   @RequiresApi(Build.VERSION_CODES.N)
   @ReactMethod
   override fun markWithImage(
@@ -262,29 +250,22 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : NativeI
     promise: Promise
   ) {
     val markOpts = MarkImageOptions.checkParams(options, promise) ?: return
-    GlobalScope.launch(Dispatchers.Main) {
-      try {
-        val markers = markOpts.watermarkImages.map { it.imageOption }
-        val concatenatedArray = listOf(
-          markOpts.backgroundImage,
-        ).plus(markers)
-        val bitmaps = MarkerImageLoader(context, markOpts.maxSize).loadImages(
-          concatenatedArray,
-          listOf(true).plus(List(markers.size) { false })
-        )
-        val bg = bitmaps[0]
-        val markerBitmaps = bitmaps.subList(1, bitmaps.lastIndex + 1)
-        val dest = generateCacheFilePathForMarker(markOpts.filename, markOpts.saveFormat)
-        markImageByBitmap(bg, markerBitmaps, dest, markOpts, promise)
-      } catch (e: Exception) {
-        Log.d(IMAGE_MARKER_TAG, "error：" + e.message)
-        e.printStackTrace()
-        promise.reject("error", e.message, e)
-      }
+    launchMarkerJob(promise) {
+      val markers = markOpts.watermarkImages.map { it.imageOption }
+      val concatenatedArray = listOf(
+        markOpts.backgroundImage,
+      ).plus(markers)
+      val bitmaps = MarkerImageLoader(context, markOpts.maxSize).loadImages(
+        concatenatedArray,
+        listOf(true).plus(List(markers.size) { false })
+      )
+      val bg = bitmaps[0]
+      val markerBitmaps = bitmaps.drop(1)
+      val dest = generateCacheFilePathForMarker(markOpts.filename, markOpts.saveFormat)
+      markImageByBitmap(bg, markerBitmaps, dest, markOpts)
     }
   }
 
-  @OptIn(DelicateCoroutinesApi::class)
   @RequiresApi(Build.VERSION_CODES.N)
   @ReactMethod
   override fun markWithWatermarks(
@@ -292,25 +273,19 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : NativeI
     promise: Promise
   ) {
     val markOpts = MarkWatermarkOptions.checkParams(options, promise) ?: return
-    GlobalScope.launch(Dispatchers.Main) {
-      try {
-        val markers = markOpts.imageLayers.map { it.imageOptions.imageOption }
-        val concatenatedArray = listOf(
-          markOpts.backgroundImage,
-        ).plus(markers)
-        val bitmaps = MarkerImageLoader(context, markOpts.maxSize).loadImages(
-          concatenatedArray,
-          listOf(true).plus(List(markers.size) { false })
-        )
-        val bg = bitmaps[0]
-        val markerBitmaps = bitmaps.subList(1, bitmaps.lastIndex + 1)
-        val dest = generateCacheFilePathForMarker(markOpts.filename, markOpts.saveFormat)
-        markImageByWatermarks(bg, markerBitmaps, dest, markOpts, promise)
-      } catch (e: Exception) {
-        Log.d(IMAGE_MARKER_TAG, "error：" + e.message)
-        e.printStackTrace()
-        promise.reject("error", e.message, e)
-      }
+    launchMarkerJob(promise) {
+      val markers = markOpts.imageLayers.map { it.imageOptions.imageOption }
+      val concatenatedArray = listOf(
+        markOpts.backgroundImage,
+      ).plus(markers)
+      val bitmaps = MarkerImageLoader(context, markOpts.maxSize).loadImages(
+        concatenatedArray,
+        listOf(true).plus(List(markers.size) { false })
+      )
+      val bg = bitmaps[0]
+      val markerBitmaps = bitmaps.drop(1)
+      val dest = generateCacheFilePathForMarker(markOpts.filename, markOpts.saveFormat)
+      markImageByWatermarks(bg, markerBitmaps, dest, markOpts)
     }
   }
 

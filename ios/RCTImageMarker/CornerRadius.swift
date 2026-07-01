@@ -56,10 +56,10 @@ class CornerRadius: NSObject {
     func radiusPath(rect: CGRect) -> UIBezierPath {
         let path = UIBezierPath()
         let cornerRadii = self.all?.radii(rect: rect) ?? CGSize(width: 0, height: 0)
-        let topLeftRadii = (self.topLeft != nil) ? self.topLeft!.radii(rect: rect) : cornerRadii
-        let topRightRadii = (self.topRight != nil) ? self.topRight!.radii(rect: rect) : cornerRadii
-        let bottomRightRadii = (self.bottomRight != nil) ? self.bottomRight!.radii(rect: rect) : cornerRadii
-        let bottomLeftRadii = (self.bottomLeft != nil) ? self.bottomLeft!.radii(rect: rect) : cornerRadii
+        let topLeftRadii = self.topLeft?.radii(rect: rect) ?? cornerRadii
+        let topRightRadii = self.topRight?.radii(rect: rect) ?? cornerRadii
+        let bottomRightRadii = self.bottomRight?.radii(rect: rect) ?? cornerRadii
+        let bottomLeftRadii = self.bottomLeft?.radii(rect: rect) ?? cornerRadii
 
         let topLeft = CGPoint(x: rect.minX, y: rect.minY + topLeftRadii.height / 4)
         let topRight = CGPoint(x: rect.maxX, y: rect.minY + topRightRadii.height / 4)
