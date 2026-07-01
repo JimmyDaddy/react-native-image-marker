@@ -1,6 +1,7 @@
 package com.jimmydaddy.imagemarker.base
 
-class MarkerError internal constructor(private var errorCode: ErrorCode, private var errMsg: String) : Error() {
+class MarkerError internal constructor(private var errorCode: ErrorCode, private var errMsg: String) :
+  Exception(errMsg) {
 
   fun getErrorCode(): String {
     return errorCode.value

@@ -21,11 +21,14 @@ import com.jimmydaddy.imagemarker.base.Constants.IMAGE_MARKER_TAG
 import com.jimmydaddy.imagemarker.base.ErrorCode
 import com.jimmydaddy.imagemarker.base.ImageOptions
 import com.jimmydaddy.imagemarker.base.MarkerError
+import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import java.util.concurrent.CompletableFuture
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 class MarkerImageLoader(private val context: ReactApplicationContext, private val maxSize: Int) {
 
@@ -47,7 +50,7 @@ class MarkerImageLoader(private val context: ReactApplicationContext, private va
   suspend fun loadImages(
     images: List<ImageOptions>,
     scaleImages: List<Boolean> = List(images.size) { true }
-  ): List<Bitmap?> = withContext(Dispatchers.IO) {
+  ): List<Bitmap> = withContext(Dispatchers.IO) {
 
     val deferredList = images.mapIndexed { index, img ->
       async {
@@ -57,74 +60,14 @@ class MarkerImageLoader(private val context: ReactApplicationContext, private va
           val isCoilImg = isCoilImg(img.uri)
           Log.d(IMAGE_MARKER_TAG, "isCoilImg: $isCoilImg")
 
-          if (isBase64String(img.uri)) {
-            Log.d(IMAGE_MARKER_TAG, "Loading Base64 Image")
-            decodeBase64ToBitmap(img.uri)?.let { bitmap ->
-              val scaledBitmap = ImageProcess.scaleBitmap(bitmap, scale)
-                ?: throw MarkerError(ErrorCode.LOAD_IMAGE_FAILED, "Failed to scale Base64 image")
-              if (!bitmap.isRecycled && scale != 1f) {
-                bitmap.recycle()
-                System.gc()
-              }
-              return@async scaledBitmap
-            } ?: throw MarkerError(ErrorCode.GET_RESOURCE_FAILED, "Failed to decode Base64 image")
-          } else if (isCoilImg) {
-            val future = CompletableFuture<Bitmap?>()
-            var request = ImageRequest.Builder(context)
-              .data(img.uri)
-            if (img.src != null && img.src.width > 0 && img.src.height > 0) {
-              request = request.size(img.src.width, img.src.height)
-              Log.d(IMAGE_MARKER_TAG, "src.width: " + img.src.width + " src.height: " + img.src.height)
-            }  else {
-              request = request.size(Size.ORIGINAL)
-            }
-            imageLoader.enqueue(request.target (
-              onStart = { _ ->
-                // Handle the placeholder drawable.
-                Log.d(IMAGE_MARKER_TAG, "start to load image: " + img.uri)
-              },
-              onSuccess = { result ->
-                val bitmap = result.toBitmap()
-                val bg = ImageProcess.scaleBitmap(bitmap, scale)
-                if (bg == null) {
-                  future.completeExceptionally(MarkerError(ErrorCode.LOAD_IMAGE_FAILED,
-                      "Can't retrieve the file from the src: " + img.uri))
-                }
-                future.complete(bg)
-              },
-              onError = { _ ->
-                future.completeExceptionally(MarkerError(ErrorCode.LOAD_IMAGE_FAILED,
-                  "Can't retrieve the file from the src: " + img.uri))
-              }
-            ).build())
-            return@async future.get()
-          } else {
-            val resId = getDrawableResourceByName(img.uri)
-            Log.d(IMAGE_MARKER_TAG, "resId: $resId")
-            if (resId == 0) {
-              Log.d(IMAGE_MARKER_TAG, "cannot find res")
-              throw MarkerError(ErrorCode.GET_RESOURCE_FAILED, "Can't get resource by the path: ${img.uri}")
-            } else {
-              val r = resources
-              Log.d(IMAGE_MARKER_TAG, "src.width: " + img.src.width + " src.height: " + img.src.height)
-              val originalBitMap = BitmapFactory.decodeResource(r, resId)
-              var bitmap = originalBitMap
-              if (img.src != null && img.src.width > 0 && img.src.height > 0) {
-                bitmap = Bitmap.createScaledBitmap(originalBitMap, img.src.width, img.src.height, true);
-              }
-              Log.d(IMAGE_MARKER_TAG, bitmap!!.height.toString() + "")
-              val bg = ImageProcess.scaleBitmap(bitmap, scale)
-              Log.d(IMAGE_MARKER_TAG, bg!!.height.toString() + "")
-              if (!bitmap.isRecycled && scale != 1f) {
-                bitmap.recycle()
-                System.gc()
-              }
-              return@async bg
-            }
+          when {
+            isBase64String(img.uri) -> loadBase64Image(img, scale)
+            isCoilImg -> loadCoilImage(img, scale)
+            else -> loadResourceImage(img, scale)
           }
         } catch (e: Exception) {
           Log.e("ImageLoader", "Failed to load image: ${img.uri}", e)
-          null
+          throw e
         }
       }
     }
@@ -134,9 +77,10 @@ class MarkerImageLoader(private val context: ReactApplicationContext, private va
   private fun isCoilImg(uri: String?): Boolean {
     // val base64Pattern =
     // "^data:(image|img)/(bmp|jpg|png|tif|gif|pcx|tga|exif|fpx|svg|psd|cdr|pcd|dxf|ufo|eps|ai|raw|WMF|webp);base64,(([[A-Za-z0-9+/])*\\s\\S*)*"
-    return uri!!.startsWith("http://") || uri.startsWith("https://") || uri.startsWith("file://") || uri.startsWith(
-      "data:"
-    ) && uri.contains("base64") && (uri.contains("img") || uri.contains("image"))
+    return uri?.startsWith("http://") == true ||
+      uri?.startsWith("https://") == true ||
+      uri?.startsWith("file://") == true ||
+      uri?.startsWith("data:") == true && uri.contains("base64") && (uri.contains("img") || uri.contains("image"))
   }
 
   @SuppressLint("DiscouragedApi")
@@ -152,6 +96,97 @@ class MarkerImageLoader(private val context: ReactApplicationContext, private va
   private fun isBase64String(s: String?): Boolean {
     if (s == null) return false
     return s.startsWith("data:image/") && s.contains(";base64,")
+  }
+
+  private fun loadBase64Image(img: ImageOptions, scale: Float): Bitmap {
+    Log.d(IMAGE_MARKER_TAG, "Loading Base64 Image")
+    val bitmap = decodeBase64ToBitmap(img.uri)
+      ?: throw MarkerError(ErrorCode.GET_RESOURCE_FAILED, "Failed to decode Base64 image")
+    return scaleBitmap(bitmap, scale, "Base64 image")
+  }
+
+  private suspend fun loadCoilImage(img: ImageOptions, scale: Float): Bitmap =
+    suspendCancellableCoroutine { continuation ->
+      var request = ImageRequest.Builder(context)
+        .data(img.uri)
+      if (img.src.width > 0 && img.src.height > 0) {
+        request = request.size(img.src.width, img.src.height)
+        Log.d(IMAGE_MARKER_TAG, "src.width: " + img.src.width + " src.height: " + img.src.height)
+      } else {
+        request = request.size(Size.ORIGINAL)
+      }
+
+      val disposable = imageLoader.enqueue(
+        request.target(
+          onStart = {
+            Log.d(IMAGE_MARKER_TAG, "start to load image: " + img.uri)
+          },
+          onSuccess = { result ->
+            runCatching {
+              scaleBitmap(result.toBitmap(), scale, "image: ${img.uri}")
+            }.fold(
+              onSuccess = { continuation.resumeIfActive(it) },
+              onFailure = { continuation.resumeExceptionIfActive(it) }
+            )
+          },
+          onError = {
+            continuation.resumeExceptionIfActive(
+              MarkerError(
+                ErrorCode.LOAD_IMAGE_FAILED,
+                "Can't retrieve the file from the src: " + img.uri
+              )
+            )
+          }
+        ).build()
+      )
+      continuation.invokeOnCancellation {
+        disposable.dispose()
+      }
+    }
+
+  private fun loadResourceImage(img: ImageOptions, scale: Float): Bitmap {
+    val resId = getDrawableResourceByName(img.uri)
+    Log.d(IMAGE_MARKER_TAG, "resId: $resId")
+    if (resId == 0) {
+      Log.d(IMAGE_MARKER_TAG, "cannot find res")
+      throw MarkerError(ErrorCode.GET_RESOURCE_FAILED, "Can't get resource by the path: ${img.uri}")
+    }
+
+    Log.d(IMAGE_MARKER_TAG, "src.width: " + img.src.width + " src.height: " + img.src.height)
+    val originalBitmap = BitmapFactory.decodeResource(resources, resId)
+      ?: throw MarkerError(ErrorCode.GET_RESOURCE_FAILED, "Can't decode resource by the path: ${img.uri}")
+    val sizedBitmap = if (img.src.width > 0 && img.src.height > 0) {
+      Bitmap.createScaledBitmap(originalBitmap, img.src.width, img.src.height, true).also {
+        if (it !== originalBitmap && !originalBitmap.isRecycled) {
+          originalBitmap.recycle()
+        }
+      }
+    } else {
+      originalBitmap
+    }
+
+    return scaleBitmap(sizedBitmap, scale, "resource: ${img.uri}")
+  }
+
+  private fun scaleBitmap(bitmap: Bitmap, scale: Float, source: String): Bitmap {
+    val scaledBitmap = ImageProcess.scaleBitmap(bitmap, scale)
+      ?: throw MarkerError(ErrorCode.LOAD_IMAGE_FAILED, "Failed to scale $source")
+    if (scaledBitmap !== bitmap && !bitmap.isRecycled) {
+      bitmap.recycle()
+    }
+    return scaledBitmap
+  }
+
+  private fun CancellableContinuation<Bitmap>.resumeIfActive(bitmap: Bitmap) {
+    if (isActive) {
+      resume(bitmap)
+    }
+  }
+
+  private fun CancellableContinuation<Bitmap>.resumeExceptionIfActive(error: Throwable) {
+    if (isActive) {
+      resumeWithException(error)
+    }
   }
 
   private fun decodeBase64ToBitmap(base64Str: String?): Bitmap? {
