@@ -25,3 +25,16 @@ buildscript {
 }
 
 apply plugin: "com.facebook.react.rootproject"
+
+allprojects {
+    repositories.configureEach { repository ->
+        if (
+            repository instanceof org.gradle.api.artifacts.repositories.MavenArtifactRepository &&
+            repository.url.toString() == "https://oss.sonatype.org/content/repositories/snapshots/"
+        ) {
+            repository.content {
+                includeGroupByRegex("com\\.facebook\\.react.*")
+            }
+        }
+    }
+}
