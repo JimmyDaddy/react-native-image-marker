@@ -31,7 +31,7 @@ type BackgroundFormat =
   | 'base64'
   | 'rotated image'
   | 'picked image';
-type WatermarkType = 'text' | 'image';
+type WatermarkType = 'text' | 'image' | 'mixed';
 type RunMode = 'anchorOffset' | 'absoluteXY';
 type OffsetValue = number | string;
 type AppTab = 'tests' | 'compose' | 'advanced';
@@ -89,7 +89,7 @@ type MarkerConfig = {
   fontSize: number;
 };
 
-const watermarkTypes: WatermarkType[] = ['text', 'image'];
+const watermarkTypes: WatermarkType[] = ['text', 'image', 'mixed'];
 const saveFormats = [ImageFormat.png, ImageFormat.jpg, ImageFormat.base64];
 const positions = [
   Position.topLeft,
@@ -540,76 +540,89 @@ function useViewModel(props: ImageMarkerLabProps) {
           };
 
     try {
-      const path =
-        nextConfig.waterMarkType === 'image'
-          ? await Marker.markImage({
-              backgroundImage: {
-                src: nextConfig.image,
-                scale: nextConfig.backgroundScale,
-                rotate: nextConfig.backgroundRotate,
-                alpha: nextConfig.backgroundAlpha,
-              },
-              watermarkImages: [
-                {
-                  src: nextConfig.marker,
-                  scale: nextConfig.watermarkScale,
-                  alpha: nextConfig.watermarkAlpha,
-                  rotate: nextConfig.watermarkRotate,
-                  position: positionOptions,
+      const backgroundImage = {
+        src: nextConfig.image,
+        scale: nextConfig.backgroundScale,
+        alpha: nextConfig.backgroundAlpha,
+        rotate: nextConfig.backgroundRotate,
+      };
+      const imageWatermark = {
+        src: nextConfig.marker,
+        scale: nextConfig.watermarkScale,
+        alpha: nextConfig.watermarkAlpha,
+        rotate: nextConfig.watermarkRotate,
+        position: positionOptions,
+      };
+      const textWatermark = {
+        text: nextConfig.text,
+        position:
+          nextConfig.waterMarkType === 'mixed' && mode === 'anchorOffset'
+            ? {
+                position: Position.bottomCenter,
+                X: 0,
+                Y: 28,
+              }
+            : positionOptions,
+        style: {
+          color: '#F8FAFC',
+          fontName: nextConfig.fontName,
+          fontSize: nextConfig.fontSize,
+          underline: nextConfig.underline,
+          bold: nextConfig.bold,
+          italic: nextConfig.italic,
+          strikeThrough: nextConfig.strikeThrough,
+          textAlign: nextConfig.textAlign,
+          rotate: nextConfig.textRotate,
+          shadowStyle: nextConfig.useTextShadow
+            ? {
+                dx: 8,
+                dy: 10,
+                radius: 12,
+                color: '#0F172A',
+              }
+            : null,
+          textBackgroundStyle: nextConfig.useTextBgStyle
+            ? {
+                type: nextConfig.textBgStretch,
+                paddingX: 12,
+                paddingY: 8,
+                color: '#1E293BCC',
+                cornerRadius: {
+                  topLeft: { x: 8, y: 8 },
+                  topRight: { x: 8, y: 8 },
+                  bottomLeft: { x: 8, y: 8 },
+                  bottomRight: { x: 8, y: 8 },
                 },
-              ],
-              quality: nextConfig.quality,
-              saveFormat: nextConfig.saveFormat,
-            })
-          : await Marker.markText({
-              backgroundImage: {
-                src: nextConfig.image,
-                scale: nextConfig.backgroundScale,
-                alpha: nextConfig.backgroundAlpha,
-                rotate: nextConfig.backgroundRotate,
-              },
-              watermarkTexts: [
-                {
-                  text: nextConfig.text,
-                  position: positionOptions,
-                  style: {
-                    color: '#F8FAFC',
-                    fontName: nextConfig.fontName,
-                    fontSize: nextConfig.fontSize,
-                    underline: nextConfig.underline,
-                    bold: nextConfig.bold,
-                    italic: nextConfig.italic,
-                    strikeThrough: nextConfig.strikeThrough,
-                    textAlign: nextConfig.textAlign,
-                    rotate: nextConfig.textRotate,
-                    shadowStyle: nextConfig.useTextShadow
-                      ? {
-                          dx: 8,
-                          dy: 10,
-                          radius: 12,
-                          color: '#0F172A',
-                        }
-                      : null,
-                    textBackgroundStyle: nextConfig.useTextBgStyle
-                      ? {
-                          type: nextConfig.textBgStretch,
-                          paddingX: 12,
-                          paddingY: 8,
-                          color: '#1E293BCC',
-                          cornerRadius: {
-                            topLeft: { x: 8, y: 8 },
-                            topRight: { x: 8, y: 8 },
-                            bottomLeft: { x: 8, y: 8 },
-                            bottomRight: { x: 8, y: 8 },
-                          },
-                        }
-                      : null,
-                  },
-                },
-              ],
-              quality: nextConfig.quality,
-              saveFormat: nextConfig.saveFormat,
-            });
+              }
+            : null,
+        },
+      };
+      let path: string;
+
+      if (nextConfig.waterMarkType === 'image') {
+        path = await Marker.markImage({
+          backgroundImage,
+          watermarkImages: [imageWatermark],
+          quality: nextConfig.quality,
+          saveFormat: nextConfig.saveFormat,
+        });
+      } else if (nextConfig.waterMarkType === 'mixed') {
+        path = await Marker.mark({
+          backgroundImage,
+          watermarkTexts: [textWatermark],
+          watermarkImages: [imageWatermark],
+          watermarkOrder: 'text-first',
+          quality: nextConfig.quality,
+          saveFormat: nextConfig.saveFormat,
+        });
+      } else {
+        path = await Marker.markText({
+          backgroundImage,
+          watermarkTexts: [textWatermark],
+          quality: nextConfig.quality,
+          saveFormat: nextConfig.saveFormat,
+        });
+      }
 
       setUri(formatResultUri(path, nextConfig.saveFormat));
       setShow(true);
@@ -698,6 +711,98 @@ function useViewModel(props: ImageMarkerLabProps) {
       },
       'Image anchor offset'
     );
+  }
+
+  async function runMixedWatermarkFeature() {
+    setBackgroundFormat('normal image');
+    applyConfig({
+      image: assets.bg,
+      marker: assets.icon,
+      waterMarkType: 'mixed',
+      text: 'Mixed watermark',
+      saveFormat: ImageFormat.png,
+      useTextShadow: true,
+      useTextBgStyle: true,
+      textBgStretch: TextBackgroundType.none,
+      bold: true,
+      fontSize: 34,
+      watermarkScale: 0.58,
+      watermarkRotate: 0,
+      watermarkAlpha: 0.92,
+      backgroundScale: 1,
+      backgroundRotate: 0,
+      backgroundAlpha: 1,
+    });
+    setLastRun('Mixed text + image');
+    setLoading(true);
+
+    try {
+      const path = await Marker.mark({
+        backgroundImage: {
+          src: assets.bg,
+          scale: 1,
+        },
+        watermarkTexts: [
+          {
+            text: 'Mixed watermark',
+            position: {
+              position: Position.bottomCenter,
+              X: 0,
+              Y: 30,
+            },
+            style: {
+              color: '#FFFFFF',
+              fontName: exampleFontName,
+              fontSize: 34,
+              bold: true,
+              shadowStyle: {
+                dx: 8,
+                dy: 10,
+                radius: 12,
+                color: '#0F172A',
+              },
+              textBackgroundStyle: {
+                type: TextBackgroundType.none,
+                paddingX: 14,
+                paddingY: 9,
+                color: '#1E293BCC',
+                cornerRadius: {
+                  all: { x: 10, y: 10 },
+                },
+              },
+            },
+          },
+        ],
+        watermarkImages: [
+          {
+            src: assets.icon,
+            scale: 0.58,
+            alpha: 0.92,
+            position: {
+              position: Position.topRight,
+              X: 26,
+              Y: 26,
+            },
+          },
+        ],
+        watermarkOrder: 'text-first',
+        quality: 100,
+        saveFormat: ImageFormat.png,
+      });
+
+      setUri(formatResultUri(path, ImageFormat.png));
+      setShow(true);
+      await updateFileSize(path, ImageFormat.png);
+    } catch (error) {
+      console.log('mixed watermark error', error);
+      Toast.show({
+        type: 'error',
+        text1: 'mixed watermark failed',
+        text2: error instanceof Error ? error.message : String(error),
+      });
+    } finally {
+      setLoading(false);
+    }
   }
 
   function runExtraFeature() {
@@ -1077,6 +1182,7 @@ function useViewModel(props: ImageMarkerLabProps) {
       runMark,
       runTextOffsetFeature,
       runImageOffsetFeature,
+      runMixedWatermarkFeature,
       runExtraFeature,
       runPositionPresetSamples,
       runAbsoluteCoordinateSamples,
@@ -1382,6 +1488,14 @@ function ImageMarkerLab(props: ImageMarkerLabProps) {
                   onPress={actions.runImageOffsetFeature}
                 />
                 <FeatureCard
+                  badge="Mixed"
+                  title="Text + image watermark"
+                  meta="single API call"
+                  tone="blue"
+                  testID="feature-mixed-watermark"
+                  onPress={actions.runMixedWatermarkFeature}
+                />
+                <FeatureCard
                   badge={extraFeature.badge}
                   title={extraFeature.title}
                   meta={extraFeature.meta}
@@ -1433,7 +1547,7 @@ function ImageMarkerLab(props: ImageMarkerLabProps) {
                   />
                 </View>
 
-                {state.waterMarkType === 'text' ? (
+                {state.waterMarkType !== 'image' ? (
                   <View style={s.textEditor}>
                     <TextInput
                       placeholder="Text watermark"
@@ -1458,7 +1572,9 @@ function ImageMarkerLab(props: ImageMarkerLabProps) {
                       />
                     </View>
                   </View>
-                ) : (
+                ) : null}
+
+                {state.waterMarkType !== 'text' ? (
                   <View style={s.fieldGrid}>
                     <NumericField
                       label="WM scale"
@@ -1484,7 +1600,7 @@ function ImageMarkerLab(props: ImageMarkerLabProps) {
                       onChange={actions.setWatermarkRotate}
                     />
                   </View>
-                )}
+                ) : null}
               </View>
             </Section>
 

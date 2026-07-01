@@ -19,6 +19,7 @@ This guide keeps the full visual cookbook for react-native-image-marker. Start f
 - [Text rotation](#text-rotation)
 - [Icon watermarks](#icon-watermarks)
 - [Multiple icon watermarks](#multiple-icon-watermarks)
+- [Mixed text and icon watermarks](#mixed-text-and-icon-watermarks)
 - [Background rotation](#background-rotation)
 - [Icon rotation](#icon-rotation)
 - [Transparent background](#transparent-background)
@@ -544,6 +545,49 @@ Marker.markImage({
 ```
 
 </details>
+
+### Mixed text and icon watermarks
+
+Use `Marker.mark` when text and icon watermarks should be produced by one API call. By default the text layer is drawn first and the image layer is drawn second. Set `watermarkOrder: 'image-first'` when the text should be the final layer.
+
+```typescript
+import Marker, { ImageFormat, Position, TextBackgroundType } from "react-native-image-marker"
+···
+Marker.mark({
+  backgroundImage: {
+    src: require('./images/test.jpg'),
+    scale: 1,
+  },
+  watermarkTexts: [{
+    text: 'text marker',
+    position: {
+      position: Position.bottomCenter,
+      Y: 24,
+    },
+    style: {
+      color: '#FFFFFF',
+      fontSize: 30,
+      textBackgroundStyle: {
+        type: TextBackgroundType.none,
+        paddingX: 12,
+        paddingY: 8,
+        color: '#1E293BCC',
+      },
+    },
+  }],
+  watermarkImages: [{
+    src: require('./images/watermark.png'),
+    position: {
+      position: Position.topRight,
+      X: 24,
+      Y: 24,
+    },
+    scale: 0.5,
+  }],
+  watermarkOrder: 'text-first',
+  saveFormat: ImageFormat.png,
+})
+```
 
 ### Background rotation
 

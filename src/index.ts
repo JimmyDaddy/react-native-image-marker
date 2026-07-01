@@ -838,6 +838,94 @@ export interface ImageMarkOptions {
   watermarkImages: Array<WatermarkImageOptions>;
 }
 
+export type MarkWatermarkOrder = 'text-first' | 'image-first';
+
+/**
+ * Options for marking text and image watermarks with a single call.
+ * @example
+ * await Marker.mark({
+ *   backgroundImage: {
+ *     src: require('./images/bg.png'),
+ *   },
+ *   watermarkTexts: [
+ *     {
+ *       text: 'hello world',
+ *       position: {
+ *         position: Position.bottomCenter,
+ *         Y: 24,
+ *       },
+ *       style: {
+ *         color: '#FFFFFF',
+ *         fontSize: 32,
+ *       },
+ *     },
+ *   ],
+ *   watermarkImages: [
+ *     {
+ *       src: require('./images/logo.png'),
+ *       position: {
+ *         position: Position.topRight,
+ *         X: 24,
+ *         Y: 24,
+ *       },
+ *       scale: 0.5,
+ *     },
+ *   ],
+ *   watermarkOrder: 'text-first',
+ *   saveFormat: ImageFormat.png,
+ * });
+ */
+export interface MarkOptions {
+  /**
+   * Background image options.
+   */
+  backgroundImage: ImageOptions;
+  /**
+   * Text watermark options. When only text watermarks are set, this call delegates to markText.
+   */
+  watermarkTexts?: TextOptions[];
+  /**
+   * @deprecated use watermarkImages instead
+   * Legacy single image watermark options.
+   */
+  watermarkImage?: ImageOptions;
+  /**
+   * @deprecated use position on watermarkImages instead
+   * Legacy single image watermark position options.
+   */
+  watermarkPositions?: PositionOptions;
+  /**
+   * Image watermark options. When only image watermarks are set, this call delegates to markImage.
+   */
+  watermarkImages?: Array<WatermarkImageOptions>;
+  /**
+   * Draw order when both text and image watermarks are set.
+   * @defaultValue 'text-first'
+   */
+  watermarkOrder?: MarkWatermarkOrder;
+  /**
+   * image quality `0-100`, `100` is best quality.
+   * @defaultValue 100
+   */
+  quality?: number;
+  /**
+   * save image name
+   */
+  filename?: string;
+  /**
+   * save image format
+   * @defaultValue `jpg`
+   */
+  saveFormat?: ImageFormat;
+  /**
+   * @deprecated since 1.2.0
+   * max image size
+   * android only
+   * @defaultValue 2048
+   */
+  maxSize?: number;
+}
+
 const ImageMarker =
   NativeImageMarker ??
   NativeModules.ImageMarker ??
@@ -849,6 +937,158 @@ const ImageMarker =
       },
     }
   );
+
+type WatermarkStep = 'text' | 'image';
+type OutputOptions = Pick<
+  MarkOptions,
+  'quality' | 'filename' | 'saveFormat' | 'maxSize'
+>;
+
+function clonePositionOptions(
+  position?: PositionOptions
+): PositionOptions | undefined {
+  return position ? { ...position } : position;
+}
+
+function cloneCornerRadius(
+  cornerRadius?: CornerRadius
+): CornerRadius | undefined {
+  if (!cornerRadius) {
+    return cornerRadius;
+  }
+
+  return {
+    topLeft: cornerRadius.topLeft ? { ...cornerRadius.topLeft } : undefined,
+    topRight: cornerRadius.topRight ? { ...cornerRadius.topRight } : undefined,
+    bottomLeft: cornerRadius.bottomLeft
+      ? { ...cornerRadius.bottomLeft }
+      : undefined,
+    bottomRight: cornerRadius.bottomRight
+      ? { ...cornerRadius.bottomRight }
+      : undefined,
+    all: cornerRadius.all ? { ...cornerRadius.all } : undefined,
+  };
+}
+
+function cloneTextBackgroundStyle(
+  style?: TextBackgroundStyle | null
+): TextBackgroundStyle | null | undefined {
+  if (!style) {
+    return style;
+  }
+
+  return {
+    ...style,
+    cornerRadius: cloneCornerRadius(style.cornerRadius),
+  };
+}
+
+function cloneTextStyle(style?: TextStyle): TextStyle | undefined {
+  if (!style) {
+    return style;
+  }
+
+  return {
+    ...style,
+    shadowStyle: style.shadowStyle
+      ? { ...style.shadowStyle }
+      : style.shadowStyle,
+    textBackgroundStyle: cloneTextBackgroundStyle(style.textBackgroundStyle),
+  };
+}
+
+function cloneTextWatermarks(watermarkTexts: TextOptions[]): TextOptions[] {
+  return watermarkTexts.map((textOptions) => ({
+    ...textOptions,
+    position: clonePositionOptions(textOptions.position),
+    positionOptions: clonePositionOptions(textOptions.positionOptions),
+    style: cloneTextStyle(textOptions.style),
+  }));
+}
+
+function cloneImageOptions<T extends ImageOptions | undefined>(
+  imageOptions: T
+): T {
+  return imageOptions ? ({ ...imageOptions } as T) : imageOptions;
+}
+
+function cloneImageWatermarks(
+  watermarkImages: WatermarkImageOptions[]
+): WatermarkImageOptions[] {
+  return watermarkImages.map((imageOptions) => ({
+    ...imageOptions,
+    position: clonePositionOptions(imageOptions.position),
+  }));
+}
+
+function hasTextWatermarks(options: MarkOptions) {
+  return (options.watermarkTexts?.length ?? 0) > 0;
+}
+
+function hasImageWatermarks(options: MarkOptions) {
+  return (
+    Boolean(options.watermarkImage?.src) ||
+    (options.watermarkImages?.length ?? 0) > 0
+  );
+}
+
+function getOutputOptions(
+  options: MarkOptions,
+  isFinalStep: boolean
+): OutputOptions {
+  const outputOptions: OutputOptions = {};
+
+  if (isFinalStep) {
+    if (options.quality !== undefined) {
+      outputOptions.quality = options.quality;
+    }
+    if (options.filename !== undefined) {
+      outputOptions.filename = options.filename;
+    }
+    if (options.saveFormat !== undefined) {
+      outputOptions.saveFormat = options.saveFormat;
+    }
+  } else {
+    outputOptions.quality = 100;
+    outputOptions.saveFormat = ImageFormat.png;
+  }
+
+  if (options.maxSize !== undefined) {
+    outputOptions.maxSize = options.maxSize;
+  }
+
+  return outputOptions;
+}
+
+function createTextMarkOptions(
+  options: MarkOptions,
+  backgroundImage: ImageOptions,
+  isFinalStep: boolean
+): TextMarkOptions {
+  return {
+    backgroundImage: cloneImageOptions(backgroundImage),
+    watermarkTexts: cloneTextWatermarks(options.watermarkTexts ?? []),
+    ...getOutputOptions(options, isFinalStep),
+  };
+}
+
+function createImageMarkOptions(
+  options: MarkOptions,
+  backgroundImage: ImageOptions,
+  isFinalStep: boolean
+): ImageMarkOptions {
+  return {
+    backgroundImage: cloneImageOptions(backgroundImage),
+    watermarkImage: cloneImageOptions(options.watermarkImage),
+    watermarkPositions: clonePositionOptions(options.watermarkPositions),
+    watermarkImages: cloneImageWatermarks(options.watermarkImages ?? []),
+    ...getOutputOptions(options, isFinalStep),
+  };
+}
+
+function getWatermarkSteps(order?: MarkWatermarkOrder): WatermarkStep[] {
+  return order === 'image-first' ? ['image', 'text'] : ['text', 'image'];
+}
 
 class Marker {
   /** @ignore ignore constructors for typedoc only */
@@ -1062,6 +1302,79 @@ class Marker {
     options.maxSize = options.maxSize || 2048;
 
     return ImageMarker.markWithImage(options);
+  }
+
+  /**
+   * Mark text and image watermarks with one call.
+   *
+   * When only text watermarks are set, this delegates to markText. When only image watermarks are set, it delegates to markImage.
+   * When both are set, it creates a temporary PNG after the first step, then applies the second step with the requested output options.
+   *
+   * @param options
+   * @returns {Promise<string>} image url or base64 string
+   * @example
+   * const result = await ImageMarker.mark({
+   *   backgroundImage: { src: require('./images/background.jpg') },
+   *   watermarkTexts: [
+   *     {
+   *       text: 'Demo',
+   *       position: { position: Position.bottomCenter, Y: 24 },
+   *       style: { color: '#ffffff', fontSize: 32 },
+   *     },
+   *   ],
+   *   watermarkImages: [
+   *     {
+   *       src: require('./images/logo.png'),
+   *       position: { position: Position.topRight, X: 24, Y: 24 },
+   *       scale: 0.5,
+   *     },
+   *   ],
+   *   watermarkOrder: 'text-first',
+   *   saveFormat: ImageFormat.png,
+   * });
+   */
+  static async mark(options: MarkOptions): Promise<string> {
+    const textWatermarks = hasTextWatermarks(options);
+    const imageWatermarks = hasImageWatermarks(options);
+
+    if (!textWatermarks && !imageWatermarks) {
+      throw new Error('please set watermark text or image!');
+    }
+
+    if (textWatermarks && !imageWatermarks) {
+      return Marker.markText(
+        createTextMarkOptions(options, options.backgroundImage, true)
+      );
+    }
+
+    if (!textWatermarks && imageWatermarks) {
+      return Marker.markImage(
+        createImageMarkOptions(options, options.backgroundImage, true)
+      );
+    }
+
+    let result = '';
+    let backgroundImage = cloneImageOptions(options.backgroundImage);
+    const steps = getWatermarkSteps(options.watermarkOrder);
+
+    for (const [index, step] of steps.entries()) {
+      const isFinalStep = index === steps.length - 1;
+      if (step === 'text') {
+        result = await Marker.markText(
+          createTextMarkOptions(options, backgroundImage, isFinalStep)
+        );
+      } else {
+        result = await Marker.markImage(
+          createImageMarkOptions(options, backgroundImage, isFinalStep)
+        );
+      }
+      backgroundImage = {
+        src: result,
+        scale: 1,
+      };
+    }
+
+    return result;
   }
 }
 

@@ -152,4 +152,152 @@ describe('Marker JS wrapper', () => {
       } as any)
     ).toThrow('please set mark image!');
   });
+
+  it('composes text and image watermarks with a single mark call', async () => {
+    nativeModule.markWithText.mockResolvedValueOnce('/tmp/text-step.png');
+    nativeModule.markWithImage.mockResolvedValueOnce('/tmp/final.jpg');
+    const options = {
+      backgroundImage: {
+        src: 'file:///tmp/background.png',
+        scale: 0.8,
+      },
+      watermarkTexts: [
+        {
+          text: 'Mixed',
+          positionOptions: {
+            position: Position.bottomCenter,
+            Y: 24,
+          },
+          style: {
+            color: '#ffffff',
+            fontSize: 32,
+            shadowStyle: {
+              dx: 2,
+              dy: 3,
+              radius: 4,
+              color: '#000000',
+            },
+          },
+        },
+      ],
+      watermarkImages: [
+        {
+          src: 12,
+          position: {
+            position: Position.topRight,
+            X: 20,
+            Y: 16,
+          },
+          scale: 0.5,
+        },
+      ],
+      quality: 82,
+      filename: 'mixed-output',
+      saveFormat: ImageFormat.jpg,
+    };
+
+    await expect(Marker.mark(options)).resolves.toBe('/tmp/final.jpg');
+
+    expect(nativeModule.markWithText).toHaveBeenCalledTimes(1);
+    expect(nativeModule.markWithImage).toHaveBeenCalledTimes(1);
+    const textOptions = nativeModule.markWithText.mock.calls[0][0];
+    const imageOptions = nativeModule.markWithImage.mock.calls[0][0];
+
+    expect(textOptions).toEqual(
+      expect.objectContaining({
+        quality: 100,
+        saveFormat: ImageFormat.png,
+        maxSize: 2048,
+      })
+    );
+    expect(textOptions).not.toHaveProperty('filename');
+    expect(textOptions.backgroundImage.src).toEqual({
+      uri: 'file:///tmp/background.png',
+      __packager_asset: false,
+    });
+    expect(textOptions.watermarkTexts[0].position).toEqual({
+      position: Position.bottomCenter,
+      Y: 24,
+    });
+
+    expect(imageOptions).toEqual(
+      expect.objectContaining({
+        quality: 82,
+        filename: 'mixed-output',
+        saveFormat: ImageFormat.jpg,
+        maxSize: 2048,
+      })
+    );
+    expect(imageOptions.backgroundImage.src).toEqual({
+      uri: '/tmp/text-step.png',
+      __packager_asset: false,
+    });
+    expect(imageOptions.watermarkImages[0].src).toEqual({
+      uri: 'asset://12',
+      width: 120,
+      height: 80,
+      scale: 1,
+    });
+    expect(options.watermarkTexts[0]).toHaveProperty('positionOptions');
+    expect(options.watermarkImages[0].src).toBe(12);
+  });
+
+  it('supports image-first composition order', async () => {
+    nativeModule.markWithImage.mockResolvedValueOnce('/tmp/image-step.png');
+    nativeModule.markWithText.mockResolvedValueOnce('/tmp/final.png');
+
+    await expect(
+      Marker.mark({
+        backgroundImage: {
+          src: 'file:///tmp/background.png',
+        },
+        watermarkOrder: 'image-first',
+        watermarkImages: [
+          {
+            src: 'file:///tmp/watermark.png',
+            position: {
+              position: Position.topLeft,
+            },
+          },
+        ],
+        watermarkTexts: [
+          {
+            text: 'Final text',
+            position: {
+              position: Position.bottomRight,
+            },
+          },
+        ],
+        saveFormat: ImageFormat.png,
+      })
+    ).resolves.toBe('/tmp/final.png');
+
+    expect(nativeModule.markWithImage).toHaveBeenCalledTimes(1);
+    expect(nativeModule.markWithText).toHaveBeenCalledTimes(1);
+    expect(nativeModule.markWithImage.mock.invocationCallOrder[0]).toBeLessThan(
+      nativeModule.markWithText.mock.invocationCallOrder[0]
+    );
+    expect(nativeModule.markWithImage.mock.calls[0][0]).toEqual(
+      expect.objectContaining({
+        quality: 100,
+        saveFormat: ImageFormat.png,
+      })
+    );
+    expect(
+      nativeModule.markWithText.mock.calls[0][0].backgroundImage.src
+    ).toEqual({
+      uri: '/tmp/image-step.png',
+      __packager_asset: false,
+    });
+  });
+
+  it('rejects mark calls without text or image watermarks', async () => {
+    await expect(
+      Marker.mark({
+        backgroundImage: {
+          src: 'file:///tmp/background.png',
+        },
+      })
+    ).rejects.toThrow('please set watermark text or image!');
+  });
 });

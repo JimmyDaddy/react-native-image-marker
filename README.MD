@@ -59,6 +59,7 @@
 
 - [**Multiple text** watermarks](https://jimmydaddy.github.io/react-native-image-marker/interfaces/TextMarkOptions.html#watermarkTexts)
 - [**Multiple icon** watermarks](https://jimmydaddy.github.io/react-native-image-marker/classes/Marker.html#markImage)
+- Text and icon watermarks in a single `mark` call
 - [**Rotating** background and icon](https://jimmydaddy.github.io/react-native-image-marker/interfaces/ImageOptions.html#rotate)
 - [Setting transparency for background and icon](https://jimmydaddy.github.io/react-native-image-marker/interfaces/ImageOptions.html#rotate)
 - Base64
@@ -221,6 +222,45 @@ const result = await Marker.markImage({
     },
   ],
   filename: 'image-watermark',
+  saveFormat: ImageFormat.png,
+});
+```
+
+### Add Text and Image Watermarks Together
+
+Use `mark` when one output image needs both text and image watermarks. The call uses the existing native text and image renderers under the hood, with a lossless PNG intermediate when both layers are present.
+
+```typescript
+import Marker, { ImageFormat, Position } from 'react-native-image-marker';
+
+const result = await Marker.mark({
+  backgroundImage: { src: require('./images/background.jpg') },
+  watermarkTexts: [
+    {
+      text: 'Demo',
+      position: {
+        position: Position.bottomCenter,
+        Y: 24,
+      },
+      style: {
+        color: '#ffffff',
+        fontSize: 32,
+      },
+    },
+  ],
+  watermarkImages: [
+    {
+      src: require('./images/logo.png'),
+      position: {
+        position: Position.topRight,
+        X: 16,
+        Y: 16,
+      },
+      scale: 0.5,
+    },
+  ],
+  watermarkOrder: 'text-first',
+  filename: 'mixed-watermark',
   saveFormat: ImageFormat.png,
 });
 ```
