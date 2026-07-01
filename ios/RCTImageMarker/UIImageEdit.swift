@@ -114,28 +114,42 @@ enum ImageMarkerRenderer {
         }
 
         let canvasRect = CGRect(origin: .zero, size: canvasSize)
-        let transform = CGAffineTransform(translationX: 0, y: canvasRect.height)
-            .scaledBy(x: 1, y: -1)
-
-        context.saveGState()
-        context.concatenate(transform)
-        if backgroundAlpha != 1.0 {
-            context.beginTransparencyLayer(auxiliaryInfo: nil)
-            context.setAlpha(backgroundAlpha)
-            context.setBlendMode(.multiply)
-            context.draw(backgroundImage, in: canvasRect)
-            context.endTransparencyLayer()
-            context.setBlendMode(.normal)
-        } else {
-            context.draw(backgroundImage, in: canvasRect)
-        }
-        context.restoreGState()
+        drawBackground(
+            context: context,
+            image: backgroundImage,
+            rect: canvasRect,
+            alpha: backgroundAlpha
+        )
 
         for watermark in watermarks {
             drawImageWatermark(context: context, canvasSize: canvasSize, watermark: watermark)
         }
 
         return UIGraphicsGetImageFromCurrentImageContext()?.rotatedImageWithTransform(backgroundRotate)
+    }
+
+    static func drawBackground(
+        context: CGContext,
+        image: CGImage,
+        rect: CGRect,
+        alpha: CGFloat
+    ) {
+        let transform = CGAffineTransform(translationX: 0, y: rect.height)
+            .scaledBy(x: 1, y: -1)
+
+        context.saveGState()
+        context.concatenate(transform)
+        if alpha != 1.0 {
+            context.beginTransparencyLayer(auxiliaryInfo: nil)
+            context.setAlpha(alpha)
+            context.setBlendMode(.multiply)
+            context.draw(image, in: rect)
+            context.endTransparencyLayer()
+            context.setBlendMode(.normal)
+        } else {
+            context.draw(image, in: rect)
+        }
+        context.restoreGState()
     }
 
     static func drawImageWatermark(
@@ -215,14 +229,15 @@ extension UIImage {
         let scale = rotatedImage.scale
         let cropRect = rect.applying(CGAffineTransform(scaleX: scale, y: scale))
         
-        let croppedImage = rotatedImage.cgImage?.cropping(to: cropRect)
-        let image = UIImage(cgImage: croppedImage!, scale: self.scale, orientation: rotatedImage.imageOrientation)
-        return image
+        guard let croppedImage = rotatedImage.cgImage?.cropping(to: cropRect) else {
+            return rotatedImage
+        }
+        return UIImage(cgImage: croppedImage, scale: self.scale, orientation: rotatedImage.imageOrientation)
     }
     
     func rotatedImageWithTransform(_ rotate: CGFloat) -> UIImage {
         if rotate == 0 || rotate.isNaN {
-            return self;
+            return self
         }
         let rotation = CGAffineTransform(rotationAngle: rotate * .pi / 180)
         let rotatedImage = rotatedImageWithTransform(rotation)
