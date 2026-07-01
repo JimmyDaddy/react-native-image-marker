@@ -228,15 +228,16 @@ const result = await Marker.markImage({
 
 ### Add Text and Image Watermarks Together
 
-Use `mark` when one output image needs both text and image watermarks. The call uses the existing native text and image renderers under the hood, with a lossless PNG intermediate when both layers are present.
+Use `mark` when one output image needs both text and image watermarks. Layers are rendered natively in the order they appear in `watermarks`, so later layers draw over earlier layers.
 
 ```typescript
 import Marker, { ImageFormat, Position } from 'react-native-image-marker';
 
 const result = await Marker.mark({
   backgroundImage: { src: require('./images/background.jpg') },
-  watermarkTexts: [
+  watermarks: [
     {
+      type: 'text',
       text: 'Demo',
       position: {
         position: Position.bottomCenter,
@@ -247,9 +248,8 @@ const result = await Marker.mark({
         fontSize: 32,
       },
     },
-  ],
-  watermarkImages: [
     {
+      type: 'image',
       src: require('./images/logo.png'),
       position: {
         position: Position.topRight,
@@ -259,7 +259,6 @@ const result = await Marker.mark({
       scale: 0.5,
     },
   ],
-  watermarkOrder: 'text-first',
   filename: 'mixed-watermark',
   saveFormat: ImageFormat.png,
 });

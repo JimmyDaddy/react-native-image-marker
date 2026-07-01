@@ -28,9 +28,10 @@ final class ImageMarkerExampleUITests: XCTestCase {
     app.launch()
     XCTAssertTrue(app.staticTexts["Image Marker Lab"].waitForExistence(timeout: 45))
     XCTAssertTrue(app.staticTexts["Feature checks"].exists)
-    XCTAssertTrue(app.buttons["feature-text-anchor-offset"].exists)
-    XCTAssertTrue(app.buttons["feature-image-anchor-offset"].exists)
-    XCTAssertTrue(app.buttons["feature-orientation-normalization"].exists)
+    XCTAssertTrue(featureButton(in: app, identifier: "feature-text-anchor-offset", label: "Anchored text offset").exists)
+    XCTAssertTrue(featureButton(in: app, identifier: "feature-image-anchor-offset", label: "Anchored image offset").exists)
+    XCTAssertTrue(featureButton(in: app, identifier: "feature-mixed-watermark", label: "Text + image watermark").exists)
+    XCTAssertTrue(featureButton(in: app, identifier: "feature-orientation-normalization", label: "Orientation normalization").exists)
   }
 
   func testTextAnchorOffsetFeatureProducesPreview() throws {
@@ -38,11 +39,24 @@ final class ImageMarkerExampleUITests: XCTestCase {
     app.launch()
 
     XCTAssertTrue(app.staticTexts["Image Marker Lab"].waitForExistence(timeout: 45))
-    let featureCard = app.buttons["feature-text-anchor-offset"]
-    XCTAssertTrue(featureCard.waitForExistence(timeout: 15))
+    let featureCard = featureButton(in: app, identifier: "feature-text-anchor-offset", label: "Anchored text offset")
+    XCTAssertTrue(featureCard.exists)
     featureCard.tap()
 
     XCTAssertTrue(app.staticTexts["Text anchor offset"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.otherElements["result-preview-ready"].waitForExistence(timeout: 15))
+  }
+
+  func testMixedWatermarkFeatureProducesPreview() throws {
+    let app = XCUIApplication()
+    app.launch()
+
+    XCTAssertTrue(app.staticTexts["Image Marker Lab"].waitForExistence(timeout: 45))
+    let featureCard = featureButton(in: app, identifier: "feature-mixed-watermark", label: "Text + image watermark")
+    XCTAssertTrue(featureCard.exists)
+    featureCard.tap()
+
+    XCTAssertTrue(app.staticTexts["Mixed text + image"].waitForExistence(timeout: 5))
     XCTAssertTrue(app.otherElements["result-preview-ready"].waitForExistence(timeout: 15))
   }
 
@@ -146,6 +160,27 @@ final class ImageMarkerExampleUITests: XCTestCase {
       UIColor.blue.setFill()
       context.fill(CGRect(x: size.width / 2, y: 0, width: size.width / 2, height: size.height))
     }
+  }
+
+  private func featureButton(in app: XCUIApplication, identifier: String, label: String) -> XCUIElement {
+    let candidates = [
+      app.buttons[identifier],
+      app.buttons[label],
+      app.descendants(matching: .any)[identifier],
+      app.descendants(matching: .any)[label],
+      app.staticTexts[label],
+    ]
+
+    for _ in 0..<8 {
+      if let hittable = candidates.first(where: { $0.exists && $0.isHittable }) {
+        return hittable
+      }
+      let scrollView = app.scrollViews.firstMatch
+      scrollView.exists ? scrollView.swipeUp() : app.swipeUp()
+      RunLoop.current.run(until: Date().addingTimeInterval(0.2))
+    }
+
+    return candidates.first(where: { $0.exists }) ?? app.descendants(matching: .any)[label]
   }
 
   private func makeSolidImage(size: CGSize, color: UIColor) -> UIImage {

@@ -548,7 +548,7 @@ Marker.markImage({
 
 ### Mixed text and icon watermarks
 
-Use `Marker.mark` when text and icon watermarks should be produced by one API call. By default the text layer is drawn first and the image layer is drawn second. Set `watermarkOrder: 'image-first'` when the text should be the final layer.
+Use `Marker.mark` when text and icon watermarks should be produced by one API call. The native renderer draws `watermarks` in array order, so later layers draw over earlier layers.
 
 ```typescript
 import Marker, { ImageFormat, Position, TextBackgroundType } from "react-native-image-marker"
@@ -558,7 +558,8 @@ Marker.mark({
     src: require('./images/test.jpg'),
     scale: 1,
   },
-  watermarkTexts: [{
+  watermarks: [{
+    type: 'text',
     text: 'text marker',
     position: {
       position: Position.bottomCenter,
@@ -574,8 +575,8 @@ Marker.mark({
         color: '#1E293BCC',
       },
     },
-  }],
-  watermarkImages: [{
+  }, {
+    type: 'image',
     src: require('./images/watermark.png'),
     position: {
       position: Position.topRight,
@@ -584,7 +585,6 @@ Marker.mark({
     },
     scale: 0.5,
   }],
-  watermarkOrder: 'text-first',
   saveFormat: ImageFormat.png,
 })
 ```

@@ -16,6 +16,8 @@ abstract class NativeImageMarkerSpec(
 
   abstract fun markWithImage(options: ReadableMap, promise: Promise)
 
+  abstract fun markWithWatermarks(options: ReadableMap, promise: Promise)
+
   companion object {
     const val NAME = "ImageMarker"
   }

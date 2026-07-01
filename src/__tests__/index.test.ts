@@ -5,6 +5,7 @@ describe('Marker JS wrapper', () => {
   let nativeModule: {
     markWithText: jest.Mock;
     markWithImage: jest.Mock;
+    markWithWatermarks: jest.Mock;
   };
   let resolveAssetSource: jest.Mock;
 
@@ -15,6 +16,7 @@ describe('Marker JS wrapper', () => {
     nativeModule = {
       markWithText: jest.fn(),
       markWithImage: jest.fn(),
+      markWithWatermarks: jest.fn(),
     };
     reactNative.NativeModules.ImageMarker = nativeModule;
     reactNative.Image.resolveAssetSource = jest.fn();
@@ -153,9 +155,8 @@ describe('Marker JS wrapper', () => {
     ).toThrow('please set mark image!');
   });
 
-  it('composes text and image watermarks with a single mark call', async () => {
-    nativeModule.markWithText.mockResolvedValueOnce('/tmp/text-step.png');
-    nativeModule.markWithImage.mockResolvedValueOnce('/tmp/final.jpg');
+  it('sends legacy text and image watermarks as ordered native layers', async () => {
+    nativeModule.markWithWatermarks.mockResolvedValueOnce('/tmp/final.jpg');
     const options = {
       backgroundImage: {
         src: 'file:///tmp/background.png',
@@ -198,29 +199,12 @@ describe('Marker JS wrapper', () => {
 
     await expect(Marker.mark(options)).resolves.toBe('/tmp/final.jpg');
 
-    expect(nativeModule.markWithText).toHaveBeenCalledTimes(1);
-    expect(nativeModule.markWithImage).toHaveBeenCalledTimes(1);
-    const textOptions = nativeModule.markWithText.mock.calls[0][0];
-    const imageOptions = nativeModule.markWithImage.mock.calls[0][0];
+    expect(nativeModule.markWithText).not.toHaveBeenCalled();
+    expect(nativeModule.markWithImage).not.toHaveBeenCalled();
+    expect(nativeModule.markWithWatermarks).toHaveBeenCalledTimes(1);
+    const nativeOptions = nativeModule.markWithWatermarks.mock.calls[0][0];
 
-    expect(textOptions).toEqual(
-      expect.objectContaining({
-        quality: 100,
-        saveFormat: ImageFormat.png,
-        maxSize: 2048,
-      })
-    );
-    expect(textOptions).not.toHaveProperty('filename');
-    expect(textOptions.backgroundImage.src).toEqual({
-      uri: 'file:///tmp/background.png',
-      __packager_asset: false,
-    });
-    expect(textOptions.watermarkTexts[0].position).toEqual({
-      position: Position.bottomCenter,
-      Y: 24,
-    });
-
-    expect(imageOptions).toEqual(
+    expect(nativeOptions).toEqual(
       expect.objectContaining({
         quality: 82,
         filename: 'mixed-output',
@@ -228,11 +212,28 @@ describe('Marker JS wrapper', () => {
         maxSize: 2048,
       })
     );
-    expect(imageOptions.backgroundImage.src).toEqual({
-      uri: '/tmp/text-step.png',
+    expect(nativeOptions.backgroundImage.src).toEqual({
+      uri: 'file:///tmp/background.png',
       __packager_asset: false,
     });
-    expect(imageOptions.watermarkImages[0].src).toEqual({
+    expect(nativeOptions.watermarks).toHaveLength(2);
+    expect(nativeOptions.watermarks[0]).toEqual(
+      expect.objectContaining({
+        type: 'text',
+        text: 'Mixed',
+      })
+    );
+    expect(nativeOptions.watermarks[0].position).toEqual({
+      position: Position.bottomCenter,
+      Y: 24,
+    });
+    expect(nativeOptions.watermarks[1]).toEqual(
+      expect.objectContaining({
+        type: 'image',
+        scale: 0.5,
+      })
+    );
+    expect(nativeOptions.watermarks[1].src).toEqual({
       uri: 'asset://12',
       width: 120,
       height: 80,
@@ -242,26 +243,24 @@ describe('Marker JS wrapper', () => {
     expect(options.watermarkImages[0].src).toBe(12);
   });
 
-  it('supports image-first composition order', async () => {
-    nativeModule.markWithImage.mockResolvedValueOnce('/tmp/image-step.png');
-    nativeModule.markWithText.mockResolvedValueOnce('/tmp/final.png');
+  it('preserves explicit watermarks layer order', async () => {
+    nativeModule.markWithWatermarks.mockResolvedValueOnce('/tmp/final.png');
 
     await expect(
       Marker.mark({
         backgroundImage: {
           src: 'file:///tmp/background.png',
         },
-        watermarkOrder: 'image-first',
-        watermarkImages: [
+        watermarks: [
           {
+            type: 'image',
             src: 'file:///tmp/watermark.png',
             position: {
               position: Position.topLeft,
             },
           },
-        ],
-        watermarkTexts: [
           {
+            type: 'text',
             text: 'Final text',
             position: {
               position: Position.bottomRight,
@@ -272,32 +271,30 @@ describe('Marker JS wrapper', () => {
       })
     ).resolves.toBe('/tmp/final.png');
 
-    expect(nativeModule.markWithImage).toHaveBeenCalledTimes(1);
-    expect(nativeModule.markWithText).toHaveBeenCalledTimes(1);
-    expect(nativeModule.markWithImage.mock.invocationCallOrder[0]).toBeLessThan(
-      nativeModule.markWithText.mock.invocationCallOrder[0]
-    );
-    expect(nativeModule.markWithImage.mock.calls[0][0]).toEqual(
+    expect(nativeModule.markWithWatermarks).toHaveBeenCalledTimes(1);
+    const nativeOptions = nativeModule.markWithWatermarks.mock.calls[0][0];
+    expect(nativeOptions).toEqual(
       expect.objectContaining({
-        quality: 100,
         saveFormat: ImageFormat.png,
       })
     );
-    expect(
-      nativeModule.markWithText.mock.calls[0][0].backgroundImage.src
-    ).toEqual({
-      uri: '/tmp/image-step.png',
+    expect(nativeOptions.watermarks.map((layer: any) => layer.type)).toEqual([
+      'image',
+      'text',
+    ]);
+    expect(nativeOptions.watermarks[0].src).toEqual({
+      uri: 'file:///tmp/watermark.png',
       __packager_asset: false,
     });
   });
 
-  it('rejects mark calls without text or image watermarks', async () => {
-    await expect(
+  it('rejects mark calls without text or image watermarks', () => {
+    expect(() =>
       Marker.mark({
         backgroundImage: {
           src: 'file:///tmp/background.png',
         },
       })
-    ).rejects.toThrow('please set watermark text or image!');
+    ).toThrow('please set watermark text or image!');
   });
 });

@@ -15,6 +15,7 @@ import com.jimmydaddy.imagemarker.base.Constants.BASE64
 import com.jimmydaddy.imagemarker.base.Constants.IMAGE_MARKER_TAG
 import com.jimmydaddy.imagemarker.base.MarkImageOptions
 import com.jimmydaddy.imagemarker.base.MarkTextOptions
+import com.jimmydaddy.imagemarker.base.MarkWatermarkOptions
 import com.jimmydaddy.imagemarker.base.SaveFormat
 import com.jimmydaddy.imagemarker.base.Utils.Companion.getBlankBitmap
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -165,6 +166,62 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : NativeI
     }
   }
 
+  private fun markImageByWatermarks(
+    bg: Bitmap?,
+    markers: List<Bitmap?>,
+    dest: String,
+    opts: MarkWatermarkOptions,
+    promise: Promise
+  ) {
+    var bos: BufferedOutputStream? = null
+    var icon: Bitmap? = null
+    try {
+      icon = ImageMarkerRenderer.renderWatermarks(
+        bg!!,
+        markers,
+        opts,
+        this.reactApplicationContext,
+        recycleMarkerBitmaps = true
+      )
+
+      if (!bg.isRecycled) {
+        bg.recycle()
+        System.gc()
+      }
+
+      if (dest == BASE64) {
+        val base64Stream = ByteArrayOutputStream()
+        icon.compress(CompressFormat.PNG, opts.quality, base64Stream)
+        base64Stream.flush()
+        base64Stream.close()
+        val bitmapBytes = base64Stream.toByteArray()
+        val result = Base64.encodeToString(bitmapBytes, Base64.DEFAULT)
+        promise.resolve("data:image/png;base64,$result")
+      } else {
+        bos = BufferedOutputStream(FileOutputStream(dest))
+        icon.compress(getSaveFormat(opts.saveFormat), opts.quality, bos)
+        bos.flush()
+        bos.close()
+        promise.resolve(dest)
+      }
+    } catch (e: Exception) {
+      e.printStackTrace()
+      promise.reject("error", e.message, e)
+    } finally {
+      if (bos != null) {
+        try {
+          bos.close()
+        } catch (e: IOException) {
+          e.printStackTrace()
+        }
+      }
+      if (icon != null && !icon.isRecycled) {
+        icon.recycle()
+        System.gc()
+      }
+    }
+  }
+
   /**
    * @param opts
    * @param promise
@@ -218,6 +275,35 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : NativeI
         val markerBitmaps = bitmaps.subList(1, bitmaps.lastIndex + 1)
         val dest = generateCacheFilePathForMarker(markOpts.filename, markOpts.saveFormat)
         markImageByBitmap(bg, markerBitmaps, dest, markOpts, promise)
+      } catch (e: Exception) {
+        Log.d(IMAGE_MARKER_TAG, "error：" + e.message)
+        e.printStackTrace()
+        promise.reject("error", e.message, e)
+      }
+    }
+  }
+
+  @OptIn(DelicateCoroutinesApi::class)
+  @RequiresApi(Build.VERSION_CODES.N)
+  @ReactMethod
+  override fun markWithWatermarks(
+    options: ReadableMap,
+    promise: Promise
+  ) {
+    val markOpts = MarkWatermarkOptions.checkParams(options, promise) ?: return
+    GlobalScope.launch(Dispatchers.Main) {
+      try {
+        val markers = markOpts.imageLayers.map { it.imageOptions.imageOption }
+        val concatenatedArray = listOf(
+          markOpts.backgroundImage,
+        ).plus(markers)
+        val bitmaps = MarkerImageLoader(context, markOpts.maxSize).loadImages(
+          concatenatedArray
+        )
+        val bg = bitmaps[0]
+        val markerBitmaps = bitmaps.subList(1, bitmaps.lastIndex + 1)
+        val dest = generateCacheFilePathForMarker(markOpts.filename, markOpts.saveFormat)
+        markImageByWatermarks(bg, markerBitmaps, dest, markOpts, promise)
       } catch (e: Exception) {
         Log.d(IMAGE_MARKER_TAG, "error：" + e.message)
         e.printStackTrace()

@@ -609,9 +609,16 @@ function useViewModel(props: ImageMarkerLabProps) {
       } else if (nextConfig.waterMarkType === 'mixed') {
         path = await Marker.mark({
           backgroundImage,
-          watermarkTexts: [textWatermark],
-          watermarkImages: [imageWatermark],
-          watermarkOrder: 'text-first',
+          watermarks: [
+            {
+              ...textWatermark,
+              type: 'text',
+            },
+            {
+              ...imageWatermark,
+              type: 'image',
+            },
+          ],
           quality: nextConfig.quality,
           saveFormat: nextConfig.saveFormat,
         });
@@ -742,8 +749,9 @@ function useViewModel(props: ImageMarkerLabProps) {
           src: assets.bg,
           scale: 1,
         },
-        watermarkTexts: [
+        watermarks: [
           {
+            type: 'text',
             text: 'Mixed watermark',
             position: {
               position: Position.bottomCenter,
@@ -772,9 +780,8 @@ function useViewModel(props: ImageMarkerLabProps) {
               },
             },
           },
-        ],
-        watermarkImages: [
           {
+            type: 'image',
             src: assets.icon,
             scale: 0.58,
             alpha: 0.92,
@@ -785,7 +792,6 @@ function useViewModel(props: ImageMarkerLabProps) {
             },
           },
         ],
-        watermarkOrder: 'text-first',
         quality: 100,
         saveFormat: ImageFormat.png,
       });
@@ -1222,6 +1228,7 @@ function FeatureCard(props: {
   return (
     <TouchableOpacity
       activeOpacity={0.82}
+      accessible
       accessibilityLabel={props.title}
       accessibilityRole="button"
       onPress={props.onPress}

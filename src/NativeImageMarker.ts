@@ -7,6 +7,7 @@ export interface Spec extends TurboModule {
   // nested structs on iOS.
   markWithText(options: Object): Promise<string>;
   markWithImage(options: Object): Promise<string>;
+  markWithWatermarks(options: Object): Promise<string>;
 }
 
 export default TurboModuleRegistry.get<Spec>('ImageMarker');
