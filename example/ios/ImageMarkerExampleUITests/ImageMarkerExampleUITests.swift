@@ -31,6 +31,7 @@ final class ImageMarkerExampleUITests: XCTestCase {
     XCTAssertTrue(featureButton(in: app, identifier: "feature-text-anchor-offset", label: "Anchored text offset").exists)
     XCTAssertTrue(featureButton(in: app, identifier: "feature-image-anchor-offset", label: "Anchored image offset").exists)
     XCTAssertTrue(featureButton(in: app, identifier: "feature-mixed-watermark", label: "Text + image watermark").exists)
+    XCTAssertTrue(featureButton(in: app, identifier: "feature-sharp-scaled-watermark", label: "Sharp scaled watermark").exists)
     XCTAssertTrue(featureButton(in: app, identifier: "feature-orientation-normalization", label: "Orientation normalization").exists)
   }
 
@@ -58,6 +59,30 @@ final class ImageMarkerExampleUITests: XCTestCase {
 
     XCTAssertTrue(app.staticTexts["Mixed text + image"].waitForExistence(timeout: 5))
     XCTAssertTrue(app.otherElements["result-preview-ready"].waitForExistence(timeout: 15))
+  }
+
+  func testSharpScaledWatermarkFeatureProducesPreview() throws {
+    let app = XCUIApplication()
+    app.launch()
+
+    XCTAssertTrue(app.staticTexts["Image Marker Lab"].waitForExistence(timeout: 45))
+    let featureCard = featureButton(in: app, identifier: "feature-sharp-scaled-watermark", label: "Sharp scaled watermark")
+    XCTAssertTrue(featureCard.exists)
+    featureCard.tap()
+
+    XCTAssertTrue(app.staticTexts["Sharp scaled watermark"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.otherElements["result-preview-ready"].waitForExistence(timeout: 15))
+    let preview = app.descendants(matching: .any)["result-preview-open"]
+    XCTAssertTrue(preview.waitForExistence(timeout: 5))
+    preview.tap()
+
+    let modal = app.otherElements["result-preview-modal"]
+    XCTAssertTrue(modal.waitForExistence(timeout: 5))
+    let modalImage = app.descendants(matching: .any)["result-preview-modal-image"]
+    XCTAssertTrue(modalImage.waitForExistence(timeout: 5))
+    app.buttons["result-preview-close"].tap()
+    let dismissed = expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: modalImage)
+    wait(for: [dismissed], timeout: 5)
   }
 
   func testLaunchPerformance() throws {
