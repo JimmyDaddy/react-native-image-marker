@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.0 (2026-07-01)
+
+* feat: add native layered watermark renderer (#293) ([50fc255](https://github.com/JimmyDaddy/react-native-image-marker/commit/50fc255)), closes [#293](https://github.com/JimmyDaddy/react-native-image-marker/issues/293)
+
 ## 1.3.0 (2026-07-01)
 
 * feat: add new architecture codegen support (#291) ([26011b6](https://github.com/JimmyDaddy/react-native-image-marker/commit/26011b6)), closes [#291](https://github.com/JimmyDaddy/react-native-image-marker/issues/291)
