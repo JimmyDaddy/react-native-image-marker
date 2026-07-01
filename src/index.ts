@@ -1123,7 +1123,11 @@ class Marker {
   /** @ignore ignore constructors for typedoc only */
   constructor() {}
   /**
-   * mark text on image
+   * Mark text-only watermarks on an image.
+   *
+   * This remains the supported API for text-only use cases. Use {@link mark}
+   * when text and image watermarks need to be composed together in one ordered
+   * native render pass.
    * @param options
    * @returns {Promise<string>} image url or base64 string
    * @example
@@ -1231,7 +1235,11 @@ class Marker {
   }
 
   /**
-   * mark image on background image
+   * Mark image-only watermarks on a background image.
+   *
+   * This remains the supported API for image-only use cases. Use {@link mark}
+   * when text and image watermarks need to be composed together in one ordered
+   * native render pass.
    * @param options
    * @returns {Promise<string>} image url or base64 string
    * @example
@@ -1334,9 +1342,10 @@ class Marker {
   }
 
   /**
-   * Mark text and image watermarks with one call.
+   * Mark ordered text and image watermark layers with one call.
    *
-   * Layers are rendered natively in array order. Later layers draw over earlier layers.
+   * Use this for mixed text and image layers. Layers are rendered natively in
+   * array order, so later layers draw over earlier layers.
    *
    * @param options
    * @returns {Promise<string>} image url or base64 string

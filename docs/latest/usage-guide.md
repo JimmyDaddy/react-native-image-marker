@@ -9,6 +9,7 @@ This guide keeps the full visual cookbook for react-native-image-marker. Start f
 
 ## Contents
 
+- [Choosing an API](#choosing-an-api)
 - [Responsive watermark size](#responsive-watermark-size)
 - [Text background fit](#text-background-fit)
 - [Text background stretchX](#text-background-stretchx)
@@ -26,6 +27,18 @@ This guide keeps the full visual cookbook for react-native-image-marker. Start f
 - [Transparent icon](#transparent-icon)
 
 ## Detailed Examples
+
+### Choosing an API
+
+Use the API that matches the watermark shape you are rendering:
+
+| API | Best for | Status |
+| --- | --- | --- |
+| `Marker.markText` | Text-only watermarks, including multiple text layers | Supported |
+| `Marker.markImage` | Image-only watermarks, including multiple logo/icon layers | Supported |
+| `Marker.mark` | Ordered mixed text and image layers in one native render pass | Supported |
+
+`markText` and `markImage` remain first-class APIs. Use `mark` when text and image watermarks need to be composed together, especially when layer order matters.
 
 ### Responsive watermark size
 

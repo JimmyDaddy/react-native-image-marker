@@ -173,6 +173,18 @@ For custom fonts, first confirm the font renders in your React Native app, then 
 
 These are the flows most apps need first. For the full visual cookbook, see the [usage guide](docs/usage-guide.md).
 
+### Choosing an API
+
+Use the API that matches the watermark shape you are rendering:
+
+| API | Best for | Status |
+| --- | --- | --- |
+| `Marker.markText` | Text-only watermarks, including multiple text layers | Supported |
+| `Marker.markImage` | Image-only watermarks, including multiple logo/icon layers | Supported |
+| `Marker.mark` | Ordered mixed text and image layers in one native render pass | Supported |
+
+`markText` and `markImage` are not deprecated. `mark` is the mixed-layer API to use when text and image watermarks need to be composed together, especially when layer order matters.
+
 ### Add a Text Watermark
 
 Use `markText` when the watermark is text-only. Set `positionOptions.position` for an anchor, and use `X` / `Y` as offsets from that anchor.
