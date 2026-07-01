@@ -622,10 +622,12 @@ jobs:
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testApp \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testTextAnchorOffsetFeatureProducesPreview \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testMixedWatermarkFeatureProducesPreview \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testSharpScaledWatermarkFeatureProducesPreview \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testNormalizesUIImageOrientationBeforeCGImageRendering \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testKeepsAlreadyUprightUIImageInstance \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testRendersImageWatermarkUsingAnchoredOffsets \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testRotatesRenderedBackgroundWhenRequested \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testRendersScaledImageWatermarkWithoutInterpolatedEdges \
             test 2>&1 | tee xcodebuild-test.log | xcpretty || {
               status=$?
               tail -n 200 xcodebuild-test.log

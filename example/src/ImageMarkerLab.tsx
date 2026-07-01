@@ -117,6 +117,8 @@ const appTabs: Array<{ label: string; value: AppTab }> = [
 ];
 
 const exampleFontName = 'MaShanZheng-Regular';
+const sharpWatermarkDataUrl =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAA1klEQVR42u3aWw6DMAwEwNz/0u0RaGRn47YTiS8eiQbJYJa11np1bk/j6fjd/Q0bAAAADgLsAu2O6noAAABwtwh2n/91TwEAAIYBdE9YfTE6UPQAAABwsAhWFxQoegAAANgogulx4YYAAAAg2MwMvD4AAAAuNjMDmiUAAP4aIB1mdu8vh6sAAACI/qBQvV53+AoAAIC7zUi6WdouggAA/DhAOphIh58fzAcAAICL4eiA5gkAAADBCQeGrwAAADj4wWJ6uAoAAIDsi1A6/Cz/IAEAwG8DvAHibmyc3jWFggAAAABJRU5ErkJggg==';
 
 function getArchitectureRuntime(): ArchitectureRuntime {
   const runtime = globalThis as typeof globalThis & {
@@ -190,6 +192,7 @@ function AppButton(props: {
   return (
     <TouchableOpacity
       activeOpacity={0.78}
+      accessible
       accessibilityLabel={props.label}
       accessibilityRole="button"
       onPress={props.onPress}
@@ -811,6 +814,64 @@ function useViewModel(props: ImageMarkerLabProps) {
     }
   }
 
+  async function runSharpScaledWatermarkFeature() {
+    setBackgroundFormat('normal image');
+    applyConfig({
+      image: assets.bg,
+      marker: sharpWatermarkDataUrl,
+      waterMarkType: 'image',
+      position: Position.center,
+      X: 0,
+      Y: 0,
+      saveFormat: ImageFormat.png,
+      watermarkScale: 2.4,
+      watermarkRotate: 0,
+      watermarkAlpha: 1,
+      backgroundScale: 1,
+      backgroundRotate: 0,
+      backgroundAlpha: 1,
+      quality: 100,
+    });
+    setLastRun('Sharp scaled watermark');
+    setLoading(true);
+
+    try {
+      const path = await Marker.markImage({
+        backgroundImage: {
+          src: assets.bg,
+          scale: 1,
+        },
+        watermarkImages: [
+          {
+            src: sharpWatermarkDataUrl,
+            scale: 2.4,
+            alpha: 1,
+            position: {
+              position: Position.center,
+              X: 0,
+              Y: 0,
+            },
+          },
+        ],
+        quality: 100,
+        saveFormat: ImageFormat.png,
+      });
+
+      setUri(formatResultUri(path, ImageFormat.png));
+      setShow(true);
+      await updateFileSize(path, ImageFormat.png);
+    } catch (error) {
+      console.log('sharp scaled watermark error', error);
+      Toast.show({
+        type: 'error',
+        text1: 'sharp watermark failed',
+        text2: error instanceof Error ? error.message : String(error),
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
   function runExtraFeature() {
     const isOrientation = props.featureVariant === 'orientation';
 
@@ -1189,6 +1250,7 @@ function useViewModel(props: ImageMarkerLabProps) {
       runTextOffsetFeature,
       runImageOffsetFeature,
       runMixedWatermarkFeature,
+      runSharpScaledWatermarkFeature,
       runExtraFeature,
       runPositionPresetSamples,
       runAbsoluteCoordinateSamples,
@@ -1384,6 +1446,14 @@ function PreviewPanel(props: {
   onClear: () => void;
   compact?: boolean;
 }) {
+  const [previewOpen, setPreviewOpen] = useState(false);
+
+  useEffect(() => {
+    if (!props.show) {
+      setPreviewOpen(false);
+    }
+  }, [props.show]);
+
   return (
     <View style={s.previewPanel}>
       <View style={s.previewHeader}>
@@ -1409,14 +1479,23 @@ function PreviewPanel(props: {
         testID={props.show ? 'result-preview-ready' : 'result-preview-empty'}
       >
         {props.show ? (
-          <Image
-            accessible
-            accessibilityLabel="result-preview-image"
-            source={{ uri: props.uri }}
-            testID="result-preview-image"
-            resizeMode="contain"
-            style={s.previewImage}
-          />
+          <TouchableOpacity
+            activeOpacity={0.9}
+            accessibilityLabel="Open result preview"
+            accessibilityRole="imagebutton"
+            onPress={() => setPreviewOpen(true)}
+            style={s.previewImageButton}
+            testID="result-preview-open"
+          >
+            <Image
+              accessible
+              accessibilityLabel="result-preview-image"
+              source={{ uri: props.uri }}
+              testID="result-preview-image"
+              resizeMode="contain"
+              style={s.previewImage}
+            />
+          </TouchableOpacity>
         ) : (
           <View style={s.previewEmpty}>
             <Text style={s.previewEmptyTitle}>No output yet</Text>
@@ -1424,6 +1503,54 @@ function PreviewPanel(props: {
           </View>
         )}
       </View>
+      {props.show && previewOpen ? (
+        <Modal
+          animationType="fade"
+          transparent
+          visible
+          statusBarTranslucent
+          onRequestClose={() => setPreviewOpen(false)}
+        >
+          <SafeAreaView style={s.previewModalContainer}>
+            <View style={s.previewModalContent}>
+              <View style={s.previewModalHeader}>
+                <Text style={s.previewModalTitle}>Result preview</Text>
+                <TouchableOpacity
+                  activeOpacity={0.78}
+                  accessible
+                  accessibilityLabel="Close result preview"
+                  accessibilityRole="button"
+                  onPress={() => setPreviewOpen(false)}
+                  style={[
+                    s.button,
+                    s.buttonCompact,
+                    s.buttonNeutral,
+                    s.previewModalCloseButton,
+                  ]}
+                  testID="result-preview-close"
+                >
+                  <Text style={[s.buttonText, s.buttonTextDark]}>Close</Text>
+                </TouchableOpacity>
+              </View>
+              <View
+                accessibilityLabel="result-preview-modal"
+                accessible
+                style={s.previewModalFrame}
+                testID="result-preview-modal"
+              >
+                <Image
+                  accessible
+                  accessibilityLabel="result-preview-modal-image"
+                  resizeMode="contain"
+                  source={{ uri: props.uri }}
+                  style={s.previewModalImage}
+                  testID="result-preview-modal-image"
+                />
+              </View>
+            </View>
+          </SafeAreaView>
+        </Modal>
+      ) : null}
     </View>
   );
 }
@@ -1501,6 +1628,14 @@ function ImageMarkerLab(props: ImageMarkerLabProps) {
                   tone="blue"
                   testID="feature-mixed-watermark"
                   onPress={actions.runMixedWatermarkFeature}
+                />
+                <FeatureCard
+                  badge="Sharp"
+                  title="Sharp scaled watermark"
+                  meta="hard-edge PNG scale"
+                  tone="green"
+                  testID="feature-sharp-scaled-watermark"
+                  onPress={actions.runSharpScaledWatermarkFeature}
                 />
                 <FeatureCard
                   badge={extraFeature.badge}
@@ -2083,6 +2218,10 @@ const s = StyleSheet.create({
   previewFrameCompact: {
     aspectRatio: 16 / 5,
   },
+  previewImageButton: {
+    height: '100%',
+    width: '100%',
+  },
   previewImage: {
     height: '100%',
     width: '100%',
@@ -2101,6 +2240,45 @@ const s = StyleSheet.create({
     color: '#64748B',
     fontSize: 13,
     marginTop: 4,
+  },
+  previewModalContainer: {
+    backgroundColor: 'rgba(15, 23, 42, 0.86)',
+    flex: 1,
+    justifyContent: 'center',
+    padding: 14,
+  },
+  previewModalContent: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  previewModalHeader: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  previewModalTitle: {
+    color: '#F8FAFC',
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  previewModalCloseButton: {
+    margin: 0,
+  },
+  previewModalFrame: {
+    alignItems: 'center',
+    backgroundColor: '#0F172A',
+    borderColor: '#334155',
+    borderRadius: 8,
+    borderWidth: 1,
+    flex: 1,
+    justifyContent: 'center',
+    overflow: 'hidden',
+    width: '100%',
+  },
+  previewModalImage: {
+    height: '100%',
+    width: '100%',
   },
   section: {
     marginBottom: 14,

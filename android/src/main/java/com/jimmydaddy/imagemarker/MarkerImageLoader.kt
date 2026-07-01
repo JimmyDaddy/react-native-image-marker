@@ -44,11 +44,15 @@ class MarkerImageLoader(private val context: ReactApplicationContext, private va
     get() = context.resources
 
   @RequiresApi(Build.VERSION_CODES.N)
-  suspend fun loadImages(images: List<ImageOptions>): List<Bitmap?> = withContext(Dispatchers.IO) {
+  suspend fun loadImages(
+    images: List<ImageOptions>,
+    scaleImages: List<Boolean> = List(images.size) { true }
+  ): List<Bitmap?> = withContext(Dispatchers.IO) {
 
-    val deferredList = images.map { img ->
+    val deferredList = images.mapIndexed { index, img ->
       async {
         try {
+          val scale = if (scaleImages.getOrElse(index) { true }) img.scale else 1f
 
           val isCoilImg = isCoilImg(img.uri)
           Log.d(IMAGE_MARKER_TAG, "isCoilImg: $isCoilImg")
@@ -56,9 +60,9 @@ class MarkerImageLoader(private val context: ReactApplicationContext, private va
           if (isBase64String(img.uri)) {
             Log.d(IMAGE_MARKER_TAG, "Loading Base64 Image")
             decodeBase64ToBitmap(img.uri)?.let { bitmap ->
-              val scaledBitmap = ImageProcess.scaleBitmap(bitmap, img.scale)
+              val scaledBitmap = ImageProcess.scaleBitmap(bitmap, scale)
                 ?: throw MarkerError(ErrorCode.LOAD_IMAGE_FAILED, "Failed to scale Base64 image")
-              if (!bitmap.isRecycled && img.scale != 1f) {
+              if (!bitmap.isRecycled && scale != 1f) {
                 bitmap.recycle()
                 System.gc()
               }
@@ -81,7 +85,7 @@ class MarkerImageLoader(private val context: ReactApplicationContext, private va
               },
               onSuccess = { result ->
                 val bitmap = result.toBitmap()
-                val bg = ImageProcess.scaleBitmap(bitmap, img.scale)
+                val bg = ImageProcess.scaleBitmap(bitmap, scale)
                 if (bg == null) {
                   future.completeExceptionally(MarkerError(ErrorCode.LOAD_IMAGE_FAILED,
                       "Can't retrieve the file from the src: " + img.uri))
@@ -109,9 +113,9 @@ class MarkerImageLoader(private val context: ReactApplicationContext, private va
                 bitmap = Bitmap.createScaledBitmap(originalBitMap, img.src.width, img.src.height, true);
               }
               Log.d(IMAGE_MARKER_TAG, bitmap!!.height.toString() + "")
-              val bg = ImageProcess.scaleBitmap(bitmap, img.scale)
+              val bg = ImageProcess.scaleBitmap(bitmap, scale)
               Log.d(IMAGE_MARKER_TAG, bg!!.height.toString() + "")
-              if (!bitmap.isRecycled && img.scale != 1f) {
+              if (!bitmap.isRecycled && scale != 1f) {
                 bitmap.recycle()
                 System.gc()
               }

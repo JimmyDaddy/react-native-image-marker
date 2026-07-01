@@ -31,6 +31,7 @@ final class ImageMarkerExampleUITests: XCTestCase {
     XCTAssertTrue(featureButton(in: app, identifier: "feature-text-anchor-offset", label: "Anchored text offset").exists)
     XCTAssertTrue(featureButton(in: app, identifier: "feature-image-anchor-offset", label: "Anchored image offset").exists)
     XCTAssertTrue(featureButton(in: app, identifier: "feature-mixed-watermark", label: "Text + image watermark").exists)
+    XCTAssertTrue(featureButton(in: app, identifier: "feature-sharp-scaled-watermark", label: "Sharp scaled watermark").exists)
     XCTAssertTrue(featureButton(in: app, identifier: "feature-orientation-normalization", label: "Orientation normalization").exists)
   }
 
@@ -58,6 +59,30 @@ final class ImageMarkerExampleUITests: XCTestCase {
 
     XCTAssertTrue(app.staticTexts["Mixed text + image"].waitForExistence(timeout: 5))
     XCTAssertTrue(app.otherElements["result-preview-ready"].waitForExistence(timeout: 15))
+  }
+
+  func testSharpScaledWatermarkFeatureProducesPreview() throws {
+    let app = XCUIApplication()
+    app.launch()
+
+    XCTAssertTrue(app.staticTexts["Image Marker Lab"].waitForExistence(timeout: 45))
+    let featureCard = featureButton(in: app, identifier: "feature-sharp-scaled-watermark", label: "Sharp scaled watermark")
+    XCTAssertTrue(featureCard.exists)
+    featureCard.tap()
+
+    XCTAssertTrue(app.staticTexts["Sharp scaled watermark"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.otherElements["result-preview-ready"].waitForExistence(timeout: 15))
+    let preview = app.descendants(matching: .any)["result-preview-open"]
+    XCTAssertTrue(preview.waitForExistence(timeout: 5))
+    preview.tap()
+
+    let modal = app.otherElements["result-preview-modal"]
+    XCTAssertTrue(modal.waitForExistence(timeout: 5))
+    let modalImage = app.descendants(matching: .any)["result-preview-modal-image"]
+    XCTAssertTrue(modalImage.waitForExistence(timeout: 5))
+    app.buttons["result-preview-close"].tap()
+    let dismissed = expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: modalImage)
+    wait(for: [dismissed], timeout: 5)
   }
 
   func testLaunchPerformance() throws {
@@ -152,6 +177,44 @@ final class ImageMarkerExampleUITests: XCTestCase {
     XCTAssertEqual(renderedImage.size.height, background.size.width, accuracy: 1)
   }
 
+  func testRendersScaledImageWatermarkWithoutInterpolatedEdges() throws {
+    let background = makeSolidImage(size: CGSize(width: 8, height: 8), color: .red)
+    let watermark = makeCheckerImage(size: CGSize(width: 4, height: 4))
+
+    let renderedImage = try XCTUnwrap(
+      ImageMarkerRenderer.renderImageWatermarks(
+        background: background,
+        watermarks: [
+          ImageMarkerImageWatermark(
+            image: watermark,
+            position: .none,
+            offsetX: "0",
+            offsetY: "0",
+            scale: 0.5,
+            rotate: 0,
+            alpha: 1
+          ),
+        ],
+        backgroundScale: 1,
+        backgroundRotate: 0,
+        backgroundAlpha: 1
+      )
+    )
+    let bytes = try XCTUnwrap(rgbaBytes(for: renderedImage))
+    let width = Int(renderedImage.size.width * renderedImage.scale)
+
+    for y in 0..<2 {
+      for x in 0..<2 {
+        XCTAssertTrue(
+          isBlackOrWhitePixel(bytes, at: pixelIndex(x: x, y: y, width: width)),
+          "Expected a hard black or white watermark pixel at (\(x), \(y))"
+        )
+      }
+    }
+    XCTAssertTrue(isRedPixel(bytes, at: pixelIndex(x: 2, y: 0, width: width)))
+    XCTAssertTrue(isRedPixel(bytes, at: pixelIndex(x: 0, y: 2, width: width)))
+  }
+
   private func makeTestImage(size: CGSize) -> UIImage {
     let renderer = UIGraphicsImageRenderer(size: size)
     return renderer.image { context in
@@ -190,6 +253,21 @@ final class ImageMarkerExampleUITests: XCTestCase {
     return renderer.image { context in
       color.setFill()
       context.fill(CGRect(origin: .zero, size: size))
+    }
+  }
+
+  private func makeCheckerImage(size: CGSize) -> UIImage {
+    let format = UIGraphicsImageRendererFormat.default()
+    format.scale = 1
+    let renderer = UIGraphicsImageRenderer(size: size, format: format)
+    return renderer.image { context in
+      for y in 0..<Int(size.height) {
+        for x in 0..<Int(size.width) {
+          let color: UIColor = (x + y).isMultiple(of: 2) ? .black : .white
+          color.setFill()
+          context.fill(CGRect(x: x, y: y, width: 1, height: 1))
+        }
+      }
     }
   }
 
@@ -246,5 +324,25 @@ final class ImageMarkerExampleUITests: XCTestCase {
     }
 
     return bytes
+  }
+
+  private func pixelIndex(x: Int, y: Int, width: Int) -> Int {
+    return (y * width + x) * 4
+  }
+
+  private func isBlackOrWhitePixel(_ bytes: [UInt8], at index: Int) -> Bool {
+    let red = bytes[index]
+    let green = bytes[index + 1]
+    let blue = bytes[index + 2]
+    let isBlack = red == 0 && green == 0 && blue == 0
+    let isWhite = red == 255 && green == 255 && blue == 255
+    return isBlack || isWhite
+  }
+
+  private func isRedPixel(_ bytes: [UInt8], at index: Int) -> Bool {
+    let red = bytes[index]
+    let green = bytes[index + 1]
+    let blue = bytes[index + 2]
+    return red == 255 && green == 0 && blue == 0
   }
 }

@@ -148,15 +148,12 @@ enum ImageMarkerRenderer {
         }
 
         context.saveGState()
-        let markerImage: UIImage
-        if watermark.scale > 0 {
-            markerImage = UIImage(cgImage: watermarkImage, scale: 1 / watermark.scale, orientation: watermark.image.imageOrientation)
-        } else {
-            markerImage = watermark.image
-        }
-        let markerSize = markerImage.size
-        let diagonal = sqrt(pow(markerSize.width, 2) + pow(markerSize.height, 2))
-        let rotatedCanvasSize = CGSize(width: diagonal, height: diagonal)
+        context.interpolationQuality = .none
+        let scale = watermark.scale > 0 ? watermark.scale : 1
+        let markerSize = CGSize(
+            width: watermark.image.size.width * scale,
+            height: watermark.image.size.height * scale
+        )
         let origin = markerOrigin(
             position: watermark.position,
             offsetX: watermark.offsetX,
@@ -164,41 +161,33 @@ enum ImageMarkerRenderer {
             canvasSize: canvasSize,
             itemSize: markerSize
         )
-        let markerRect = CGRect(origin: origin, size: rotatedCanvasSize)
-
-        UIGraphicsBeginImageContextWithOptions(rotatedCanvasSize, false, 1)
-        guard let markerContext = UIGraphicsGetCurrentContext() else {
-            UIGraphicsEndImageContext()
-            context.restoreGState()
-            return
-        }
-
-        markerContext.saveGState()
-        let rotatedMarkerImage = markerImage.rotatedImageWithTransform(watermark.rotate)
-        let markerOrigin = CGPoint(x: 0, y: markerRect.height - rotatedMarkerImage.size.height)
-        let drawRotatedMarker = {
-            markerContext.draw(
-                rotatedMarkerImage.cgImage!,
-                in: CGRect(origin: markerOrigin, size: rotatedMarkerImage.size)
+        let markerRect = CGRect(origin: origin, size: markerSize)
+        let drawMarker = {
+            context.saveGState()
+            context.translateBy(x: markerRect.midX, y: markerRect.midY)
+            if watermark.rotate != 0 {
+                context.rotate(by: watermark.rotate * .pi / 180)
+            }
+            context.draw(
+                watermarkImage,
+                in: CGRect(
+                    x: -markerSize.width / 2,
+                    y: -markerSize.height / 2,
+                    width: markerSize.width,
+                    height: markerSize.height
+                )
             )
+            context.restoreGState()
         }
 
         if watermark.alpha != 1.0 {
-            markerContext.beginTransparencyLayer(auxiliaryInfo: nil)
-            markerContext.setAlpha(watermark.alpha)
-            markerContext.setBlendMode(.multiply)
-            drawRotatedMarker()
-            markerContext.endTransparencyLayer()
+            context.beginTransparencyLayer(auxiliaryInfo: nil)
+            context.setAlpha(watermark.alpha)
+            context.setBlendMode(.multiply)
+            drawMarker()
+            context.endTransparencyLayer()
         } else {
-            drawRotatedMarker()
-        }
-        markerContext.restoreGState()
-
-        let renderedWatermark = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
-
-        if let renderedWatermark = renderedWatermark?.cgImage {
-            context.draw(renderedWatermark, in: markerRect)
+            drawMarker()
         }
         context.restoreGState()
     }

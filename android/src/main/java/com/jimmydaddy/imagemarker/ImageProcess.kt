@@ -12,7 +12,7 @@ class ImageProcess {
       return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, rotationMatrix, true)
     }
 
-    fun scaleBitmap(bitmap: Bitmap, scale: Float): Bitmap? {
+    fun scaleBitmap(bitmap: Bitmap, scale: Float, filter: Boolean = true): Bitmap? {
       val w = bitmap.width
       val h = bitmap.height
       val mtx = Matrix()
@@ -21,13 +21,13 @@ class ImageProcess {
       }
       var scaledBitmap: Bitmap? = null
       try {
-        scaledBitmap = Bitmap.createBitmap(bitmap, 0, 0, w, h, mtx, true)
+        scaledBitmap = Bitmap.createBitmap(bitmap, 0, 0, w, h, mtx, filter)
       } catch (e: OutOfMemoryError) {
         print(e.message)
         while (scaledBitmap == null) {
           System.gc()
           System.runFinalization()
-          scaledBitmap = Bitmap.createBitmap(bitmap, 0, 0, w, h, mtx, true)
+          scaledBitmap = Bitmap.createBitmap(bitmap, 0, 0, w, h, mtx, filter)
         }
       }
       Log.d(IMAGE_MARKER_TAG, "original width: " + w + " original height: " + h + " scaled width: " + scaledBitmap?.width + " scaled height: " + scaledBitmap?.height)

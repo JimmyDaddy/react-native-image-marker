@@ -22,8 +22,16 @@ object ImageMarkerRenderer {
   ) {
     canvas.save()
     var markerBitmap = sourceMarker
+    if (markOpts.imageOption.scale != 1f) {
+      markerBitmap = ImageProcess.scaleBitmap(markerBitmap, markOpts.imageOption.scale, filter = false)
+        ?: throw IllegalStateException("Failed to scale watermark bitmap")
+    }
     if (markOpts.imageOption.rotate != 0f) {
+      val scaledMarkerBitmap = markerBitmap
       markerBitmap = ImageProcess.rotate(markerBitmap, markOpts.imageOption.rotate)
+      if (scaledMarkerBitmap !== sourceMarker && !scaledMarkerBitmap.isRecycled) {
+        scaledMarkerBitmap.recycle()
+      }
     }
 
     if (markOpts.positionEnum != null) {

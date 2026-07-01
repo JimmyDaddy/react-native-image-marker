@@ -11,6 +11,7 @@ import com.jimmydaddy.imagemarker.ImageMarkerRenderer
 import com.jimmydaddy.imagemarker.base.MarkImageOptions
 import com.jimmydaddy.imagemarker.base.MarkWatermarkOptions
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -127,8 +128,34 @@ class ImageMarkerRendererTest {
     assertEquals(Color.GREEN, output.getPixel(1, 1))
   }
 
+  @Test
+  fun rendersScaledImageWatermarkWithoutInterpolatedEdges() {
+    val background = solidBitmap(8, 8, Color.RED)
+    val marker = checkerBitmap(4, 4)
+    val options = imageOptions(
+      watermarkScale = 0.5,
+      watermarkPosition = JavaOnlyMap.of("X", 0, "Y", 0)
+    )
+
+    val output = ImageMarkerRenderer.renderImageWatermarks(
+      background,
+      listOf(marker),
+      options
+    )
+
+    for (y in 0 until 2) {
+      for (x in 0 until 2) {
+        val pixel = output.getPixel(x, y)
+        assertTrue("Expected a hard black or white watermark pixel, got $pixel", isBlackOrWhite(pixel))
+      }
+    }
+    assertEquals(Color.RED, output.getPixel(2, 0))
+    assertEquals(Color.RED, output.getPixel(0, 2))
+  }
+
   private fun imageOptions(
     backgroundRotate: Int = 0,
+    watermarkScale: Double = 1.0,
     watermarkPosition: JavaOnlyMap
   ): MarkImageOptions {
     return MarkImageOptions(
@@ -147,6 +174,8 @@ class ImageMarkerRendererTest {
           JavaOnlyMap.of(
             "src",
             imageSource("watermark"),
+            "scale",
+            watermarkScale,
             "position",
             watermarkPosition,
             "alpha",
@@ -176,5 +205,19 @@ class ImageMarkerRendererTest {
     return Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).also {
       it.eraseColor(color)
     }
+  }
+
+  private fun checkerBitmap(width: Int, height: Int): Bitmap {
+    return Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).also { bitmap ->
+      for (y in 0 until height) {
+        for (x in 0 until width) {
+          bitmap.setPixel(x, y, if ((x + y) % 2 == 0) Color.BLACK else Color.WHITE)
+        }
+      }
+    }
+  }
+
+  private fun isBlackOrWhite(pixel: Int): Boolean {
+    return pixel == Color.BLACK || pixel == Color.WHITE
   }
 }
