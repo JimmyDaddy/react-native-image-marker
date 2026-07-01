@@ -59,6 +59,7 @@
 
 - [**Multiple text** watermarks](https://jimmydaddy.github.io/react-native-image-marker/interfaces/TextMarkOptions.html#watermarkTexts)
 - [**Multiple icon** watermarks](https://jimmydaddy.github.io/react-native-image-marker/classes/Marker.html#markImage)
+- Text and icon watermarks in a single `mark` call
 - [**Rotating** background and icon](https://jimmydaddy.github.io/react-native-image-marker/interfaces/ImageOptions.html#rotate)
 - [Setting transparency for background and icon](https://jimmydaddy.github.io/react-native-image-marker/interfaces/ImageOptions.html#rotate)
 - Base64
@@ -172,6 +173,18 @@ For custom fonts, first confirm the font renders in your React Native app, then 
 
 These are the flows most apps need first. For the full visual cookbook, see the [usage guide](docs/usage-guide.md).
 
+### Choosing an API
+
+Use the API that matches the watermark shape you are rendering:
+
+| API | Best for | Status |
+| --- | --- | --- |
+| `Marker.markText` | Text-only watermarks, including multiple text layers | Supported |
+| `Marker.markImage` | Image-only watermarks, including multiple logo/icon layers | Supported |
+| `Marker.mark` | Ordered mixed text and image layers in one native render pass | Supported |
+
+`markText` and `markImage` are not deprecated. `mark` is the mixed-layer API to use when text and image watermarks need to be composed together, especially when layer order matters.
+
 ### Add a Text Watermark
 
 Use `markText` when the watermark is text-only. Set `positionOptions.position` for an anchor, and use `X` / `Y` as offsets from that anchor.
@@ -221,6 +234,44 @@ const result = await Marker.markImage({
     },
   ],
   filename: 'image-watermark',
+  saveFormat: ImageFormat.png,
+});
+```
+
+### Add Text and Image Watermarks Together
+
+Use `mark` when one output image needs both text and image watermarks. Layers are rendered natively in the order they appear in `watermarks`, so later layers draw over earlier layers.
+
+```typescript
+import Marker, { ImageFormat, Position } from 'react-native-image-marker';
+
+const result = await Marker.mark({
+  backgroundImage: { src: require('./images/background.jpg') },
+  watermarks: [
+    {
+      type: 'text',
+      text: 'Demo',
+      position: {
+        position: Position.bottomCenter,
+        Y: 24,
+      },
+      style: {
+        color: '#ffffff',
+        fontSize: 32,
+      },
+    },
+    {
+      type: 'image',
+      src: require('./images/logo.png'),
+      position: {
+        position: Position.topRight,
+        X: 16,
+        Y: 16,
+      },
+      scale: 0.5,
+    },
+  ],
+  filename: 'mixed-watermark',
   saveFormat: ImageFormat.png,
 });
 ```

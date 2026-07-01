@@ -374,6 +374,12 @@ jobs:
           ./gradlew clean
           ./gradlew -PnewArchEnabled=true assembleDebug --stacktrace
 
+      - name: Compile Android tests New Architecture
+        if: steps.verify-android-changed-files.outputs.any_changed == 'true'
+        run: |
+          cd example/android
+          ./gradlew -PnewArchEnabled=true :app:compileDebugAndroidTestKotlin --stacktrace
+
   android-api-level-test:
     runs-on: ubuntu-latest
     needs: [changes, android-build]
@@ -615,6 +621,7 @@ jobs:
             -parallel-testing-enabled NO \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testApp \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testTextAnchorOffsetFeatureProducesPreview \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testMixedWatermarkFeatureProducesPreview \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testNormalizesUIImageOrientationBeforeCGImageRendering \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testKeepsAlreadyUprightUIImageInstance \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testRendersImageWatermarkUsingAnchoredOffsets \

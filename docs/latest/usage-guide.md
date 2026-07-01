@@ -9,6 +9,7 @@ This guide keeps the full visual cookbook for react-native-image-marker. Start f
 
 ## Contents
 
+- [Choosing an API](#choosing-an-api)
 - [Responsive watermark size](#responsive-watermark-size)
 - [Text background fit](#text-background-fit)
 - [Text background stretchX](#text-background-stretchx)
@@ -19,12 +20,25 @@ This guide keeps the full visual cookbook for react-native-image-marker. Start f
 - [Text rotation](#text-rotation)
 - [Icon watermarks](#icon-watermarks)
 - [Multiple icon watermarks](#multiple-icon-watermarks)
+- [Mixed text and icon watermarks](#mixed-text-and-icon-watermarks)
 - [Background rotation](#background-rotation)
 - [Icon rotation](#icon-rotation)
 - [Transparent background](#transparent-background)
 - [Transparent icon](#transparent-icon)
 
 ## Detailed Examples
+
+### Choosing an API
+
+Use the API that matches the watermark shape you are rendering:
+
+| API | Best for | Status |
+| --- | --- | --- |
+| `Marker.markText` | Text-only watermarks, including multiple text layers | Supported |
+| `Marker.markImage` | Image-only watermarks, including multiple logo/icon layers | Supported |
+| `Marker.mark` | Ordered mixed text and image layers in one native render pass | Supported |
+
+`markText` and `markImage` remain first-class APIs. Use `mark` when text and image watermarks need to be composed together, especially when layer order matters.
 
 ### Responsive watermark size
 
@@ -544,6 +558,49 @@ Marker.markImage({
 ```
 
 </details>
+
+### Mixed text and icon watermarks
+
+Use `Marker.mark` when text and icon watermarks should be produced by one API call. The native renderer draws `watermarks` in array order, so later layers draw over earlier layers.
+
+```typescript
+import Marker, { ImageFormat, Position, TextBackgroundType } from "react-native-image-marker"
+···
+Marker.mark({
+  backgroundImage: {
+    src: require('./images/test.jpg'),
+    scale: 1,
+  },
+  watermarks: [{
+    type: 'text',
+    text: 'text marker',
+    position: {
+      position: Position.bottomCenter,
+      Y: 24,
+    },
+    style: {
+      color: '#FFFFFF',
+      fontSize: 30,
+      textBackgroundStyle: {
+        type: TextBackgroundType.none,
+        paddingX: 12,
+        paddingY: 8,
+        color: '#1E293BCC',
+      },
+    },
+  }, {
+    type: 'image',
+    src: require('./images/watermark.png'),
+    position: {
+      position: Position.topRight,
+      X: 24,
+      Y: 24,
+    },
+    scale: 0.5,
+  }],
+  saveFormat: ImageFormat.png,
+})
+```
 
 ### Background rotation
 

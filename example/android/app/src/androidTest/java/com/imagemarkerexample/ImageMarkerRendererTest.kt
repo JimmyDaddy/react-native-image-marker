@@ -3,10 +3,13 @@ package com.imagemarkerexample
 import android.graphics.Bitmap
 import android.graphics.Color
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import com.facebook.react.bridge.JavaOnlyArray
 import com.facebook.react.bridge.JavaOnlyMap
+import com.facebook.react.bridge.ReactApplicationContext
 import com.jimmydaddy.imagemarker.ImageMarkerRenderer
 import com.jimmydaddy.imagemarker.base.MarkImageOptions
+import com.jimmydaddy.imagemarker.base.MarkWatermarkOptions
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -66,6 +69,62 @@ class ImageMarkerRendererTest {
 
     assertEquals(2, output.width)
     assertEquals(3, output.height)
+  }
+
+  @Test
+  fun rendersWatermarkLayersInArrayOrder() {
+    val background = solidBitmap(8, 6, Color.RED)
+    val firstMarker = solidBitmap(2, 2, Color.BLUE)
+    val secondMarker = solidBitmap(2, 2, Color.GREEN)
+    val options = MarkWatermarkOptions(
+      JavaOnlyMap.of(
+        "backgroundImage",
+        JavaOnlyMap.of(
+          "src",
+          imageSource("background"),
+          "alpha",
+          1
+        ),
+        "watermarks",
+        JavaOnlyArray.of(
+          JavaOnlyMap.of(
+            "type",
+            "image",
+            "src",
+            imageSource("first"),
+            "position",
+            JavaOnlyMap.of("X", 1, "Y", 1),
+            "alpha",
+            1
+          ),
+          JavaOnlyMap.of(
+            "type",
+            "image",
+            "src",
+            imageSource("second"),
+            "position",
+            JavaOnlyMap.of("X", 1, "Y", 1),
+            "alpha",
+            1
+          )
+        ),
+        "saveFormat",
+        "png"
+      )
+    )
+
+    val output = ImageMarkerRenderer.renderWatermarks(
+      background,
+      listOf(firstMarker, secondMarker),
+      options,
+      ReactApplicationContext(
+        InstrumentationRegistry.getInstrumentation().targetContext.applicationContext
+      )
+    )
+
+    assertEquals(8, output.width)
+    assertEquals(6, output.height)
+    assertEquals(Color.GREEN, output.getPixel(1, 1))
   }
 
   private fun imageOptions(

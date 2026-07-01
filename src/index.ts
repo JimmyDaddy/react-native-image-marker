@@ -838,6 +838,100 @@ export interface ImageMarkOptions {
   watermarkImages: Array<WatermarkImageOptions>;
 }
 
+export interface TextWatermarkLayer extends TextOptions {
+  type: 'text';
+}
+
+export interface ImageWatermarkLayer extends WatermarkImageOptions {
+  type: 'image';
+}
+
+export type WatermarkLayer = TextWatermarkLayer | ImageWatermarkLayer;
+
+/**
+ * Options for marking text and image watermarks with a single call.
+ * @example
+ * await Marker.mark({
+ *   backgroundImage: {
+ *     src: require('./images/bg.png'),
+ *   },
+ *   watermarks: [
+ *     {
+ *       type: 'text',
+ *       text: 'hello world',
+ *       position: {
+ *         position: Position.bottomCenter,
+ *         Y: 24,
+ *       },
+ *       style: {
+ *         color: '#FFFFFF',
+ *         fontSize: 32,
+ *       },
+ *     },
+ *     {
+ *       type: 'image',
+ *       src: require('./images/logo.png'),
+ *       position: {
+ *         position: Position.topRight,
+ *         X: 24,
+ *         Y: 24,
+ *       },
+ *       scale: 0.5,
+ *     },
+ *   ],
+ *   saveFormat: ImageFormat.png,
+ * });
+ */
+export interface MarkOptions {
+  /**
+   * Background image options.
+   */
+  backgroundImage: ImageOptions;
+  /**
+   * Ordered watermark layers. Layers are rendered in array order, so later layers draw over earlier layers.
+   */
+  watermarks?: WatermarkLayer[];
+  /**
+   * Text watermark options. Kept for compatibility; use watermarks instead for ordered mixed layers.
+   */
+  watermarkTexts?: TextOptions[];
+  /**
+   * @deprecated use watermarkImages instead
+   * Legacy single image watermark options.
+   */
+  watermarkImage?: ImageOptions;
+  /**
+   * @deprecated use position on watermarkImages instead
+   * Legacy single image watermark position options.
+   */
+  watermarkPositions?: PositionOptions;
+  /**
+   * Image watermark options. Kept for compatibility; use watermarks instead for ordered mixed layers.
+   */
+  watermarkImages?: Array<WatermarkImageOptions>;
+  /**
+   * image quality `0-100`, `100` is best quality.
+   * @defaultValue 100
+   */
+  quality?: number;
+  /**
+   * save image name
+   */
+  filename?: string;
+  /**
+   * save image format
+   * @defaultValue `jpg`
+   */
+  saveFormat?: ImageFormat;
+  /**
+   * @deprecated since 1.2.0
+   * max image size
+   * android only
+   * @defaultValue 2048
+   */
+  maxSize?: number;
+}
+
 const ImageMarker =
   NativeImageMarker ??
   NativeModules.ImageMarker ??
@@ -850,11 +944,190 @@ const ImageMarker =
     }
   );
 
+type OutputOptions = Pick<
+  MarkOptions,
+  'quality' | 'filename' | 'saveFormat' | 'maxSize'
+>;
+
+function clonePositionOptions(
+  position?: PositionOptions
+): PositionOptions | undefined {
+  return position ? { ...position } : position;
+}
+
+function cloneCornerRadius(
+  cornerRadius?: CornerRadius
+): CornerRadius | undefined {
+  if (!cornerRadius) {
+    return cornerRadius;
+  }
+
+  return {
+    topLeft: cornerRadius.topLeft ? { ...cornerRadius.topLeft } : undefined,
+    topRight: cornerRadius.topRight ? { ...cornerRadius.topRight } : undefined,
+    bottomLeft: cornerRadius.bottomLeft
+      ? { ...cornerRadius.bottomLeft }
+      : undefined,
+    bottomRight: cornerRadius.bottomRight
+      ? { ...cornerRadius.bottomRight }
+      : undefined,
+    all: cornerRadius.all ? { ...cornerRadius.all } : undefined,
+  };
+}
+
+function cloneTextBackgroundStyle(
+  style?: TextBackgroundStyle | null
+): TextBackgroundStyle | null | undefined {
+  if (!style) {
+    return style;
+  }
+
+  return {
+    ...style,
+    cornerRadius: cloneCornerRadius(style.cornerRadius),
+  };
+}
+
+function cloneTextStyle(style?: TextStyle): TextStyle | undefined {
+  if (!style) {
+    return style;
+  }
+
+  return {
+    ...style,
+    shadowStyle: style.shadowStyle
+      ? { ...style.shadowStyle }
+      : style.shadowStyle,
+    textBackgroundStyle: cloneTextBackgroundStyle(style.textBackgroundStyle),
+  };
+}
+
+function cloneTextWatermarks(watermarkTexts: TextOptions[]): TextOptions[] {
+  return watermarkTexts.map((textOptions) => ({
+    ...textOptions,
+    position: clonePositionOptions(textOptions.position),
+    positionOptions: clonePositionOptions(textOptions.positionOptions),
+    style: cloneTextStyle(textOptions.style),
+  }));
+}
+
+function cloneImageOptions<T extends ImageOptions | undefined>(
+  imageOptions: T
+): T {
+  return imageOptions ? ({ ...imageOptions } as T) : imageOptions;
+}
+
+function cloneImageWatermarks(
+  watermarkImages: WatermarkImageOptions[]
+): WatermarkImageOptions[] {
+  return watermarkImages.map((imageOptions) => ({
+    ...imageOptions,
+    position: clonePositionOptions(imageOptions.position),
+  }));
+}
+
+function getOutputOptions(options: MarkOptions): OutputOptions {
+  const outputOptions: OutputOptions = {};
+
+  if (options.quality !== undefined) {
+    outputOptions.quality = options.quality;
+  }
+  if (options.filename !== undefined) {
+    outputOptions.filename = options.filename;
+  }
+  if (options.saveFormat !== undefined) {
+    outputOptions.saveFormat = options.saveFormat;
+  }
+  if (options.maxSize !== undefined) {
+    outputOptions.maxSize = options.maxSize;
+  }
+
+  return outputOptions;
+}
+
+function resolveImageSource(src: any) {
+  let srcObj: any = resolveAssetSource(src);
+  if (!srcObj) {
+    srcObj = {
+      uri: src,
+      __packager_asset: false,
+    };
+  }
+  return srcObj;
+}
+
+function createTextLayer(textOptions: TextOptions): TextWatermarkLayer {
+  return {
+    ...textOptions,
+    type: 'text',
+    position:
+      clonePositionOptions(
+        textOptions.position || textOptions.positionOptions
+      ) || {},
+    style: cloneTextStyle(textOptions.style),
+  };
+}
+
+function createImageLayer(
+  imageOptions: WatermarkImageOptions
+): ImageWatermarkLayer {
+  return {
+    ...imageOptions,
+    type: 'image',
+    src: resolveImageSource(imageOptions.src),
+    position: clonePositionOptions(imageOptions.position) || {},
+  };
+}
+
+function createWatermarkLayers(options: MarkOptions): WatermarkLayer[] {
+  if ((options.watermarks?.length ?? 0) > 0) {
+    return options.watermarks!.map((layer) => {
+      if (layer.type === 'text') {
+        return createTextLayer(layer);
+      }
+      return createImageLayer(layer);
+    });
+  }
+
+  const layers: WatermarkLayer[] = [
+    ...cloneTextWatermarks(options.watermarkTexts ?? []).map(createTextLayer),
+    ...cloneImageWatermarks(options.watermarkImages ?? []).map(
+      createImageLayer
+    ),
+  ];
+
+  if (options.watermarkImage?.src) {
+    layers.push(
+      createImageLayer({
+        ...cloneImageOptions(options.watermarkImage),
+        position: clonePositionOptions(options.watermarkPositions),
+      })
+    );
+  }
+
+  return layers;
+}
+
+function createNativeMarkOptions(options: MarkOptions): MarkOptions {
+  return {
+    backgroundImage: {
+      ...cloneImageOptions(options.backgroundImage),
+      src: resolveImageSource(options.backgroundImage.src),
+    },
+    watermarks: createWatermarkLayers(options),
+    ...getOutputOptions(options),
+  };
+}
+
 class Marker {
   /** @ignore ignore constructors for typedoc only */
   constructor() {}
   /**
-   * mark text on image
+   * Mark text-only watermarks on an image.
+   *
+   * This remains the supported API for text-only use cases. Use {@link mark}
+   * when text and image watermarks need to be composed together in one ordered
+   * native render pass.
    * @param options
    * @returns {Promise<string>} image url or base64 string
    * @example
@@ -962,7 +1235,11 @@ class Marker {
   }
 
   /**
-   * mark image on background image
+   * Mark image-only watermarks on a background image.
+   *
+   * This remains the supported API for image-only use cases. Use {@link mark}
+   * when text and image watermarks need to be composed together in one ordered
+   * native render pass.
    * @param options
    * @returns {Promise<string>} image url or base64 string
    * @example
@@ -1062,6 +1339,50 @@ class Marker {
     options.maxSize = options.maxSize || 2048;
 
     return ImageMarker.markWithImage(options);
+  }
+
+  /**
+   * Mark ordered text and image watermark layers with one call.
+   *
+   * Use this for mixed text and image layers. Layers are rendered natively in
+   * array order, so later layers draw over earlier layers.
+   *
+   * @param options
+   * @returns {Promise<string>} image url or base64 string
+   * @example
+   * const result = await ImageMarker.mark({
+   *   backgroundImage: { src: require('./images/background.jpg') },
+   *   watermarks: [
+   *     {
+   *       type: 'text',
+   *       text: 'Demo',
+   *       position: { position: Position.bottomCenter, Y: 24 },
+   *       style: { color: '#ffffff', fontSize: 32 },
+   *     },
+   *     {
+   *       type: 'image',
+   *       src: require('./images/logo.png'),
+   *       position: { position: Position.topRight, X: 24, Y: 24 },
+   *       scale: 0.5,
+   *     },
+   *   ],
+   *   saveFormat: ImageFormat.png,
+   * });
+   */
+  static mark(options: MarkOptions): Promise<string> {
+    const { backgroundImage } = options;
+
+    if (!backgroundImage || !backgroundImage.src) {
+      throw new Error('please set image!');
+    }
+
+    const nativeOptions = createNativeMarkOptions(options);
+    if (!nativeOptions.watermarks || nativeOptions.watermarks.length === 0) {
+      throw new Error('please set watermark text or image!');
+    }
+    nativeOptions.maxSize = nativeOptions.maxSize || 2048;
+
+    return ImageMarker.markWithWatermarks(nativeOptions);
   }
 }
 

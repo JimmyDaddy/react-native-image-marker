@@ -30,12 +30,13 @@ data class TextOptions(val options: ReadableMap) {
     if (text == null) {
       throw MarkerError(ErrorCode.PARAMS_REQUIRED, "mark text is required")
     }
-    val positionOptions =
-      if (null != options.getMap("position")) options.getMap("position") else null
-    x = if (positionOptions!!.hasKey("X")) Utils.handleDynamicToString(positionOptions.getDynamic("X")) else null
-    y = if (positionOptions.hasKey("Y")) Utils.handleDynamicToString(positionOptions.getDynamic("Y")) else null
+    val positionOptions = options.getMap("position")
+    x =
+      if (positionOptions != null && positionOptions.hasKey("X")) Utils.handleDynamicToString(positionOptions.getDynamic("X")) else null
+    y =
+      if (positionOptions != null && positionOptions.hasKey("Y")) Utils.handleDynamicToString(positionOptions.getDynamic("Y")) else null
     positionEnum =
-      if (null != positionOptions.getString("position")) PositionEnum.getPosition(
+      if (positionOptions != null && null != positionOptions.getString("position")) PositionEnum.getPosition(
         positionOptions.getString("position")
       ) else null
     style = TextStyle(options.getMap("style"))
