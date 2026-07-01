@@ -180,5 +180,16 @@
         }
       ]
     ]
+  },
+  "codegenConfig": {
+    "name": "RNImageMarkerSpec",
+    "type": "modules",
+    "jsSrcsDir": "src",
+    "android": {
+      "javaPackageName": "com.jimmydaddy.imagemarker"
+    },
+    "ios": {
+      "moduleName": "ImageMarker"
+    }
   }
 }

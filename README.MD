@@ -74,6 +74,7 @@
   - Relative position
   - [Background border radius](https://jimmydaddy.github.io/react-native-image-marker/interfaces/TextBackgroundStyle.html#cornerRadius)
 - Compatible with both Android and iOS
+- React Native New Architecture support with a legacy bridge fallback
 - Expo
 
 ## Installation
@@ -132,6 +133,30 @@ If you add the package to an existing Expo project, rebuild the native app after
 | < 0.60.0                                             | v0.5.2 or earlier                 |
 
 > **_Note: This table is only applicable to major versions of react-native-image-marker. Patch versions should be backwards compatible._**
+
+### New Architecture
+
+`react-native-image-marker` supports React Native's New Architecture in v1.3.0 and later. New Architecture apps use the generated TurboModule binding, while legacy bridge apps continue to use the existing `NativeModules.ImageMarker` fallback.
+
+To verify the runtime path locally, open the example app and check the **Architecture status** panel:
+
+- **New architecture** means both runtime signals are available.
+- **TurboModule on** means React Native exposed `global.__turboModuleProxy`.
+- **Fabric renderer on** means React Native exposed `global.nativeFabricUIManager`.
+- **Bridgeless off** is acceptable; it is a separate runtime mode and does not mean the New Architecture build failed.
+
+For local New Architecture smoke tests, run the example with the platform New Architecture flags enabled:
+
+```shell
+# Android
+cd example/android
+./gradlew -PnewArchEnabled=true installDebug
+
+# iOS
+cd example
+RCT_NEW_ARCH_ENABLED=1 NO_FLIPPER=1 yarn pods:new-arch
+RCT_NEW_ARCH_ENABLED=1 NO_FLIPPER=1 yarn ios
+```
 
 ## Fonts
 
@@ -275,7 +300,7 @@ The native marker call returns the generated image path. Save it with your prefe
 
 ## Examples
 
-The examples open the same **Image Marker Lab** experience on both React Native and Expo. Use **Tests** for one-tap feature checks, **Compose** for common watermark settings, and **Advanced** for input source, background transform, output format, and quality controls. Each run writes to the result preview so you can quickly confirm the generated image instead of only checking logs.
+The examples open the same **Image Marker Lab** experience on both React Native and Expo. Each tab starts with the same runtime architecture status and result preview, then shows the controls for that tab. Use **Tests** for one-tap feature checks, **Compose** for common watermark settings, and **Advanced** for input source, background transform, output format, and quality controls. Each run writes to the result preview so you can quickly confirm the generated image instead of only checking logs.
 
 <table class="example-gallery">
   <tr>
@@ -306,6 +331,8 @@ The examples open the same **Image Marker Lab** experience on both React Native 
 
 The React Native example covers the full lab, including local image picking, base64 input, rotated image/orientation handling, anchored text/image offsets, position presets, and absolute-coordinate watermark placement.
 
+The runtime status panel also helps confirm whether the app is running through the New Architecture or the legacy bridge.
+
 If you want to run the example locally, you can do the following:
 
 ```bash
@@ -331,6 +358,8 @@ yarn example ios
 [expo-example](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/expo-example)
 
 The Expo example reuses the same lab UI with Expo adapters for image picking and file-size reads. It runs as a development build and includes feature checks for base64 backgrounds, text/image offsets, position presets, and absolute-coordinate placement.
+
+Expo development builds show the same runtime status panel as the React Native example, so you can confirm the active architecture after `prebuild` and native rebuilds.
 
 If you want to run the example locally, you can do the following:
 
