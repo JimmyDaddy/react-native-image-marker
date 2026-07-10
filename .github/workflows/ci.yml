@@ -667,6 +667,7 @@ jobs:
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testMixedWatermarkFeatureProducesPreview \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testSharpScaledWatermarkFeatureProducesPreview \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testRotationOutputPolicyFeatureProducesPreview \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testWatermarkOrientationMatchesUprightPixelReference \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testNormalizesUIImageOrientationBeforeCGImageRendering \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testKeepsAlreadyUprightUIImageInstance \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testPositionDefaultsAndEdgeInsetOverrides \
@@ -679,6 +680,7 @@ jobs:
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testRendersImageWatermarkUsingAnchoredOffsets \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testRotatesRenderedBackgroundWhenRequested \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testRendersScaledImageWatermarkWithoutInterpolatedEdges \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testPreservesAsymmetricWatermarkOrientationAcrossScaleAndRotation \
             test 2>&1 | tee xcodebuild-test.log | xcpretty || {
               status=$?
               tail -n 200 xcodebuild-test.log

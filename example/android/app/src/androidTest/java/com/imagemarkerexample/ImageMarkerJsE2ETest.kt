@@ -48,6 +48,25 @@ class ImageMarkerJsE2ETest {
     waitForView(withReactTestId("rotation-output-validated"), 5_000)
   }
 
+  @Test
+  fun watermarkOrientationMatchesUprightPixelReference() {
+    val feature = allOf(
+      withReactTestId("feature-watermark-orientation"),
+      withContentDescription("Watermark orientation")
+    )
+    val visibleFeature = allOf(feature, isDisplayingAtLeast(90))
+    waitForView(withText("Image Marker Lab"), 90_000)
+    onView(isAssignableFrom(ScrollView::class.java)).perform(fullScroll(View.FOCUS_DOWN))
+    waitForView(visibleFeature, 5_000)
+    onView(visibleFeature).perform(click())
+
+    // JS reads both native PNG files and exposes this contract only when their raster payloads
+    // match, so the check fails if the watermark path mirrors the asymmetric pixel probe.
+    onView(isAssignableFrom(ScrollView::class.java)).perform(fullScroll(View.FOCUS_UP))
+    waitForView(withReactTestId("result-preview-ready"), 60_000)
+    waitForView(withReactTestId("watermark-orientation-validated"), 5_000)
+  }
+
   private fun fullScroll(direction: Int): ViewAction {
     return object : ViewAction {
       override fun getConstraints(): Matcher<View> = isAssignableFrom(ScrollView::class.java)

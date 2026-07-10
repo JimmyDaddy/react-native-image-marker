@@ -34,6 +34,7 @@ final class ImageMarkerExampleUITests: XCTestCase {
     XCTAssertTrue(featureButton(in: app, identifier: "feature-sharp-scaled-watermark", label: "Sharp scaled watermark").exists)
     XCTAssertTrue(featureButton(in: app, identifier: "feature-orientation-normalization", label: "Orientation normalization").exists)
     XCTAssertTrue(featureButton(in: app, identifier: "feature-rotation-output-policy", label: "Rotation output policy").exists)
+    XCTAssertTrue(featureButton(in: app, identifier: "feature-watermark-orientation", label: "Watermark orientation").exists)
   }
 
   func testTextAnchorOffsetFeatureProducesPreview() throws {
@@ -101,6 +102,23 @@ final class ImageMarkerExampleUITests: XCTestCase {
 
     XCTAssertTrue(app.otherElements["result-preview-ready"].waitForExistence(timeout: 15))
     XCTAssertTrue(app.staticTexts["rotation-output-validated"].waitForExistence(timeout: 10))
+  }
+
+  func testWatermarkOrientationMatchesUprightPixelReference() throws {
+    let app = XCUIApplication()
+    app.launch()
+
+    XCTAssertTrue(app.staticTexts["Image Marker Lab"].waitForExistence(timeout: 45))
+    let featureCard = featureButton(
+      in: app,
+      identifier: "feature-watermark-orientation",
+      label: "Watermark orientation"
+    )
+    XCTAssertTrue(featureCard.exists)
+    featureCard.tap()
+
+    XCTAssertTrue(app.otherElements["result-preview-ready"].waitForExistence(timeout: 60))
+    XCTAssertTrue(app.staticTexts["watermark-orientation-validated"].waitForExistence(timeout: 10))
   }
 
   func testLaunchPerformance() throws {
@@ -513,6 +531,56 @@ final class ImageMarkerExampleUITests: XCTestCase {
     XCTAssertTrue(isRedPixel(bytes, at: pixelIndex(x: 0, y: 2, width: width)))
   }
 
+  func testPreservesAsymmetricWatermarkOrientationAcrossScaleAndRotation() throws {
+    let background = makeSolidImage(size: CGSize(width: 32, height: 32), color: .black)
+    let watermark = makeQuadrantImage()
+
+    for scenario in [
+      (name: "scale=1", scale: CGFloat(1), rotation: CGFloat(0), expected: [UIColor.red, .green, .blue, .yellow]),
+      (name: "scale=2", scale: CGFloat(2), rotation: CGFloat(0), expected: [UIColor.red, .green, .blue, .yellow]),
+      (name: "rotation=90", scale: CGFloat(1), rotation: CGFloat(90), expected: [UIColor.blue, .red, .yellow, .green]),
+    ] {
+      let renderedImage = try XCTUnwrap(
+        ImageMarkerRenderer.renderImageWatermarks(
+          background: background,
+          watermarks: [
+            ImageMarkerImageWatermark(
+              image: watermark,
+              position: .none,
+              offsetX: "4",
+              offsetY: "5",
+              scale: scenario.scale,
+              rotate: scenario.rotation,
+              alpha: 1
+            ),
+          ],
+          backgroundScale: 1,
+          backgroundRotate: 0,
+          backgroundAlpha: 1
+        )
+      )
+
+      let markerSize = CGSize(
+        width: watermark.size.width * scenario.scale,
+        height: watermark.size.height * scenario.scale
+      )
+      let visibleSize = ImageMarkerRenderer.rotatedBoundingSize(markerSize, rotation: scenario.rotation)
+      let samplePoints = quadrantSamplePoints(origin: CGPoint(x: 4, y: 5), size: visibleSize)
+      let bytes = try XCTUnwrap(rgbaBytes(for: renderedImage))
+      let width = Int(renderedImage.size.width * renderedImage.scale)
+
+      for (index, point) in samplePoints.enumerated() {
+        assertPixel(
+          bytes,
+          at: point,
+          width: width,
+          matches: scenario.expected[index],
+          message: "\(scenario.name), quadrant \(index)"
+        )
+      }
+    }
+  }
+
   private func makeTestImage(size: CGSize) -> UIImage {
     let renderer = UIGraphicsImageRenderer(size: size)
     return renderer.image { context in
@@ -606,6 +674,59 @@ final class ImageMarkerExampleUITests: XCTestCase {
         }
       }
     }
+  }
+
+  private func makeQuadrantImage() -> UIImage {
+    let size = CGSize(width: 8, height: 6)
+    let format = UIGraphicsImageRendererFormat.default()
+    format.scale = 1
+    format.opaque = true
+    return UIGraphicsImageRenderer(size: size, format: format).image { context in
+      for (rect, color) in [
+        (CGRect(x: 0, y: 0, width: 4, height: 3), UIColor.red),
+        (CGRect(x: 4, y: 0, width: 4, height: 3), UIColor.green),
+        (CGRect(x: 0, y: 3, width: 4, height: 3), UIColor.blue),
+        (CGRect(x: 4, y: 3, width: 4, height: 3), UIColor.yellow),
+      ] {
+        color.setFill()
+        context.fill(rect)
+      }
+    }
+  }
+
+  private func quadrantSamplePoints(origin: CGPoint, size: CGSize) -> [CGPoint] {
+    return [
+      CGPoint(x: origin.x + size.width / 4, y: origin.y + size.height / 4),
+      CGPoint(x: origin.x + size.width * 3 / 4, y: origin.y + size.height / 4),
+      CGPoint(x: origin.x + size.width / 4, y: origin.y + size.height * 3 / 4),
+      CGPoint(x: origin.x + size.width * 3 / 4, y: origin.y + size.height * 3 / 4),
+    ]
+  }
+
+  private func assertPixel(
+    _ bytes: [UInt8],
+    at point: CGPoint,
+    width: Int,
+    matches expectedColor: UIColor,
+    message: String
+  ) {
+    var expectedRed: CGFloat = 0
+    var expectedGreen: CGFloat = 0
+    var expectedBlue: CGFloat = 0
+    var expectedAlpha: CGFloat = 0
+    XCTAssertTrue(
+      expectedColor.getRed(
+        &expectedRed,
+        green: &expectedGreen,
+        blue: &expectedBlue,
+        alpha: &expectedAlpha
+      )
+    )
+    let index = pixelIndex(x: Int(point.x), y: Int(point.y), width: width)
+    XCTAssertEqual(bytes[index], UInt8(expectedRed * 255), accuracy: 2, message)
+    XCTAssertEqual(bytes[index + 1], UInt8(expectedGreen * 255), accuracy: 2, message)
+    XCTAssertEqual(bytes[index + 2], UInt8(expectedBlue * 255), accuracy: 2, message)
+    XCTAssertEqual(bytes[index + 3], UInt8(expectedAlpha * 255), accuracy: 2, message)
   }
 
   private func bluePixelCount(in image: UIImage, xRange: Range<Int>, yRange: Range<Int>) -> Int {

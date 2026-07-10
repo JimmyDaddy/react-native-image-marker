@@ -314,6 +314,11 @@ enum ImageMarkerRenderer {
             if watermark.rotate != 0 {
                 context.rotate(by: watermark.rotate * .pi / 180)
             }
+            // UIGraphics contexts use a top-left origin while CGContext.draw(_:in:)
+            // interprets CGImage pixels in Quartz coordinates. Flip only the image's
+            // local coordinate system so its orientation is preserved after scaling
+            // and rotation without allocating an intermediate UIImage.
+            context.scaleBy(x: 1, y: -1)
             context.draw(
                 watermarkImage,
                 in: CGRect(
