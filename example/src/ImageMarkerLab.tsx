@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Dimensions,
+  Image,
+  type ImageSourcePropType,
   Modal,
   Platform,
   SafeAreaView,
@@ -14,6 +16,7 @@ import {
 import Marker, {
   ImageFormat,
   Position,
+  RotationCanvasMode,
   TextBackgroundType,
 } from 'react-native-image-marker';
 import Toast from 'react-native-toast-message';
@@ -60,6 +63,8 @@ export type ImageMarkerLabProps = {
   featureVariant: FeatureVariant;
   pickImage: (target: PickImageTarget) => Promise<string | null>;
   getFileSize: (path: string) => Promise<number>;
+  readFileBase64: (path: string) => Promise<string>;
+  removeFile: (path: string) => Promise<void>;
 };
 
 type MarkerConfig = {
@@ -115,6 +120,8 @@ const textAlignOptions: MarkerConfig['textAlign'][] = [
 const exampleFontName = 'MaShanZheng-Regular';
 const sharpWatermarkDataUrl =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAA1klEQVR42u3aWw6DMAwEwNz/0u0RaGRn47YTiS8eiQbJYJa11np1bk/j6fjd/Q0bAAAADgLsAu2O6noAAABwtwh2n/91TwEAAIYBdE9YfTE6UPQAAABwsAhWFxQoegAAANgogulx4YYAAAAg2MwMvD4AAAAuNjMDmiUAAP4aIB1mdu8vh6sAAACI/qBQvV53+AoAAIC7zUi6WdouggAA/DhAOphIh58fzAcAAICL4eiA5gkAAADBCQeGrwAAADj4wWJ6uAoAAIDsi1A6/Cz/IAEAwG8DvAHibmyc3jWFggAAAABJRU5ErkJggg==';
+const paddedWatermarkDataUrl =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAS0lEQVR42u3SsQ0AIBADsey/dBAjAF8hu0kfXQIAAAAAAMeads/tfvHB4wkKUIACFKAABShAAQpQgAIUoAAFKEABClAAAAAAAACMWikxfZ9KwPGPAAAAAElFTkSuQmCC';
 
 const normalizeOffset = (value: OffsetValue) => {
   if (typeof value === 'string' && value.trim() === '') {
@@ -130,6 +137,16 @@ const formatResultUri = (path: string, saveFormat: ImageFormat) => {
 
   return Platform.OS === 'android' ? `file:${path}` : path;
 };
+
+const getImageSize = (uri: string) =>
+  new Promise<{ width: number; height: number }>((resolve, reject) => {
+    Image.getSize(
+      uri,
+      (imageWidth, imageHeight) =>
+        resolve({ width: imageWidth, height: imageHeight }),
+      (error) => reject(error)
+    );
+  });
 
 function sourceFromBackgroundFormat(
   format: BackgroundFormat,
@@ -185,6 +202,7 @@ function useViewModel(props: ImageMarkerLabProps) {
   const [fileSize, setFileSize] = useState('0 B');
   const [fontSize, setFontSize] = useState(36);
   const [lastRun, setLastRun] = useState('Ready');
+  const [resultContract, setResultContract] = useState('');
 
   useEffect(() => {
     if (backgroundFormat !== 'picked image') {
@@ -690,6 +708,141 @@ function useViewModel(props: ImageMarkerLabProps) {
     }
   }
 
+  async function runRotationOutputPolicyFeature() {
+    setBackgroundFormat('normal image');
+    applyConfig({
+      image: assets.bg,
+      marker: paddedWatermarkDataUrl,
+      waterMarkType: 'image',
+      position: Position.center,
+      X: 0,
+      Y: 0,
+      saveFormat: ImageFormat.jpg,
+      watermarkScale: 1,
+      watermarkRotate: 0,
+      watermarkAlpha: 1,
+      backgroundScale: 1,
+      backgroundRotate: 30,
+      backgroundAlpha: 1,
+      quality: 100,
+    });
+    setLastRun('Rotation crop + JPG matte');
+    setUri('');
+    setShow(false);
+    setFileSize('0 B');
+    setResultContract('');
+    setLoading(true);
+
+    try {
+      const outputOptions = {
+        backgroundImage: {
+          src: assets.bg,
+          scale: 1,
+          rotate: 30,
+        },
+        quality: 100,
+        saveFormat: ImageFormat.jpg,
+        rotationCanvasMode: RotationCanvasMode.crop,
+      };
+      const watermarkOptions = {
+        src: paddedWatermarkDataUrl,
+        scale: 1,
+        position: {
+          position: Position.center,
+          X: 0,
+          Y: 0,
+          edgeInset: 0,
+        },
+      };
+      const path = await Marker.markImage({
+        ...outputOptions,
+        watermarkImages: [
+          { ...watermarkOptions, trimTransparentPadding: true },
+        ],
+        matteColor: '#F8FAFC',
+      });
+
+      let untrimmedProbePath = '';
+      let darkMatteProbePath = '';
+      try {
+        untrimmedProbePath = await Marker.markImage({
+          ...outputOptions,
+          watermarkImages: [
+            { ...watermarkOptions, trimTransparentPadding: false },
+          ],
+          matteColor: '#F8FAFC',
+          filename: 'rotation-output-untrimmed-probe',
+        });
+        darkMatteProbePath = await Marker.markImage({
+          ...outputOptions,
+          watermarkImages: [
+            { ...watermarkOptions, trimTransparentPadding: true },
+          ],
+          matteColor: '#000000',
+          filename: 'rotation-output-dark-matte-probe',
+        });
+
+        const [outputBytes, untrimmedBytes, darkMatteBytes] = await Promise.all(
+          [
+            props.readFileBase64(path),
+            props.readFileBase64(untrimmedProbePath),
+            props.readFileBase64(darkMatteProbePath),
+          ]
+        );
+        const normalizedOutputBytes = outputBytes.replace(/\s/g, '');
+        if (!normalizedOutputBytes.startsWith('/9j/')) {
+          throw new Error('Output bytes do not contain a JPEG signature');
+        }
+        if (normalizedOutputBytes === untrimmedBytes.replace(/\s/g, '')) {
+          throw new Error(
+            'Transparent-padding trim did not affect output pixels'
+          );
+        }
+        if (normalizedOutputBytes === darkMatteBytes.replace(/\s/g, '')) {
+          throw new Error('JPEG matte color did not affect output pixels');
+        }
+      } finally {
+        await Promise.all(
+          [untrimmedProbePath, darkMatteProbePath]
+            .filter(Boolean)
+            .map((probePath) =>
+              props.removeFile(probePath).catch(() => undefined)
+            )
+        );
+      }
+
+      const outputUri = formatResultUri(path, ImageFormat.jpg);
+      const source = Image.resolveAssetSource(assets.bg as ImageSourcePropType);
+      const outputSize = await getImageSize(outputUri);
+      if (!path.toLowerCase().endsWith('.jpg')) {
+        throw new Error(`Expected a .jpg output path, received ${path}`);
+      }
+      if (
+        Math.round(outputSize.width) !== Math.round(source.width) ||
+        Math.round(outputSize.height) !== Math.round(source.height)
+      ) {
+        throw new Error(
+          `Crop output ${outputSize.width}x${outputSize.height} did not preserve ` +
+            `${source.width}x${source.height}`
+        );
+      }
+
+      setUri(outputUri);
+      setShow(true);
+      setResultContract('rotation-output-validated');
+      await updateFileSize(path, ImageFormat.jpg);
+    } catch (error) {
+      console.log('rotation output policy error', error);
+      Toast.show({
+        type: 'error',
+        text1: 'rotation output policy failed',
+        text2: error instanceof Error ? error.message : String(error),
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
   function runExtraFeature() {
     const isOrientation = props.featureVariant === 'orientation';
 
@@ -1036,6 +1189,7 @@ function useViewModel(props: ImageMarkerLabProps) {
       fileSize,
       fontSize,
       lastRun,
+      resultContract,
     },
     actions: {
       setBackgroundFormat,
@@ -1069,6 +1223,7 @@ function useViewModel(props: ImageMarkerLabProps) {
       runImageOffsetFeature,
       runMixedWatermarkFeature,
       runSharpScaledWatermarkFeature,
+      runRotationOutputPolicyFeature,
       runExtraFeature,
       runPositionPresetSamples,
       runAbsoluteCoordinateSamples,
@@ -1077,6 +1232,7 @@ function useViewModel(props: ImageMarkerLabProps) {
         setShow(false);
         setFileSize('0 B');
         setLastRun('Ready');
+        setResultContract('');
       },
     },
   };
@@ -1086,6 +1242,7 @@ function TabPage(props: {
   show: boolean;
   uri: string;
   fileSize: string;
+  resultContract?: string;
   onClear: () => void;
   compactPreview?: boolean;
   children: React.ReactNode;
@@ -1100,6 +1257,14 @@ function TabPage(props: {
         fileSize={props.fileSize}
         onClear={props.onClear}
       />
+      {props.resultContract ? (
+        <Text
+          accessibilityLabel={props.resultContract}
+          testID={props.resultContract}
+        >
+          {props.resultContract}
+        </Text>
+      ) : null}
       {props.children}
     </>
   );
@@ -1151,6 +1316,7 @@ function ImageMarkerLab(props: ImageMarkerLabProps) {
             show={state.show}
             uri={state.uri}
             fileSize={state.fileSize}
+            resultContract={state.resultContract}
             onClear={actions.clearResult}
           >
             <Section title="Feature checks">
@@ -1186,6 +1352,14 @@ function ImageMarkerLab(props: ImageMarkerLabProps) {
                   tone="green"
                   testID="feature-sharp-scaled-watermark"
                   onPress={actions.runSharpScaledWatermarkFeature}
+                />
+                <FeatureCard
+                  badge="Rotate"
+                  title="Rotation output policy"
+                  meta="crop + JPG matte + trim"
+                  tone="orange"
+                  testID="feature-rotation-output-policy"
+                  onPress={actions.runRotationOutputPolicyFeature}
                 />
                 <FeatureCard
                   badge={extraFeature.badge}
@@ -1226,6 +1400,7 @@ function ImageMarkerLab(props: ImageMarkerLabProps) {
             show={state.show}
             uri={state.uri}
             fileSize={state.fileSize}
+            resultContract={state.resultContract}
             onClear={actions.clearResult}
           >
             <Section title="Watermark">
@@ -1331,6 +1506,7 @@ function ImageMarkerLab(props: ImageMarkerLabProps) {
             show={state.show}
             uri={state.uri}
             fileSize={state.fileSize}
+            resultContract={state.resultContract}
             onClear={actions.clearResult}
           >
             <Section title="Input source">

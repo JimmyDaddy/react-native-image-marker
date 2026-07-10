@@ -29,6 +29,16 @@ async function getFileSize(path: string) {
   return stat.exists ? Number((stat as { size?: number }).size ?? 0) : 0;
 }
 
+async function readFileBase64(path: string) {
+  return FileSystem.readAsStringAsync(path, {
+    encoding: FileSystem.EncodingType.Base64,
+  });
+}
+
+async function removeFile(path: string) {
+  await FileSystem.deleteAsync(path, { idempotent: true });
+}
+
 function App() {
   return (
     <ImageMarkerLab
@@ -37,6 +47,8 @@ function App() {
       featureVariant="base64"
       getFileSize={getFileSize}
       pickImage={pickImage}
+      readFileBase64={readFileBase64}
+      removeFile={removeFile}
     />
   );
 }

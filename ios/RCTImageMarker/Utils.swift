@@ -114,6 +114,13 @@ class Utils: NSObject {
         return isPng(saveFormat) ? ".png" : ".jpg"
     }
 
+    static func canonicalOutputFilename(_ filename: String, ext: String) -> String {
+        let lowercased = filename.lowercased()
+        let knownExtension = [".jpeg", ".jpg", ".png"].first { lowercased.hasSuffix($0) }
+        let stem = knownExtension.map { String(filename.dropLast($0.count)) } ?? filename
+        return "\(stem)\(ext)"
+    }
+
     static func isBase64(_ uri: String?) -> Bool {
         return uri?.hasPrefix("data:") ?? false
     }

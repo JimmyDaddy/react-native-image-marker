@@ -100,7 +100,12 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
             }
             return "data:image/png;base64,\(imageData.base64EncodedString(options: .lineLength64Characters))"
         }
-        guard let data = Utils.isPng(opts.saveFormat) ? image.pngData() : image.jpegData(compressionQuality: CGFloat(opts.quality) / 100.0) else {
+        guard let data = ImageMarkerRenderer.encodedData(
+            for: image,
+            asPNG: Utils.isPng(opts.saveFormat),
+            jpegQuality: CGFloat(opts.quality) / 100.0,
+            matteColor: opts.matteColor
+        ) else {
             throw markerError("Failed to encode image")
         }
         try data.write(to: URL(fileURLWithPath: fullPath), options: .atomic)
@@ -110,77 +115,16 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
     func generateCacheFilePathForMarker(_ ext: String?, _ filename: String?) -> String {
         let paths = NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true)
         let cacheDirectory = paths[0]
-        if let filename = filename, !filename.isEmpty {
-            if let ext = ext, filename.hasSuffix(ext) {
-                return (cacheDirectory as NSString).appendingPathComponent(filename)
-            } else {
-                let fullName = "\(filename)\(ext ?? "")"
-                return (cacheDirectory as NSString).appendingPathComponent(fullName)
-            }
+        if let filename = filename,
+           !filename.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            let fullName = Utils.canonicalOutputFilename(filename, ext: ext ?? "")
+            return (cacheDirectory as NSString).appendingPathComponent(fullName)
         } else {
             let name = UUID().uuidString
             let fullName = "\(name)\(ext ?? "")"
             let fullPath = (cacheDirectory as NSString).appendingPathComponent(fullName)
             return fullPath
         }
-    }
-
-    private func markerOrigin(
-        position: MarkerPositionEnum,
-        offsetX: String?,
-        offsetY: String?,
-        canvasSize: CGSize,
-        itemSize: CGSize
-    ) -> CGPoint {
-        let margin = CGFloat(20)
-        if position == .none {
-            return CGPoint(
-                x: Utils.parseSpreadValue(v: offsetX, relativeTo: canvasSize.width) ?? margin,
-                y: Utils.parseSpreadValue(v: offsetY, relativeTo: canvasSize.height) ?? margin
-            )
-        }
-
-        var origin: CGPoint
-        switch position {
-        case .topLeft:
-            origin = CGPoint(x: margin, y: margin)
-        case .topCenter:
-            origin = CGPoint(x: (canvasSize.width - itemSize.width) / 2, y: margin)
-        case .topRight:
-            origin = CGPoint(x: canvasSize.width - itemSize.width - margin, y: margin)
-        case .bottomLeft:
-            origin = CGPoint(x: margin, y: canvasSize.height - itemSize.height - margin)
-        case .bottomCenter:
-            origin = CGPoint(x: (canvasSize.width - itemSize.width) / 2, y: canvasSize.height - itemSize.height - margin)
-        case .bottomRight:
-            origin = CGPoint(x: canvasSize.width - itemSize.width - margin, y: canvasSize.height - itemSize.height - margin)
-        case .center:
-            origin = CGPoint(x: (canvasSize.width - itemSize.width) / 2, y: (canvasSize.height - itemSize.height) / 2)
-        case .none:
-            origin = CGPoint(x: margin, y: margin)
-        }
-
-        if let parsedX = Utils.parseSpreadValue(v: offsetX, relativeTo: canvasSize.width) {
-            switch position {
-            case .topRight, .bottomRight:
-                origin.x = canvasSize.width - itemSize.width - parsedX
-            case .topCenter, .bottomCenter, .center:
-                origin.x = (canvasSize.width - itemSize.width) / 2 + parsedX
-            default:
-                origin.x = parsedX
-            }
-        }
-        if let parsedY = Utils.parseSpreadValue(v: offsetY, relativeTo: canvasSize.height) {
-            switch position {
-            case .bottomLeft, .bottomCenter, .bottomRight:
-                origin.y = canvasSize.height - itemSize.height - parsedY
-            case .center:
-                origin.y = (canvasSize.height - itemSize.height) / 2 + parsedY
-            default:
-                origin.y = parsedY
-            }
-        }
-        return origin
     }
 
     private func fontWithTraits(_ font: UIFont, bold: Bool, italic: Bool) -> UIFont {
@@ -250,12 +194,14 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         let attributedText = NSAttributedString(string: textOpts.text, attributes: attributes)
         let textRect = attributedText.boundingRect(with: canvasSize, options: .usesLineFragmentOrigin, context: nil)
         let size = textRect.size
-        let origin = markerOrigin(
-            position: textOpts.position,
+        let renderPosition = ImageMarkerRenderPosition(rawValue: textOpts.position.rawValue as String) ?? .none
+        let origin = ImageMarkerRenderer.markerOrigin(
+            position: renderPosition,
             offsetX: textOpts.X,
             offsetY: textOpts.Y,
             canvasSize: canvasSize,
-            itemSize: size
+            itemSize: size,
+            edgeInset: textOpts.edgeInset
         )
         let posX = origin.x
         let posY = origin.y
@@ -302,28 +248,17 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
     }
 
     func markImgWithText(_ image: UIImage, _ opts: MarkTextOptions) -> UIImage? {
-        let canvasSize = image.size
-        UIGraphicsBeginImageContextWithOptions(canvasSize, false, opts.backgroundImage.scale)
-        defer {
-            UIGraphicsEndImageContext()
+        return ImageMarkerRenderer.renderCanvas(
+            background: image,
+            backgroundScale: opts.backgroundImage.scale,
+            backgroundRotate: opts.backgroundImage.rotate,
+            backgroundAlpha: opts.backgroundImage.alpha,
+            rotationCanvasMode: opts.rotationCanvasMode
+        ) { context, canvasSize in
+            for textOpts in opts.watermarkTexts {
+                drawTextWatermark(textOpts, in: context, canvasSize: canvasSize)
+            }
         }
-
-        guard let context = UIGraphicsGetCurrentContext(), let backgroundImage = image.cgImage else {
-            return nil
-        }
-
-        ImageMarkerRenderer.drawBackground(
-            context: context,
-            image: backgroundImage,
-            rect: CGRect(origin: .zero, size: canvasSize),
-            alpha: opts.backgroundImage.alpha
-        )
-
-        for textOpts in opts.watermarkTexts {
-            drawTextWatermark(textOpts, in: context, canvasSize: canvasSize)
-        }
-
-        return UIGraphicsGetImageFromCurrentImageContext()?.rotatedImageWithTransform(opts.backgroundImage.rotate)
     }
     
     func markImage(with image: UIImage, waterImages: [UIImage], options: MarkImageOptions) -> UIImage? {
@@ -341,7 +276,9 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
                 offsetY: watermarkOptions.Y,
                 scale: watermarkOptions.imageOption.scale,
                 rotate: watermarkOptions.imageOption.rotate,
-                alpha: watermarkOptions.imageOption.alpha
+                alpha: watermarkOptions.imageOption.alpha,
+                edgeInset: watermarkOptions.edgeInset,
+                trimTransparentPadding: watermarkOptions.trimTransparentPadding
             )
         }
 
@@ -350,55 +287,45 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
             watermarks: watermarks,
             backgroundScale: options.backgroundImage.scale,
             backgroundRotate: options.backgroundImage.rotate,
-            backgroundAlpha: options.backgroundImage.alpha
+            backgroundAlpha: options.backgroundImage.alpha,
+            rotationCanvasMode: options.rotationCanvasMode
         )
     }
 
     func markWatermarks(with image: UIImage, waterImages: [UIImage], options: MarkWatermarkOptions) -> UIImage? {
-        let bg = image
-        let canvasSize = bg.size
-        UIGraphicsBeginImageContextWithOptions(canvasSize, false, options.backgroundImage.scale)
-
-        guard let context = UIGraphicsGetCurrentContext(), let backgroundImage = bg.cgImage else {
-            UIGraphicsEndImageContext()
-            return nil
-        }
-
-        ImageMarkerRenderer.drawBackground(
-            context: context,
-            image: backgroundImage,
-            rect: CGRect(origin: .zero, size: canvasSize),
-            alpha: options.backgroundImage.alpha
-        )
-
-        var imageIndex = 0
-        for layer in options.watermarkLayers {
-            switch layer {
-            case let .text(textOptions):
-                drawTextWatermark(textOptions, in: context, canvasSize: canvasSize)
-            case let .image(imageOptions):
-                guard waterImages.indices.contains(imageIndex) else {
-                    continue
+        return ImageMarkerRenderer.renderCanvas(
+            background: image,
+            backgroundScale: options.backgroundImage.scale,
+            backgroundRotate: options.backgroundImage.rotate,
+            backgroundAlpha: options.backgroundImage.alpha,
+            rotationCanvasMode: options.rotationCanvasMode
+        ) { context, canvasSize in
+            var imageIndex = 0
+            for layer in options.watermarkLayers {
+                switch layer {
+                case let .text(textOptions):
+                    drawTextWatermark(textOptions, in: context, canvasSize: canvasSize)
+                case let .image(imageOptions):
+                    guard waterImages.indices.contains(imageIndex) else {
+                        continue
+                    }
+                    let position = ImageMarkerRenderPosition(rawValue: imageOptions.position.rawValue as String) ?? .none
+                    let watermark = ImageMarkerImageWatermark(
+                        image: waterImages[imageIndex],
+                        position: position,
+                        offsetX: imageOptions.X,
+                        offsetY: imageOptions.Y,
+                        scale: imageOptions.imageOption.scale,
+                        rotate: imageOptions.imageOption.rotate,
+                        alpha: imageOptions.imageOption.alpha,
+                        edgeInset: imageOptions.edgeInset,
+                        trimTransparentPadding: imageOptions.trimTransparentPadding
+                    )
+                    ImageMarkerRenderer.drawImageWatermark(context: context, canvasSize: canvasSize, watermark: watermark)
+                    imageIndex += 1
                 }
-                let position = ImageMarkerRenderPosition(rawValue: imageOptions.position.rawValue as String) ?? .none
-                let watermark = ImageMarkerImageWatermark(
-                    image: waterImages[imageIndex],
-                    position: position,
-                    offsetX: imageOptions.X,
-                    offsetY: imageOptions.Y,
-                    scale: imageOptions.imageOption.scale,
-                    rotate: imageOptions.imageOption.rotate,
-                    alpha: imageOptions.imageOption.alpha
-                )
-                ImageMarkerRenderer.drawImageWatermark(context: context, canvasSize: canvasSize, watermark: watermark)
-                imageIndex += 1
             }
         }
-
-        var renderedImage = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
-        renderedImage = renderedImage?.rotatedImageWithTransform(options.backgroundImage.rotate)
-        return renderedImage
     }
     
     @objc(markWithText:resolve:reject:)

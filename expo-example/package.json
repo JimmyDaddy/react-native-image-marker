@@ -7,6 +7,7 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
+    "typecheck": "tsc --noEmit",
     "expo-install": "npx expo install"
   },
   "dependencies": {
@@ -20,7 +21,7 @@
     "filesize": "^10.1.0",
     "react": "18.2.0",
     "react-native": "0.73.2",
-    "react-native-image-marker": "link:..",
+    "react-native-image-marker": "file:..",
     "react-native-toast-message": "^2.2.0"
   },
   "devDependencies": {

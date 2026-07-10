@@ -15,7 +15,6 @@ import android.util.TypedValue
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.views.text.ReactFontManager
-import com.jimmydaddy.imagemarker.base.Constants.DEFAULT_MARGIN
 import kotlin.math.ceil
 
 @Suppress("DEPRECATION")
@@ -23,6 +22,7 @@ data class TextOptions(val options: ReadableMap) {
   private var text: String? = options.getString("text")
   private var x: String?
   private var y: String?
+  private var edgeInset: String?
   private var positionEnum: PositionEnum?
   private var style: TextStyle
 
@@ -35,6 +35,8 @@ data class TextOptions(val options: ReadableMap) {
       if (positionOptions != null && positionOptions.hasKey("X")) Utils.handleDynamicToString(positionOptions.getDynamic("X")) else null
     y =
       if (positionOptions != null && positionOptions.hasKey("Y")) Utils.handleDynamicToString(positionOptions.getDynamic("Y")) else null
+    edgeInset =
+      if (positionOptions != null && positionOptions.hasKey("edgeInset")) Utils.handleDynamicToString(positionOptions.getDynamic("edgeInset")) else null
     positionEnum =
       if (positionOptions != null && null != positionOptions.getString("position")) PositionEnum.getPosition(
         positionOptions.getString("position")
@@ -96,7 +98,7 @@ data class TextOptions(val options: ReadableMap) {
     // ALIGN_CENTER, ALIGN_NORMAL, ALIGN_OPPOSITE
     val textLayout: StaticLayout = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
       val builder =
-        StaticLayout.Builder.obtain(text!!, 0, text!!.length, textPaint, canvas.width)
+        StaticLayout.Builder.obtain(text!!, 0, text!!.length, textPaint, maxWidth)
       builder.setAlignment(Layout.Alignment.ALIGN_NORMAL)
       builder.setLineSpacing(0.0f, 1.0f)
       builder.setIncludePad(false)
@@ -105,7 +107,7 @@ data class TextOptions(val options: ReadableMap) {
       StaticLayout(
         text,
         textPaint,
-        canvas.width,
+        maxWidth,
         Layout.Alignment.ALIGN_NORMAL,
         1.0f,
         0.0f,
@@ -122,26 +124,16 @@ data class TextOptions(val options: ReadableMap) {
           .coerceAtLeast(textLayout.getLineWidth(a) + textLayout.getLineLeft(a)).toDouble()
       ).toInt()
     }
-    val margin = DEFAULT_MARGIN
-    var position = Position(margin, margin)
-    if (positionEnum != null) {
-      position = Position.getTextPosition(
-        positionEnum,
-        x,
-        y,
-        maxWidth,
-        maxHeight,
-        textWidth,
-        textHeight
-      )
-    } else {
-      if (null != x) {
-        position.x = Utils.parseSpreadValue(x, maxWidth.toFloat())
-      }
-      if (null != y) {
-        position.y = Utils.parseSpreadValue(y, maxHeight.toFloat())
-      }
-    }
+    val position = Position.getTextPosition(
+      positionEnum,
+      x,
+      y,
+      maxWidth,
+      maxHeight,
+      textWidth,
+      textHeight,
+      edgeInset
+    )
     val x = position.x
     val y = position.y
 

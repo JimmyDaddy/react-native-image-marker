@@ -12,6 +12,7 @@ import React
 class TextOptions: NSObject {
     var X: String?
     var Y: String?
+    var edgeInset: String?
     var position: MarkerPositionEnum = .none
     var text: String
     var style: TextStyle
@@ -24,6 +25,7 @@ class TextOptions: NSObject {
         if let positionOpts = opts["position"] as? [AnyHashable: Any] {
             self.X = Utils.isNULL(positionOpts["X"]) ? nil : Utils.handleDynamicToString(v: positionOpts["X"])
             self.Y = Utils.isNULL(positionOpts["Y"]) ? nil : Utils.handleDynamicToString(v: positionOpts["Y"])
+            self.edgeInset = Utils.isNULL(positionOpts["edgeInset"]) ? nil : Utils.handleDynamicToString(v: positionOpts["edgeInset"])
             self.position = positionOpts["position"] != nil ? RCTConvert.MarkerPosition(positionOpts["position"]) : .none
         }
 

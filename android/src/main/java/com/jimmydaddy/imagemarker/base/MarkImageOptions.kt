@@ -34,11 +34,25 @@ class MarkImageOptions(options: ReadableMap) : Options(options) {
       } else {
         null
       }
+      val edgeInset = if (positionOptions?.hasKey("edgeInset") == true) {
+        Utils.handleDynamicToString(positionOptions.getDynamic("edgeInset"))
+      } else {
+        null
+      }
       val positionEnum =
         if (positionOptions?.getString("position") != null) PositionEnum.getPosition(
           positionOptions.getString("position")
         ) else null
-      val markerOpts = WatermarkImageOptions(marker, x, y, positionEnum)
+      val trimTransparentPadding =
+        markerImageOpts.hasKey("trimTransparentPadding") && markerImageOpts.getBoolean("trimTransparentPadding")
+      val markerOpts = WatermarkImageOptions(
+        marker,
+        x,
+        y,
+        edgeInset,
+        positionEnum,
+        trimTransparentPadding
+      )
       myMarkerList.add(markerOpts)
     }
     watermarkImages = myMarkerList.toTypedArray()

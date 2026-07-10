@@ -49,6 +49,18 @@ export enum ImageFormat {
 }
 
 /**
+ * Controls the output canvas after the composed image is rotated.
+ *
+ * `expand` preserves the entire rotated image by growing the output canvas.
+ * `crop` keeps the original canvas dimensions and clips content outside it.
+ * @enum
+ */
+export enum RotationCanvasMode {
+  expand = 'expand',
+  crop = 'crop',
+}
+
+/**
  * Padding style for text background
  * @example
  * padding: 10
@@ -179,6 +191,18 @@ export interface PositionOptions {
   X?: number | string;
   Y?: number | string;
   position?: Position;
+  /**
+   * Fallback distance from the selected anchor edges when the matching `X` or
+   * `Y` value is omitted. Named anchors use the compatibility default `20`.
+   * Without a named anchor, set this value when omitted axes must behave the
+   * same on every platform; otherwise legacy text/image defaults are preserved.
+   * Percentages are resolved against the background image.
+   * @example
+   * edgeInset: 0
+   * // or
+   * edgeInset: '5%'
+   */
+  edgeInset?: number | string;
 }
 
 /**
@@ -570,7 +594,7 @@ export interface TextOptions {
  *      rotate: 45
  *    }
  *  }],
- *  quality: 1,
+ *  quality: 100,
  *  filename: 'test',
  *  saveFormat: ImageFormat.jpg,
  */
@@ -648,6 +672,23 @@ export interface TextMarkOptions {
    */
   saveFormat?: ImageFormat;
   /**
+   * Matte color used when an output with transparency is encoded as JPEG.
+   * JPEG has no alpha channel, so transparent pixels are composited over this
+   * color before encoding.
+   * @defaultValue `#FFFFFF`
+   * @example
+   * matteColor: '#FFFFFF'
+   */
+  matteColor?: string;
+  /**
+   * Controls whether background rotation expands the output canvas or crops
+   * back to the original canvas dimensions.
+   * @defaultValue RotationCanvasMode.expand
+   * @example
+   * rotationCanvasMode: RotationCanvasMode.crop
+   */
+  rotationCanvasMode?: RotationCanvasMode;
+  /**
    * @deprecated since 1.2.0
    * max image size see #49 #42
    * android only
@@ -715,6 +756,12 @@ export interface ImageOptions {
  **/
 export interface WatermarkImageOptions extends ImageOptions {
   position?: PositionOptions;
+  /**
+   * Remove fully transparent outer rows and columns before scaling, rotating,
+   * and positioning the watermark.
+   * @defaultValue false
+   */
+  trimTransparentPadding?: boolean;
 }
 
 /**
@@ -748,7 +795,7 @@ export interface WatermarkImageOptions extends ImageOptions {
  *     },
  *    },
  *  ],
- *  quality: 1,
+ *  quality: 100,
  *  filename: 'test',
  *  saveFormat: ImageFormat.jpg,
  *
@@ -778,7 +825,7 @@ export interface ImageMarkOptions {
    *    alpha: 0.5
    *  }
    */
-  watermarkImage?: ImageOptions;
+  watermarkImage?: WatermarkImageOptions;
   /**
    * @since 1.1.0
    * @deprecated use watermarkImages instead
@@ -794,10 +841,10 @@ export interface ImageMarkOptions {
    */
   watermarkPositions?: PositionOptions; // watermark position options see @PositionOptions
   /**
-   * image quality `0-1`
-   * @defaultValue 1
+   * image quality `0-100`, `100` is best quality.
+   * @defaultValue 100
    * @example
-   * quality: 1
+   * quality: 100
    */
   quality?: number;
   /**
@@ -813,6 +860,17 @@ export interface ImageMarkOptions {
    * saveFormat: ImageFormat.jpg
    */
   saveFormat?: ImageFormat;
+  /**
+   * Matte color used when an output with transparency is encoded as JPEG.
+   * @defaultValue `#FFFFFF`
+   */
+  matteColor?: string;
+  /**
+   * Controls whether background rotation expands the output canvas or crops
+   * back to the original canvas dimensions.
+   * @defaultValue RotationCanvasMode.expand
+   */
+  rotationCanvasMode?: RotationCanvasMode;
   /**
    * @deprecated since 1.2.0
    * max image size see #49 #42
@@ -904,7 +962,7 @@ export interface MarkOptions {
    * @deprecated use watermarkImages instead
    * Legacy single image watermark options.
    */
-  watermarkImage?: ImageOptions;
+  watermarkImage?: WatermarkImageOptions;
   /**
    * @deprecated use position on watermarkImages instead
    * Legacy single image watermark position options.
@@ -928,6 +986,17 @@ export interface MarkOptions {
    * @defaultValue `jpg`
    */
   saveFormat?: ImageFormat;
+  /**
+   * Matte color used when an output with transparency is encoded as JPEG.
+   * @defaultValue `#FFFFFF`
+   */
+  matteColor?: string;
+  /**
+   * Controls whether background rotation expands the output canvas or crops
+   * back to the original canvas dimensions.
+   * @defaultValue RotationCanvasMode.expand
+   */
+  rotationCanvasMode?: RotationCanvasMode;
   /**
    * @deprecated since 1.2.0
    * max image size

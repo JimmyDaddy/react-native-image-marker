@@ -1,6 +1,7 @@
 node_modules
 lib
 docs
+**/build/**
 
 base64.js
 example/src/bas64bg.js

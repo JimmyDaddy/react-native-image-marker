@@ -26,8 +26,22 @@ class ImageOptions: NSObject {
             throw NSError(domain: ErrorDomainEnum.PARAMS_REQUIRED.rawValue, code: 0, userInfo: [NSLocalizedDescriptionKey: "image uri is required"])
         }
         self.uri = uri
-        self.scale = opts["scale"] as? CGFloat ?? 1.0
-        self.rotate = opts["rotate"] as? CGFloat ?? 0
-        self.alpha = opts["alpha"] as? CGFloat ?? 1.0
+        self.scale = (opts["scale"] as? NSNumber).map(CGFloat.init(truncating:)) ?? 1.0
+        self.rotate = (opts["rotate"] as? NSNumber).map(CGFloat.init(truncating:)) ?? 0
+        self.alpha = (opts["alpha"] as? NSNumber).map(CGFloat.init(truncating:)) ?? 1.0
+        guard self.scale.isFinite, self.scale > 0 else {
+            throw NSError(
+                domain: ErrorDomainEnum.PARAMS_INVALID.rawValue,
+                code: 0,
+                userInfo: [NSLocalizedDescriptionKey: "image scale must be greater than zero"]
+            )
+        }
+        guard self.rotate.isFinite else {
+            throw NSError(
+                domain: ErrorDomainEnum.PARAMS_INVALID.rawValue,
+                code: 0,
+                userInfo: [NSLocalizedDescriptionKey: "image rotation must be finite"]
+            )
+        }
     }
 }

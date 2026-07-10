@@ -37,6 +37,16 @@ async function getFileSize(path: string) {
   return Number(stat.size);
 }
 
+async function readFileBase64(path: string) {
+  return RNBlobUtil.fs.readFile(path, 'base64');
+}
+
+async function removeFile(path: string) {
+  if (await RNBlobUtil.fs.exists(path)) {
+    await RNBlobUtil.fs.unlink(path);
+  }
+}
+
 function App() {
   return (
     <ImageMarkerLab
@@ -45,6 +55,8 @@ function App() {
       featureVariant="orientation"
       getFileSize={getFileSize}
       pickImage={pickImage}
+      readFileBase64={readFileBase64}
+      removeFile={removeFile}
     />
   );
 }

@@ -27,16 +27,26 @@ class MarkImageOptions: Options {
                 throw NSError(domain: ErrorDomainEnum.PARAMS_INVALID.rawValue, code: 0, userInfo: [NSLocalizedDescriptionKey: "watermarkImage is invalid"])
             }
             let singleImageOptions = try ImageOptions(dicOpts: watermarkImageOpts)
-            var singleX: String? = "20.0"
-            var singleY: String? = "20.0"
+            var singleX: String?
+            var singleY: String?
+            var singleEdgeInset: String?
             var singlePosition: MarkerPositionEnum = .none
             let singleImagePositionOpts = opts["watermarkPositions"] as? [AnyHashable: Any]
             if let positionOpts = singleImagePositionOpts, !Utils.isNULL(singleImagePositionOpts) {
                 singleX = Utils.isNULL(positionOpts["X"]) ? nil : Utils.handleDynamicToString(v: positionOpts["X"])
                 singleY = Utils.isNULL(positionOpts["Y"]) ? nil : Utils.handleDynamicToString(v: positionOpts["Y"])
+                singleEdgeInset = Utils.isNULL(positionOpts["edgeInset"]) ? nil : Utils.handleDynamicToString(v: positionOpts["edgeInset"])
                 singlePosition = positionOpts["position"] != nil ? RCTConvert.MarkerPosition(positionOpts["position"]) : .none
             }
-            let watermarkImageOptions = WatermarkImageOptions(watermarkImage: singleImageOptions, X: singleX, Y: singleY, position: singlePosition)
+            let trimTransparentPadding = watermarkImageOpts["trimTransparentPadding"] as? Bool ?? false
+            let watermarkImageOptions = WatermarkImageOptions(
+                watermarkImage: singleImageOptions,
+                X: singleX,
+                Y: singleY,
+                edgeInset: singleEdgeInset,
+                position: singlePosition,
+                trimTransparentPadding: trimTransparentPadding
+            )
             self.watermarkImages.append(watermarkImageOptions)
         }
     }

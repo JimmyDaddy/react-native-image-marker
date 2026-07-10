@@ -30,6 +30,8 @@
   "scripts": {
     "test": "jest",
     "typecheck": "tsc --noEmit",
+    "typecheck:example": "npm --prefix example run typecheck",
+    "typecheck:expo-example": "npm --prefix expo-example run typecheck",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "prepack": "bob build",
     "release": "release-it",
@@ -38,7 +40,7 @@
     "bootstrap": "yarn example && yarn install && yarn example pods && yarn expo-example && yarn expo-example expo-install",
     "bootstrap-m1": "yarn example && yarn install && yarn example m1-pods",
     "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build",
-    "docs": "typedoc --excludePrivate --tsconfig tsconfig.doc.json && node scripts/copy-doc-assets.js",
+    "docs": "typedoc --gitRevision master --excludePrivate --tsconfig tsconfig.doc.json && node scripts/copy-doc-assets.js",
     "expo-install": "yarn expo-example expo-install"
   },
   "keywords": [

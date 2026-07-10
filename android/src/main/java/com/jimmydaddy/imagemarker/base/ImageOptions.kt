@@ -27,7 +27,13 @@ class ImageOptions(val options: ReadableMap) {
     src = RNImageSRC(originalSRC)
     uri = originalSRC!!.getString(PROP_ICON_URI)
     scale = if (options.hasKey("scale")) options.getDouble("scale").toFloat() else DEFAULT_SCALE
-    rotate = if (options.hasKey("rotate")) options.getInt("rotate").toFloat() else DEFAULT_ROTATE
+    if (!scale.isFinite() || scale <= 0f) {
+      throw MarkerError(ErrorCode.INVALID_PARAMS, "image scale must be finite and greater than zero")
+    }
+    rotate = if (options.hasKey("rotate")) options.getDouble("rotate").toFloat() else DEFAULT_ROTATE
+    if (!rotate.isFinite()) {
+      throw MarkerError(ErrorCode.INVALID_PARAMS, "image rotation must be finite")
+    }
     alpha = if (options.hasKey("alpha")) (options.getDouble("alpha") * 255).toInt() else DEFAULT_ALPHA
   }
 

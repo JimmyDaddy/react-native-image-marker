@@ -14,21 +14,21 @@ import coil.ImageLoader
 import coil.decode.GifDecoder
 import coil.decode.ImageDecoderDecoder
 import coil.decode.SvgDecoder
+import coil.request.CachePolicy
 import coil.request.ImageRequest
+import coil.request.SuccessResult
 import coil.size.Size
 import com.facebook.react.bridge.ReactApplicationContext
 import com.jimmydaddy.imagemarker.base.Constants.IMAGE_MARKER_TAG
 import com.jimmydaddy.imagemarker.base.ErrorCode
 import com.jimmydaddy.imagemarker.base.ImageOptions
 import com.jimmydaddy.imagemarker.base.MarkerError
-import kotlinx.coroutines.CancellableContinuation
+import com.jimmydaddy.imagemarker.base.Utils
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 
 class MarkerImageLoader(private val context: ReactApplicationContext, private val maxSize: Int) {
 
@@ -50,28 +50,44 @@ class MarkerImageLoader(private val context: ReactApplicationContext, private va
   suspend fun loadImages(
     images: List<ImageOptions>,
     scaleImages: List<Boolean> = List(images.size) { true }
-  ): List<Bitmap> = withContext(Dispatchers.IO) {
-
-    val deferredList = images.mapIndexed { index, img ->
-      async {
-        try {
+  ): List<Bitmap> {
+    // Decode sequentially. All decoded bitmaps must remain resident until composition, so
+    // concurrent decoding only increases the peak through overlapping decoder intermediates.
+    val loaded = ArrayList<Bitmap>(images.size)
+    try {
+      withContext(Dispatchers.IO) {
+        for ((index, img) in images.withIndex()) {
+          currentCoroutineContext().ensureActive()
           val scale = if (scaleImages.getOrElse(index) { true }) img.scale else 1f
-
           val isCoilImg = isCoilImg(img.uri)
           Log.d(IMAGE_MARKER_TAG, "isCoilImg: $isCoilImg")
 
-          when {
+          val bitmap = when {
             isBase64String(img.uri) -> loadBase64Image(img, scale)
             isCoilImg -> loadCoilImage(img, scale)
             else -> loadResourceImage(img, scale)
           }
-        } catch (e: Exception) {
-          Log.e("ImageLoader", "Failed to load image: ${img.uri}", e)
-          throw e
+          loaded.add(bitmap)
+          currentCoroutineContext().ensureActive()
         }
       }
+      return loaded
+    } catch (error: CancellationException) {
+      recycleBitmaps(loaded)
+      throw error
+    } catch (error: OutOfMemoryError) {
+      recycleBitmaps(loaded)
+      throw MarkerError(
+        ErrorCode.RENDER_FAILED,
+        "Unable to decode marker images"
+      ).apply { initCause(error) }
+    } catch (error: Exception) {
+      recycleBitmaps(loaded)
+      Log.e("ImageLoader", "Failed to load marker images", error)
+      throw error
+    } finally {
+      imageLoader.shutdown()
     }
-    deferredList.awaitAll()
   }
 
   private fun isCoilImg(uri: String?): Boolean {
@@ -101,14 +117,17 @@ class MarkerImageLoader(private val context: ReactApplicationContext, private va
   private fun loadBase64Image(img: ImageOptions, scale: Float): Bitmap {
     Log.d(IMAGE_MARKER_TAG, "Loading Base64 Image")
     val bitmap = decodeBase64ToBitmap(img.uri)
-      ?: throw MarkerError(ErrorCode.GET_RESOURCE_FAILED, "Failed to decode Base64 image")
-    return scaleBitmap(bitmap, scale, "Base64 image")
+    return scaleBitmap(bitmap, scale)
   }
 
-  private suspend fun loadCoilImage(img: ImageOptions, scale: Float): Bitmap =
-    suspendCancellableCoroutine { continuation ->
+  private suspend fun loadCoilImage(img: ImageOptions, scale: Float): Bitmap {
+    var ownedBitmap: Bitmap? = null
+    try {
       var request = ImageRequest.Builder(context)
         .data(img.uri)
+        // The returned bitmap is explicitly recycled after rendering. Keep it out of Coil's
+        // memory cache so that recycling cannot invalidate a shared cached drawable.
+        .memoryCachePolicy(CachePolicy.DISABLED)
       if (img.src.width > 0 && img.src.height > 0) {
         request = request.size(img.src.width, img.src.height)
         Log.d(IMAGE_MARKER_TAG, "src.width: " + img.src.width + " src.height: " + img.src.height)
@@ -116,33 +135,30 @@ class MarkerImageLoader(private val context: ReactApplicationContext, private va
         request = request.size(Size.ORIGINAL)
       }
 
-      val disposable = imageLoader.enqueue(
-        request.target(
-          onStart = {
-            Log.d(IMAGE_MARKER_TAG, "start to load image: " + img.uri)
-          },
-          onSuccess = { result ->
-            runCatching {
-              scaleBitmap(result.toBitmap(), scale, "image: ${img.uri}")
-            }.fold(
-              onSuccess = { continuation.resumeIfActive(it) },
-              onFailure = { continuation.resumeExceptionIfActive(it) }
-            )
-          },
-          onError = {
-            continuation.resumeExceptionIfActive(
-              MarkerError(
-                ErrorCode.LOAD_IMAGE_FAILED,
-                "Can't retrieve the file from the src: " + img.uri
-              )
-            )
-          }
-        ).build()
-      )
-      continuation.invokeOnCancellation {
-        disposable.dispose()
+      Log.d(IMAGE_MARKER_TAG, "start to load image: " + img.uri)
+      val result = imageLoader.execute(request.build())
+      if (result !is SuccessResult) {
+        throw MarkerError(
+          ErrorCode.LOAD_IMAGE_FAILED,
+          "Can't retrieve the file from the src: " + img.uri
+        )
       }
+
+      ownedBitmap = Utils.allocateOrThrow("loaded image bitmap") {
+        result.drawable.toBitmap()
+      }
+      ownedBitmap = scaleBitmap(ownedBitmap, scale)
+      currentCoroutineContext().ensureActive()
+      return ownedBitmap.also { ownedBitmap = null }
+    } catch (error: OutOfMemoryError) {
+      throw MarkerError(
+        ErrorCode.RENDER_FAILED,
+        "Unable to decode image: ${img.uri}"
+      ).apply { initCause(error) }
+    } finally {
+      recycleBitmap(ownedBitmap)
     }
+  }
 
   private fun loadResourceImage(img: ImageOptions, scale: Float): Bitmap {
     val resId = getDrawableResourceByName(img.uri)
@@ -153,50 +169,74 @@ class MarkerImageLoader(private val context: ReactApplicationContext, private va
     }
 
     Log.d(IMAGE_MARKER_TAG, "src.width: " + img.src.width + " src.height: " + img.src.height)
-    val originalBitmap = BitmapFactory.decodeResource(resources, resId)
-      ?: throw MarkerError(ErrorCode.GET_RESOURCE_FAILED, "Can't decode resource by the path: ${img.uri}")
-    val sizedBitmap = if (img.src.width > 0 && img.src.height > 0) {
-      Bitmap.createScaledBitmap(originalBitmap, img.src.width, img.src.height, true).also {
-        if (it !== originalBitmap && !originalBitmap.isRecycled) {
-          originalBitmap.recycle()
+    var ownedBitmap: Bitmap? = Utils.allocateOrThrow("decoded resource bitmap") {
+      BitmapFactory.decodeResource(resources, resId)
+    } ?: throw MarkerError(
+      ErrorCode.GET_RESOURCE_FAILED,
+      "Can't decode resource by the path: ${img.uri}"
+    )
+    try {
+      if (img.src.width > 0 && img.src.height > 0) {
+        val decodedBitmap = checkNotNull(ownedBitmap)
+        val sizedBitmap = Utils.allocateOrThrow("resized resource bitmap") {
+          Bitmap.createScaledBitmap(decodedBitmap, img.src.width, img.src.height, true)
         }
+        if (sizedBitmap !== decodedBitmap) {
+          recycleBitmap(decodedBitmap)
+        }
+        ownedBitmap = sizedBitmap
       }
-    } else {
-      originalBitmap
-    }
 
-    return scaleBitmap(sizedBitmap, scale, "resource: ${img.uri}")
+      ownedBitmap = scaleBitmap(checkNotNull(ownedBitmap), scale)
+      return ownedBitmap.also { ownedBitmap = null }
+    } finally {
+      recycleBitmap(ownedBitmap)
+    }
   }
 
-  private fun scaleBitmap(bitmap: Bitmap, scale: Float, source: String): Bitmap {
-    val scaledBitmap = ImageProcess.scaleBitmap(bitmap, scale)
-      ?: throw MarkerError(ErrorCode.LOAD_IMAGE_FAILED, "Failed to scale $source")
-    if (scaledBitmap !== bitmap && !bitmap.isRecycled) {
+  private fun scaleBitmap(bitmap: Bitmap, scale: Float): Bitmap {
+    try {
+      val scaledBitmap = ImageProcess.scaleBitmap(bitmap, scale)
+      if (scaledBitmap !== bitmap) {
+        recycleBitmap(bitmap)
+      }
+      return scaledBitmap
+    } catch (error: Throwable) {
+      recycleBitmap(bitmap)
+      throw error
+    }
+  }
+
+  private fun recycleBitmaps(bitmaps: Iterable<Bitmap>) {
+    for (bitmap in bitmaps) {
+      recycleBitmap(bitmap)
+    }
+  }
+
+  private fun recycleBitmap(bitmap: Bitmap?) {
+    if (bitmap != null && !bitmap.isRecycled) {
       bitmap.recycle()
     }
-    return scaledBitmap
   }
 
-  private fun CancellableContinuation<Bitmap>.resumeIfActive(bitmap: Bitmap) {
-    if (isActive) {
-      resume(bitmap)
+  private fun decodeBase64ToBitmap(base64Str: String?): Bitmap {
+    if (base64Str == null) {
+      throw MarkerError(ErrorCode.GET_RESOURCE_FAILED, "Failed to decode Base64 image")
     }
-  }
-
-  private fun CancellableContinuation<Bitmap>.resumeExceptionIfActive(error: Throwable) {
-    if (isActive) {
-      resumeWithException(error)
-    }
-  }
-
-  private fun decodeBase64ToBitmap(base64Str: String?): Bitmap? {
-    if (base64Str == null) return null
     return try {
       val imageBytes = Base64.decode(base64Str.substring(base64Str.indexOf(",") + 1), Base64.DEFAULT)
       BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
-    } catch (e: Exception) {
-      Log.e("ImageLoader", "Failed to decode Base64 image", e)
-      null
+        ?: throw MarkerError(ErrorCode.GET_RESOURCE_FAILED, "Failed to decode Base64 image")
+    } catch (error: MarkerError) {
+      throw error
+    } catch (error: OutOfMemoryError) {
+      throw MarkerError(
+        ErrorCode.RENDER_FAILED,
+        "Unable to decode Base64 image"
+      ).apply { initCause(error) }
+    } catch (error: IllegalArgumentException) {
+      Log.e("ImageLoader", "Failed to decode Base64 image", error)
+      throw MarkerError(ErrorCode.GET_RESOURCE_FAILED, "Failed to decode Base64 image")
     }
   }
 }

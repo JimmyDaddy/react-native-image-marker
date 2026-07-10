@@ -33,6 +33,7 @@ final class ImageMarkerExampleUITests: XCTestCase {
     XCTAssertTrue(featureButton(in: app, identifier: "feature-mixed-watermark", label: "Text + image watermark").exists)
     XCTAssertTrue(featureButton(in: app, identifier: "feature-sharp-scaled-watermark", label: "Sharp scaled watermark").exists)
     XCTAssertTrue(featureButton(in: app, identifier: "feature-orientation-normalization", label: "Orientation normalization").exists)
+    XCTAssertTrue(featureButton(in: app, identifier: "feature-rotation-output-policy", label: "Rotation output policy").exists)
   }
 
   func testTextAnchorOffsetFeatureProducesPreview() throws {
@@ -85,6 +86,23 @@ final class ImageMarkerExampleUITests: XCTestCase {
     wait(for: [dismissed], timeout: 5)
   }
 
+  func testRotationOutputPolicyFeatureProducesPreview() throws {
+    let app = XCUIApplication()
+    app.launch()
+
+    XCTAssertTrue(app.staticTexts["Image Marker Lab"].waitForExistence(timeout: 45))
+    let featureCard = featureButton(
+      in: app,
+      identifier: "feature-rotation-output-policy",
+      label: "Rotation output policy"
+    )
+    XCTAssertTrue(featureCard.exists)
+    featureCard.tap()
+
+    XCTAssertTrue(app.otherElements["result-preview-ready"].waitForExistence(timeout: 15))
+    XCTAssertTrue(app.staticTexts["rotation-output-validated"].waitForExistence(timeout: 10))
+  }
+
   func testLaunchPerformance() throws {
     if #available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 7.0, *) {
       // This measures how long it takes to launch your application.
@@ -114,6 +132,286 @@ final class ImageMarkerExampleUITests: XCTestCase {
     let image = makeTestImage(size: CGSize(width: 12, height: 8))
 
     XCTAssertTrue(image.normalizedForImageMarker() === image)
+  }
+
+  func testPositionDefaultsAndEdgeInsetOverrides() throws {
+    let canvasSize = CGSize(width: 100, height: 80)
+    let itemSize = CGSize(width: 20, height: 10)
+
+    let absolute = ImageMarkerRenderer.markerOrigin(
+      position: .none,
+      offsetX: nil,
+      offsetY: nil,
+      canvasSize: canvasSize,
+      itemSize: itemSize
+    )
+    XCTAssertEqual(absolute.x, 20, accuracy: 0.001)
+    XCTAssertEqual(absolute.y, 20, accuracy: 0.001)
+
+    let flushAbsolute = ImageMarkerRenderer.markerOrigin(
+      position: .none,
+      offsetX: nil,
+      offsetY: nil,
+      canvasSize: canvasSize,
+      itemSize: itemSize,
+      edgeInset: "0"
+    )
+    XCTAssertEqual(flushAbsolute.x, 0, accuracy: 0.001)
+    XCTAssertEqual(flushAbsolute.y, 0, accuracy: 0.001)
+
+    let defaultAnchored = ImageMarkerRenderer.markerOrigin(
+      position: .topLeft,
+      offsetX: nil,
+      offsetY: nil,
+      canvasSize: canvasSize,
+      itemSize: itemSize
+    )
+    XCTAssertEqual(defaultAnchored.x, 20, accuracy: 0.001)
+    XCTAssertEqual(defaultAnchored.y, 20, accuracy: 0.001)
+
+    let insetAnchored = ImageMarkerRenderer.markerOrigin(
+      position: .bottomRight,
+      offsetX: nil,
+      offsetY: nil,
+      canvasSize: canvasSize,
+      itemSize: itemSize,
+      edgeInset: "7"
+    )
+    XCTAssertEqual(insetAnchored.x, 73, accuracy: 0.001)
+    XCTAssertEqual(insetAnchored.y, 63, accuracy: 0.001)
+
+    let explicitZero = ImageMarkerRenderer.markerOrigin(
+      position: .bottomRight,
+      offsetX: "0",
+      offsetY: "0",
+      canvasSize: canvasSize,
+      itemSize: itemSize,
+      edgeInset: "7"
+    )
+    XCTAssertEqual(explicitZero.x, 80, accuracy: 0.001)
+    XCTAssertEqual(explicitZero.y, 70, accuracy: 0.001)
+  }
+
+  func testRotatesFortyFiveDegreesWithExpandedTransparentCanvas() throws {
+    let background = makeSolidImage(size: CGSize(width: 40, height: 20), color: .red)
+    let renderedImage = try XCTUnwrap(
+      ImageMarkerRenderer.renderImageWatermarks(
+        background: background,
+        watermarks: [],
+        backgroundScale: 1,
+        backgroundRotate: 45,
+        backgroundAlpha: 1,
+        rotationCanvasMode: .expand
+      )
+    )
+
+    XCTAssertEqual(renderedImage.size.width, 43, accuracy: 0.001)
+    XCTAssertEqual(renderedImage.size.height, 43, accuracy: 0.001)
+    let bytes = try XCTUnwrap(rgbaBytes(for: renderedImage))
+    let width = Int(renderedImage.size.width * renderedImage.scale)
+    XCTAssertLessThan(bytes[pixelIndex(x: 0, y: 0, width: width) + 3], 64)
+    XCTAssertTrue(isRedPixel(bytes, at: pixelIndex(x: width / 2, y: width / 2, width: width)))
+  }
+
+  func testRotatesFortyFiveDegreesWithCroppedOriginalCanvas() throws {
+    let background = makeSolidImage(size: CGSize(width: 40, height: 20), color: .red)
+    let renderedImage = try XCTUnwrap(
+      ImageMarkerRenderer.renderImageWatermarks(
+        background: background,
+        watermarks: [],
+        backgroundScale: 1,
+        backgroundRotate: 45,
+        backgroundAlpha: 1,
+        rotationCanvasMode: .crop
+      )
+    )
+
+    XCTAssertEqual(renderedImage.size.width, 40, accuracy: 0.001)
+    XCTAssertEqual(renderedImage.size.height, 20, accuracy: 0.001)
+    let bytes = try XCTUnwrap(rgbaBytes(for: renderedImage))
+    let width = Int(renderedImage.size.width * renderedImage.scale)
+    XCTAssertLessThan(bytes[pixelIndex(x: 0, y: 0, width: width) + 3], 64)
+    XCTAssertTrue(isRedPixel(bytes, at: pixelIndex(x: width / 2, y: 10, width: width)))
+  }
+
+  func testJPEGUsesExplicitMatteWhilePNGPreservesTransparency() throws {
+    let transparentImage = makeTransparentInsetImage(
+      size: CGSize(width: 10, height: 10),
+      inset: 3,
+      color: .red
+    )
+    let pngData = try XCTUnwrap(
+      ImageMarkerRenderer.encodedData(
+        for: transparentImage,
+        asPNG: true,
+        jpegQuality: 1,
+        matteColor: UIColor.green.withAlphaComponent(0.2)
+      )
+    )
+    let jpegData = try XCTUnwrap(
+      ImageMarkerRenderer.encodedData(
+        for: transparentImage,
+        asPNG: false,
+        jpegQuality: 1,
+        matteColor: .green
+      )
+    )
+    let pngImage = try XCTUnwrap(UIImage(data: pngData))
+    let jpegImage = try XCTUnwrap(UIImage(data: jpegData))
+    let pngBytes = try XCTUnwrap(rgbaBytes(for: pngImage))
+    let jpegBytes = try XCTUnwrap(rgbaBytes(for: jpegImage))
+
+    XCTAssertEqual(pngBytes[3], 0)
+    XCTAssertLessThan(jpegBytes[0], 40)
+    XCTAssertGreaterThan(jpegBytes[1], 200)
+    XCTAssertLessThan(jpegBytes[2], 40)
+    XCTAssertEqual(jpegBytes[3], 255)
+  }
+
+  func testTrimsTransparentWatermarkPaddingBeforeAnchoredPositioning() throws {
+    let background = makeSolidImage(size: CGSize(width: 12, height: 12), color: .red)
+    let paddedWatermark = makeTransparentInsetImage(
+      size: CGSize(width: 8, height: 8),
+      inset: 2,
+      color: .blue
+    )
+    let trimmedWatermark = paddedWatermark.trimmingTransparentPadding()
+    XCTAssertEqual(trimmedWatermark.size.width, 4, accuracy: 0.001)
+    XCTAssertEqual(trimmedWatermark.size.height, 4, accuracy: 0.001)
+
+    let renderedImage = try XCTUnwrap(
+      ImageMarkerRenderer.renderImageWatermarks(
+        background: background,
+        watermarks: [
+          ImageMarkerImageWatermark(
+            image: paddedWatermark,
+            position: .topRight,
+            offsetX: "0",
+            offsetY: "0",
+            scale: 1,
+            rotate: 0,
+            alpha: 1,
+            trimTransparentPadding: true
+          ),
+        ],
+        backgroundScale: 1,
+        backgroundRotate: 0,
+        backgroundAlpha: 1
+      )
+    )
+
+    XCTAssertGreaterThan(bluePixelCount(in: renderedImage, xRange: 8..<12, yRange: 0..<4), 10)
+
+    let asymmetric = makeAsymmetricTransparentImage()
+    let asymmetricTrimmed = asymmetric.trimmingTransparentPadding()
+    XCTAssertEqual(asymmetricTrimmed.size.width, 3, accuracy: 0.001)
+    XCTAssertEqual(asymmetricTrimmed.size.height, 4, accuracy: 0.001)
+
+    for visibleRect in [
+      CGRect(x: 1, y: 300, width: 2, height: 4),
+      CGRect(x: 1, y: 254, width: 2, height: 4),
+    ] {
+      let tallImage = makeTransparentRectImage(
+        size: CGSize(width: 4, height: 600),
+        visibleRect: visibleRect
+      )
+      let tallTrimmed = tallImage.trimmingTransparentPadding()
+      XCTAssertEqual(tallTrimmed.size.width, 2, accuracy: 0.001)
+      XCTAssertEqual(tallTrimmed.size.height, 4, accuracy: 0.001)
+      XCTAssertEqual(bluePixelCount(in: tallTrimmed, xRange: 0..<2, yRange: 0..<4), 8)
+    }
+  }
+
+  func testOptionsPreferFilenameAndProvideRenderingDefaults() throws {
+    let background: [AnyHashable: Any] = [
+      "src": ["uri": "file:///tmp/background.png"],
+    ]
+    let canonical = try Options(dicOpts: [
+      "backgroundImage": background,
+      "filename": "canonical-name",
+      "fileName": "legacy-name",
+    ])
+    XCTAssertEqual(canonical.filename, "canonical-name")
+    XCTAssertEqual(canonical.rotationCanvasMode, .expand)
+
+    var white: CGFloat = 0
+    XCTAssertTrue(canonical.matteColor.getWhite(&white, alpha: nil))
+    XCTAssertEqual(white, 1, accuracy: 0.001)
+
+    let legacy = try Options(dicOpts: [
+      "backgroundImage": background,
+      "fileName": "legacy-name",
+      "matteColor": "#00FF00",
+      "rotationCanvasMode": "crop",
+    ])
+    XCTAssertEqual(legacy.filename, "legacy-name")
+    XCTAssertEqual(legacy.rotationCanvasMode, .crop)
+    var red: CGFloat = 0
+    var green: CGFloat = 0
+    var blue: CGFloat = 0
+    var alpha: CGFloat = 0
+    XCTAssertTrue(legacy.matteColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha))
+    XCTAssertEqual(red, 0, accuracy: 0.001)
+    XCTAssertEqual(green, 1, accuracy: 0.001)
+    XCTAssertEqual(blue, 0, accuracy: 0.001)
+    XCTAssertEqual(alpha, 1, accuracy: 0.001)
+
+    let translucentMatte = try Options(dicOpts: [
+      "backgroundImage": background,
+      "matteColor": "#FF000080",
+    ])
+    XCTAssertTrue(translucentMatte.matteColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha))
+    XCTAssertEqual(red, 1, accuracy: 0.001)
+    XCTAssertEqual(green, 0, accuracy: 0.001)
+    XCTAssertEqual(blue, 0, accuracy: 0.001)
+    XCTAssertEqual(alpha, 1, accuracy: 0.001)
+
+    XCTAssertThrowsError(try Options(dicOpts: [
+      "backgroundImage": background,
+      "matteColor": "#FFFFFFzz",
+    ]))
+    XCTAssertThrowsError(try ImageOptions(dicOpts: [
+      "src": ["uri": "file:///tmp/image.png"],
+      "scale": 0,
+    ]))
+    XCTAssertThrowsError(try ImageOptions(dicOpts: [
+      "src": ["uri": "file:///tmp/image.png"],
+      "rotate": CGFloat.infinity,
+    ]))
+
+    XCTAssertEqual(Utils.canonicalOutputFilename("output.png", ext: ".jpg"), "output.jpg")
+    XCTAssertEqual(Utils.canonicalOutputFilename("output.JPEG", ext: ".png"), "output.png")
+  }
+
+  func testAnchorsRotatedWatermarkByVisibleBounds() throws {
+    let background = makeSolidImage(size: CGSize(width: 40, height: 40), color: .red)
+    let watermark = makeSolidImage(size: CGSize(width: 6, height: 14), color: .blue)
+
+    for rotation in [CGFloat(45), CGFloat(90)] {
+      let renderedImage = try XCTUnwrap(
+        ImageMarkerRenderer.renderImageWatermarks(
+          background: background,
+          watermarks: [
+            ImageMarkerImageWatermark(
+              image: watermark,
+              position: .topRight,
+              offsetX: nil,
+              offsetY: nil,
+              scale: 1,
+              rotate: rotation,
+              alpha: 1,
+              edgeInset: "0"
+            ),
+          ],
+          backgroundScale: 1,
+          backgroundRotate: 0,
+          backgroundAlpha: 1
+        )
+      )
+      let bounds = try XCTUnwrap(bluePixelBounds(in: renderedImage))
+      XCTAssertLessThanOrEqual(bounds.minY, 1, "rotation \(rotation)")
+      XCTAssertGreaterThanOrEqual(bounds.maxX, 39, "rotation \(rotation)")
+    }
   }
 
   func testRendersImageWatermarkUsingAnchoredOffsets() throws {
@@ -256,6 +554,45 @@ final class ImageMarkerExampleUITests: XCTestCase {
     }
   }
 
+  private func makeTransparentInsetImage(size: CGSize, inset: CGFloat, color: UIColor) -> UIImage {
+    let format = UIGraphicsImageRendererFormat.default()
+    format.scale = 1
+    format.opaque = false
+    let renderer = UIGraphicsImageRenderer(size: size, format: format)
+    return renderer.image { context in
+      UIColor.clear.setFill()
+      context.fill(CGRect(origin: .zero, size: size))
+      color.setFill()
+      context.fill(
+        CGRect(
+          x: inset,
+          y: inset,
+          width: size.width - inset * 2,
+          height: size.height - inset * 2
+        )
+      )
+    }
+  }
+
+  private func makeAsymmetricTransparentImage() -> UIImage {
+    return makeTransparentRectImage(
+      size: CGSize(width: 9, height: 11),
+      visibleRect: CGRect(x: 1, y: 3, width: 3, height: 4)
+    )
+  }
+
+  private func makeTransparentRectImage(size: CGSize, visibleRect: CGRect) -> UIImage {
+    let format = UIGraphicsImageRendererFormat.default()
+    format.scale = 1
+    format.opaque = false
+    return UIGraphicsImageRenderer(size: size, format: format).image { context in
+      UIColor.clear.setFill()
+      context.fill(CGRect(origin: .zero, size: size))
+      UIColor.blue.setFill()
+      context.fill(visibleRect)
+    }
+  }
+
   private func makeCheckerImage(size: CGSize) -> UIImage {
     let format = UIGraphicsImageRendererFormat.default()
     format.scale = 1
@@ -292,6 +629,33 @@ final class ImageMarkerExampleUITests: XCTestCase {
       }
     }
     return count
+  }
+
+  private func bluePixelBounds(in image: UIImage) -> CGRect? {
+    guard let bytes = rgbaBytes(for: image) else {
+      return nil
+    }
+    let width = Int(image.size.width * image.scale)
+    let height = Int(image.size.height * image.scale)
+    var minX = width
+    var minY = height
+    var maxX = -1
+    var maxY = -1
+    for y in 0..<height {
+      for x in 0..<width {
+        let index = pixelIndex(x: x, y: y, width: width)
+        if bytes[index + 2] > 140 && bytes[index] < 120 && bytes[index + 1] < 120 {
+          minX = min(minX, x)
+          minY = min(minY, y)
+          maxX = max(maxX, x)
+          maxY = max(maxY, y)
+        }
+      }
+    }
+    guard maxX >= minX, maxY >= minY else {
+      return nil
+    }
+    return CGRect(x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1)
   }
 
   private func rgbaBytes(for image: UIImage) -> [UInt8]? {
