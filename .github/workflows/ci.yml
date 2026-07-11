@@ -88,7 +88,9 @@ jobs:
                   "example/metro.config.js",
                   "example/package.json",
                   "example/package-lock.json",
+                  "example/tsconfig.json",
                   "example/src/**",
+                  "scripts/run-android-instrumentation.sh",
               ],
               ["example/ios/**"],
           )
@@ -109,6 +111,7 @@ jobs:
                   "example/metro.config.js",
                   "example/package.json",
                   "example/package-lock.json",
+                  "example/tsconfig.json",
                   "example/src/**",
               ],
               ["example/android/**"],
@@ -121,6 +124,21 @@ jobs:
                   "app.plugin.js",
                   "tsconfig*.json",
                   "lefthook.yml",
+                  ".eslintignore",
+                  ".eslintrc.js",
+                  ".github/workflows/ci.yml",
+                  "docs/**",
+                  "README.MD",
+                  "assets/**",
+                  "scripts/copy-doc-assets.js",
+                  "example/package.json",
+                  "example/package-lock.json",
+                  "example/tsconfig.json",
+                  "example/src/**",
+                  "expo-example/App.tsx",
+                  "expo-example/metro.config.js",
+                  "expo-example/package.json",
+                  "expo-example/tsconfig.json",
               ]
           )
           security = any_changed(
@@ -197,17 +215,42 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install dependencies
-        run: npm install
+      - name: Install root and Expo example dependencies
+        run: |
+          npm install
+          npm --prefix expo-example install --ignore-scripts --no-audit --no-fund
+
+      - name: Verify Expo clean-install bundle
+        run: |
+          test ! -d example/node_modules
+          npm --prefix expo-example run bundle:smoke
+
+      - name: Install React Native example dependencies
+        run: npm --prefix example install
 
       - name: Typecheck
-        run: npm run typecheck
+        run: |
+          npm run typecheck
+          npm run typecheck:example
+          npm run typecheck:expo-example
+
+      - name: Lint
+        run: npm run lint
 
       - name: Test
         run: npm test -- --runInBand
 
       - name: Build package
         run: npm run prepack
+
+      - name: Verify generated docs are current
+        run: |
+          npm run docs
+          if [ -n "$(git status --porcelain -- docs/latest)" ]; then
+            git status --short -- docs/latest
+            git diff -- docs/latest
+            exit 1
+          fi
 
   install-dep:
     runs-on: macos-latest
@@ -265,6 +308,10 @@ jobs:
           pwd
           npm install
 
+      - name: Typecheck example
+        if: steps.verify-dev-changed-files.outputs.any_changed == 'true'
+        run: npm run typecheck:example
+
   android-build:
     runs-on: macos-latest
     name: Android Build
@@ -294,7 +341,9 @@ jobs:
             example/metro.config.js
             example/package.json
             example/package-lock.json
+            example/tsconfig.json
             example/src/**
+            scripts/run-android-instrumentation.sh
 
       - uses: actions/cache@v4
         name: Cache node_modules
@@ -414,7 +463,9 @@ jobs:
             example/metro.config.js
             example/package.json
             example/package-lock.json
+            example/tsconfig.json
             example/src/**
+            scripts/run-android-instrumentation.sh
 
       - uses: actions/cache@v4
         name: Cache node_modules
@@ -475,8 +526,7 @@ jobs:
           target: ${{ matrix.target }}
           arch: x86_64
           profile: pixel_5
-          script: |
-            cd example/android && ./gradlew connectedCheck  --stacktrace
+          script: bash scripts/run-android-instrumentation.sh
 
       - name: Upload Reports
         uses: actions/upload-artifact@v4
@@ -520,6 +570,7 @@ jobs:
             example/metro.config.js
             example/package.json
             example/package-lock.json
+            example/tsconfig.json
             example/src/**
 
       - uses: actions/cache@v4
@@ -623,11 +674,29 @@ jobs:
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testTextAnchorOffsetFeatureProducesPreview \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testMixedWatermarkFeatureProducesPreview \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testSharpScaledWatermarkFeatureProducesPreview \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testRotationOutputPolicyFeatureProducesPreview \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testWatermarkOrientationMatchesUprightPixelReference \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testNormalizesUIImageOrientationBeforeCGImageRendering \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testKeepsAlreadyUprightUIImageInstance \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testPositionDefaultsAndEdgeInsetOverrides \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testRotatesFortyFiveDegreesWithExpandedTransparentCanvas \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testRotatesFortyFiveDegreesWithCroppedOriginalCanvas \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testJPEGUsesExplicitMatteWhilePNGPreservesTransparency \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testTrimsTransparentWatermarkPaddingBeforeAnchoredPositioning \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testOptionsPreferFilenameAndProvideRenderingDefaults \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testRejectsInvalidQualityAlphaAndUnsafeFilenames \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testParsesShadowHexColorAndRejectsInvalidValues \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testBackgroundScaleChangesCanvasWithoutImplicitlyScalingLayers \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testBackgroundScaleDoesNotImplicitlyScaleText \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testSequentialAsyncMapBoundsConcurrencyAndPreservesOrder \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testAsyncLimiterBoundsConcurrencyAndSkipsCancelledWaiter \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testCancellableContinuationHandlesCancellationCompletionRace \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testRenderAndReleaseSourcesDropsInputsBeforeEncodingPhase \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testAnchorsRotatedWatermarkByVisibleBounds \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testRendersImageWatermarkUsingAnchoredOffsets \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testRotatesRenderedBackgroundWhenRequested \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testRendersScaledImageWatermarkWithoutInterpolatedEdges \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testPreservesAsymmetricWatermarkOrientationAcrossScaleAndRotation \
             test 2>&1 | tee xcodebuild-test.log | xcpretty || {
               status=$?
               tail -n 200 xcodebuild-test.log

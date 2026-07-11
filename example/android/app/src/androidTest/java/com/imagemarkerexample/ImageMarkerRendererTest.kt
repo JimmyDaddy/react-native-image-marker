@@ -1,6 +1,7 @@
 package com.imagemarkerexample
 
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -8,12 +9,15 @@ import com.facebook.react.bridge.JavaOnlyArray
 import com.facebook.react.bridge.JavaOnlyMap
 import com.facebook.react.bridge.ReactApplicationContext
 import com.jimmydaddy.imagemarker.ImageMarkerRenderer
+import com.jimmydaddy.imagemarker.ImageProcess
 import com.jimmydaddy.imagemarker.base.MarkImageOptions
+import com.jimmydaddy.imagemarker.base.MarkTextOptions
 import com.jimmydaddy.imagemarker.base.MarkWatermarkOptions
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.io.ByteArrayOutputStream
 
 @RunWith(AndroidJUnit4::class)
 class ImageMarkerRendererTest {
@@ -70,6 +74,110 @@ class ImageMarkerRendererTest {
 
     assertEquals(2, output.width)
     assertEquals(3, output.height)
+  }
+
+  @Test
+  fun fortyFiveDegreeExpandGrowsCanvasAndKeepsPngCornersTransparent() {
+    val output = ImageMarkerRenderer.renderImageWatermarks(
+      solidBitmap(10, 10, Color.RED),
+      listOf(solidBitmap(1, 1, Color.BLUE)),
+      imageOptions(
+        backgroundRotate = 45,
+        watermarkPosition = JavaOnlyMap.of("X", 4, "Y", 4)
+      )
+    )
+
+    assertEquals(15, output.width)
+    assertEquals(15, output.height)
+    assertEquals(0, Color.alpha(output.getPixel(0, 0)))
+    assertEquals(Color.RED, output.getPixel(7, 2))
+  }
+
+  @Test
+  fun fortyFiveDegreeCropKeepsOriginalDimensions() {
+    val output = ImageMarkerRenderer.renderImageWatermarks(
+      solidBitmap(10, 10, Color.RED),
+      listOf(solidBitmap(1, 1, Color.BLUE)),
+      imageOptions(
+        backgroundRotate = 45,
+        rotationCanvasMode = "crop",
+        watermarkPosition = JavaOnlyMap.of("X", 4, "Y", 4)
+      )
+    )
+
+    assertEquals(10, output.width)
+    assertEquals(10, output.height)
+    assertEquals(0, Color.alpha(output.getPixel(0, 0)))
+    assertEquals(Color.RED, output.getPixel(5, 2))
+  }
+
+  @Test
+  fun jpegRenderingUsesConfiguredMatteAndPngIgnoresIt() {
+    val jpegOutput = ImageMarkerRenderer.renderImageWatermarks(
+      solidBitmap(10, 10, Color.RED),
+      listOf(solidBitmap(1, 1, Color.BLUE)),
+      imageOptions(
+        backgroundRotate = 45,
+        saveFormat = "jpg",
+        matteColor = "#00FF00",
+        watermarkPosition = JavaOnlyMap.of("X", 4, "Y", 4)
+      )
+    )
+    val pngOutput = ImageMarkerRenderer.renderImageWatermarks(
+      solidBitmap(10, 10, Color.RED),
+      listOf(solidBitmap(1, 1, Color.BLUE)),
+      imageOptions(
+        backgroundRotate = 45,
+        saveFormat = "png",
+        matteColor = "#00FF00",
+        watermarkPosition = JavaOnlyMap.of("X", 4, "Y", 4)
+      )
+    )
+
+    assertEquals(Color.GREEN, jpegOutput.getPixel(0, 0))
+    assertEquals(0, Color.alpha(pngOutput.getPixel(0, 0)))
+  }
+
+  @Test
+  fun jpegMatteIsOpaqueEvenWhenTheConfiguredColorContainsAlpha() {
+    val output = ImageMarkerRenderer.renderImageWatermarks(
+      solidBitmap(10, 10, Color.RED),
+      listOf(solidBitmap(1, 1, Color.BLUE)),
+      imageOptions(
+        backgroundRotate = 45,
+        saveFormat = "jpg",
+        matteColor = "#00FF0080",
+        watermarkPosition = JavaOnlyMap.of("X", 4, "Y", 4)
+      )
+    )
+
+    val corner = output.getPixel(0, 0)
+    assertEquals(255, Color.alpha(corner))
+    assertEquals(Color.GREEN, corner)
+  }
+
+  @Test
+  fun jpegEncoderPreservesWhiteMatteInsteadOfBlackCorners() {
+    val output = ImageMarkerRenderer.renderImageWatermarks(
+      solidBitmap(20, 20, Color.RED),
+      listOf(solidBitmap(1, 1, Color.BLUE)),
+      imageOptions(
+        backgroundRotate = 45,
+        saveFormat = "jpg",
+        matteColor = "#FFFFFF",
+        watermarkPosition = JavaOnlyMap.of("X", 9, "Y", 9)
+      )
+    )
+    val bytes = ByteArrayOutputStream().use { stream ->
+      assertTrue(output.compress(Bitmap.CompressFormat.JPEG, 100, stream))
+      stream.toByteArray()
+    }
+    val decoded = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+    val corner = decoded.getPixel(0, 0)
+
+    assertTrue(Color.red(corner) > 240)
+    assertTrue(Color.green(corner) > 240)
+    assertTrue(Color.blue(corner) > 240)
   }
 
   @Test
@@ -153,9 +261,206 @@ class ImageMarkerRendererTest {
     assertEquals(Color.RED, output.getPixel(0, 2))
   }
 
+  @Test
+  fun halfScaleBackgroundChangesCanvasWithoutScalingAbsoluteWatermarkCoordinates() {
+    val scaledBackground = ImageProcess.scaleBitmap(solidBitmap(8, 8, Color.RED), 0.5f)
+    val output = ImageMarkerRenderer.renderImageWatermarks(
+      scaledBackground,
+      listOf(solidBitmap(1, 1, Color.BLUE)),
+      imageOptions(
+        backgroundScale = 0.5,
+        watermarkPosition = JavaOnlyMap.of("X", 2, "Y", 1)
+      )
+    )
+
+    assertEquals(4, output.width)
+    assertEquals(4, output.height)
+    assertEquals(Color.RED, output.getPixel(1, 1))
+    assertEquals(Color.BLUE, output.getPixel(2, 1))
+    assertEquals(Color.RED, output.getPixel(3, 1))
+  }
+
+  @Test
+  fun doubleScaleBackgroundChangesCanvasWithoutScalingWatermarkOrCoordinates() {
+    val scaledBackground = ImageProcess.scaleBitmap(solidBitmap(8, 8, Color.RED), 2f)
+    val output = ImageMarkerRenderer.renderImageWatermarks(
+      scaledBackground,
+      listOf(solidBitmap(2, 1, Color.BLUE)),
+      imageOptions(
+        backgroundScale = 2.0,
+        watermarkPosition = JavaOnlyMap.of("X", 2, "Y", 1)
+      )
+    )
+
+    assertEquals(16, output.width)
+    assertEquals(16, output.height)
+    assertEquals(Color.RED, output.getPixel(1, 1))
+    assertEquals(Color.BLUE, output.getPixel(2, 1))
+    assertEquals(Color.BLUE, output.getPixel(3, 1))
+    assertEquals(Color.RED, output.getPixel(4, 1))
+  }
+
+  @Test
+  fun backgroundScaleRoundsEachOutputDimensionAndNeverProducesZero() {
+    val source = solidBitmap(4, 3, Color.RED)
+
+    val slightlyLarger = ImageProcess.scaleBitmap(source, 1.1f)
+    val thumbnail = ImageProcess.scaleBitmap(source, 0.3f)
+
+    assertEquals(4, slightlyLarger.width)
+    assertEquals(3, slightlyLarger.height)
+    assertEquals(1, thumbnail.width)
+    assertEquals(1, thumbnail.height)
+  }
+
+  @Test
+  fun rotatedBackgroundUsesFilteredSampling() {
+    val output = ImageMarkerRenderer.renderImageWatermarks(
+      checkerBitmap(4, 4),
+      listOf(solidBitmap(1, 1, Color.TRANSPARENT)),
+      imageOptions(
+        backgroundRotate = 15,
+        watermarkPosition = JavaOnlyMap.of("edgeInset", 0)
+      )
+    )
+
+    var foundInterpolatedPixel = false
+    for (y in 0 until output.height) {
+      for (x in 0 until output.width) {
+        val pixel = output.getPixel(x, y)
+        val red = Color.red(pixel)
+        if (
+          Color.alpha(pixel) > 0 &&
+          red in 1..254 &&
+          red == Color.green(pixel) &&
+          red == Color.blue(pixel)
+        ) {
+          foundInterpolatedPixel = true
+        }
+      }
+    }
+
+    assertTrue("Expected bilinear sampling to produce an interpolated background pixel", foundInterpolatedPixel)
+  }
+
+  @Test
+  fun trimTransparentPaddingPositionsVisiblePixelsAtTheAnchor() {
+    val background = solidBitmap(8, 8, Color.RED)
+    val paddedMarker = paddedMarkerBitmap()
+    val withoutTrim = ImageMarkerRenderer.renderImageWatermarks(
+      background,
+      listOf(paddedMarker),
+      imageOptions(
+        trimTransparentPadding = false,
+        watermarkPosition = JavaOnlyMap.of(
+          "position",
+          "topLeft",
+          "edgeInset",
+          0
+        )
+      )
+    )
+    val withTrim = ImageMarkerRenderer.renderImageWatermarks(
+      solidBitmap(8, 8, Color.RED),
+      listOf(paddedMarkerBitmap()),
+      imageOptions(
+        trimTransparentPadding = true,
+        watermarkPosition = JavaOnlyMap.of(
+          "position",
+          "topLeft",
+          "edgeInset",
+          0
+        )
+      )
+    )
+
+    assertEquals(Color.RED, withoutTrim.getPixel(0, 0))
+    assertEquals(Color.BLUE, withoutTrim.getPixel(2, 2))
+    assertEquals(Color.BLUE, withTrim.getPixel(0, 0))
+    assertEquals(Color.RED, withTrim.getPixel(2, 2))
+  }
+
+  @Test
+  fun transparentBoundsFindOnlyVisibleContent() {
+    assertEquals(
+      android.graphics.Rect(2, 2, 4, 4),
+      ImageMarkerRenderer.findNonTransparentBounds(paddedMarkerBitmap())
+    )
+    assertEquals(
+      android.graphics.Rect(0, 0, 4, 4),
+      ImageMarkerRenderer.findNonTransparentBounds(
+        Bitmap.createBitmap(4, 4, Bitmap.Config.ARGB_8888)
+      )
+    )
+  }
+
+  @Test
+  fun missingTextStyleRendersWithVisibleDefaults() {
+    val output = ImageMarkerRenderer.renderTextWatermarks(
+      solidBitmap(80, 40, Color.WHITE),
+      textOptions(x = 4, y = 4),
+      reactContext()
+    )
+
+    var nonWhitePixels = 0
+    for (y in 0 until output.height) {
+      for (x in 0 until output.width) {
+        val pixel = output.getPixel(x, y)
+        if (Color.red(pixel) < 245 || Color.green(pixel) < 245 || Color.blue(pixel) < 245) {
+          nonWhitePixels += 1
+        }
+      }
+    }
+    assertTrue("Expected default black text to be visible", nonWhitePixels > 0)
+  }
+
+  @Test
+  fun rotatedTextAtNonZeroCoordinatesKeepsItsLocalCenter() {
+    val style = JavaOnlyMap.of(
+      "color", "#00000000",
+      "fontSize", 24,
+      "rotate", 90,
+      "textBackgroundStyle", JavaOnlyMap.of(
+        "color", "#0000FF",
+        "type", "none"
+      )
+    )
+    val base = ImageMarkerRenderer.renderTextWatermarks(
+      solidBitmap(140, 110, Color.WHITE),
+      textOptions(x = 30, y = 30, style = style),
+      reactContext()
+    )
+    val deltaX = 24
+    val deltaY = 18
+    val shifted = ImageMarkerRenderer.renderTextWatermarks(
+      solidBitmap(140, 110, Color.WHITE),
+      textOptions(x = 30 + deltaX, y = 30 + deltaY, style = style),
+      reactContext()
+    )
+
+    var comparedPixels = 0
+    for (y in 0 until base.height - deltaY) {
+      for (x in 0 until base.width - deltaX) {
+        if (isBlue(base.getPixel(x, y))) {
+          assertTrue(
+            "Expected rotated text pixel ($x,$y) to translate by the configured coordinates",
+            isBlue(shifted.getPixel(x + deltaX, y + deltaY))
+          )
+          comparedPixels += 1
+        }
+      }
+    }
+    assertTrue("Expected a visible rotated text background", comparedPixels > 0)
+  }
+
   private fun imageOptions(
     backgroundRotate: Int = 0,
+    backgroundScale: Double = 1.0,
     watermarkScale: Double = 1.0,
+    rotationCanvasMode: String = "expand",
+    saveFormat: String = "png",
+    matteColor: String = "#FFFFFF",
+    trimTransparentPadding: Boolean = false,
     watermarkPosition: JavaOnlyMap
   ): MarkImageOptions {
     return MarkImageOptions(
@@ -166,6 +471,8 @@ class ImageMarkerRendererTest {
           imageSource("background"),
           "rotate",
           backgroundRotate,
+          "scale",
+          backgroundScale,
           "alpha",
           1
         ),
@@ -178,13 +485,49 @@ class ImageMarkerRendererTest {
             watermarkScale,
             "position",
             watermarkPosition,
+            "trimTransparentPadding",
+            trimTransparentPadding,
             "alpha",
             1
           )
         ),
         "saveFormat",
-        "png"
+        saveFormat,
+        "matteColor",
+        matteColor,
+        "rotationCanvasMode",
+        rotationCanvasMode
       )
+    )
+  }
+
+  private fun textOptions(
+    x: Int,
+    y: Int,
+    style: JavaOnlyMap? = null
+  ): MarkTextOptions {
+    val watermark = JavaOnlyMap.of(
+      "text", "Marker",
+      "position", JavaOnlyMap.of("X", x, "Y", y)
+    )
+    if (style != null) {
+      watermark.putMap("style", style)
+    }
+    return MarkTextOptions(
+      JavaOnlyMap.of(
+        "backgroundImage", JavaOnlyMap.of(
+          "src", imageSource("background"),
+          "alpha", 1
+        ),
+        "watermarkTexts", JavaOnlyArray.of(watermark),
+        "saveFormat", "png"
+      )
+    )
+  }
+
+  private fun reactContext(): ReactApplicationContext {
+    return ReactApplicationContext(
+      InstrumentationRegistry.getInstrumentation().targetContext.applicationContext
     )
   }
 
@@ -217,7 +560,21 @@ class ImageMarkerRendererTest {
     }
   }
 
+  private fun paddedMarkerBitmap(): Bitmap {
+    return Bitmap.createBitmap(6, 6, Bitmap.Config.ARGB_8888).also { bitmap ->
+      for (y in 2 until 4) {
+        for (x in 2 until 4) {
+          bitmap.setPixel(x, y, Color.BLUE)
+        }
+      }
+    }
+  }
+
   private fun isBlackOrWhite(pixel: Int): Boolean {
     return pixel == Color.BLACK || pixel == Color.WHITE
+  }
+
+  private fun isBlue(pixel: Int): Boolean {
+    return Color.blue(pixel) > 200 && Color.red(pixel) < 80 && Color.green(pixel) < 80
   }
 }

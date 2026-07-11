@@ -5,6 +5,8 @@ This guide keeps the full visual cookbook for react-native-image-marker. Start f
 ## Contents
 
 - [Choosing an API](#choosing-an-api)
+- [Output transparency and rotation canvas](#output-transparency-and-rotation-canvas)
+- [Anchor insets and transparent watermark trim](#anchor-insets-and-transparent-watermark-trim)
 - [Responsive watermark size](#responsive-watermark-size)
 - [Text background fit](#text-background-fit)
 - [Text background stretchX](#text-background-stretchx)
@@ -35,6 +37,75 @@ Use the API that matches the watermark shape you are rendering:
 | `Marker.mark` | Ordered mixed text and image layers in one native render pass | Supported |
 
 `markText` and `markImage` remain first-class APIs. Use `mark` when text and image watermarks need to be composed together, especially when layer order matters.
+
+### Output transparency and rotation canvas
+
+JPEG has no alpha channel. If the composed output contains transparent pixels,
+JPEG encoding composites them over `matteColor`; the native default is white
+(`#FFFFFF`). Omitted `saveFormat` still defaults to JPEG for compatibility. Use
+`ImageFormat.png` when the saved result must retain transparency.
+Known image suffixes on `filename` (`.jpg`, `.jpeg`, and `.png`) are replaced
+with the suffix selected by `saveFormat` on both platforms.
+
+Rotating the background rotates the complete composed result. The compatibility
+default, `RotationCanvasMode.expand`, grows the canvas so the entire rotated
+image remains visible. `RotationCanvasMode.crop` keeps the original canvas
+dimensions and clips rotated content that falls outside them.
+
+```typescript
+import Marker, {
+  ImageFormat,
+  Position,
+  RotationCanvasMode,
+} from 'react-native-image-marker'
+
+await Marker.markImage({
+  backgroundImage: {
+    src: require('./images/test.jpg'),
+    rotate: 30,
+  },
+  watermarkImages: [{
+    src: require('./images/watermark.png'),
+    position: { position: Position.center },
+  }],
+  quality: 92,
+  saveFormat: ImageFormat.jpg,
+  matteColor: '#FFFFFF',
+  rotationCanvasMode: RotationCanvasMode.crop,
+})
+```
+
+`quality` uses a `0-100` range. It primarily affects JPEG compression; PNG is
+lossless.
+
+### Anchor insets and transparent watermark trim
+
+Named anchors preserve the compatibility inset of `20` when the corresponding
+`X` or `Y` offset is omitted. Set `edgeInset` to choose that fallback explicitly,
+including `edgeInset: 0` for a flush edge. Without a named `position`, coordinates
+are absolute and omitted axes keep their existing platform/API defaults. Set
+`edgeInset` (including `0`) when the
+fallback must be identical on both platforms. Numeric values are pixels;
+percentage values are relative to the background canvas.
+
+`trimTransparentPadding` removes fully transparent outer rows and columns from
+an image watermark before scale, rotation, and position are applied. It is
+disabled by default and does not modify the source asset.
+
+```typescript
+await Marker.markImage({
+  backgroundImage: { src: require('./images/test.jpg') },
+  watermarkImages: [{
+    src: require('./images/logo-with-transparent-padding.png'),
+    trimTransparentPadding: true,
+    position: {
+      position: Position.topLeft,
+      edgeInset: 0,
+    },
+  }],
+  saveFormat: ImageFormat.png,
+})
+```
 
 ### Responsive watermark size
 
@@ -628,6 +699,10 @@ Marker.mark({
 
 ### Background rotation
 
+Choose the output policy explicitly when rotating. `expand` preserves every
+rotated pixel and may enlarge the canvas; `crop` preserves the original canvas
+size. JPEG outputs use `matteColor` for any transparency that remains.
+
 **Sample**
 
 <p style="display:flex">
@@ -641,7 +716,11 @@ Marker.mark({
 <summary>example code</summary>
 
 ```typescript
-import Marker, { Position, TextBackgroundType } from "react-native-image-marker"
+import Marker, {
+  ImageFormat,
+  Position,
+  RotationCanvasMode,
+} from "react-native-image-marker"
 ···
 Marker.markImage({
   backgroundImage: {
@@ -655,6 +734,9 @@ Marker.markImage({
       position: Position.topLeft,
     },
   }],
+  saveFormat: ImageFormat.jpg,
+  matteColor: '#FFFFFF',
+  rotationCanvasMode: RotationCanvasMode.crop,
 });
 
 Marker.markText({
@@ -703,6 +785,8 @@ Marker.markText({
       underline: true,
     },
   }],
+  saveFormat: ImageFormat.png,
+  rotationCanvasMode: RotationCanvasMode.expand,
 })
 
 ```
@@ -742,6 +826,9 @@ Marker.markImage({
 
 ### Transparent background
 
+Use PNG when the saved result must retain the background alpha. JPEG always
+flattens transparency over `matteColor`.
+
 **Sample**
 
  <img src="../assets/alphabgonly.png" width='400'>
@@ -752,7 +839,7 @@ Marker.markImage({
 <summary>example code</summary>
 
 ```typescript
-import Marker, { Position, TextBackgroundType } from "react-native-image-marker"
+import Marker, { ImageFormat, Position } from "react-native-image-marker"
 ···
 Marker.markImage({
   backgroundImage: {
@@ -766,12 +853,16 @@ Marker.markImage({
       position: Position.topLeft,
     },
   }],
+  saveFormat: ImageFormat.png,
 });
 ```
 
 </details>
 
 ### Transparent icon
+
+The watermark can be translucent regardless of output format, but only PNG
+preserves alpha in the final saved image.
 
 **Sample**
 
@@ -783,7 +874,7 @@ Marker.markImage({
 <summary>example code</summary>
 
 ```typescript
-import Marker, { Position, TextBackgroundType } from "react-native-image-marker"
+import Marker, { ImageFormat, Position } from "react-native-image-marker"
 ···
 Marker.markImage({
   backgroundImage: {
@@ -797,6 +888,7 @@ Marker.markImage({
     },
     alpha: 0.5,
   }],
+  saveFormat: ImageFormat.png,
 });
 ```
 

@@ -59,7 +59,7 @@ extension RCTConvert {
             "bottomRight": MarkerPositionEnum.bottomRight,
         ]
         guard let value = value as? String, let mv = MyEnumMap[value] else {
-            return MarkerPositionEnum.topLeft
+            return MarkerPositionEnum.none
         }
         return mv
     }

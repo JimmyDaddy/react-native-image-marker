@@ -2,7 +2,6 @@ package com.jimmydaddy.imagemarker
 
 import android.graphics.Bitmap
 import android.graphics.Bitmap.CompressFormat
-import android.graphics.Canvas
 import android.os.Build
 import android.util.Base64
 import android.util.Log
@@ -13,13 +12,14 @@ import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
 import com.jimmydaddy.imagemarker.base.Constants.BASE64
 import com.jimmydaddy.imagemarker.base.Constants.IMAGE_MARKER_TAG
+import com.jimmydaddy.imagemarker.base.ErrorCode
 import com.jimmydaddy.imagemarker.base.MarkImageOptions
 import com.jimmydaddy.imagemarker.base.MarkTextOptions
 import com.jimmydaddy.imagemarker.base.MarkWatermarkOptions
 import com.jimmydaddy.imagemarker.base.MarkerError
 import com.jimmydaddy.imagemarker.base.Options
+import com.jimmydaddy.imagemarker.base.OutputFileName
 import com.jimmydaddy.imagemarker.base.SaveFormat
-import com.jimmydaddy.imagemarker.base.Utils.Companion.getBlankBitmap
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -27,9 +27,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.BufferedOutputStream
 import java.io.ByteArrayOutputStream
-import java.io.FileOutputStream
+import java.io.File
 import java.io.IOException
 import java.util.UUID
 
@@ -40,6 +39,7 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : NativeI
   context
 ) {
   private val moduleScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+  private val markerJobLimiter = MarkerJobLimiter(parallelism = 1)
 
   override fun invalidate() {
     moduleScope.cancel()
@@ -56,9 +56,16 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : NativeI
   ) {
     moduleScope.launch {
       try {
-        promise.resolve(block())
+        promise.resolve(markerJobLimiter.run(block))
       } catch (e: CancellationException) {
         Log.d(IMAGE_MARKER_TAG, "marker job cancelled")
+      } catch (error: OutOfMemoryError) {
+        val markerError = MarkerError(
+          ErrorCode.RENDER_FAILED,
+          "Unable to complete marker image"
+        ).apply { initCause(error) }
+        Log.d(IMAGE_MARKER_TAG, "error: " + markerError.message)
+        promise.rejectMarkerError(markerError)
       } catch (e: Exception) {
         Log.d(IMAGE_MARKER_TAG, "error: " + e.message)
         promise.rejectMarkerError(e)
@@ -81,21 +88,23 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : NativeI
     dest: String,
     opts: MarkImageOptions
   ): String {
-    var icon: Bitmap? = null
-    try {
-      icon = withContext(Dispatchers.Default) {
-        ImageMarkerRenderer.renderImageWatermarks(
-          bg,
-          markers,
-          opts,
-          recycleMarkerBitmaps = false
-        )
-      }
-      return writeResult(icon, dest, opts)
-    } finally {
-      recycleBitmap(icon)
-      recycleBitmap(bg)
-      recycleBitmaps(markers)
+    return withContext(Dispatchers.Default) {
+      OwnedResourcePipeline.run(
+        inputs = listOf(bg).plus(markers),
+        releaseInput = ::recycleBitmap,
+        render = {
+          ImageMarkerRenderer.renderImageWatermarks(
+            bg,
+            markers,
+            opts,
+            recycleMarkerBitmaps = false
+          )
+        },
+        // The renderer owns a distinct output bitmap. Inputs are released before encoding,
+        // which is often the second-largest memory peak in the pipeline.
+        encode = { icon -> writeResult(icon, dest, opts) },
+        releaseOutput = ::recycleBitmap
+      )
     }
   }
 
@@ -104,47 +113,16 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : NativeI
     dest: String,
     opts: MarkTextOptions
   ): String {
-    var icon: Bitmap? = null
-    try {
-      icon = withContext(Dispatchers.Default) {
-        renderTextWatermarks(bg, opts)
-      }
-      return writeResult(icon, dest, opts)
-    } finally {
-      recycleBitmap(icon)
-      recycleBitmap(bg)
-    }
-  }
-
-  private fun renderTextWatermarks(
-    bg: Bitmap,
-    opts: MarkTextOptions
-  ): Bitmap {
-    var icon: Bitmap? = null
-    try {
-      val height = bg.height
-      val width = bg.width
-      icon = getBlankBitmap(width, height)
-        ?: throw IllegalStateException("Failed to create output bitmap")
-      val canvas = Canvas(icon)
-      canvas.save()
-      canvas.drawBitmap(bg, 0f, 0f, opts.backgroundImage.applyStyle())
-      canvas.restore()
-
-      for (text in opts.watermarkTexts) {
-        text.applyStyle(this.reactApplicationContext, canvas, width, height)
-      }
-
-      if (opts.backgroundImage.rotate != 0f) {
-        val rotatedIcon = ImageProcess.rotate(icon, opts.backgroundImage.rotate)
-        recycleBitmap(icon)
-        icon = rotatedIcon
-      }
-
-      return icon
-    } catch (e: Exception) {
-      recycleBitmap(icon)
-      throw e
+    return withContext(Dispatchers.Default) {
+      OwnedResourcePipeline.run(
+        inputs = listOf(bg),
+        releaseInput = ::recycleBitmap,
+        render = {
+          ImageMarkerRenderer.renderTextWatermarks(bg, opts, reactApplicationContext)
+        },
+        encode = { icon -> writeResult(icon, dest, opts) },
+        releaseOutput = ::recycleBitmap
+      )
     }
   }
 
@@ -154,22 +132,22 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : NativeI
     dest: String,
     opts: MarkWatermarkOptions
   ): String {
-    var icon: Bitmap? = null
-    try {
-      icon = withContext(Dispatchers.Default) {
-        ImageMarkerRenderer.renderWatermarks(
-          bg,
-          markers,
-          opts,
-          context,
-          recycleMarkerBitmaps = false
-        )
-      }
-      return writeResult(icon, dest, opts)
-    } finally {
-      recycleBitmap(icon)
-      recycleBitmap(bg)
-      recycleBitmaps(markers)
+    return withContext(Dispatchers.Default) {
+      OwnedResourcePipeline.run(
+        inputs = listOf(bg).plus(markers),
+        releaseInput = ::recycleBitmap,
+        render = {
+          ImageMarkerRenderer.renderWatermarks(
+            bg,
+            markers,
+            opts,
+            context,
+            recycleMarkerBitmaps = false
+          )
+        },
+        encode = { icon -> writeResult(icon, dest, opts) },
+        releaseOutput = ::recycleBitmap
+      )
     }
   }
 
@@ -178,32 +156,46 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : NativeI
     dest: String,
     opts: Options
   ): String = withContext(Dispatchers.IO) {
-    if (dest == BASE64) {
-      return@withContext encodeBase64(icon, opts)
-    }
-
-    BufferedOutputStream(FileOutputStream(dest)).use { stream ->
-      if (!icon.compress(getSaveFormat(opts.saveFormat), opts.quality, stream)) {
-        throw IOException("Failed to encode marker image")
+    try {
+      if (dest == BASE64) {
+        return@withContext encodeBase64(icon, opts)
       }
-      stream.flush()
+
+      AtomicFileWriter.write(File(dest)) { stream ->
+        if (!icon.compress(getSaveFormat(opts.saveFormat), opts.quality, stream)) {
+          throw IOException("Failed to encode marker image")
+        }
+      }
+      dest
+    } catch (error: OutOfMemoryError) {
+      throw encodingOutOfMemory(error)
     }
-    dest
   }
 
   private fun encodeBase64(
     icon: Bitmap,
     opts: Options
   ): String {
-    val bitmapBytes = ByteArrayOutputStream().use { stream ->
-      if (!icon.compress(CompressFormat.PNG, opts.quality, stream)) {
-        throw IOException("Failed to encode marker image")
+    try {
+      val bitmapBytes = ByteArrayOutputStream().use { stream ->
+        if (!icon.compress(CompressFormat.PNG, opts.quality, stream)) {
+          throw IOException("Failed to encode marker image")
+        }
+        stream.flush()
+        stream.toByteArray()
       }
-      stream.flush()
-      stream.toByteArray()
+      val result = Base64.encodeToString(bitmapBytes, Base64.DEFAULT)
+      return "data:image/png;base64,$result"
+    } catch (error: OutOfMemoryError) {
+      throw encodingOutOfMemory(error)
     }
-    val result = Base64.encodeToString(bitmapBytes, Base64.DEFAULT)
-    return "data:image/png;base64,$result"
+  }
+
+  private fun encodingOutOfMemory(error: OutOfMemoryError): MarkerError {
+    return MarkerError(
+      ErrorCode.RENDER_FAILED,
+      "Unable to encode marker image"
+    ).apply { initCause(error) }
   }
 
   private fun recycleBitmaps(bitmaps: List<Bitmap>) {
@@ -237,9 +229,13 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : NativeI
           markOpts.backgroundImage,
         )
       )
-      val bg = bitmaps[0]
-      val dest = generateCacheFilePathForMarker(markOpts.filename, markOpts.saveFormat)
-      markImageByText(bg, dest, markOpts)
+      try {
+        val bg = bitmaps[0]
+        val dest = generateCacheFilePathForMarker(markOpts.filename, markOpts.saveFormat)
+        markImageByText(bg, dest, markOpts)
+      } finally {
+        recycleBitmaps(bitmaps)
+      }
     }
   }
 
@@ -259,10 +255,14 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : NativeI
         concatenatedArray,
         listOf(true).plus(List(markers.size) { false })
       )
-      val bg = bitmaps[0]
-      val markerBitmaps = bitmaps.drop(1)
-      val dest = generateCacheFilePathForMarker(markOpts.filename, markOpts.saveFormat)
-      markImageByBitmap(bg, markerBitmaps, dest, markOpts)
+      try {
+        val bg = bitmaps[0]
+        val markerBitmaps = bitmaps.drop(1)
+        val dest = generateCacheFilePathForMarker(markOpts.filename, markOpts.saveFormat)
+        markImageByBitmap(bg, markerBitmaps, dest, markOpts)
+      } finally {
+        recycleBitmaps(bitmaps)
+      }
     }
   }
 
@@ -282,10 +282,14 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : NativeI
         concatenatedArray,
         listOf(true).plus(List(markers.size) { false })
       )
-      val bg = bitmaps[0]
-      val markerBitmaps = bitmaps.drop(1)
-      val dest = generateCacheFilePathForMarker(markOpts.filename, markOpts.saveFormat)
-      markImageByWatermarks(bg, markerBitmaps, dest, markOpts)
+      try {
+        val bg = bitmaps[0]
+        val markerBitmaps = bitmaps.drop(1)
+        val dest = generateCacheFilePathForMarker(markOpts.filename, markOpts.saveFormat)
+        markImageByWatermarks(bg, markerBitmaps, dest, markOpts)
+      } finally {
+        recycleBitmaps(bitmaps)
+      }
     }
   }
 
@@ -297,14 +301,9 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : NativeI
     if (saveFormat != null && saveFormat === SaveFormat.BASE64) {
       return BASE64
     }
-    val ext =
-      if (saveFormat != null && (saveFormat === SaveFormat.PNG)) ".png" else ".jpg"
-    return if (null != filename) {
-      if (filename.endsWith(".jpg") || filename.endsWith(".png")) "$cacheDir/$filename" else "$cacheDir/$filename$ext"
-    } else {
-      val name = UUID.randomUUID().toString() + "_image_marker"
-      "$cacheDir/$name$ext"
-    }
+    val generatedName = UUID.randomUUID().toString() + "_image_marker"
+    val outputFileName = OutputFileName.resolve(filename, saveFormat, generatedName)
+    return "$cacheDir/$outputFileName"
   }
 
   companion object {

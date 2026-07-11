@@ -6,6 +6,11 @@ import {
   normalizeImageMarkOptions,
   normalizeTextMarkOptions,
 } from './normalize';
+import {
+  validateImageMarkOptions,
+  validateMarkOptions,
+  validateTextMarkOptions,
+} from './validate';
 
 const LINKING_ERROR =
   `The package 'react-native-image-marker' doesn't seem to be linked. Make sure: \n\n` +
@@ -46,6 +51,18 @@ export enum ImageFormat {
   jpg = 'jpg',
   // base64 string
   base64 = 'base64',
+}
+
+/**
+ * Controls the output canvas after the composed image is rotated.
+ *
+ * `expand` preserves the entire rotated image by growing the output canvas.
+ * `crop` keeps the original canvas dimensions and clips content outside it.
+ * @enum
+ */
+export enum RotationCanvasMode {
+  expand = 'expand',
+  crop = 'crop',
 }
 
 /**
@@ -179,6 +196,18 @@ export interface PositionOptions {
   X?: number | string;
   Y?: number | string;
   position?: Position;
+  /**
+   * Fallback distance from the selected anchor edges when the matching `X` or
+   * `Y` value is omitted. Named anchors use the compatibility default `20`.
+   * Without a named anchor, set this value when omitted axes must behave the
+   * same on every platform; otherwise legacy text/image defaults are preserved.
+   * Percentages are resolved against the background image.
+   * @example
+   * edgeInset: 0
+   * // or
+   * edgeInset: '5%'
+   */
+  edgeInset?: number | string;
 }
 
 /**
@@ -212,6 +241,7 @@ export interface PositionOptions {
 export interface TextStyle {
   /**
    * font color
+   * @defaultValue '#000000'
    * @example
    *  color: '#aacc22'
    */
@@ -570,7 +600,7 @@ export interface TextOptions {
  *      rotate: 45
  *    }
  *  }],
- *  quality: 1,
+ *  quality: 100,
  *  filename: 'test',
  *  saveFormat: ImageFormat.jpg,
  */
@@ -648,6 +678,23 @@ export interface TextMarkOptions {
    */
   saveFormat?: ImageFormat;
   /**
+   * Matte color used when an output with transparency is encoded as JPEG.
+   * JPEG has no alpha channel, so transparent pixels are composited over this
+   * color before encoding.
+   * @defaultValue `#FFFFFF`
+   * @example
+   * matteColor: '#FFFFFF'
+   */
+  matteColor?: string;
+  /**
+   * Controls whether background rotation expands the output canvas or crops
+   * back to the original canvas dimensions.
+   * @defaultValue RotationCanvasMode.expand
+   * @example
+   * rotationCanvasMode: RotationCanvasMode.crop
+   */
+  rotationCanvasMode?: RotationCanvasMode;
+  /**
    * @deprecated since 1.2.0
    * max image size see #49 #42
    * android only
@@ -715,6 +762,12 @@ export interface ImageOptions {
  **/
 export interface WatermarkImageOptions extends ImageOptions {
   position?: PositionOptions;
+  /**
+   * Remove fully transparent outer rows and columns before scaling, rotating,
+   * and positioning the watermark.
+   * @defaultValue false
+   */
+  trimTransparentPadding?: boolean;
 }
 
 /**
@@ -748,7 +801,7 @@ export interface WatermarkImageOptions extends ImageOptions {
  *     },
  *    },
  *  ],
- *  quality: 1,
+ *  quality: 100,
  *  filename: 'test',
  *  saveFormat: ImageFormat.jpg,
  *
@@ -778,7 +831,7 @@ export interface ImageMarkOptions {
    *    alpha: 0.5
    *  }
    */
-  watermarkImage?: ImageOptions;
+  watermarkImage?: WatermarkImageOptions;
   /**
    * @since 1.1.0
    * @deprecated use watermarkImages instead
@@ -794,10 +847,10 @@ export interface ImageMarkOptions {
    */
   watermarkPositions?: PositionOptions; // watermark position options see @PositionOptions
   /**
-   * image quality `0-1`
-   * @defaultValue 1
+   * image quality `0-100`, `100` is best quality.
+   * @defaultValue 100
    * @example
-   * quality: 1
+   * quality: 100
    */
   quality?: number;
   /**
@@ -813,6 +866,17 @@ export interface ImageMarkOptions {
    * saveFormat: ImageFormat.jpg
    */
   saveFormat?: ImageFormat;
+  /**
+   * Matte color used when an output with transparency is encoded as JPEG.
+   * @defaultValue `#FFFFFF`
+   */
+  matteColor?: string;
+  /**
+   * Controls whether background rotation expands the output canvas or crops
+   * back to the original canvas dimensions.
+   * @defaultValue RotationCanvasMode.expand
+   */
+  rotationCanvasMode?: RotationCanvasMode;
   /**
    * @deprecated since 1.2.0
    * max image size see #49 #42
@@ -840,7 +904,7 @@ export interface ImageMarkOptions {
    *  }
    * }]
    **/
-  watermarkImages: Array<WatermarkImageOptions>;
+  watermarkImages?: Array<WatermarkImageOptions>;
 }
 
 export interface TextWatermarkLayer extends TextOptions {
@@ -904,7 +968,7 @@ export interface MarkOptions {
    * @deprecated use watermarkImages instead
    * Legacy single image watermark options.
    */
-  watermarkImage?: ImageOptions;
+  watermarkImage?: WatermarkImageOptions;
   /**
    * @deprecated use position on watermarkImages instead
    * Legacy single image watermark position options.
@@ -928,6 +992,17 @@ export interface MarkOptions {
    * @defaultValue `jpg`
    */
   saveFormat?: ImageFormat;
+  /**
+   * Matte color used when an output with transparency is encoded as JPEG.
+   * @defaultValue `#FFFFFF`
+   */
+  matteColor?: string;
+  /**
+   * Controls whether background rotation expands the output canvas or crops
+   * back to the original canvas dimensions.
+   * @defaultValue RotationCanvasMode.expand
+   */
+  rotationCanvasMode?: RotationCanvasMode;
   /**
    * @deprecated since 1.2.0
    * max image size
@@ -1049,6 +1124,8 @@ class Marker {
       throw new Error('please set watermark text!');
     }
 
+    validateTextMarkOptions(options);
+
     return getImageMarker().markWithText(normalizeTextMarkOptions(options));
   }
 
@@ -1114,6 +1191,8 @@ class Marker {
       throw new Error('please set mark image!');
     }
 
+    validateImageMarkOptions(options);
+
     return getImageMarker().markWithImage(normalizeImageMarkOptions(options));
   }
 
@@ -1156,6 +1235,7 @@ class Marker {
     if (!nativeOptions.watermarks || nativeOptions.watermarks.length === 0) {
       throw new Error('please set watermark text or image!');
     }
+    validateMarkOptions(options);
     return getImageMarker().markWithWatermarks(nativeOptions);
   }
 }

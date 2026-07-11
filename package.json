@@ -29,7 +29,10 @@
   ],
   "scripts": {
     "test": "jest",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && npm run typecheck:api",
+    "typecheck:api": "tsc --noEmit --strict --skipLibCheck --esModuleInterop --verbatimModuleSyntax --moduleResolution node --module esnext --target esnext src/__tests__/image-mark-options.typecheck.ts",
+    "typecheck:example": "npm --prefix example run typecheck",
+    "typecheck:expo-example": "npm --prefix expo-example run typecheck",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "prepack": "bob build",
     "release": "release-it",
@@ -38,7 +41,7 @@
     "bootstrap": "yarn example && yarn install && yarn example pods && yarn expo-example && yarn expo-example expo-install",
     "bootstrap-m1": "yarn example && yarn install && yarn example m1-pods",
     "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build",
-    "docs": "typedoc --excludePrivate --tsconfig tsconfig.doc.json && node scripts/copy-doc-assets.js",
+    "docs": "typedoc --gitRevision master --excludePrivate --tsconfig tsconfig.doc.json && node scripts/copy-doc-assets.js",
     "expo-install": "yarn expo-example expo-install"
   },
   "keywords": [
@@ -89,7 +92,7 @@
     "react-native": "0.73.3",
     "react-native-builder-bob": "^0.40.15",
     "release-it": "^17.10.0",
-    "typedoc": "^0.28.14",
+    "typedoc": "0.28.19",
     "typedoc-plugin-localization": "^3.1.0",
     "typedoc-plugin-rename-defaults": "^0.7.3",
     "typescript": "^5.9.3"
@@ -106,6 +109,10 @@
   },
   "jest": {
     "preset": "react-native",
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "<rootDir>/src/__tests__/.*\\.typecheck\\.ts$"
+    ],
     "modulePathIgnorePatterns": [
       "<rootDir>/example/node_modules",
       "<rootDir>/lib/"

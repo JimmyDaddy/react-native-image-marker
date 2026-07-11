@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Dimensions,
+  Image,
+  type ImageSourcePropType,
   Modal,
   Platform,
   SafeAreaView,
@@ -14,10 +16,12 @@ import {
 import Marker, {
   ImageFormat,
   Position,
+  RotationCanvasMode,
   TextBackgroundType,
 } from 'react-native-image-marker';
 import Toast from 'react-native-toast-message';
 import { filesize } from 'filesize';
+import { inflate } from 'pako';
 import {
   AppButton,
   ArchitecturePanel,
@@ -60,6 +64,8 @@ export type ImageMarkerLabProps = {
   featureVariant: FeatureVariant;
   pickImage: (target: PickImageTarget) => Promise<string | null>;
   getFileSize: (path: string) => Promise<number>;
+  readFileBase64: (path: string) => Promise<string>;
+  removeFile: (path: string) => Promise<void>;
 };
 
 type MarkerConfig = {
@@ -115,6 +121,254 @@ const textAlignOptions: MarkerConfig['textAlign'][] = [
 const exampleFontName = 'MaShanZheng-Regular';
 const sharpWatermarkDataUrl =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAA1klEQVR42u3aWw6DMAwEwNz/0u0RaGRn47YTiS8eiQbJYJa11np1bk/j6fjd/Q0bAAAADgLsAu2O6noAAABwtwh2n/91TwEAAIYBdE9YfTE6UPQAAABwsAhWFxQoegAAANgogulx4YYAAAAg2MwMvD4AAAAuNjMDmiUAAP4aIB1mdu8vh6sAAACI/qBQvV53+AoAAIC7zUi6WdouggAA/DhAOphIh58fzAcAAICL4eiA5gkAAADBCQeGrwAAADj4wWJ6uAoAAIDsi1A6/Cz/IAEAwG8DvAHibmyc3jWFggAAAABJRU5ErkJggg==';
+const paddedWatermarkDataUrl =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAS0lEQVR42u3SsQ0AIBADsey/dBAjAF8hu0kfXQIAAAAAAMeads/tfvHB4wkKUIACFKAABShAAQpQgAIUoAAFKEABClAAAAAAAACMWikxfZ9KwPGPAAAAAElFTkSuQmCC';
+const asymmetricWatermarkDataUrl =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAgCAYAAABU1PscAAAAiklEQVR42mN47+LyfyCw0tE4qmCGUQ8MJg+AwGgMjHpg1AOjHhj1AEkeoJZBA4VHPTDqgVEPDHUPWDd9+08J/nVGlGqYX1yLZD2DzgOkemJQeoAUTwxaDxDriUHtAWI8QTMPYHMMuXjIewCfJ4aMB3B5YjQGaJ2JBywPDPlSaMTXA6NtodHWKJ0wAK4zu/VjvPaxAAAAAElFTkSuQmCC';
+const solidWatermarkBackgroundDataUrl =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAgCAYAAABU1PscAAAAM0lEQVR42u3PMQ0AAAwDoPo33WrYuQQckD4XAQEBAQEBAQEBAQEBAQEBAQEBAQEBAYGrAX6h6VrZbbgHAAAAAElFTkSuQmCC';
+
+const base64Alphabet =
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+
+function decodeBase64Bytes(value: string) {
+  const encoded = value.slice(value.indexOf(',') + 1).replace(/\s/g, '');
+  if (encoded.length % 4 !== 0) {
+    throw new Error('Invalid base64 output length');
+  }
+
+  const padding = encoded.endsWith('==') ? 2 : encoded.endsWith('=') ? 1 : 0;
+  const result = new Uint8Array((encoded.length / 4) * 3 - padding);
+  let outputIndex = 0;
+  for (let index = 0; index < encoded.length; index += 4) {
+    const first = base64Alphabet.indexOf(encoded[index]);
+    const second = base64Alphabet.indexOf(encoded[index + 1]);
+    const third =
+      encoded[index + 2] === '='
+        ? 0
+        : base64Alphabet.indexOf(encoded[index + 2]);
+    const fourth =
+      encoded[index + 3] === '='
+        ? 0
+        : base64Alphabet.indexOf(encoded[index + 3]);
+    if (first < 0 || second < 0 || third < 0 || fourth < 0) {
+      throw new Error('Invalid base64 output data');
+    }
+
+    const bits = first * 262144 + second * 4096 + third * 64 + fourth;
+    if (outputIndex < result.length) {
+      result[outputIndex++] = Math.floor(bits / 65536) % 256;
+    }
+    if (outputIndex < result.length) {
+      result[outputIndex++] = Math.floor(bits / 256) % 256;
+    }
+    if (outputIndex < result.length) {
+      result[outputIndex++] = bits % 256;
+    }
+  }
+  return result;
+}
+
+function readBigEndianUint32(bytes: Uint8Array, offset: number) {
+  return (
+    bytes[offset] * 16777216 +
+    bytes[offset + 1] * 65536 +
+    bytes[offset + 2] * 256 +
+    bytes[offset + 3]
+  );
+}
+
+function paethPredictor(left: number, up: number, upperLeft: number) {
+  const estimate = left + up - upperLeft;
+  const leftDistance = Math.abs(estimate - left);
+  const upDistance = Math.abs(estimate - up);
+  const upperLeftDistance = Math.abs(estimate - upperLeft);
+  if (leftDistance <= upDistance && leftDistance <= upperLeftDistance) {
+    return left;
+  }
+  return upDistance <= upperLeftDistance ? up : upperLeft;
+}
+
+function channelCountForPngColorType(colorType: number) {
+  switch (colorType) {
+    case 0:
+      return 1;
+    case 2:
+      return 3;
+    case 4:
+      return 2;
+    case 6:
+      return 4;
+    default:
+      throw new Error(`Unsupported PNG color type ${colorType}`);
+  }
+}
+
+function decodePngRgba(base64: string) {
+  const bytes = decodeBase64Bytes(base64);
+  const signature = [137, 80, 78, 71, 13, 10, 26, 10];
+  if (signature.some((value, index) => bytes[index] !== value)) {
+    throw new Error('Orientation probe output is not a PNG');
+  }
+
+  let offset = signature.length;
+  let pngWidth = 0;
+  let pngHeight = 0;
+  let bitDepth = 0;
+  let colorType = -1;
+  let compressionMethod = -1;
+  let filterMethod = -1;
+  let interlaceMethod = -1;
+  const idatChunks: Uint8Array[] = [];
+  let idatLength = 0;
+  while (offset + 12 <= bytes.length) {
+    const length = readBigEndianUint32(bytes, offset);
+    const typeOffset = offset + 4;
+    const dataOffset = typeOffset + 4;
+    const nextOffset = dataOffset + length + 4;
+    if (nextOffset > bytes.length) {
+      throw new Error('Orientation probe contains a truncated PNG chunk');
+    }
+
+    const type = String.fromCharCode(
+      bytes[typeOffset],
+      bytes[typeOffset + 1],
+      bytes[typeOffset + 2],
+      bytes[typeOffset + 3]
+    );
+    if (type === 'IHDR') {
+      if (length !== 13 || pngWidth !== 0 || pngHeight !== 0) {
+        throw new Error('Orientation probe contains an invalid PNG header');
+      }
+      pngWidth = readBigEndianUint32(bytes, dataOffset);
+      pngHeight = readBigEndianUint32(bytes, dataOffset + 4);
+      bitDepth = bytes[dataOffset + 8];
+      colorType = bytes[dataOffset + 9];
+      compressionMethod = bytes[dataOffset + 10];
+      filterMethod = bytes[dataOffset + 11];
+      interlaceMethod = bytes[dataOffset + 12];
+    } else if (type === 'IDAT') {
+      idatChunks.push(bytes.slice(dataOffset, dataOffset + length));
+      idatLength += length;
+    } else if (type === 'IEND') {
+      break;
+    }
+    offset = nextOffset;
+  }
+
+  if (pngWidth === 0 || pngHeight === 0 || idatLength === 0) {
+    throw new Error('Orientation probe PNG is missing raster data');
+  }
+  if (
+    bitDepth !== 8 ||
+    compressionMethod !== 0 ||
+    filterMethod !== 0 ||
+    interlaceMethod !== 0
+  ) {
+    throw new Error(
+      `Unsupported PNG format: depth=${bitDepth}, compression=${compressionMethod}, ` +
+        `filter=${filterMethod}, interlace=${interlaceMethod}`
+    );
+  }
+
+  const channelCount = channelCountForPngColorType(colorType);
+  const compressed = new Uint8Array(idatLength);
+  let compressedOffset = 0;
+  idatChunks.forEach((chunk) => {
+    compressed.set(chunk, compressedOffset);
+    compressedOffset += chunk.length;
+  });
+  const filtered = inflate(compressed);
+  const rowLength = pngWidth * channelCount;
+  const expectedLength = pngHeight * (rowLength + 1);
+  if (filtered.length !== expectedLength) {
+    throw new Error(
+      `PNG scanline length ${filtered.length} does not match ${expectedLength}`
+    );
+  }
+
+  const samples = new Uint8Array(pngHeight * rowLength);
+  for (let row = 0; row < pngHeight; row += 1) {
+    const filteredOffset = row * (rowLength + 1);
+    const filterType = filtered[filteredOffset];
+    if (filterType > 4) {
+      throw new Error(`Unsupported PNG scanline filter ${filterType}`);
+    }
+    const rowOffset = row * rowLength;
+    const previousRowOffset = rowOffset - rowLength;
+    for (let column = 0; column < rowLength; column += 1) {
+      const encoded = filtered[filteredOffset + column + 1];
+      const left =
+        column >= channelCount ? samples[rowOffset + column - channelCount] : 0;
+      const up = row > 0 ? samples[previousRowOffset + column] : 0;
+      const upperLeft =
+        row > 0 && column >= channelCount
+          ? samples[previousRowOffset + column - channelCount]
+          : 0;
+      let predictor = 0;
+      switch (filterType) {
+        case 1:
+          predictor = left;
+          break;
+        case 2:
+          predictor = up;
+          break;
+        case 3:
+          predictor = Math.floor((left + up) / 2);
+          break;
+        case 4:
+          predictor = paethPredictor(left, up, upperLeft);
+          break;
+      }
+      samples[rowOffset + column] = (encoded + predictor) % 256;
+    }
+  }
+
+  const rgba = new Uint8Array(pngWidth * pngHeight * 4);
+  for (let pixel = 0; pixel < pngWidth * pngHeight; pixel += 1) {
+    const sourceOffset = pixel * channelCount;
+    const rgbaOffset = pixel * 4;
+    if (colorType === 0) {
+      const gray = samples[sourceOffset];
+      rgba[rgbaOffset] = gray;
+      rgba[rgbaOffset + 1] = gray;
+      rgba[rgbaOffset + 2] = gray;
+      rgba[rgbaOffset + 3] = 255;
+    } else if (colorType === 2) {
+      rgba[rgbaOffset] = samples[sourceOffset];
+      rgba[rgbaOffset + 1] = samples[sourceOffset + 1];
+      rgba[rgbaOffset + 2] = samples[sourceOffset + 2];
+      rgba[rgbaOffset + 3] = 255;
+    } else if (colorType === 4) {
+      const gray = samples[sourceOffset];
+      rgba[rgbaOffset] = gray;
+      rgba[rgbaOffset + 1] = gray;
+      rgba[rgbaOffset + 2] = gray;
+      rgba[rgbaOffset + 3] = samples[sourceOffset + 1];
+    } else {
+      rgba.set(samples.subarray(sourceOffset, sourceOffset + 4), rgbaOffset);
+    }
+  }
+
+  return { width: pngWidth, height: pngHeight, rgba };
+}
+
+function assertSamePngRaster(actualBase64: string, referenceBase64: string) {
+  const actual = decodePngRgba(actualBase64);
+  const reference = decodePngRgba(referenceBase64);
+  if (actual.width !== reference.width || actual.height !== reference.height) {
+    throw new Error(
+      `Watermark raster size ${actual.width}x${actual.height} does not match ` +
+        `the upright reference ${reference.width}x${reference.height}`
+    );
+  }
+  if (
+    actual.rgba.length !== reference.rgba.length ||
+    actual.rgba.some((value, index) => value !== reference.rgba[index])
+  ) {
+    throw new Error('Watermark pixels do not match the upright reference');
+  }
+}
 
 const normalizeOffset = (value: OffsetValue) => {
   if (typeof value === 'string' && value.trim() === '') {
@@ -130,6 +384,16 @@ const formatResultUri = (path: string, saveFormat: ImageFormat) => {
 
   return Platform.OS === 'android' ? `file:${path}` : path;
 };
+
+const getImageSize = (uri: string) =>
+  new Promise<{ width: number; height: number }>((resolve, reject) => {
+    Image.getSize(
+      uri,
+      (imageWidth, imageHeight) =>
+        resolve({ width: imageWidth, height: imageHeight }),
+      (error) => reject(error)
+    );
+  });
 
 function sourceFromBackgroundFormat(
   format: BackgroundFormat,
@@ -185,6 +449,7 @@ function useViewModel(props: ImageMarkerLabProps) {
   const [fileSize, setFileSize] = useState('0 B');
   const [fontSize, setFontSize] = useState(36);
   const [lastRun, setLastRun] = useState('Ready');
+  const [resultContract, setResultContract] = useState('');
 
   useEffect(() => {
     if (backgroundFormat !== 'picked image') {
@@ -690,6 +955,235 @@ function useViewModel(props: ImageMarkerLabProps) {
     }
   }
 
+  async function runRotationOutputPolicyFeature() {
+    setBackgroundFormat('normal image');
+    applyConfig({
+      image: assets.bg,
+      marker: paddedWatermarkDataUrl,
+      waterMarkType: 'image',
+      position: Position.center,
+      X: 0,
+      Y: 0,
+      saveFormat: ImageFormat.jpg,
+      watermarkScale: 1,
+      watermarkRotate: 0,
+      watermarkAlpha: 1,
+      backgroundScale: 1,
+      backgroundRotate: 30,
+      backgroundAlpha: 1,
+      quality: 100,
+    });
+    setLastRun('Rotation crop + JPG matte');
+    setUri('');
+    setShow(false);
+    setFileSize('0 B');
+    setResultContract('');
+    setLoading(true);
+
+    try {
+      const outputOptions = {
+        backgroundImage: {
+          src: assets.bg,
+          scale: 1,
+          rotate: 30,
+        },
+        quality: 100,
+        saveFormat: ImageFormat.jpg,
+        rotationCanvasMode: RotationCanvasMode.crop,
+      };
+      const watermarkOptions = {
+        src: paddedWatermarkDataUrl,
+        scale: 1,
+        position: {
+          position: Position.center,
+          X: 0,
+          Y: 0,
+          edgeInset: 0,
+        },
+      };
+      const path = await Marker.markImage({
+        ...outputOptions,
+        watermarkImages: [
+          { ...watermarkOptions, trimTransparentPadding: true },
+        ],
+        matteColor: '#F8FAFC',
+      });
+
+      let untrimmedProbePath = '';
+      let darkMatteProbePath = '';
+      try {
+        untrimmedProbePath = await Marker.markImage({
+          ...outputOptions,
+          watermarkImages: [
+            { ...watermarkOptions, trimTransparentPadding: false },
+          ],
+          matteColor: '#F8FAFC',
+          filename: 'rotation-output-untrimmed-probe',
+        });
+        darkMatteProbePath = await Marker.markImage({
+          ...outputOptions,
+          watermarkImages: [
+            { ...watermarkOptions, trimTransparentPadding: true },
+          ],
+          matteColor: '#000000',
+          filename: 'rotation-output-dark-matte-probe',
+        });
+
+        const [outputBytes, untrimmedBytes, darkMatteBytes] = await Promise.all(
+          [
+            props.readFileBase64(path),
+            props.readFileBase64(untrimmedProbePath),
+            props.readFileBase64(darkMatteProbePath),
+          ]
+        );
+        const normalizedOutputBytes = outputBytes.replace(/\s/g, '');
+        if (!normalizedOutputBytes.startsWith('/9j/')) {
+          throw new Error('Output bytes do not contain a JPEG signature');
+        }
+        if (normalizedOutputBytes === untrimmedBytes.replace(/\s/g, '')) {
+          throw new Error(
+            'Transparent-padding trim did not affect output pixels'
+          );
+        }
+        if (normalizedOutputBytes === darkMatteBytes.replace(/\s/g, '')) {
+          throw new Error('JPEG matte color did not affect output pixels');
+        }
+      } finally {
+        await Promise.all(
+          [untrimmedProbePath, darkMatteProbePath]
+            .filter(Boolean)
+            .map((probePath) =>
+              props.removeFile(probePath).catch(() => undefined)
+            )
+        );
+      }
+
+      const outputUri = formatResultUri(path, ImageFormat.jpg);
+      const source = Image.resolveAssetSource(assets.bg as ImageSourcePropType);
+      const outputSize = await getImageSize(outputUri);
+      if (!path.toLowerCase().endsWith('.jpg')) {
+        throw new Error(`Expected a .jpg output path, received ${path}`);
+      }
+      if (
+        Math.round(outputSize.width) !== Math.round(source.width) ||
+        Math.round(outputSize.height) !== Math.round(source.height)
+      ) {
+        throw new Error(
+          `Crop output ${outputSize.width}x${outputSize.height} did not preserve ` +
+            `${source.width}x${source.height}`
+        );
+      }
+
+      setUri(outputUri);
+      setShow(true);
+      setResultContract('rotation-output-validated');
+      await updateFileSize(path, ImageFormat.jpg);
+    } catch (error) {
+      console.log('rotation output policy error', error);
+      Toast.show({
+        type: 'error',
+        text1: 'rotation output policy failed',
+        text2: error instanceof Error ? error.message : String(error),
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function runWatermarkOrientationFeature() {
+    setBackgroundFormat('normal image');
+    applyConfig({
+      image: solidWatermarkBackgroundDataUrl,
+      marker: asymmetricWatermarkDataUrl,
+      waterMarkType: 'image',
+      position: Position.topLeft,
+      X: 0,
+      Y: 0,
+      saveFormat: ImageFormat.png,
+      watermarkScale: 1,
+      watermarkRotate: 0,
+      watermarkAlpha: 1,
+      backgroundScale: 1,
+      backgroundRotate: 0,
+      backgroundAlpha: 1,
+      quality: 100,
+    });
+    setLastRun('Watermark orientation');
+    setUri('');
+    setShow(false);
+    setFileSize('0 B');
+    setResultContract('');
+    setLoading(true);
+
+    let referencePath = '';
+    try {
+      const watermarkOptions = {
+        src: asymmetricWatermarkDataUrl,
+        scale: 1,
+        rotate: 0,
+        position: {
+          position: Position.topLeft,
+          X: 0,
+          Y: 0,
+          edgeInset: 0,
+        },
+        trimTransparentPadding: false,
+      };
+      referencePath = await Marker.markImage({
+        backgroundImage: {
+          src: asymmetricWatermarkDataUrl,
+          scale: 1,
+        },
+        watermarkImages: [{ ...watermarkOptions, alpha: 0 }],
+        quality: 100,
+        saveFormat: ImageFormat.png,
+        filename: 'watermark-orientation-reference',
+      });
+      const path = await Marker.markImage({
+        backgroundImage: {
+          src: solidWatermarkBackgroundDataUrl,
+          scale: 1,
+        },
+        watermarkImages: [{ ...watermarkOptions, alpha: 1 }],
+        quality: 100,
+        saveFormat: ImageFormat.png,
+        filename: 'watermark-orientation-output',
+      });
+
+      const [outputBytes, referenceBytes] = await Promise.all([
+        props.readFileBase64(path),
+        props.readFileBase64(referencePath),
+      ]);
+      assertSamePngRaster(outputBytes, referenceBytes);
+
+      const outputUri = formatResultUri(path, ImageFormat.png);
+      const outputSize = await getImageSize(outputUri);
+      if (outputSize.width !== 48 || outputSize.height !== 32) {
+        throw new Error(
+          'Expected a 48x32 orientation probe, received ' +
+            `${outputSize.width}x${outputSize.height}`
+        );
+      }
+
+      setUri(outputUri);
+      setShow(true);
+      setResultContract('watermark-orientation-validated');
+      await updateFileSize(path, ImageFormat.png);
+    } catch (error) {
+      console.log('watermark orientation error', error);
+      Toast.show({
+        type: 'error',
+        text1: 'watermark orientation failed',
+        text2: error instanceof Error ? error.message : String(error),
+      });
+    } finally {
+      if (referencePath) {
+        await props.removeFile(referencePath).catch(() => undefined);
+      }
+      setLoading(false);
+    }
+  }
+
   function runExtraFeature() {
     const isOrientation = props.featureVariant === 'orientation';
 
@@ -1036,6 +1530,7 @@ function useViewModel(props: ImageMarkerLabProps) {
       fileSize,
       fontSize,
       lastRun,
+      resultContract,
     },
     actions: {
       setBackgroundFormat,
@@ -1069,6 +1564,8 @@ function useViewModel(props: ImageMarkerLabProps) {
       runImageOffsetFeature,
       runMixedWatermarkFeature,
       runSharpScaledWatermarkFeature,
+      runRotationOutputPolicyFeature,
+      runWatermarkOrientationFeature,
       runExtraFeature,
       runPositionPresetSamples,
       runAbsoluteCoordinateSamples,
@@ -1077,6 +1574,7 @@ function useViewModel(props: ImageMarkerLabProps) {
         setShow(false);
         setFileSize('0 B');
         setLastRun('Ready');
+        setResultContract('');
       },
     },
   };
@@ -1086,6 +1584,7 @@ function TabPage(props: {
   show: boolean;
   uri: string;
   fileSize: string;
+  resultContract?: string;
   onClear: () => void;
   compactPreview?: boolean;
   children: React.ReactNode;
@@ -1100,6 +1599,14 @@ function TabPage(props: {
         fileSize={props.fileSize}
         onClear={props.onClear}
       />
+      {props.resultContract ? (
+        <Text
+          accessibilityLabel={props.resultContract}
+          testID={props.resultContract}
+        >
+          {props.resultContract}
+        </Text>
+      ) : null}
       {props.children}
     </>
   );
@@ -1151,6 +1658,7 @@ function ImageMarkerLab(props: ImageMarkerLabProps) {
             show={state.show}
             uri={state.uri}
             fileSize={state.fileSize}
+            resultContract={state.resultContract}
             onClear={actions.clearResult}
           >
             <Section title="Feature checks">
@@ -1186,6 +1694,22 @@ function ImageMarkerLab(props: ImageMarkerLabProps) {
                   tone="green"
                   testID="feature-sharp-scaled-watermark"
                   onPress={actions.runSharpScaledWatermarkFeature}
+                />
+                <FeatureCard
+                  badge="Rotate"
+                  title="Rotation output policy"
+                  meta="crop + JPG matte + trim"
+                  tone="orange"
+                  testID="feature-rotation-output-policy"
+                  onPress={actions.runRotationOutputPolicyFeature}
+                />
+                <FeatureCard
+                  badge="Pixels"
+                  title="Watermark orientation"
+                  meta="asymmetric pixel probe"
+                  tone="green"
+                  testID="feature-watermark-orientation"
+                  onPress={actions.runWatermarkOrientationFeature}
                 />
                 <FeatureCard
                   badge={extraFeature.badge}
@@ -1226,6 +1750,7 @@ function ImageMarkerLab(props: ImageMarkerLabProps) {
             show={state.show}
             uri={state.uri}
             fileSize={state.fileSize}
+            resultContract={state.resultContract}
             onClear={actions.clearResult}
           >
             <Section title="Watermark">
@@ -1331,6 +1856,7 @@ function ImageMarkerLab(props: ImageMarkerLabProps) {
             show={state.show}
             uri={state.uri}
             fileSize={state.fileSize}
+            resultContract={state.resultContract}
             onClear={actions.clearResult}
           >
             <Section title="Input source">

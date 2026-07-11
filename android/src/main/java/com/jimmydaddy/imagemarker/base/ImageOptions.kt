@@ -27,8 +27,22 @@ class ImageOptions(val options: ReadableMap) {
     src = RNImageSRC(originalSRC)
     uri = originalSRC!!.getString(PROP_ICON_URI)
     scale = if (options.hasKey("scale")) options.getDouble("scale").toFloat() else DEFAULT_SCALE
-    rotate = if (options.hasKey("rotate")) options.getInt("rotate").toFloat() else DEFAULT_ROTATE
-    alpha = if (options.hasKey("alpha")) (options.getDouble("alpha") * 255).toInt() else DEFAULT_ALPHA
+    if (!scale.isFinite() || scale <= 0f) {
+      throw MarkerError(ErrorCode.INVALID_PARAMS, "image scale must be finite and greater than zero")
+    }
+    rotate = if (options.hasKey("rotate")) options.getDouble("rotate").toFloat() else DEFAULT_ROTATE
+    if (!rotate.isFinite()) {
+      throw MarkerError(ErrorCode.INVALID_PARAMS, "image rotation must be finite")
+    }
+    val normalizedAlpha = if (options.hasKey("alpha") && !options.isNull("alpha")) {
+      options.getDouble("alpha")
+    } else {
+      1.0
+    }
+    if (!normalizedAlpha.isFinite() || normalizedAlpha !in 0.0..1.0) {
+      throw MarkerError(ErrorCode.INVALID_PARAMS, "image alpha must be finite and between zero and one")
+    }
+    alpha = (normalizedAlpha * DEFAULT_ALPHA).toInt()
   }
 
   fun applyStyle(): Paint {

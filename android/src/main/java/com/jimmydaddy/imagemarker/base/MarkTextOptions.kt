@@ -27,8 +27,9 @@ class MarkTextOptions(options: ReadableMap) : Options(options) {
     fun checkParams(opts: ReadableMap, promise: Promise): MarkTextOptions? {
       try {
         return MarkTextOptions(opts)
-      } catch (e: MarkerError) {
-        promise.reject(e.getErrorCode(), e.getErrMsg())
+      } catch (e: Exception) {
+        val markerError = MarkerError.fromInvalidParams(e, "Invalid text marker options")
+        promise.reject(markerError.getErrorCode(), markerError.getErrMsg())
       }
       return null
     }

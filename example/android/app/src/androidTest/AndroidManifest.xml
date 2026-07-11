@@ -1,0 +1,8 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <application>
+    <provider
+      android:name="com.imagemarkerexample.TestImageProvider"
+      android:authorities="com.imagemarkerexample.test.imageprovider"
+      android:exported="true" />
+  </application>
+</manifest>

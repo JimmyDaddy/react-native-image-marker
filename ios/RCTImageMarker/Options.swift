@@ -7,6 +7,7 @@
 
 import Foundation
 import UIKit
+import React
 
 class Options: NSObject {
     var backgroundImage: ImageOptions
@@ -14,16 +15,47 @@ class Options: NSObject {
     var saveFormat: String?
     var maxSize: Int?
     var filename: String?
+    var matteColor: UIColor = .white
+    var rotationCanvasMode: ImageMarkerRotationCanvasMode = .expand
 
     init(dicOpts opts: [AnyHashable: Any]) throws {
         guard let backgroundImageOpts = opts["backgroundImage"] as? [AnyHashable: Any], !Utils.isNULL(backgroundImageOpts) else {
             throw NSError(domain: ErrorDomainEnum.PARAMS_REQUIRED.rawValue, code: 0, userInfo: [NSLocalizedDescriptionKey: "backgroundImage is required"])
         }
         self.backgroundImage = try ImageOptions(dicOpts: backgroundImageOpts)
-        self.quality = opts["quality"] as? Int ?? 100
+        if let rawQuality = opts["quality"], !Utils.isNULL(rawQuality) {
+            guard let qualityNumber = rawQuality as? NSNumber,
+                  CFGetTypeID(qualityNumber) != CFBooleanGetTypeID() else {
+                throw NSError(domain: ErrorDomainEnum.PARAMS_INVALID.rawValue, code: 0, userInfo: [NSLocalizedDescriptionKey: "quality must be an integer between 0 and 100"])
+            }
+            let qualityValue = qualityNumber.doubleValue
+            guard qualityValue.isFinite,
+                  qualityValue.rounded(.towardZero) == qualityValue,
+                  (0...100).contains(qualityValue) else {
+                throw NSError(domain: ErrorDomainEnum.PARAMS_INVALID.rawValue, code: 0, userInfo: [NSLocalizedDescriptionKey: "quality must be an integer between 0 and 100"])
+            }
+            self.quality = Int(qualityValue)
+        }
         self.saveFormat = opts["saveFormat"] as? String
         self.maxSize = opts["maxSize"] as? Int
-        self.filename = opts["fileName"] as? String
+        self.filename = opts["filename"] as? String ?? opts["fileName"] as? String
+        if let filename = self.filename, !Utils.isSafeOutputFilename(filename) {
+            throw NSError(domain: ErrorDomainEnum.PARAMS_INVALID.rawValue, code: 0, userInfo: [NSLocalizedDescriptionKey: "filename must be a safe basename"])
+        }
+
+        if let matteColorValue = opts["matteColor"] as? String {
+            guard let matteColor = UIColor(hex: matteColorValue) else {
+                throw NSError(domain: ErrorDomainEnum.PARAMS_INVALID.rawValue, code: 0, userInfo: [NSLocalizedDescriptionKey: "matteColor is invalid"])
+            }
+            self.matteColor = matteColor.withAlphaComponent(1)
+        }
+
+        if let rotationCanvasModeValue = opts["rotationCanvasMode"] as? String {
+            guard let rotationCanvasMode = ImageMarkerRotationCanvasMode(rawValue: rotationCanvasModeValue) else {
+                throw NSError(domain: ErrorDomainEnum.PARAMS_INVALID.rawValue, code: 0, userInfo: [NSLocalizedDescriptionKey: "rotationCanvasMode is invalid"])
+            }
+            self.rotationCanvasMode = rotationCanvasMode
+        }
     }
 
     static func checkParams(_ opts: [AnyHashable: Any], rejecter reject: @escaping RCTPromiseRejectBlock) -> Options? {

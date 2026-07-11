@@ -6,6 +6,7 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "start": "react-native start",
+    "typecheck": "tsc --noEmit",
     "pods": "pod-install",
     "pods:new-arch": "cd ios && RCT_NEW_ARCH_ENABLED=1 NO_FLIPPER=1 pod install",
     "m1-pods": "cd ios && arch -x86_64 pod install"
@@ -13,6 +14,7 @@
   "dependencies": {
     "@expo/react-native-action-sheet": "^4.0.1",
     "filesize": "^10.1.0",
+    "pako": "^3.0.1",
     "react": "18.2.0",
     "react-native": "0.73.3",
     "react-native-blob-util": "^0.19.2",

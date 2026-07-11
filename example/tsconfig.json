@@ -1,0 +1,10 @@
+{
+  "extends": "@react-native/typescript-config/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "react-native-image-marker": ["../src/index"]
+    }
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
+}

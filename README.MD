@@ -276,6 +276,58 @@ const result = await Marker.mark({
 });
 ```
 
+### Control Rotation, JPEG Transparency, and Edge Spacing
+
+JPEG does not support an alpha channel. When transparent pixels need to be
+saved as JPEG, `matteColor` selects the solid color placed behind them; its
+native default is white (`#FFFFFF`). The existing output default remains JPEG
+for compatibility. Use PNG when the result itself must stay transparent.
+If `filename` already ends in `.jpg`, `.jpeg`, or `.png`, that suffix is
+normalized to match `saveFormat` so the path never disagrees with its bytes.
+
+Background rotation keeps the full rotated result by default with
+`RotationCanvasMode.expand`, which can make the output canvas larger.
+`RotationCanvasMode.crop` keeps the original canvas dimensions and clips any
+rotated content outside those bounds.
+
+Named positions keep the compatibility edge inset of `20` when neither an
+axis offset nor `edgeInset` is supplied. Set `edgeInset: 0` for a flush anchor.
+Positions without a named anchor remain absolute. Omitted axes keep the legacy
+platform/API defaults; set `edgeInset` (including `0`) when the fallback must be
+identical on both platforms.
+
+`trimTransparentPadding` optionally removes fully transparent outer pixels
+from an image watermark before it is scaled, rotated, and positioned.
+
+```typescript
+import Marker, {
+  ImageFormat,
+  Position,
+  RotationCanvasMode,
+} from 'react-native-image-marker';
+
+const result = await Marker.markImage({
+  backgroundImage: {
+    src: require('./images/background.png'),
+    rotate: 30,
+  },
+  watermarkImages: [
+    {
+      src: require('./images/logo-with-transparent-padding.png'),
+      trimTransparentPadding: true,
+      position: {
+        position: Position.topLeft,
+        edgeInset: 0,
+      },
+    },
+  ],
+  saveFormat: ImageFormat.jpg,
+  matteColor: '#FFFFFF',
+  rotationCanvasMode: RotationCanvasMode.crop,
+  quality: 92,
+});
+```
+
 ### Use Base64 Input
 
 Pass a base64 data URL or base64 string as `src` when your image already lives in memory or comes from an API response.
@@ -297,7 +349,7 @@ await Marker.markText({
 
 ### Keep QR and Icon Watermarks Sharp
 
-For QR codes, barcodes, pixel art, and line-art logos, prefer `saveFormat: ImageFormat.png`. JPEG can add compression artifacts even with `quality: 100`, while PNG keeps hard edges intact.
+For QR codes, barcodes, pixel art, and line-art logos, prefer `saveFormat: ImageFormat.png`. JPEG can add compression artifacts even with `quality: 100`, while PNG keeps hard edges intact. `quality` uses a `0-100` range; it primarily affects JPEG because PNG output is lossless.
 
 Image watermarks are scaled natively from their `scale` value before rendering, so choose the final output size with `scale` instead of pre-compressing the source image.
 
@@ -386,7 +438,7 @@ The examples open the same **Image Marker Lab** experience on both React Native 
 
 [example](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/example)
 
-The React Native example covers the full lab, including local image picking, base64 input, rotated image/orientation handling, anchored text/image offsets, position presets, and absolute-coordinate watermark placement.
+The React Native example covers the full lab, including local image picking, base64 input, rotated image/orientation handling, the crop-plus-JPEG-matte output policy, transparent watermark trimming, anchored text/image offsets, position presets, and absolute-coordinate watermark placement.
 
 The runtime status panel also helps confirm whether the app is running through the New Architecture or the legacy bridge.
 
@@ -414,7 +466,7 @@ yarn example ios
 
 [expo-example](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/expo-example)
 
-The Expo example reuses the same lab UI with Expo adapters for image picking and file-size reads. It runs as a development build and includes feature checks for base64 backgrounds, text/image offsets, position presets, and absolute-coordinate placement.
+The Expo example reuses the same lab UI with Expo adapters for image picking and file-size reads. It runs as a development build and includes feature checks for base64 backgrounds, rotation output policy, text/image offsets, position presets, and absolute-coordinate placement.
 
 Expo development builds show the same runtime status panel as the React Native example, so you can confirm the active architecture after `prebuild` and native rebuilds.
 

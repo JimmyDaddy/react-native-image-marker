@@ -1,7 +1,18 @@
+function deepFreeze<T>(value: T): T {
+  if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+    Object.values(value as Record<string, unknown>).forEach((nestedValue) => {
+      deepFreeze(nestedValue);
+    });
+    Object.freeze(value);
+  }
+  return value;
+}
+
 describe('Marker JS wrapper', () => {
   let Marker: any;
   let ImageFormat: any;
   let Position: any;
+  let RotationCanvasMode: any;
   let nativeModule: {
     markWithText: jest.Mock;
     markWithImage: jest.Mock;
@@ -37,6 +48,14 @@ describe('Marker JS wrapper', () => {
     Marker = moduleExports.default;
     ImageFormat = moduleExports.ImageFormat;
     Position = moduleExports.Position;
+    RotationCanvasMode = moduleExports.RotationCanvasMode;
+  });
+
+  it('exports stable rotation canvas mode values', () => {
+    expect(RotationCanvasMode).toEqual({
+      expand: 'expand',
+      crop: 'crop',
+    });
   });
 
   it('normalizes markText options before calling the native module', async () => {
@@ -53,6 +72,7 @@ describe('Marker JS wrapper', () => {
             position: Position.topRight,
             X: 12,
             Y: '5%',
+            edgeInset: 0,
           },
           style: {
             fontSizeRatio: 0.04,
@@ -61,7 +81,10 @@ describe('Marker JS wrapper', () => {
       ],
       quality: 90,
       saveFormat: ImageFormat.png,
+      matteColor: '#F4F1EA',
+      rotationCanvasMode: RotationCanvasMode.crop,
     };
+    deepFreeze(options);
 
     await expect(Marker.markText(options)).resolves.toBe('/tmp/text.png');
 
@@ -71,6 +94,8 @@ describe('Marker JS wrapper', () => {
         maxSize: 2048,
         quality: 90,
         saveFormat: ImageFormat.png,
+        matteColor: '#F4F1EA',
+        rotationCanvasMode: RotationCanvasMode.crop,
       })
     );
     const nativeOptions = nativeModule.markWithText.mock.calls[0][0];
@@ -82,6 +107,7 @@ describe('Marker JS wrapper', () => {
       position: Position.topRight,
       X: 12,
       Y: '5%',
+      edgeInset: 0,
     });
     expect(nativeOptions.watermarkTexts[0]).not.toHaveProperty(
       'positionOptions'
@@ -89,6 +115,9 @@ describe('Marker JS wrapper', () => {
     expect(options.backgroundImage.src).toBe('file:///tmp/background.png');
     expect(options.watermarkTexts[0]).toHaveProperty('positionOptions');
     expect(options.watermarkTexts[0]).not.toHaveProperty('position');
+    expect(nativeOptions.watermarkTexts[0].position).not.toBe(
+      options.watermarkTexts[0].positionOptions
+    );
   });
 
   it('resolves markImage assets and preserves explicit maxSize', async () => {
@@ -104,6 +133,7 @@ describe('Marker JS wrapper', () => {
       },
       watermarkPositions: {
         position: Position.center,
+        edgeInset: '2%',
       },
       watermarkImages: [
         {
@@ -112,19 +142,26 @@ describe('Marker JS wrapper', () => {
             position: Position.bottomRight,
             X: '10%',
             Y: 20,
+            edgeInset: 0,
           },
           scale: 0.5,
+          trimTransparentPadding: true,
         },
       ],
       maxSize: 1024,
       saveFormat: ImageFormat.jpg,
+      matteColor: '#123456',
+      rotationCanvasMode: RotationCanvasMode.expand,
     };
+    deepFreeze(options);
 
     await expect(Marker.markImage(options)).resolves.toBe('/tmp/image.png');
 
     expect(nativeModule.markWithImage).toHaveBeenCalledTimes(1);
     const nativeOptions = nativeModule.markWithImage.mock.calls[0][0];
     expect(nativeOptions.maxSize).toBe(1024);
+    expect(nativeOptions.matteColor).toBe('#123456');
+    expect(nativeOptions.rotationCanvasMode).toBe(RotationCanvasMode.expand);
     expect(nativeOptions.backgroundImage.src).toEqual({
       uri: 'asset://10',
       width: 120,
@@ -139,9 +176,59 @@ describe('Marker JS wrapper', () => {
       uri: 'file:///tmp/watermark.png',
       __packager_asset: false,
     });
+    expect(nativeOptions.watermarkImages[0]).toEqual(
+      expect.objectContaining({
+        trimTransparentPadding: true,
+      })
+    );
+    expect(nativeOptions.watermarkImages[0].position).toEqual({
+      position: Position.bottomRight,
+      X: '10%',
+      Y: 20,
+      edgeInset: 0,
+    });
+    expect(nativeOptions.watermarkImages[0].position).not.toBe(
+      options.watermarkImages[0].position
+    );
+    expect(nativeOptions.watermarkPositions).toEqual({
+      position: Position.center,
+      edgeInset: '2%',
+    });
+    expect(nativeOptions.watermarkPositions).not.toBe(
+      options.watermarkPositions
+    );
     expect(options.backgroundImage.src).toBe(10);
     expect(options.watermarkImage.src).toBe('file:///tmp/legacy-watermark.png');
     expect(options.watermarkImages[0].src).toBe('file:///tmp/watermark.png');
+  });
+
+  it('supports the legacy watermarkImage-only markImage shape', async () => {
+    nativeModule.markWithImage.mockResolvedValue('/tmp/legacy-image.png');
+
+    await expect(
+      Marker.markImage({
+        backgroundImage: {
+          src: 'file:///tmp/background.png',
+        },
+        watermarkImage: {
+          src: 'file:///tmp/legacy-watermark.png',
+          alpha: 0.75,
+        },
+      })
+    ).resolves.toBe('/tmp/legacy-image.png');
+
+    expect(nativeModule.markWithImage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        watermarkImages: [],
+        watermarkImage: expect.objectContaining({
+          alpha: 0.75,
+          src: {
+            uri: 'file:///tmp/legacy-watermark.png',
+            __packager_asset: false,
+          },
+        }),
+      })
+    );
   });
 
   it('rejects markImage calls without any image watermark', () => {
@@ -169,6 +256,171 @@ describe('Marker JS wrapper', () => {
         ],
       } as any)
     ).toThrow('please set mark image!');
+  });
+
+  it('rejects invalid quality values in every public marking API', () => {
+    const invalidQualityValues = [
+      Number.NaN,
+      Number.POSITIVE_INFINITY,
+      Number.NEGATIVE_INFINITY,
+      -1,
+      101,
+      50.5,
+    ];
+
+    invalidQualityValues.forEach((quality) => {
+      expect(() =>
+        Marker.markText({
+          backgroundImage: { src: 'file:///tmp/background.png' },
+          watermarkTexts: [{ text: 'quality' }],
+          quality,
+        })
+      ).toThrow('quality must be a finite integer between 0 and 100.');
+
+      expect(() =>
+        Marker.markImage({
+          backgroundImage: { src: 'file:///tmp/background.png' },
+          watermarkImage: { src: 'file:///tmp/watermark.png' },
+          quality,
+        })
+      ).toThrow('quality must be a finite integer between 0 and 100.');
+
+      expect(() =>
+        Marker.mark({
+          backgroundImage: { src: 'file:///tmp/background.png' },
+          watermarks: [{ type: 'text', text: 'quality' }],
+          quality,
+        })
+      ).toThrow('quality must be a finite integer between 0 and 100.');
+    });
+
+    expect(nativeModule.markWithText).not.toHaveBeenCalled();
+    expect(nativeModule.markWithImage).not.toHaveBeenCalled();
+    expect(nativeModule.markWithWatermarks).not.toHaveBeenCalled();
+  });
+
+  it('rejects invalid maxSize values before native normalization', () => {
+    for (const maxSize of [0, -1, 10.5, Number.NaN, Number.POSITIVE_INFINITY]) {
+      expect(() =>
+        Marker.markImage({
+          backgroundImage: { src: 'file:///tmp/background.png' },
+          watermarkImage: { src: 'file:///tmp/watermark.png' },
+          maxSize,
+        })
+      ).toThrow('maxSize must be a positive finite integer.');
+    }
+
+    expect(nativeModule.markWithImage).not.toHaveBeenCalled();
+  });
+
+  it('accepts quality and alpha boundary values', async () => {
+    nativeModule.markWithText.mockResolvedValue('/tmp/boundary-text.png');
+    nativeModule.markWithWatermarks.mockResolvedValue(
+      '/tmp/boundary-watermarks.png'
+    );
+
+    await expect(
+      Marker.markText({
+        backgroundImage: {
+          src: 'file:///tmp/background.png',
+          alpha: 0,
+        },
+        watermarkTexts: [{ text: 'boundary' }],
+        quality: 0,
+      })
+    ).resolves.toBe('/tmp/boundary-text.png');
+
+    await expect(
+      Marker.mark({
+        backgroundImage: {
+          src: 'file:///tmp/background.png',
+          alpha: 1,
+        },
+        watermarkImage: {
+          src: 'file:///tmp/legacy-watermark.png',
+          alpha: 0,
+        },
+        watermarkImages: [
+          {
+            src: 'file:///tmp/watermark.png',
+            alpha: 1,
+          },
+        ],
+        watermarks: [
+          {
+            type: 'image',
+            src: 'file:///tmp/mixed-watermark.png',
+            alpha: 0,
+          },
+        ],
+        quality: 100,
+      })
+    ).resolves.toBe('/tmp/boundary-watermarks.png');
+  });
+
+  it('rejects invalid alpha values at every nested image location', () => {
+    const invalidCases = [
+      {
+        invoke: () =>
+          Marker.markText({
+            backgroundImage: {
+              src: 'file:///tmp/background.png',
+              alpha: Number.NaN,
+            },
+            watermarkTexts: [{ text: 'background alpha' }],
+          }),
+        path: 'backgroundImage',
+      },
+      {
+        invoke: () =>
+          Marker.markImage({
+            backgroundImage: { src: 'file:///tmp/background.png' },
+            watermarkImage: {
+              src: 'file:///tmp/legacy-watermark.png',
+              alpha: -0.01,
+            },
+          }),
+        path: 'watermarkImage',
+      },
+      {
+        invoke: () =>
+          Marker.markImage({
+            backgroundImage: { src: 'file:///tmp/background.png' },
+            watermarkImages: [
+              {
+                src: 'file:///tmp/watermark.png',
+                alpha: 1.01,
+              },
+            ],
+          }),
+        path: 'watermarkImages[0]',
+      },
+      {
+        invoke: () =>
+          Marker.mark({
+            backgroundImage: { src: 'file:///tmp/background.png' },
+            watermarks: [
+              { type: 'text', text: 'first layer' },
+              {
+                type: 'image',
+                src: 'file:///tmp/mixed-watermark.png',
+                alpha: Number.POSITIVE_INFINITY,
+              },
+            ],
+          }),
+        path: 'watermarks[1]',
+      },
+    ];
+
+    invalidCases.forEach(({ invoke, path }) => {
+      expect(invoke).toThrow(
+        `${path}.alpha must be a finite number between 0 and 1.`
+      );
+    });
+
+    expect(nativeModule.markWithText).not.toHaveBeenCalled();
+    expect(nativeModule.markWithImage).not.toHaveBeenCalled();
+    expect(nativeModule.markWithWatermarks).not.toHaveBeenCalled();
   });
 
   it('sends legacy text and image watermarks as ordered native layers', async () => {
@@ -204,14 +456,19 @@ describe('Marker JS wrapper', () => {
             position: Position.topRight,
             X: 20,
             Y: 16,
+            edgeInset: 4,
           },
           scale: 0.5,
+          trimTransparentPadding: true,
         },
       ],
       quality: 82,
       filename: 'mixed-output',
       saveFormat: ImageFormat.jpg,
+      matteColor: '#FAFAFA',
+      rotationCanvasMode: RotationCanvasMode.crop,
     };
+    deepFreeze(options);
 
     await expect(Marker.mark(options)).resolves.toBe('/tmp/final.jpg');
 
@@ -225,6 +482,8 @@ describe('Marker JS wrapper', () => {
         quality: 82,
         filename: 'mixed-output',
         saveFormat: ImageFormat.jpg,
+        matteColor: '#FAFAFA',
+        rotationCanvasMode: RotationCanvasMode.crop,
         maxSize: 2048,
       })
     );
@@ -247,6 +506,7 @@ describe('Marker JS wrapper', () => {
       expect.objectContaining({
         type: 'image',
         scale: 0.5,
+        trimTransparentPadding: true,
       })
     );
     expect(nativeOptions.watermarks[1].src).toEqual({
@@ -257,6 +517,15 @@ describe('Marker JS wrapper', () => {
     });
     expect(options.watermarkTexts[0]).toHaveProperty('positionOptions');
     expect(options.watermarkImages[0].src).toBe(12);
+    expect(nativeOptions.watermarks[1].position).toEqual({
+      position: Position.topRight,
+      X: 20,
+      Y: 16,
+      edgeInset: 4,
+    });
+    expect(nativeOptions.watermarks[1].position).not.toBe(
+      options.watermarkImages[0].position
+    );
   });
 
   it('preserves explicit watermarks layer order', async () => {

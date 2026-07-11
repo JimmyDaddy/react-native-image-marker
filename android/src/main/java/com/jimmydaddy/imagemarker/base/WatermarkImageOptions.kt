@@ -6,7 +6,9 @@ data class WatermarkImageOptions(val options: ReadableMap?) {
   lateinit var imageOption: ImageOptions
   var x: String? = null
   var y: String? = null
+  var edgeInset: String? = null
   var positionEnum: PositionEnum? = null
+  var trimTransparentPadding: Boolean = false
 
   init {
     if (options != null) {
@@ -16,18 +18,31 @@ data class WatermarkImageOptions(val options: ReadableMap?) {
         if (positionOptions != null && positionOptions.hasKey("X")) Utils.handleDynamicToString(positionOptions.getDynamic("X")) else null
       y =
         if (positionOptions != null && positionOptions.hasKey("Y")) Utils.handleDynamicToString(positionOptions.getDynamic("Y")) else null
+      edgeInset =
+        if (positionOptions != null && positionOptions.hasKey("edgeInset")) Utils.handleDynamicToString(positionOptions.getDynamic("edgeInset")) else null
       positionEnum =
         if (positionOptions != null && null != positionOptions.getString("position")) PositionEnum.getPosition(
           positionOptions.getString("position")
         ) else null
+      trimTransparentPadding =
+        options.hasKey("trimTransparentPadding") && options.getBoolean("trimTransparentPadding")
     }
   }
 
-  constructor(watermarkImage: ImageOptions, x: String?, y: String?, position: PositionEnum?) : this(null) {
+  constructor(
+    watermarkImage: ImageOptions,
+    x: String?,
+    y: String?,
+    edgeInset: String?,
+    position: PositionEnum?,
+    trimTransparentPadding: Boolean = false
+  ) : this(null) {
     imageOption = watermarkImage
     this.x = x
     this.y = y
+    this.edgeInset = edgeInset
     this.positionEnum = position
+    this.trimTransparentPadding = trimTransparentPadding
   }
 
   companion object {

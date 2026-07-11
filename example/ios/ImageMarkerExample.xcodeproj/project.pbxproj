@@ -17,6 +17,12 @@
 		A119E9E12B162437000C0527 /* ImageMarkerExampleUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A119E9E02B162437000C0527 /* ImageMarkerExampleUITests.swift */; };
 		A119E9E32B162437000C0527 /* ImageMarkerExampleUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A119E9E22B162437000C0527 /* ImageMarkerExampleUITestsLaunchTests.swift */; };
 		D08944733B654D0E986F9F68 /* UIImageEdit.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6F06930265B472194E651B7 /* UIImageEdit.swift */; };
+		D29700110000000000000001 /* Options.swift in Sources */ = {isa = PBXBuildFile; fileRef = D29700010000000000000001 /* Options.swift */; };
+		D29700110000000000000002 /* ImageOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = D29700010000000000000002 /* ImageOptions.swift */; };
+		D29700110000000000000003 /* RNImageSRC.swift in Sources */ = {isa = PBXBuildFile; fileRef = D29700010000000000000003 /* RNImageSRC.swift */; };
+		D29700110000000000000004 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = D29700010000000000000004 /* Utils.swift */; };
+		D29700110000000000000005 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = D29700010000000000000005 /* Constants.swift */; };
+		D29700110000000000000006 /* UIColorHex.swift in Sources */ = {isa = PBXBuildFile; fileRef = D29700010000000000000006 /* UIColorHex.swift */; };
 		F95A8E69C66343EEB9A8D9DC /* RubikBurned-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E3DA1B9696844B35AAE670BD /* RubikBurned-Regular.ttf */; };
 /* End PBXBuildFile section */
 
@@ -49,6 +55,12 @@
 		A119E9E02B162437000C0527 /* ImageMarkerExampleUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageMarkerExampleUITests.swift; sourceTree = "<group>"; };
 		A119E9E22B162437000C0527 /* ImageMarkerExampleUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageMarkerExampleUITestsLaunchTests.swift; sourceTree = "<group>"; };
 		B6F06930265B472194E651B7 /* UIImageEdit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = UIImageEdit.swift; path = "../../../ios/RCTImageMarker/UIImageEdit.swift"; sourceTree = "<group>"; };
+		D29700010000000000000001 /* Options.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Options.swift; path = "../../../ios/RCTImageMarker/Options.swift"; sourceTree = "<group>"; };
+		D29700010000000000000002 /* ImageOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ImageOptions.swift; path = "../../../ios/RCTImageMarker/ImageOptions.swift"; sourceTree = "<group>"; };
+		D29700010000000000000003 /* RNImageSRC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RNImageSRC.swift; path = "../../../ios/RCTImageMarker/RNImageSRC.swift"; sourceTree = "<group>"; };
+		D29700010000000000000004 /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Utils.swift; path = "../../../ios/RCTImageMarker/Utils.swift"; sourceTree = "<group>"; };
+		D29700010000000000000005 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Constants.swift; path = "../../../ios/RCTImageMarker/Constants.swift"; sourceTree = "<group>"; };
+		D29700010000000000000006 /* UIColorHex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = UIColorHex.swift; path = "../../../ios/RCTImageMarker/UIColorHex.swift"; sourceTree = "<group>"; };
 		E3DA1B9696844B35AAE670BD /* RubikBurned-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "RubikBurned-Regular.ttf"; path = "../assets/fonts/RubikBurned-Regular.ttf"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
@@ -134,6 +146,12 @@
 				A119E9E02B162437000C0527 /* ImageMarkerExampleUITests.swift */,
 				A119E9E22B162437000C0527 /* ImageMarkerExampleUITestsLaunchTests.swift */,
 				B6F06930265B472194E651B7 /* UIImageEdit.swift */,
+				D29700010000000000000001 /* Options.swift */,
+				D29700010000000000000002 /* ImageOptions.swift */,
+				D29700010000000000000003 /* RNImageSRC.swift */,
+				D29700010000000000000004 /* Utils.swift */,
+				D29700010000000000000005 /* Constants.swift */,
+				D29700010000000000000006 /* UIColorHex.swift */,
 			);
 			path = ImageMarkerExampleUITests;
 			sourceTree = "<group>";
@@ -410,6 +428,12 @@
 				A119E9E12B162437000C0527 /* ImageMarkerExampleUITests.swift in Sources */,
 				A119E9E32B162437000C0527 /* ImageMarkerExampleUITestsLaunchTests.swift in Sources */,
 				D08944733B654D0E986F9F68 /* UIImageEdit.swift in Sources */,
+				D29700110000000000000001 /* Options.swift in Sources */,
+				D29700110000000000000002 /* ImageOptions.swift in Sources */,
+				D29700110000000000000003 /* RNImageSRC.swift in Sources */,
+				D29700110000000000000004 /* Utils.swift in Sources */,
+				D29700110000000000000005 /* Constants.swift in Sources */,
+				D29700110000000000000006 /* UIColorHex.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

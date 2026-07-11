@@ -15,6 +15,7 @@ import React
 @objc(ImageMarker)
 public final class ImageMarker: NSObject, RCTBridgeModule {
     public var bridge: RCTBridge!
+    private let operationLimiter = ImageMarkerAsyncLimiter(limit: 1)
     
     func loadImages(with imageOptions: [ImageOptions]) async throws -> [UIImage] {
         let className = "RCTImageLoader"
@@ -23,60 +24,51 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
               let imageLoader = bridge.module(for: classType) as? RCTImageLoader else {
             throw NSError(domain: ErrorDomainEnum.BASE.rawValue, code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to get ImageLoader module"])
         }
-        let images = try await withThrowingTaskGroup(of: (Int, UIImage).self) { group in
-            for (index, img) in imageOptions.enumerated() {
-                group.addTask {
-                    try await withUnsafeThrowingContinuation { continuation -> Void in
-                        if Utils.isBase64(img.uri) {
-                            if let image = UIImage.transBase64(img.uri) {
-                                continuation.resume(returning: (index, image.normalizedForImageMarker()))
-                            } else {
-                                let error = NSError(domain: ErrorDomainEnum.BASE.rawValue, code: 3, userInfo: [NSLocalizedDescriptionKey: "Failed to load image"])
-                                continuation.resume(throwing: error)
-                            }
-                        } else {
-                            guard let request = RCTConvert.nsurlRequest(img.src) else {
-                                let error = NSError(domain: ErrorDomainEnum.BASE.rawValue, code: 3, userInfo: [NSLocalizedDescriptionKey: "Failed to create URL request for image: \(img.uri)"])
-                                continuation.resume(throwing: error)
-                                return
-                            }
-                            imageLoader.loadImage(with: request, size: CGSizeMake(img.rnSrc.width, img.rnSrc.height), scale: img.rnSrc.scale, clipped: false, resizeMode: RCTResizeMode.cover) { _, _ in
-                            } partialLoad: { _ in
-                                //
-                            } completionBlock: { error, loadedImage in
-                                if let loadedImage = loadedImage {
-                                    continuation.resume(returning: (index, loadedImage.normalizedForImageMarker()))
-                                } else if let error = error {
-                                    continuation.resume(throwing: error)
-                                } else {
-                                    let error = NSError(domain: ErrorDomainEnum.BASE.rawValue, code: 3, userInfo: [NSLocalizedDescriptionKey: "Failed to load image"])
-                                    continuation.resume(throwing: error)
-                                }
-                            }
+        return try await Utils.sequentialAsyncMap(imageOptions) { img in
+            try await self.loadImage(img, using: imageLoader)
+        }
+    }
 
-//                            imageLoader.loadImage(with: request!) { error, loadedImage in
-//                                if let loadedImage = loadedImage {
-//                                    continuation.resume(returning: (index, loadedImage))
-//                                } else if let error = error {
-//                                    continuation.resume(throwing: error)
-//                                } else {
-//                                    let error = NSError(domain: ErrorDomainEnum.BASE.rawValue, code: 3, userInfo: [NSLocalizedDescriptionKey: "Failed to load image"])
-//                                    continuation.resume(throwing: error)
-//                                }
-//                            }
-                        }
-                    }
+    private func loadImage(_ imageOptions: ImageOptions, using imageLoader: RCTImageLoader) async throws -> UIImage {
+        if Utils.isBase64(imageOptions.uri) {
+            try Task.checkCancellation()
+            guard let image = UIImage.transBase64(imageOptions.uri) else {
+                throw NSError(domain: ErrorDomainEnum.BASE.rawValue, code: 3, userInfo: [NSLocalizedDescriptionKey: "Failed to load image"])
+            }
+            try Task.checkCancellation()
+            return image.normalizedForImageMarker()
+        }
+
+        guard let request = RCTConvert.nsurlRequest(imageOptions.src) else {
+            throw NSError(domain: ErrorDomainEnum.BASE.rawValue, code: 3, userInfo: [NSLocalizedDescriptionKey: "Failed to create URL request for image: \(imageOptions.uri)"])
+        }
+        let loadedImage: UIImage = try await ImageMarkerCancellableContinuation.run { completion in
+            return imageLoader.loadImage(
+                with: request,
+                size: CGSizeMake(imageOptions.rnSrc.width, imageOptions.rnSrc.height),
+                scale: imageOptions.rnSrc.scale,
+                clipped: false,
+                resizeMode: RCTResizeMode.cover
+            ) { _, _ in
+                // Progress is intentionally ignored.
+            } partialLoad: { _ in
+                // Partial images are intentionally ignored.
+            } completionBlock: { error, image in
+                if let image {
+                    completion(.success(image))
+                } else if let error {
+                    completion(.failure(error))
+                } else {
+                    completion(.failure(NSError(
+                        domain: ErrorDomainEnum.BASE.rawValue,
+                        code: 3,
+                        userInfo: [NSLocalizedDescriptionKey: "Failed to load image"]
+                    )))
                 }
             }
-            var imagesWithIndex: [(Int, UIImage)] = []
-            for try await image in group {
-                imagesWithIndex.append(image)
-            }
-            let sortedImagesWithIndex = imagesWithIndex.sorted { $0.0 < $1.0 }
-            let images = sortedImagesWithIndex.map { $0.1 }
-            return images
         }
-        return images
+        try Task.checkCancellation()
+        return loadedImage.normalizedForImageMarker()
     }
 
     @objc
@@ -93,94 +85,45 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
     }
 
     func saveImageForMarker(_ image: UIImage, with opts: Options) throws -> String {
-        let fullPath = generateCacheFilePathForMarker(Utils.getExt(opts.saveFormat), opts.filename)
+        let fullPath = try generateCacheFilePathForMarker(Utils.getExt(opts.saveFormat), opts.filename)
         if let saveFormat = opts.saveFormat, saveFormat == "base64" {
             guard let imageData = image.pngData() else {
                 throw markerError("Failed to encode image as PNG")
             }
             return "data:image/png;base64,\(imageData.base64EncodedString(options: .lineLength64Characters))"
         }
-        guard let data = Utils.isPng(opts.saveFormat) ? image.pngData() : image.jpegData(compressionQuality: CGFloat(opts.quality) / 100.0) else {
+        guard let data = ImageMarkerRenderer.encodedData(
+            for: image,
+            asPNG: Utils.isPng(opts.saveFormat),
+            jpegQuality: CGFloat(opts.quality) / 100.0,
+            matteColor: opts.matteColor
+        ) else {
             throw markerError("Failed to encode image")
         }
         try data.write(to: URL(fileURLWithPath: fullPath), options: .atomic)
         return fullPath
     }
     
-    func generateCacheFilePathForMarker(_ ext: String?, _ filename: String?) -> String {
+    func generateCacheFilePathForMarker(_ ext: String?, _ filename: String?) throws -> String {
         let paths = NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true)
         let cacheDirectory = paths[0]
-        if let filename = filename, !filename.isEmpty {
-            if let ext = ext, filename.hasSuffix(ext) {
-                return (cacheDirectory as NSString).appendingPathComponent(filename)
-            } else {
-                let fullName = "\(filename)\(ext ?? "")"
-                return (cacheDirectory as NSString).appendingPathComponent(fullName)
+        if let filename = filename,
+           !filename.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            guard Utils.isSafeOutputFilename(filename) else {
+                throw NSError(
+                    domain: ErrorDomainEnum.PARAMS_INVALID.rawValue,
+                    code: 0,
+                    userInfo: [NSLocalizedDescriptionKey: "filename must be a safe basename"]
+                )
             }
+            let fullName = Utils.canonicalOutputFilename(filename, ext: ext ?? "")
+            return (cacheDirectory as NSString).appendingPathComponent(fullName)
         } else {
             let name = UUID().uuidString
             let fullName = "\(name)\(ext ?? "")"
             let fullPath = (cacheDirectory as NSString).appendingPathComponent(fullName)
             return fullPath
         }
-    }
-
-    private func markerOrigin(
-        position: MarkerPositionEnum,
-        offsetX: String?,
-        offsetY: String?,
-        canvasSize: CGSize,
-        itemSize: CGSize
-    ) -> CGPoint {
-        let margin = CGFloat(20)
-        if position == .none {
-            return CGPoint(
-                x: Utils.parseSpreadValue(v: offsetX, relativeTo: canvasSize.width) ?? margin,
-                y: Utils.parseSpreadValue(v: offsetY, relativeTo: canvasSize.height) ?? margin
-            )
-        }
-
-        var origin: CGPoint
-        switch position {
-        case .topLeft:
-            origin = CGPoint(x: margin, y: margin)
-        case .topCenter:
-            origin = CGPoint(x: (canvasSize.width - itemSize.width) / 2, y: margin)
-        case .topRight:
-            origin = CGPoint(x: canvasSize.width - itemSize.width - margin, y: margin)
-        case .bottomLeft:
-            origin = CGPoint(x: margin, y: canvasSize.height - itemSize.height - margin)
-        case .bottomCenter:
-            origin = CGPoint(x: (canvasSize.width - itemSize.width) / 2, y: canvasSize.height - itemSize.height - margin)
-        case .bottomRight:
-            origin = CGPoint(x: canvasSize.width - itemSize.width - margin, y: canvasSize.height - itemSize.height - margin)
-        case .center:
-            origin = CGPoint(x: (canvasSize.width - itemSize.width) / 2, y: (canvasSize.height - itemSize.height) / 2)
-        case .none:
-            origin = CGPoint(x: margin, y: margin)
-        }
-
-        if let parsedX = Utils.parseSpreadValue(v: offsetX, relativeTo: canvasSize.width) {
-            switch position {
-            case .topRight, .bottomRight:
-                origin.x = canvasSize.width - itemSize.width - parsedX
-            case .topCenter, .bottomCenter, .center:
-                origin.x = (canvasSize.width - itemSize.width) / 2 + parsedX
-            default:
-                origin.x = parsedX
-            }
-        }
-        if let parsedY = Utils.parseSpreadValue(v: offsetY, relativeTo: canvasSize.height) {
-            switch position {
-            case .bottomLeft, .bottomCenter, .bottomRight:
-                origin.y = canvasSize.height - itemSize.height - parsedY
-            case .center:
-                origin.y = (canvasSize.height - itemSize.height) / 2 + parsedY
-            default:
-                origin.y = parsedY
-            }
-        }
-        return origin
     }
 
     private func fontWithTraits(_ font: UIFont, bold: Bool, italic: Bool) -> UIFont {
@@ -250,12 +193,14 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         let attributedText = NSAttributedString(string: textOpts.text, attributes: attributes)
         let textRect = attributedText.boundingRect(with: canvasSize, options: .usesLineFragmentOrigin, context: nil)
         let size = textRect.size
-        let origin = markerOrigin(
-            position: textOpts.position,
+        let renderPosition = ImageMarkerRenderPosition(rawValue: textOpts.position.rawValue as String) ?? .none
+        let origin = ImageMarkerRenderer.markerOrigin(
+            position: renderPosition,
             offsetX: textOpts.X,
             offsetY: textOpts.Y,
             canvasSize: canvasSize,
-            itemSize: size
+            itemSize: size,
+            edgeInset: textOpts.edgeInset
         )
         let posX = origin.x
         let posY = origin.y
@@ -302,28 +247,17 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
     }
 
     func markImgWithText(_ image: UIImage, _ opts: MarkTextOptions) -> UIImage? {
-        let canvasSize = image.size
-        UIGraphicsBeginImageContextWithOptions(canvasSize, false, opts.backgroundImage.scale)
-        defer {
-            UIGraphicsEndImageContext()
+        return ImageMarkerRenderer.renderCanvas(
+            background: image,
+            backgroundScale: opts.backgroundImage.scale,
+            backgroundRotate: opts.backgroundImage.rotate,
+            backgroundAlpha: opts.backgroundImage.alpha,
+            rotationCanvasMode: opts.rotationCanvasMode
+        ) { context, canvasSize in
+            for textOpts in opts.watermarkTexts {
+                drawTextWatermark(textOpts, in: context, canvasSize: canvasSize)
+            }
         }
-
-        guard let context = UIGraphicsGetCurrentContext(), let backgroundImage = image.cgImage else {
-            return nil
-        }
-
-        ImageMarkerRenderer.drawBackground(
-            context: context,
-            image: backgroundImage,
-            rect: CGRect(origin: .zero, size: canvasSize),
-            alpha: opts.backgroundImage.alpha
-        )
-
-        for textOpts in opts.watermarkTexts {
-            drawTextWatermark(textOpts, in: context, canvasSize: canvasSize)
-        }
-
-        return UIGraphicsGetImageFromCurrentImageContext()?.rotatedImageWithTransform(opts.backgroundImage.rotate)
     }
     
     func markImage(with image: UIImage, waterImages: [UIImage], options: MarkImageOptions) -> UIImage? {
@@ -341,7 +275,9 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
                 offsetY: watermarkOptions.Y,
                 scale: watermarkOptions.imageOption.scale,
                 rotate: watermarkOptions.imageOption.rotate,
-                alpha: watermarkOptions.imageOption.alpha
+                alpha: watermarkOptions.imageOption.alpha,
+                edgeInset: watermarkOptions.edgeInset,
+                trimTransparentPadding: watermarkOptions.trimTransparentPadding
             )
         }
 
@@ -350,55 +286,45 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
             watermarks: watermarks,
             backgroundScale: options.backgroundImage.scale,
             backgroundRotate: options.backgroundImage.rotate,
-            backgroundAlpha: options.backgroundImage.alpha
+            backgroundAlpha: options.backgroundImage.alpha,
+            rotationCanvasMode: options.rotationCanvasMode
         )
     }
 
     func markWatermarks(with image: UIImage, waterImages: [UIImage], options: MarkWatermarkOptions) -> UIImage? {
-        let bg = image
-        let canvasSize = bg.size
-        UIGraphicsBeginImageContextWithOptions(canvasSize, false, options.backgroundImage.scale)
-
-        guard let context = UIGraphicsGetCurrentContext(), let backgroundImage = bg.cgImage else {
-            UIGraphicsEndImageContext()
-            return nil
-        }
-
-        ImageMarkerRenderer.drawBackground(
-            context: context,
-            image: backgroundImage,
-            rect: CGRect(origin: .zero, size: canvasSize),
-            alpha: options.backgroundImage.alpha
-        )
-
-        var imageIndex = 0
-        for layer in options.watermarkLayers {
-            switch layer {
-            case let .text(textOptions):
-                drawTextWatermark(textOptions, in: context, canvasSize: canvasSize)
-            case let .image(imageOptions):
-                guard waterImages.indices.contains(imageIndex) else {
-                    continue
+        return ImageMarkerRenderer.renderCanvas(
+            background: image,
+            backgroundScale: options.backgroundImage.scale,
+            backgroundRotate: options.backgroundImage.rotate,
+            backgroundAlpha: options.backgroundImage.alpha,
+            rotationCanvasMode: options.rotationCanvasMode
+        ) { context, canvasSize in
+            var imageIndex = 0
+            for layer in options.watermarkLayers {
+                switch layer {
+                case let .text(textOptions):
+                    drawTextWatermark(textOptions, in: context, canvasSize: canvasSize)
+                case let .image(imageOptions):
+                    guard waterImages.indices.contains(imageIndex) else {
+                        continue
+                    }
+                    let position = ImageMarkerRenderPosition(rawValue: imageOptions.position.rawValue as String) ?? .none
+                    let watermark = ImageMarkerImageWatermark(
+                        image: waterImages[imageIndex],
+                        position: position,
+                        offsetX: imageOptions.X,
+                        offsetY: imageOptions.Y,
+                        scale: imageOptions.imageOption.scale,
+                        rotate: imageOptions.imageOption.rotate,
+                        alpha: imageOptions.imageOption.alpha,
+                        edgeInset: imageOptions.edgeInset,
+                        trimTransparentPadding: imageOptions.trimTransparentPadding
+                    )
+                    ImageMarkerRenderer.drawImageWatermark(context: context, canvasSize: canvasSize, watermark: watermark)
+                    imageIndex += 1
                 }
-                let position = ImageMarkerRenderPosition(rawValue: imageOptions.position.rawValue as String) ?? .none
-                let watermark = ImageMarkerImageWatermark(
-                    image: waterImages[imageIndex],
-                    position: position,
-                    offsetX: imageOptions.X,
-                    offsetY: imageOptions.Y,
-                    scale: imageOptions.imageOption.scale,
-                    rotate: imageOptions.imageOption.rotate,
-                    alpha: imageOptions.imageOption.alpha
-                )
-                ImageMarkerRenderer.drawImageWatermark(context: context, canvasSize: canvasSize, watermark: watermark)
-                imageIndex += 1
             }
         }
-
-        var renderedImage = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
-        renderedImage = renderedImage?.rotatedImageWithTransform(options.backgroundImage.rotate)
-        return renderedImage
     }
     
     @objc(markWithText:resolve:reject:)
@@ -408,13 +334,18 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         }
         Task(priority: .userInitiated) {
             do {
-                let images = try await self.loadImages(with: [markOpts.backgroundImage])
-                guard let scaledImage = self.markImgWithText(images[0], markOpts) else {
-                    reject("error", "Failed to render watermarked image", nil)
-                    return
+                let result = try await self.operationLimiter.withPermit {
+                    var images = try await self.loadImages(with: [markOpts.backgroundImage])
+                    let renderedImage = Utils.renderAndReleaseSources(&images) { sources in
+                        self.markImgWithText(sources[0], markOpts)
+                    }
+                    guard let renderedImage else {
+                        throw self.markerError("Failed to render watermarked image")
+                    }
+                    try Task.checkCancellation()
+                    return try self.saveImageForMarker(renderedImage, with: markOpts)
                 }
-                let res = try self.saveImageForMarker(scaledImage, with: markOpts)
-                resolve(res)
+                resolve(result)
             } catch {
                 reject("error", error.localizedDescription, error)
             }
@@ -428,14 +359,23 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         }
         Task(priority: .userInitiated) {
             do {
-                let waterImages = markOpts.watermarkImages.map { $0.imageOption }
-                var images = try await self.loadImages(with: [markOpts.backgroundImage] + waterImages)
-                guard let scaledImage = self.markImage(with: images.remove(at: 0), waterImages: images, options: markOpts) else {
-                    reject("error", "Failed to render watermarked image", nil)
-                    return
+                let result = try await self.operationLimiter.withPermit {
+                    let waterImages = markOpts.watermarkImages.map { $0.imageOption }
+                    var images = try await self.loadImages(with: [markOpts.backgroundImage] + waterImages)
+                    let renderedImage = Utils.renderAndReleaseSources(&images) { sources in
+                        self.markImage(
+                            with: sources[0],
+                            waterImages: Array(sources.dropFirst()),
+                            options: markOpts
+                        )
+                    }
+                    guard let renderedImage else {
+                        throw self.markerError("Failed to render watermarked image")
+                    }
+                    try Task.checkCancellation()
+                    return try self.saveImageForMarker(renderedImage, with: markOpts)
                 }
-                let res = try self.saveImageForMarker(scaledImage, with: markOpts)
-                resolve(res)
+                resolve(result)
             } catch {
                 reject("error", error.localizedDescription, error)
             }
@@ -449,14 +389,23 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         }
         Task(priority: .userInitiated) {
             do {
-                let waterImages = markOpts.imageLayers.map { $0.imageOption }
-                var images = try await self.loadImages(with: [markOpts.backgroundImage] + waterImages)
-                guard let scaledImage = self.markWatermarks(with: images.remove(at: 0), waterImages: images, options: markOpts) else {
-                    reject("error", "Failed to render watermarked image", nil)
-                    return
+                let result = try await self.operationLimiter.withPermit {
+                    let waterImages = markOpts.imageLayers.map { $0.imageOption }
+                    var images = try await self.loadImages(with: [markOpts.backgroundImage] + waterImages)
+                    let renderedImage = Utils.renderAndReleaseSources(&images) { sources in
+                        self.markWatermarks(
+                            with: sources[0],
+                            waterImages: Array(sources.dropFirst()),
+                            options: markOpts
+                        )
+                    }
+                    guard let renderedImage else {
+                        throw self.markerError("Failed to render watermarked image")
+                    }
+                    try Task.checkCancellation()
+                    return try self.saveImageForMarker(renderedImage, with: markOpts)
                 }
-                let res = try self.saveImageForMarker(scaledImage, with: markOpts)
-                resolve(res)
+                resolve(result)
             } catch {
                 reject("error", error.localizedDescription, error)
             }

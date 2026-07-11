@@ -20,7 +20,12 @@ export const DEFAULT_MAX_SIZE = 2048;
 type AssetResolver = (source: any) => any;
 type OutputOptions = Pick<
   MarkOptions,
-  'quality' | 'filename' | 'saveFormat' | 'maxSize'
+  | 'quality'
+  | 'filename'
+  | 'saveFormat'
+  | 'matteColor'
+  | 'rotationCanvasMode'
+  | 'maxSize'
 >;
 
 const defaultAssetResolver: AssetResolver = (source) =>
@@ -115,7 +120,13 @@ function getOutputOptions(options: MarkOptions): OutputOptions {
   if (options.saveFormat !== undefined) {
     outputOptions.saveFormat = options.saveFormat;
   }
-  outputOptions.maxSize = options.maxSize || DEFAULT_MAX_SIZE;
+  if (options.matteColor !== undefined) {
+    outputOptions.matteColor = options.matteColor;
+  }
+  if (options.rotationCanvasMode !== undefined) {
+    outputOptions.rotationCanvasMode = options.rotationCanvasMode;
+  }
+  outputOptions.maxSize = options.maxSize ?? DEFAULT_MAX_SIZE;
 
   return outputOptions;
 }
@@ -220,7 +231,7 @@ export function normalizeTextMarkOptions(
         };
       }
     ),
-    maxSize: options.maxSize || DEFAULT_MAX_SIZE,
+    maxSize: options.maxSize ?? DEFAULT_MAX_SIZE,
   };
 }
 
@@ -237,7 +248,7 @@ export function normalizeImageMarkOptions(
     watermarkImages: cloneImageWatermarks(options.watermarkImages ?? []).map(
       (imageOptions) => resolveImageOptions(imageOptions, assetResolver)
     ),
-    maxSize: options.maxSize || DEFAULT_MAX_SIZE,
+    maxSize: options.maxSize ?? DEFAULT_MAX_SIZE,
   };
 
   if (options.watermarkImage?.src) {
@@ -247,6 +258,14 @@ export function normalizeImageMarkOptions(
     );
   } else {
     delete nativeOptions.watermarkImage;
+  }
+
+  if (options.watermarkPositions) {
+    nativeOptions.watermarkPositions = clonePositionOptions(
+      options.watermarkPositions
+    );
+  } else {
+    delete nativeOptions.watermarkPositions;
   }
 
   return nativeOptions;
