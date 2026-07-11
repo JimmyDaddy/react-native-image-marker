@@ -92,7 +92,7 @@
     "react-native": "0.73.3",
     "react-native-builder-bob": "^0.40.15",
     "release-it": "^17.10.0",
-    "typedoc": "^0.28.14",
+    "typedoc": "0.28.19",
     "typedoc-plugin-localization": "^3.1.0",
     "typedoc-plugin-rename-defaults": "^0.7.3",
     "typescript": "^5.9.3"
