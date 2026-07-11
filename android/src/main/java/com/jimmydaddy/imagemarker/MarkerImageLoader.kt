@@ -199,11 +199,18 @@ class MarkerImageLoader(private val context: ReactApplicationContext, private va
         "Can't decode resource bounds by the path: ${img.uri}"
       )
     }
-    val decodeTarget = preScaleTarget(img, bounds.outWidth, bounds.outHeight)
+    val sourceSize = ImageDecodePlanner.densityAdjustedSize(
+      bounds.outWidth,
+      bounds.outHeight,
+      bounds.inDensity,
+      bounds.inTargetDensity,
+      bounds.inScaled
+    )
+    val decodeTarget = preScaleTarget(img, sourceSize.width, sourceSize.height)
     val decodeOptions = BitmapFactory.Options().apply {
-      inSampleSize = calculateInSampleSize(
-        bounds.outWidth,
-        bounds.outHeight,
+      inSampleSize = ImageDecodePlanner.calculateInSampleSize(
+        sourceSize.width,
+        sourceSize.height,
         decodeTarget.width,
         decodeTarget.height,
         swapDimensions = false
@@ -216,7 +223,7 @@ class MarkerImageLoader(private val context: ReactApplicationContext, private va
       "Can't decode resource by the path: ${img.uri}"
     )
     try {
-      ownedBitmap = resizeToPreScaleTarget(checkNotNull(ownedBitmap), img)
+      ownedBitmap = resizeToTarget(checkNotNull(ownedBitmap), decodeTarget)
       ownedBitmap = scaleBitmap(checkNotNull(ownedBitmap), scale)
       return ownedBitmap.also { ownedBitmap = null }
     } finally {
@@ -270,7 +277,7 @@ class MarkerImageLoader(private val context: ReactApplicationContext, private va
       val orientedHeight = if (swapsDimensions(orientation)) bounds.outWidth else bounds.outHeight
       val decodeTarget = preScaleTarget(img, orientedWidth, orientedHeight)
       val decodeOptions = BitmapFactory.Options().apply {
-        inSampleSize = calculateInSampleSize(
+        inSampleSize = ImageDecodePlanner.calculateInSampleSize(
           bounds.outWidth,
           bounds.outHeight,
           decodeTarget.width,
@@ -305,26 +312,6 @@ class MarkerImageLoader(private val context: ReactApplicationContext, private va
     } catch (_: Exception) {
       ExifInterface.ORIENTATION_NORMAL
     }
-  }
-
-  private fun calculateInSampleSize(
-    sourceWidth: Int,
-    sourceHeight: Int,
-    requestedWidth: Int,
-    requestedHeight: Int,
-    swapDimensions: Boolean
-  ): Int {
-    if (sourceWidth <= 0 || sourceHeight <= 0) return 1
-    val orientedWidth = if (swapDimensions) sourceHeight else sourceWidth
-    val orientedHeight = if (swapDimensions) sourceWidth else sourceHeight
-    var sampleSize = 1
-    while (
-      orientedWidth / (sampleSize * 2) >= requestedWidth &&
-      orientedHeight / (sampleSize * 2) >= requestedHeight
-    ) {
-      sampleSize *= 2
-    }
-    return sampleSize
   }
 
   private fun swapsDimensions(orientation: Int): Boolean {
@@ -383,6 +370,10 @@ class MarkerImageLoader(private val context: ReactApplicationContext, private va
 
   private fun resizeToPreScaleTarget(bitmap: Bitmap, img: ImageOptions): Bitmap {
     val target = preScaleTarget(img, bitmap.width, bitmap.height)
+    return resizeToTarget(bitmap, target)
+  }
+
+  private fun resizeToTarget(bitmap: Bitmap, target: ImagePixelSize): Bitmap {
     if (bitmap.width == target.width && bitmap.height == target.height) {
       return bitmap
     }
