@@ -1,5 +1,11 @@
 # Changelog
 
+## <small>1.4.2 (2026-07-11)</small>
+
+* fix(ci): repair npm publish setup ([5a35143](https://github.com/JimmyDaddy/react-native-image-marker/commit/5a35143))
+* fix(rendering): align cross-platform output and harden pipeline (#299) ([94b623f](https://github.com/JimmyDaddy/react-native-image-marker/commit/94b623f)), closes [#299](https://github.com/JimmyDaddy/react-native-image-marker/issues/299)
+* refactor: improve marker pipeline maintainability (#296) ([58f9a1e](https://github.com/JimmyDaddy/react-native-image-marker/commit/58f9a1e)), closes [#296](https://github.com/JimmyDaddy/react-native-image-marker/issues/296)
+
 ## <small>1.4.1 (2026-07-01)</small>
 
 * fix: keep scaled image watermarks sharp (#295) ([a5d7112](https://github.com/JimmyDaddy/react-native-image-marker/commit/a5d7112)), closes [#295](https://github.com/JimmyDaddy/react-native-image-marker/issues/295)
