@@ -27,21 +27,40 @@ data class TextOptions(val options: ReadableMap) {
   private var style: TextStyle
 
   init {
-    if (text == null) {
-      throw MarkerError(ErrorCode.PARAMS_REQUIRED, "mark text is required")
-    }
-    val positionOptions = options.getMap("position")
-    x =
-      if (positionOptions != null && positionOptions.hasKey("X")) Utils.handleDynamicToString(positionOptions.getDynamic("X")) else null
-    y =
-      if (positionOptions != null && positionOptions.hasKey("Y")) Utils.handleDynamicToString(positionOptions.getDynamic("Y")) else null
-    edgeInset =
-      if (positionOptions != null && positionOptions.hasKey("edgeInset")) Utils.handleDynamicToString(positionOptions.getDynamic("edgeInset")) else null
-    positionEnum =
-      if (positionOptions != null && null != positionOptions.getString("position")) PositionEnum.getPosition(
+    try {
+      if (text == null) {
+        throw MarkerError(ErrorCode.PARAMS_REQUIRED, "mark text is required")
+      }
+      val positionOptions = if (options.hasKey("position") && !options.isNull("position")) {
+        options.getMap("position")
+      } else {
+        null
+      }
+      x =
+        if (positionOptions?.hasKey("X") == true) Utils.handleDynamicToString(positionOptions.getDynamic("X")) else null
+      y =
+        if (positionOptions?.hasKey("Y") == true) Utils.handleDynamicToString(positionOptions.getDynamic("Y")) else null
+      edgeInset =
+        if (positionOptions?.hasKey("edgeInset") == true) Utils.handleDynamicToString(positionOptions.getDynamic("edgeInset")) else null
+      val positionName = if (positionOptions?.hasKey("position") == true && !positionOptions.isNull("position")) {
         positionOptions.getString("position")
-      ) else null
-    style = TextStyle(options.getMap("style"))
+      } else {
+        null
+      }
+      positionEnum = positionName?.let(PositionEnum::getPosition)
+      val styleOptions = if (options.hasKey("style") && !options.isNull("style")) {
+        options.getMap("style")
+      } else {
+        null
+      }
+      style = TextStyle(styleOptions)
+    } catch (error: MarkerError) {
+      throw error
+    } catch (error: Exception) {
+      throw MarkerError(ErrorCode.INVALID_PARAMS, "Invalid text options").apply {
+        initCause(error)
+      }
+    }
   }
 
   fun applyStyle(
@@ -83,7 +102,7 @@ data class TextOptions(val options: ReadableMap) {
     Log.i(Constants.IMAGE_MARKER_TAG, "textSize: " + textSize + " fontSize: " + style.fontSize + " displayMetrics: " + context.resources.displayMetrics)
     textPaint.color = Color.parseColor(Utils.transRGBColor(style.color))
     textPaint.isUnderlineText = style.underline
-    textPaint.textSkewX = style.skewX!!
+    textPaint.textSkewX = style.skewX
     var typeface = Typeface.create(typefaceFamily, Typeface.NORMAL)
     if (style.italic && style.bold) {
       typeface = Typeface.create(typefaceFamily, Typeface.BOLD_ITALIC)
@@ -138,8 +157,8 @@ data class TextOptions(val options: ReadableMap) {
     val y = position.y
 
     canvas.save()
-    val textRectWithPosition = RectF(x, y , textWidth.toFloat(), textHeight.toFloat())
-    canvas.rotate(style.rotate.toFloat(), textRectWithPosition.centerX(), textRectWithPosition.centerY())
+    val rotationPivot = rotationPivot(x, y, textWidth.toFloat(), textHeight.toFloat())
+    canvas.rotate(style.rotate.toFloat(), rotationPivot.first, rotationPivot.second)
 
     // Draw text background
     if (null != style.textBackgroundStyle) {
@@ -180,5 +199,16 @@ data class TextOptions(val options: ReadableMap) {
     canvas.translate(textX, y)
     textLayout.draw(canvas)
     canvas.restore()
+  }
+
+  companion object {
+    internal fun rotationPivot(
+      x: Float,
+      y: Float,
+      width: Float,
+      height: Float
+    ): Pair<Float, Float> {
+      return Pair(x + width / 2f, y + height / 2f)
+    }
   }
 }

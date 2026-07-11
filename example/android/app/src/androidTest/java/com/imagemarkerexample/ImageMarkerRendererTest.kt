@@ -9,7 +9,9 @@ import com.facebook.react.bridge.JavaOnlyArray
 import com.facebook.react.bridge.JavaOnlyMap
 import com.facebook.react.bridge.ReactApplicationContext
 import com.jimmydaddy.imagemarker.ImageMarkerRenderer
+import com.jimmydaddy.imagemarker.ImageProcess
 import com.jimmydaddy.imagemarker.base.MarkImageOptions
+import com.jimmydaddy.imagemarker.base.MarkTextOptions
 import com.jimmydaddy.imagemarker.base.MarkWatermarkOptions
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -260,6 +262,58 @@ class ImageMarkerRendererTest {
   }
 
   @Test
+  fun halfScaleBackgroundChangesCanvasWithoutScalingAbsoluteWatermarkCoordinates() {
+    val scaledBackground = ImageProcess.scaleBitmap(solidBitmap(8, 8, Color.RED), 0.5f)
+    val output = ImageMarkerRenderer.renderImageWatermarks(
+      scaledBackground,
+      listOf(solidBitmap(1, 1, Color.BLUE)),
+      imageOptions(
+        backgroundScale = 0.5,
+        watermarkPosition = JavaOnlyMap.of("X", 2, "Y", 1)
+      )
+    )
+
+    assertEquals(4, output.width)
+    assertEquals(4, output.height)
+    assertEquals(Color.RED, output.getPixel(1, 1))
+    assertEquals(Color.BLUE, output.getPixel(2, 1))
+    assertEquals(Color.RED, output.getPixel(3, 1))
+  }
+
+  @Test
+  fun doubleScaleBackgroundChangesCanvasWithoutScalingWatermarkOrCoordinates() {
+    val scaledBackground = ImageProcess.scaleBitmap(solidBitmap(8, 8, Color.RED), 2f)
+    val output = ImageMarkerRenderer.renderImageWatermarks(
+      scaledBackground,
+      listOf(solidBitmap(2, 1, Color.BLUE)),
+      imageOptions(
+        backgroundScale = 2.0,
+        watermarkPosition = JavaOnlyMap.of("X", 2, "Y", 1)
+      )
+    )
+
+    assertEquals(16, output.width)
+    assertEquals(16, output.height)
+    assertEquals(Color.RED, output.getPixel(1, 1))
+    assertEquals(Color.BLUE, output.getPixel(2, 1))
+    assertEquals(Color.BLUE, output.getPixel(3, 1))
+    assertEquals(Color.RED, output.getPixel(4, 1))
+  }
+
+  @Test
+  fun backgroundScaleRoundsEachOutputDimensionAndNeverProducesZero() {
+    val source = solidBitmap(4, 3, Color.RED)
+
+    val slightlyLarger = ImageProcess.scaleBitmap(source, 1.1f)
+    val thumbnail = ImageProcess.scaleBitmap(source, 0.3f)
+
+    assertEquals(4, slightlyLarger.width)
+    assertEquals(3, slightlyLarger.height)
+    assertEquals(1, thumbnail.width)
+    assertEquals(1, thumbnail.height)
+  }
+
+  @Test
   fun rotatedBackgroundUsesFilteredSampling() {
     val output = ImageMarkerRenderer.renderImageWatermarks(
       checkerBitmap(4, 4),
@@ -340,8 +394,68 @@ class ImageMarkerRendererTest {
     )
   }
 
+  @Test
+  fun missingTextStyleRendersWithVisibleDefaults() {
+    val output = ImageMarkerRenderer.renderTextWatermarks(
+      solidBitmap(80, 40, Color.WHITE),
+      textOptions(x = 4, y = 4),
+      reactContext()
+    )
+
+    var nonWhitePixels = 0
+    for (y in 0 until output.height) {
+      for (x in 0 until output.width) {
+        val pixel = output.getPixel(x, y)
+        if (Color.red(pixel) < 245 || Color.green(pixel) < 245 || Color.blue(pixel) < 245) {
+          nonWhitePixels += 1
+        }
+      }
+    }
+    assertTrue("Expected default black text to be visible", nonWhitePixels > 0)
+  }
+
+  @Test
+  fun rotatedTextAtNonZeroCoordinatesKeepsItsLocalCenter() {
+    val style = JavaOnlyMap.of(
+      "color", "#00000000",
+      "fontSize", 24,
+      "rotate", 90,
+      "textBackgroundStyle", JavaOnlyMap.of(
+        "color", "#0000FF",
+        "type", "none"
+      )
+    )
+    val base = ImageMarkerRenderer.renderTextWatermarks(
+      solidBitmap(140, 110, Color.WHITE),
+      textOptions(x = 30, y = 30, style = style),
+      reactContext()
+    )
+    val deltaX = 24
+    val deltaY = 18
+    val shifted = ImageMarkerRenderer.renderTextWatermarks(
+      solidBitmap(140, 110, Color.WHITE),
+      textOptions(x = 30 + deltaX, y = 30 + deltaY, style = style),
+      reactContext()
+    )
+
+    var comparedPixels = 0
+    for (y in 0 until base.height - deltaY) {
+      for (x in 0 until base.width - deltaX) {
+        if (isBlue(base.getPixel(x, y))) {
+          assertTrue(
+            "Expected rotated text pixel ($x,$y) to translate by the configured coordinates",
+            isBlue(shifted.getPixel(x + deltaX, y + deltaY))
+          )
+          comparedPixels += 1
+        }
+      }
+    }
+    assertTrue("Expected a visible rotated text background", comparedPixels > 0)
+  }
+
   private fun imageOptions(
     backgroundRotate: Int = 0,
+    backgroundScale: Double = 1.0,
     watermarkScale: Double = 1.0,
     rotationCanvasMode: String = "expand",
     saveFormat: String = "png",
@@ -357,6 +471,8 @@ class ImageMarkerRendererTest {
           imageSource("background"),
           "rotate",
           backgroundRotate,
+          "scale",
+          backgroundScale,
           "alpha",
           1
         ),
@@ -382,6 +498,36 @@ class ImageMarkerRendererTest {
         "rotationCanvasMode",
         rotationCanvasMode
       )
+    )
+  }
+
+  private fun textOptions(
+    x: Int,
+    y: Int,
+    style: JavaOnlyMap? = null
+  ): MarkTextOptions {
+    val watermark = JavaOnlyMap.of(
+      "text", "Marker",
+      "position", JavaOnlyMap.of("X", x, "Y", y)
+    )
+    if (style != null) {
+      watermark.putMap("style", style)
+    }
+    return MarkTextOptions(
+      JavaOnlyMap.of(
+        "backgroundImage", JavaOnlyMap.of(
+          "src", imageSource("background"),
+          "alpha", 1
+        ),
+        "watermarkTexts", JavaOnlyArray.of(watermark),
+        "saveFormat", "png"
+      )
+    )
+  }
+
+  private fun reactContext(): ReactApplicationContext {
+    return ReactApplicationContext(
+      InstrumentationRegistry.getInstrumentation().targetContext.applicationContext
     )
   }
 
@@ -426,5 +572,9 @@ class ImageMarkerRendererTest {
 
   private fun isBlackOrWhite(pixel: Int): Boolean {
     return pixel == Color.BLACK || pixel == Color.WHITE
+  }
+
+  private fun isBlue(pixel: Int): Boolean {
+    return Color.blue(pixel) > 200 && Color.red(pixel) < 80 && Color.green(pixel) < 80
   }
 }

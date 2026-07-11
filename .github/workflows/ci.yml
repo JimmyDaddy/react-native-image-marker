@@ -136,6 +136,7 @@ jobs:
                   "example/tsconfig.json",
                   "example/src/**",
                   "expo-example/App.tsx",
+                  "expo-example/metro.config.js",
                   "expo-example/package.json",
                   "expo-example/tsconfig.json",
               ]
@@ -214,11 +215,18 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install dependencies
+      - name: Install root and Expo example dependencies
         run: |
           npm install
-          npm --prefix example install
           npm --prefix expo-example install --ignore-scripts --no-audit --no-fund
+
+      - name: Verify Expo clean-install bundle
+        run: |
+          test ! -d example/node_modules
+          npm --prefix expo-example run bundle:smoke
+
+      - name: Install React Native example dependencies
+        run: npm --prefix example install
 
       - name: Typecheck
         run: |
@@ -676,6 +684,14 @@ jobs:
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testJPEGUsesExplicitMatteWhilePNGPreservesTransparency \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testTrimsTransparentWatermarkPaddingBeforeAnchoredPositioning \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testOptionsPreferFilenameAndProvideRenderingDefaults \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testRejectsInvalidQualityAlphaAndUnsafeFilenames \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testParsesShadowHexColorAndRejectsInvalidValues \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testBackgroundScaleChangesCanvasWithoutImplicitlyScalingLayers \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testBackgroundScaleDoesNotImplicitlyScaleText \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testSequentialAsyncMapBoundsConcurrencyAndPreservesOrder \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testAsyncLimiterBoundsConcurrencyAndSkipsCancelledWaiter \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testCancellableContinuationHandlesCancellationCompletionRace \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testRenderAndReleaseSourcesDropsInputsBeforeEncodingPhase \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testAnchorsRotatedWatermarkByVisibleBounds \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testRendersImageWatermarkUsingAnchoredOffsets \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testRotatesRenderedBackgroundWhenRequested \

@@ -126,7 +126,7 @@ function getOutputOptions(options: MarkOptions): OutputOptions {
   if (options.rotationCanvasMode !== undefined) {
     outputOptions.rotationCanvasMode = options.rotationCanvasMode;
   }
-  outputOptions.maxSize = options.maxSize || DEFAULT_MAX_SIZE;
+  outputOptions.maxSize = options.maxSize ?? DEFAULT_MAX_SIZE;
 
   return outputOptions;
 }
@@ -231,7 +231,7 @@ export function normalizeTextMarkOptions(
         };
       }
     ),
-    maxSize: options.maxSize || DEFAULT_MAX_SIZE,
+    maxSize: options.maxSize ?? DEFAULT_MAX_SIZE,
   };
 }
 
@@ -248,7 +248,7 @@ export function normalizeImageMarkOptions(
     watermarkImages: cloneImageWatermarks(options.watermarkImages ?? []).map(
       (imageOptions) => resolveImageOptions(imageOptions, assetResolver)
     ),
-    maxSize: options.maxSize || DEFAULT_MAX_SIZE,
+    maxSize: options.maxSize ?? DEFAULT_MAX_SIZE,
   };
 
   if (options.watermarkImage?.src) {

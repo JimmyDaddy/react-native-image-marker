@@ -1,7 +1,6 @@
 package com.jimmydaddy.imagemarker
 
 import android.graphics.Bitmap
-import android.graphics.Matrix
 import android.util.Log
 import com.jimmydaddy.imagemarker.base.Constants.IMAGE_MARKER_TAG
 import com.jimmydaddy.imagemarker.base.ErrorCode
@@ -12,6 +11,7 @@ import kotlin.math.ceil
 import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.roundToInt
 import kotlin.math.sin
 
 class ImageProcess {
@@ -64,9 +64,10 @@ class ImageProcess {
       if (!scale.isFinite() || scale <= 0f) {
         throw MarkerError(ErrorCode.INVALID_PARAMS, "Image scale must be finite and greater than zero")
       }
-      val matrix = Matrix().apply { postScale(scale, scale) }
+      val scaledWidth = (bitmap.width * scale).roundToInt().coerceAtLeast(1)
+      val scaledHeight = (bitmap.height * scale).roundToInt().coerceAtLeast(1)
       val scaledBitmap = Utils.allocateOrThrow("scaled image bitmap") {
-        Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, filter)
+        Bitmap.createScaledBitmap(bitmap, scaledWidth, scaledHeight, filter)
       }
       Log.d(
         IMAGE_MARKER_TAG,

@@ -11,4 +11,14 @@ class MarkerError internal constructor(private var errorCode: ErrorCode, private
   fun getErrMsg(): String {
     return errMsg
   }
+
+  companion object {
+    internal fun fromInvalidParams(error: Exception, message: String): MarkerError {
+      return if (error is MarkerError) {
+        error
+      } else {
+        MarkerError(ErrorCode.INVALID_PARAMS, message).apply { initCause(error) }
+      }
+    }
+  }
 }

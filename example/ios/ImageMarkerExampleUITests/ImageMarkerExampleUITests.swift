@@ -8,6 +8,100 @@
 import XCTest
 import UIKit
 
+private actor SequentialLoadProbe {
+  private var active = 0
+  private var maximumActive = 0
+  private var started: [Int] = []
+
+  func begin(_ value: Int) {
+    active += 1
+    maximumActive = max(maximumActive, active)
+    started.append(value)
+  }
+
+  func end() {
+    active -= 1
+  }
+
+  func snapshot() -> (maximumActive: Int, started: [Int]) {
+    return (maximumActive, started)
+  }
+}
+
+private actor AsyncLimiterProbe {
+  private var active = 0
+  private var maximumActive = 0
+  private var entries: [Int] = []
+
+  func begin(_ value: Int) {
+    active += 1
+    maximumActive = max(maximumActive, active)
+    entries.append(value)
+  }
+
+  func end() {
+    active -= 1
+  }
+
+  func snapshot() -> (maximumActive: Int, entries: [Int]) {
+    return (maximumActive, entries)
+  }
+}
+
+private actor AsyncTestGate {
+  private var isOpen = false
+  private var waiters: [CheckedContinuation<Void, Never>] = []
+
+  func wait() async {
+    if isOpen {
+      return
+    }
+    await withCheckedContinuation { continuation in
+      waiters.append(continuation)
+    }
+  }
+
+  func open() {
+    isOpen = true
+    let currentWaiters = waiters
+    waiters.removeAll()
+    currentWaiters.forEach { $0.resume() }
+  }
+}
+
+private final class CancellationBridgeProbe: @unchecked Sendable {
+  private let lock = NSLock()
+  private var completion: ((Result<Int, Error>) -> Void)?
+  private var cancellationCount = 0
+
+  func install(_ completion: @escaping (Result<Int, Error>) -> Void) {
+    lock.lock()
+    self.completion = completion
+    lock.unlock()
+  }
+
+  func recordCancellation() {
+    lock.lock()
+    cancellationCount += 1
+    lock.unlock()
+  }
+
+  func complete(_ result: Result<Int, Error>) {
+    lock.lock()
+    let completion = self.completion
+    lock.unlock()
+    completion?(result)
+  }
+
+  func cancellationCalls() -> Int {
+    lock.lock()
+    defer { lock.unlock() }
+    return cancellationCount
+  }
+}
+
+private final class SourceLifetimeToken {}
+
 final class ImageMarkerExampleUITests: XCTestCase {
 
   override func setUpWithError() throws {
@@ -401,6 +495,357 @@ final class ImageMarkerExampleUITests: XCTestCase {
     XCTAssertEqual(Utils.canonicalOutputFilename("output.JPEG", ext: ".png"), "output.png")
   }
 
+  func testRejectsInvalidQualityAlphaAndUnsafeFilenames() throws {
+    let background: [AnyHashable: Any] = [
+      "src": ["uri": "file:///tmp/background.png"],
+    ]
+
+    for quality in [0, 100] {
+      XCTAssertEqual(
+        try Options(dicOpts: ["backgroundImage": background, "quality": quality]).quality,
+        quality
+      )
+    }
+    for quality: Any in [-1, 101, 50.5, Double.nan, Double.infinity, true, "80"] {
+      assertInvalidParams {
+        _ = try Options(dicOpts: ["backgroundImage": background, "quality": quality])
+      }
+    }
+
+    for alpha in [0.0, 1.0] {
+      XCTAssertEqual(
+        try ImageOptions(dicOpts: ["src": ["uri": "file:///tmp/image.png"], "alpha": alpha]).alpha,
+        alpha,
+        accuracy: 0.001
+      )
+    }
+    for alpha: Any in [-0.01, 1.01, Double.nan, Double.infinity, true, "0.5"] {
+      assertInvalidParams {
+        _ = try ImageOptions(dicOpts: ["src": ["uri": "file:///tmp/image.png"], "alpha": alpha])
+      }
+    }
+
+    for filename in [".", "..", ".png", ".jpg", ".jpeg", "../escape", "nested/file", "nested\\file", "bad\nname"] {
+      assertInvalidParams {
+        _ = try Options(dicOpts: ["backgroundImage": background, "filename": filename])
+      }
+    }
+    XCTAssertNoThrow(try Options(dicOpts: ["backgroundImage": background, "filename": "safe-name.png"]))
+    XCTAssertNoThrow(try Options(dicOpts: ["backgroundImage": background, "filename": "  "]))
+  }
+
+  func testParsesShadowHexColorAndRejectsInvalidValues() throws {
+    assertColor(Utils.resolvedTextColor(nil), red: 0, green: 0, blue: 0, alpha: 1)
+    assertColor(Utils.resolvedTextColor("#123"), red: 1.0 / 15.0, green: 2.0 / 15.0, blue: 3.0 / 15.0, alpha: 1)
+
+    let shadow = try XCTUnwrap(
+      Utils.getShadowStyle([
+        "radius": 0,
+        "dx": 8,
+        "dy": 0,
+        "color": "#0000FF",
+      ])
+    )
+    let shadowColor = try XCTUnwrap(shadow.shadowColor as? UIColor)
+    assertColor(shadowColor, red: 0, green: 0, blue: 1, alpha: 1)
+
+    let shortShadow = try XCTUnwrap(
+      Utils.getShadowStyle([
+        "radius": 0,
+        "dx": 0,
+        "dy": 0,
+        "color": "#F08C",
+      ])
+    )
+    let shortColor = try XCTUnwrap(shortShadow.shadowColor as? UIColor)
+    assertColor(shortColor, red: 1, green: 0, blue: 8.0 / 15.0, alpha: 12.0 / 15.0)
+
+    assertInvalidParams {
+      _ = try Utils.getShadowStyle(["radius": 0, "dx": 0, "dy": 0, "color": "#GGGGGG"])
+    }
+    assertInvalidParams {
+      _ = try Utils.getShadowStyle(["radius": 0, "dx": 0, "dy": 0])
+    }
+
+    let renderedImage = makeShadowedTextImage(shadow: shadow)
+    let bytes = try XCTUnwrap(rgbaBytes(for: renderedImage))
+    let bluePixels = stride(from: 0, to: bytes.count, by: 4).filter { index in
+      bytes[index + 2] > 140 && bytes[index] < 100 && bytes[index + 1] < 100
+    }
+    XCTAssertGreaterThan(bluePixels.count, 0)
+  }
+
+  func testBackgroundScaleChangesCanvasWithoutImplicitlyScalingLayers() throws {
+    let backgroundImage = makeSolidImage(size: CGSize(width: 40, height: 24), color: .red)
+    let watermarkImage = makeSolidImage(size: CGSize(width: 4, height: 3), color: .blue)
+    let background: [AnyHashable: Any] = [
+      "src": ["uri": "file:///tmp/background.png"],
+    ]
+
+    for scenario in [
+      (scale: CGFloat(0.5), size: CGSize(width: 20, height: 12)),
+      (scale: CGFloat(2), size: CGSize(width: 80, height: 48)),
+      (scale: CGFloat(1.1), size: CGSize(width: 44, height: 26)),
+      (scale: CGFloat(0.3), size: CGSize(width: 12, height: 7)),
+    ] {
+      let options = try Options(dicOpts: [
+        "backgroundImage": background.merging(["scale": scenario.scale]) { _, new in new },
+      ])
+      let renderedImage = try XCTUnwrap(
+        ImageMarkerRenderer.renderImageWatermarks(
+          background: backgroundImage,
+          watermarks: [
+            ImageMarkerImageWatermark(
+              image: watermarkImage,
+              position: .none,
+              offsetX: "2",
+              offsetY: "3",
+              scale: 1,
+              rotate: 0,
+              alpha: 1
+            ),
+          ],
+          backgroundScale: options.backgroundImage.scale,
+          backgroundRotate: 0,
+          backgroundAlpha: 1
+        )
+      )
+
+      XCTAssertEqual(renderedImage.scale, 1, accuracy: 0.001)
+      XCTAssertEqual(renderedImage.size.width, scenario.size.width, accuracy: 0.001)
+      XCTAssertEqual(renderedImage.size.height, scenario.size.height, accuracy: 0.001)
+      let watermarkBounds = try XCTUnwrap(bluePixelBounds(in: renderedImage))
+      XCTAssertEqual(watermarkBounds.minX, 2, accuracy: 0.001)
+      XCTAssertEqual(watermarkBounds.minY, 3, accuracy: 0.001)
+      XCTAssertEqual(watermarkBounds.width, 4, accuracy: 0.001)
+      XCTAssertEqual(watermarkBounds.height, 3, accuracy: 0.001)
+    }
+
+    XCTAssertEqual(
+      ImageMarkerRenderer.scaledCanvasSize(CGSize(width: 4, height: 3), backgroundScale: 1.1),
+      CGSize(width: 4, height: 3)
+    )
+    XCTAssertEqual(
+      ImageMarkerRenderer.scaledCanvasSize(CGSize(width: 4, height: 3), backgroundScale: 0.3),
+      CGSize(width: 1, height: 1)
+    )
+
+    for backingScale in [CGFloat(2), CGFloat(3)] {
+      let backingSize = CGSize(width: 4 * backingScale, height: 3 * backingScale)
+      let backingImage = makeSolidImage(size: backingSize, color: .red)
+      let retinaImage = try XCTUnwrap(
+        UIImage(cgImage: try XCTUnwrap(backingImage.cgImage), scale: backingScale, orientation: .up)
+      )
+      XCTAssertEqual(retinaImage.size, CGSize(width: 4, height: 3))
+      let watermarkBackingImage = makeSolidImage(
+        size: CGSize(width: 2 * backingScale, height: 2 * backingScale),
+        color: .blue
+      )
+      let retinaWatermark = try XCTUnwrap(
+        UIImage(
+          cgImage: try XCTUnwrap(watermarkBackingImage.cgImage),
+          scale: backingScale,
+          orientation: .up
+        )
+      )
+      XCTAssertEqual(retinaWatermark.size, CGSize(width: 2, height: 2))
+
+      let renderedImage = try XCTUnwrap(
+        ImageMarkerRenderer.renderImageWatermarks(
+          background: retinaImage,
+          watermarks: [
+            ImageMarkerImageWatermark(
+              image: retinaWatermark,
+              position: .none,
+              offsetX: "1",
+              offsetY: "1",
+              scale: 1,
+              rotate: 0,
+              alpha: 1
+            ),
+          ],
+          backgroundScale: 1,
+          backgroundRotate: 0,
+          backgroundAlpha: 1
+        )
+      )
+      XCTAssertEqual(renderedImage.size, CGSize(width: 4, height: 3))
+      let watermarkBounds = try XCTUnwrap(bluePixelBounds(in: renderedImage))
+      XCTAssertEqual(watermarkBounds, CGRect(x: 1, y: 1, width: 2, height: 2))
+    }
+  }
+
+  func testBackgroundScaleDoesNotImplicitlyScaleText() throws {
+    let background = makeSolidImage(size: CGSize(width: 60, height: 40), color: .red)
+    var textBounds: [CGRect] = []
+
+    for scale in [CGFloat(0.5), CGFloat(2)] {
+      let renderedImage = try XCTUnwrap(
+        ImageMarkerRenderer.renderCanvas(
+          background: background,
+          backgroundScale: scale,
+          backgroundRotate: 0,
+          backgroundAlpha: 1,
+          rotationCanvasMode: .expand
+        ) { _, _ in
+          let text = NSAttributedString(
+            string: "M",
+            attributes: [
+              .font: UIFont.systemFont(ofSize: 12),
+              .foregroundColor: UIColor.blue,
+            ]
+          )
+          text.draw(at: CGPoint(x: 3, y: 4))
+        }
+      )
+      textBounds.append(try XCTUnwrap(bluePixelBounds(in: renderedImage)))
+    }
+
+    XCTAssertEqual(textBounds[0].minX, textBounds[1].minX, accuracy: 0.001)
+    XCTAssertEqual(textBounds[0].minY, textBounds[1].minY, accuracy: 0.001)
+    XCTAssertEqual(textBounds[0].width, textBounds[1].width, accuracy: 0.001)
+    XCTAssertEqual(textBounds[0].height, textBounds[1].height, accuracy: 0.001)
+  }
+
+  func testSequentialAsyncMapBoundsConcurrencyAndPreservesOrder() async throws {
+    let probe = SequentialLoadProbe()
+    let output = try await Utils.sequentialAsyncMap([0, 1, 2, 3]) { value in
+      await probe.begin(value)
+      try await Task.sleep(nanoseconds: 5_000_000)
+      await probe.end()
+      return value * 10
+    }
+    let snapshot = await probe.snapshot()
+
+    XCTAssertEqual(output, [0, 10, 20, 30])
+    XCTAssertEqual(snapshot.maximumActive, 1)
+    XCTAssertEqual(snapshot.started, [0, 1, 2, 3])
+  }
+
+  func testAsyncLimiterBoundsConcurrencyAndSkipsCancelledWaiter() async throws {
+    let limiter = ImageMarkerAsyncLimiter(limit: 1)
+    let probe = AsyncLimiterProbe()
+
+    await withTaskGroup(of: Void.self) { group in
+      for value in 0..<4 {
+        group.addTask {
+          try? await limiter.withPermit {
+            await probe.begin(value)
+            try await Task.sleep(nanoseconds: 5_000_000)
+            await probe.end()
+          }
+        }
+      }
+    }
+    let boundedSnapshot = await probe.snapshot()
+    XCTAssertEqual(boundedSnapshot.maximumActive, 1)
+    XCTAssertEqual(Set(boundedSnapshot.entries), Set(0..<4))
+
+    let cancellationLimiter = ImageMarkerAsyncLimiter(limit: 1)
+    let cancellationProbe = AsyncLimiterProbe()
+    let gate = AsyncTestGate()
+    let firstStarted = expectation(description: "first limiter operation started")
+    let first = Task {
+      try await cancellationLimiter.withPermit {
+        await cancellationProbe.begin(1)
+        firstStarted.fulfill()
+        await gate.wait()
+        await cancellationProbe.end()
+      }
+    }
+    await fulfillment(of: [firstStarted], timeout: 2)
+
+    let cancelledWaiter = Task {
+      try await cancellationLimiter.withPermit {
+        await cancellationProbe.begin(2)
+        await cancellationProbe.end()
+      }
+    }
+    for _ in 0..<1_000 {
+      if await cancellationLimiter.waitingCount == 1 {
+        break
+      }
+      await Task.yield()
+    }
+    let queuedWaiters = await cancellationLimiter.waitingCount
+    XCTAssertEqual(queuedWaiters, 1)
+    cancelledWaiter.cancel()
+    do {
+      try await cancelledWaiter.value
+      XCTFail("Expected a cancelled limiter waiter")
+    } catch is CancellationError {
+      // Expected.
+    }
+    await gate.open()
+    try await first.value
+
+    let cancelledSnapshot = await cancellationProbe.snapshot()
+    XCTAssertEqual(cancelledSnapshot.maximumActive, 1)
+    XCTAssertEqual(cancelledSnapshot.entries, [1])
+  }
+
+  func testCancellableContinuationHandlesCancellationCompletionRace() async throws {
+    let probe = CancellationBridgeProbe()
+    let startEntered = expectation(description: "request start entered")
+    let allowStartToReturn = DispatchSemaphore(value: 0)
+    let task = Task {
+      try await ImageMarkerCancellableContinuation.run { completion in
+        probe.install(completion)
+        startEntered.fulfill()
+        allowStartToReturn.wait()
+        return {
+          probe.recordCancellation()
+          completion(.success(99))
+        }
+      }
+    }
+
+    await fulfillment(of: [startEntered], timeout: 2)
+    task.cancel()
+    allowStartToReturn.signal()
+    do {
+      _ = try await task.value
+      XCTFail("Expected request cancellation")
+    } catch is CancellationError {
+      // Expected.
+    }
+    probe.complete(.success(42))
+    XCTAssertEqual(probe.cancellationCalls(), 1)
+
+    let completedValue = try await ImageMarkerCancellableContinuation.run { completion in
+      completion(.success(7))
+      return {
+        probe.recordCancellation()
+      }
+    }
+    XCTAssertEqual(completedValue, 7)
+    XCTAssertEqual(probe.cancellationCalls(), 1)
+  }
+
+  func testRenderAndReleaseSourcesDropsInputsBeforeEncodingPhase() {
+    weak var firstSource: SourceLifetimeToken?
+    weak var secondSource: SourceLifetimeToken?
+    var sources: [SourceLifetimeToken] = []
+    autoreleasepool {
+      let first = SourceLifetimeToken()
+      let second = SourceLifetimeToken()
+      firstSource = first
+      secondSource = second
+      sources = [first, second]
+    }
+
+    let renderedCount = Utils.renderAndReleaseSources(&sources) { currentSources in
+      XCTAssertNotNil(firstSource)
+      XCTAssertNotNil(secondSource)
+      return currentSources.count
+    }
+
+    XCTAssertEqual(renderedCount, 2)
+    XCTAssertTrue(sources.isEmpty)
+    XCTAssertNil(firstSource)
+    XCTAssertNil(secondSource)
+  }
+
   func testAnchorsRotatedWatermarkByVisibleBounds() throws {
     let background = makeSolidImage(size: CGSize(width: 40, height: 40), color: .red)
     let watermark = makeSolidImage(size: CGSize(width: 6, height: 14), color: .blue)
@@ -694,6 +1139,23 @@ final class ImageMarkerExampleUITests: XCTestCase {
     }
   }
 
+  private func makeShadowedTextImage(shadow: NSShadow) -> UIImage {
+    let format = UIGraphicsImageRendererFormat.default()
+    format.scale = 1
+    format.opaque = false
+    return UIGraphicsImageRenderer(size: CGSize(width: 64, height: 36), format: format).image { _ in
+      let text = NSAttributedString(
+        string: "MM",
+        attributes: [
+          .font: UIFont.boldSystemFont(ofSize: 24),
+          .foregroundColor: UIColor.red,
+          .shadow: shadow,
+        ]
+      )
+      text.draw(at: CGPoint(x: 1, y: 1))
+    }
+  }
+
   private func quadrantSamplePoints(origin: CGPoint, size: CGSize) -> [CGPoint] {
     return [
       CGPoint(x: origin.x + size.width / 4, y: origin.y + size.height / 4),
@@ -727,6 +1189,45 @@ final class ImageMarkerExampleUITests: XCTestCase {
     XCTAssertEqual(bytes[index + 1], UInt8(expectedGreen * 255), accuracy: 2, message)
     XCTAssertEqual(bytes[index + 2], UInt8(expectedBlue * 255), accuracy: 2, message)
     XCTAssertEqual(bytes[index + 3], UInt8(expectedAlpha * 255), accuracy: 2, message)
+  }
+
+  private func assertColor(
+    _ color: UIColor,
+    red expectedRed: CGFloat,
+    green expectedGreen: CGFloat,
+    blue expectedBlue: CGFloat,
+    alpha expectedAlpha: CGFloat,
+    file: StaticString = #filePath,
+    line: UInt = #line
+  ) {
+    var red: CGFloat = 0
+    var green: CGFloat = 0
+    var blue: CGFloat = 0
+    var alpha: CGFloat = 0
+    XCTAssertTrue(
+      color.getRed(&red, green: &green, blue: &blue, alpha: &alpha),
+      file: file,
+      line: line
+    )
+    XCTAssertEqual(red, expectedRed, accuracy: 0.001, file: file, line: line)
+    XCTAssertEqual(green, expectedGreen, accuracy: 0.001, file: file, line: line)
+    XCTAssertEqual(blue, expectedBlue, accuracy: 0.001, file: file, line: line)
+    XCTAssertEqual(alpha, expectedAlpha, accuracy: 0.001, file: file, line: line)
+  }
+
+  private func assertInvalidParams(
+    _ expression: () throws -> Void,
+    file: StaticString = #filePath,
+    line: UInt = #line
+  ) {
+    XCTAssertThrowsError(try expression(), file: file, line: line) { error in
+      XCTAssertEqual(
+        (error as NSError).domain,
+        ErrorDomainEnum.PARAMS_INVALID.rawValue,
+        file: file,
+        line: line
+      )
+    }
   }
 
   private func bluePixelCount(in image: UIImage, xRange: Range<Int>, yRange: Range<Int>) -> Int {

@@ -15,6 +15,7 @@ import React
 @objc(ImageMarker)
 public final class ImageMarker: NSObject, RCTBridgeModule {
     public var bridge: RCTBridge!
+    private let operationLimiter = ImageMarkerAsyncLimiter(limit: 1)
     
     func loadImages(with imageOptions: [ImageOptions]) async throws -> [UIImage] {
         let className = "RCTImageLoader"
@@ -23,60 +24,51 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
               let imageLoader = bridge.module(for: classType) as? RCTImageLoader else {
             throw NSError(domain: ErrorDomainEnum.BASE.rawValue, code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to get ImageLoader module"])
         }
-        let images = try await withThrowingTaskGroup(of: (Int, UIImage).self) { group in
-            for (index, img) in imageOptions.enumerated() {
-                group.addTask {
-                    try await withUnsafeThrowingContinuation { continuation -> Void in
-                        if Utils.isBase64(img.uri) {
-                            if let image = UIImage.transBase64(img.uri) {
-                                continuation.resume(returning: (index, image.normalizedForImageMarker()))
-                            } else {
-                                let error = NSError(domain: ErrorDomainEnum.BASE.rawValue, code: 3, userInfo: [NSLocalizedDescriptionKey: "Failed to load image"])
-                                continuation.resume(throwing: error)
-                            }
-                        } else {
-                            guard let request = RCTConvert.nsurlRequest(img.src) else {
-                                let error = NSError(domain: ErrorDomainEnum.BASE.rawValue, code: 3, userInfo: [NSLocalizedDescriptionKey: "Failed to create URL request for image: \(img.uri)"])
-                                continuation.resume(throwing: error)
-                                return
-                            }
-                            imageLoader.loadImage(with: request, size: CGSizeMake(img.rnSrc.width, img.rnSrc.height), scale: img.rnSrc.scale, clipped: false, resizeMode: RCTResizeMode.cover) { _, _ in
-                            } partialLoad: { _ in
-                                //
-                            } completionBlock: { error, loadedImage in
-                                if let loadedImage = loadedImage {
-                                    continuation.resume(returning: (index, loadedImage.normalizedForImageMarker()))
-                                } else if let error = error {
-                                    continuation.resume(throwing: error)
-                                } else {
-                                    let error = NSError(domain: ErrorDomainEnum.BASE.rawValue, code: 3, userInfo: [NSLocalizedDescriptionKey: "Failed to load image"])
-                                    continuation.resume(throwing: error)
-                                }
-                            }
+        return try await Utils.sequentialAsyncMap(imageOptions) { img in
+            try await self.loadImage(img, using: imageLoader)
+        }
+    }
 
-//                            imageLoader.loadImage(with: request!) { error, loadedImage in
-//                                if let loadedImage = loadedImage {
-//                                    continuation.resume(returning: (index, loadedImage))
-//                                } else if let error = error {
-//                                    continuation.resume(throwing: error)
-//                                } else {
-//                                    let error = NSError(domain: ErrorDomainEnum.BASE.rawValue, code: 3, userInfo: [NSLocalizedDescriptionKey: "Failed to load image"])
-//                                    continuation.resume(throwing: error)
-//                                }
-//                            }
-                        }
-                    }
+    private func loadImage(_ imageOptions: ImageOptions, using imageLoader: RCTImageLoader) async throws -> UIImage {
+        if Utils.isBase64(imageOptions.uri) {
+            try Task.checkCancellation()
+            guard let image = UIImage.transBase64(imageOptions.uri) else {
+                throw NSError(domain: ErrorDomainEnum.BASE.rawValue, code: 3, userInfo: [NSLocalizedDescriptionKey: "Failed to load image"])
+            }
+            try Task.checkCancellation()
+            return image.normalizedForImageMarker()
+        }
+
+        guard let request = RCTConvert.nsurlRequest(imageOptions.src) else {
+            throw NSError(domain: ErrorDomainEnum.BASE.rawValue, code: 3, userInfo: [NSLocalizedDescriptionKey: "Failed to create URL request for image: \(imageOptions.uri)"])
+        }
+        let loadedImage: UIImage = try await ImageMarkerCancellableContinuation.run { completion in
+            return imageLoader.loadImage(
+                with: request,
+                size: CGSizeMake(imageOptions.rnSrc.width, imageOptions.rnSrc.height),
+                scale: imageOptions.rnSrc.scale,
+                clipped: false,
+                resizeMode: RCTResizeMode.cover
+            ) { _, _ in
+                // Progress is intentionally ignored.
+            } partialLoad: { _ in
+                // Partial images are intentionally ignored.
+            } completionBlock: { error, image in
+                if let image {
+                    completion(.success(image))
+                } else if let error {
+                    completion(.failure(error))
+                } else {
+                    completion(.failure(NSError(
+                        domain: ErrorDomainEnum.BASE.rawValue,
+                        code: 3,
+                        userInfo: [NSLocalizedDescriptionKey: "Failed to load image"]
+                    )))
                 }
             }
-            var imagesWithIndex: [(Int, UIImage)] = []
-            for try await image in group {
-                imagesWithIndex.append(image)
-            }
-            let sortedImagesWithIndex = imagesWithIndex.sorted { $0.0 < $1.0 }
-            let images = sortedImagesWithIndex.map { $0.1 }
-            return images
         }
-        return images
+        try Task.checkCancellation()
+        return loadedImage.normalizedForImageMarker()
     }
 
     @objc
@@ -93,7 +85,7 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
     }
 
     func saveImageForMarker(_ image: UIImage, with opts: Options) throws -> String {
-        let fullPath = generateCacheFilePathForMarker(Utils.getExt(opts.saveFormat), opts.filename)
+        let fullPath = try generateCacheFilePathForMarker(Utils.getExt(opts.saveFormat), opts.filename)
         if let saveFormat = opts.saveFormat, saveFormat == "base64" {
             guard let imageData = image.pngData() else {
                 throw markerError("Failed to encode image as PNG")
@@ -112,11 +104,18 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         return fullPath
     }
     
-    func generateCacheFilePathForMarker(_ ext: String?, _ filename: String?) -> String {
+    func generateCacheFilePathForMarker(_ ext: String?, _ filename: String?) throws -> String {
         let paths = NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true)
         let cacheDirectory = paths[0]
         if let filename = filename,
            !filename.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            guard Utils.isSafeOutputFilename(filename) else {
+                throw NSError(
+                    domain: ErrorDomainEnum.PARAMS_INVALID.rawValue,
+                    code: 0,
+                    userInfo: [NSLocalizedDescriptionKey: "filename must be a safe basename"]
+                )
+            }
             let fullName = Utils.canonicalOutputFilename(filename, ext: ext ?? "")
             return (cacheDirectory as NSString).appendingPathComponent(fullName)
         } else {
@@ -335,13 +334,18 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         }
         Task(priority: .userInitiated) {
             do {
-                let images = try await self.loadImages(with: [markOpts.backgroundImage])
-                guard let scaledImage = self.markImgWithText(images[0], markOpts) else {
-                    reject("error", "Failed to render watermarked image", nil)
-                    return
+                let result = try await self.operationLimiter.withPermit {
+                    var images = try await self.loadImages(with: [markOpts.backgroundImage])
+                    let renderedImage = Utils.renderAndReleaseSources(&images) { sources in
+                        self.markImgWithText(sources[0], markOpts)
+                    }
+                    guard let renderedImage else {
+                        throw self.markerError("Failed to render watermarked image")
+                    }
+                    try Task.checkCancellation()
+                    return try self.saveImageForMarker(renderedImage, with: markOpts)
                 }
-                let res = try self.saveImageForMarker(scaledImage, with: markOpts)
-                resolve(res)
+                resolve(result)
             } catch {
                 reject("error", error.localizedDescription, error)
             }
@@ -355,14 +359,23 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         }
         Task(priority: .userInitiated) {
             do {
-                let waterImages = markOpts.watermarkImages.map { $0.imageOption }
-                var images = try await self.loadImages(with: [markOpts.backgroundImage] + waterImages)
-                guard let scaledImage = self.markImage(with: images.remove(at: 0), waterImages: images, options: markOpts) else {
-                    reject("error", "Failed to render watermarked image", nil)
-                    return
+                let result = try await self.operationLimiter.withPermit {
+                    let waterImages = markOpts.watermarkImages.map { $0.imageOption }
+                    var images = try await self.loadImages(with: [markOpts.backgroundImage] + waterImages)
+                    let renderedImage = Utils.renderAndReleaseSources(&images) { sources in
+                        self.markImage(
+                            with: sources[0],
+                            waterImages: Array(sources.dropFirst()),
+                            options: markOpts
+                        )
+                    }
+                    guard let renderedImage else {
+                        throw self.markerError("Failed to render watermarked image")
+                    }
+                    try Task.checkCancellation()
+                    return try self.saveImageForMarker(renderedImage, with: markOpts)
                 }
-                let res = try self.saveImageForMarker(scaledImage, with: markOpts)
-                resolve(res)
+                resolve(result)
             } catch {
                 reject("error", error.localizedDescription, error)
             }
@@ -376,14 +389,23 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         }
         Task(priority: .userInitiated) {
             do {
-                let waterImages = markOpts.imageLayers.map { $0.imageOption }
-                var images = try await self.loadImages(with: [markOpts.backgroundImage] + waterImages)
-                guard let scaledImage = self.markWatermarks(with: images.remove(at: 0), waterImages: images, options: markOpts) else {
-                    reject("error", "Failed to render watermarked image", nil)
-                    return
+                let result = try await self.operationLimiter.withPermit {
+                    let waterImages = markOpts.imageLayers.map { $0.imageOption }
+                    var images = try await self.loadImages(with: [markOpts.backgroundImage] + waterImages)
+                    let renderedImage = Utils.renderAndReleaseSources(&images) { sources in
+                        self.markWatermarks(
+                            with: sources[0],
+                            waterImages: Array(sources.dropFirst()),
+                            options: markOpts
+                        )
+                    }
+                    guard let renderedImage else {
+                        throw self.markerError("Failed to render watermarked image")
+                    }
+                    try Task.checkCancellation()
+                    return try self.saveImageForMarker(renderedImage, with: markOpts)
                 }
-                let res = try self.saveImageForMarker(scaledImage, with: markOpts)
-                resolve(res)
+                resolve(result)
             } catch {
                 reject("error", error.localizedDescription, error)
             }

@@ -9,6 +9,7 @@ const modules = Object.keys({
   ...pak.peerDependencies,
 }).concat([
   'filesize',
+  'pako',
   'react-native-image-marker',
   'react-native-toast-message',
 ]);

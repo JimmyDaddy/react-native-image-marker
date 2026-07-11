@@ -10,95 +10,199 @@ import Foundation
 import UIKit
 import React
 
-class Utils: NSObject {
-    static func getColor(_ hexColor: String) -> UIColor {
-        var cString: String = hexColor.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
-
-        if cString.hasPrefix("0X") {
-            cString = String(cString.dropFirst(2))
-        }
-        if cString.hasPrefix("#") {
-            cString = String(cString.dropFirst())
-        }
-
-        if cString.count != 8 && cString.count != 6 && cString.count != 3 && cString.count != 4 {
-            return UIColor.clear
-        }
-
-        var red: UInt32 = 0
-        var green: UInt32 = 0
-        var blue: UInt32 = 0
-        var alpha: CGFloat = 1.0
-
-        if cString.count == 8 {
-            let aString = String(cString.suffix(2))
-            if let a = UInt32(aString, radix: 16) {
-                alpha = CGFloat(a) / 255.0
-            }
-            cString = String(cString.prefix(6))
-        } else if cString.count == 4 {
-            let aString = String(cString.suffix(1))
-            if let a = UInt32(aString, radix: 16) {
-                alpha = CGFloat(a) / 15.0
-            }
-            cString = String(cString.prefix(3))
-        }
-
-        let hex6 = cString.count == 6 ? true : false
-        var range = NSRange(location: 0, length: hex6 ? 2 : 1)
-
-        /* 调用下面的方法处理字符串 */
-        let redStr = (cString as NSString).substring(with: range)
-        red = stringToInt(redStr)
-
-        range.location = hex6 ? 2 : 1
-        let greenStr = (cString as NSString).substring(with: range)
-        green = stringToInt(greenStr)
-
-        range.location = hex6 ? 4 : 2
-        let blueStr = (cString as NSString).substring(with: range)
-        blue = stringToInt(blueStr)
-
-        return UIColor(red: CGFloat(red) / 255.0, green: CGFloat(green) / 255.0, blue: CGFloat(blue) / 255.0, alpha: alpha)
+actor ImageMarkerAsyncLimiter {
+    private struct Waiter {
+        let id: UUID
+        let continuation: CheckedContinuation<Void, Error>
     }
 
-    static func stringToInt(_ string: String) -> UInt32 {
-        if string.count == 1 {
-            let hexChar = string[string.startIndex]
-            let intCh: UInt32 = getCharInt(hexChar)
-            return intCh * 2
+    private let limit: Int
+    private var activeCount = 0
+    private var waiters: [Waiter] = []
+
+    init(limit: Int) {
+        precondition(limit > 0)
+        self.limit = limit
+    }
+
+    var waitingCount: Int {
+        return waiters.count
+    }
+
+    func withPermit<Value>(_ operation: () async throws -> Value) async throws -> Value {
+        try await acquire()
+        defer {
+            release()
+        }
+        try Task.checkCancellation()
+        return try await operation()
+    }
+
+    private func acquire() async throws {
+        try Task.checkCancellation()
+        if activeCount < limit {
+            activeCount += 1
+            return
+        }
+
+        let id = UUID()
+        try await withTaskCancellationHandler(operation: {
+            try await withCheckedThrowingContinuation { continuation in
+                waiters.append(Waiter(id: id, continuation: continuation))
+            }
+        }, onCancel: {
+            Task {
+                await self.cancelWaiter(id)
+            }
+        })
+    }
+
+    private func cancelWaiter(_ id: UUID) {
+        guard let index = waiters.firstIndex(where: { $0.id == id }) else {
+            return
+        }
+        let waiter = waiters.remove(at: index)
+        waiter.continuation.resume(throwing: CancellationError())
+    }
+
+    private func release() {
+        if waiters.isEmpty {
+            activeCount -= 1
+            return
+        }
+        let next = waiters.removeFirst()
+        next.continuation.resume()
+    }
+}
+
+private final class ImageMarkerCancellableContinuationState<Value>: @unchecked Sendable {
+    private enum Terminal {
+        case result(Result<Value, Error>)
+        case cancelled
+    }
+
+    private let lock = NSLock()
+    private var continuation: CheckedContinuation<Value, Error>?
+    private var cancellationBlock: (() -> Void)?
+    private var terminal: Terminal?
+
+    func installContinuation(_ continuation: CheckedContinuation<Value, Error>) {
+        lock.lock()
+        if let terminal {
+            lock.unlock()
+            resume(continuation, with: terminal)
         } else {
-            let hexChar1 = string[string.startIndex]
-            let intCh1: UInt32 = getCharInt(hexChar1)
-            let hexChar2 = string[string.index(after: string.startIndex)]
-            let intCh2: UInt32 = getCharInt(hexChar2)
-            return intCh1 + intCh2
+            self.continuation = continuation
+            lock.unlock()
         }
-    }
-    
-    static func getCharInt(_ char: Character) -> UInt32 {
-        var charInt: UInt32 = 0
-        if let asciiValue = char.asciiValue {
-            switch asciiValue {
-            case 48...57: // '0'...'9'
-                charInt = UInt32(asciiValue) - 48
-            case 65...70: // 'A'...'F'
-                charInt = UInt32(asciiValue) - 55
-            case 97...102: // 'a'...'f'
-                charInt = UInt32(asciiValue) - 87
-            default:
-                print("Invalid hex character")
-            }
-        }
-        return charInt
     }
 
-    static func getShadowStyle(_ shadowStyle: [AnyHashable: Any]?) -> NSShadow? {
+    func canStart() -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return terminal == nil
+    }
+
+    func installCancellationBlock(_ block: (() -> Void)?) {
+        guard let block else {
+            return
+        }
+        var shouldCancel = false
+        lock.lock()
+        if terminal == nil {
+            cancellationBlock = block
+        } else if case .cancelled = terminal {
+            shouldCancel = true
+        }
+        lock.unlock()
+        if shouldCancel {
+            block()
+        }
+    }
+
+    func complete(_ result: Result<Value, Error>) {
+        var continuationToResume: CheckedContinuation<Value, Error>?
+        lock.lock()
+        if terminal == nil {
+            terminal = .result(result)
+            continuationToResume = continuation
+            continuation = nil
+            cancellationBlock = nil
+        }
+        lock.unlock()
+        continuationToResume?.resume(with: result)
+    }
+
+    func cancel() {
+        var continuationToResume: CheckedContinuation<Value, Error>?
+        var blockToCall: (() -> Void)?
+        lock.lock()
+        if terminal == nil {
+            terminal = .cancelled
+            continuationToResume = continuation
+            continuation = nil
+            blockToCall = cancellationBlock
+            cancellationBlock = nil
+        }
+        lock.unlock()
+        continuationToResume?.resume(throwing: CancellationError())
+        blockToCall?()
+    }
+
+    private func resume(_ continuation: CheckedContinuation<Value, Error>, with terminal: Terminal) {
+        switch terminal {
+        case let .result(result):
+            continuation.resume(with: result)
+        case .cancelled:
+            continuation.resume(throwing: CancellationError())
+        }
+    }
+}
+
+enum ImageMarkerCancellableContinuation {
+    static func run<Value>(
+        start: (@escaping (Result<Value, Error>) -> Void) -> (() -> Void)?
+    ) async throws -> Value {
+        try Task.checkCancellation()
+        let state = ImageMarkerCancellableContinuationState<Value>()
+        return try await withTaskCancellationHandler(operation: {
+            try await withCheckedThrowingContinuation { continuation in
+                state.installContinuation(continuation)
+                guard state.canStart() else {
+                    return
+                }
+                let cancellationBlock = start { result in
+                    state.complete(result)
+                }
+                state.installCancellationBlock(cancellationBlock)
+            }
+        }, onCancel: {
+            state.cancel()
+        })
+    }
+}
+
+class Utils: NSObject {
+    static func resolvedTextColor(_ value: String?) -> UIColor {
+        guard let value else {
+            return .black
+        }
+        return UIColor(hex: value) ?? .clear
+    }
+
+    static func getShadowStyle(_ shadowStyle: [AnyHashable: Any]?) throws -> NSShadow? {
         if let shadowStyle = shadowStyle {
+            guard let colorValue = shadowStyle["color"] as? String,
+                  let color = UIColor(hex: colorValue) else {
+                throw NSError(
+                    domain: ErrorDomainEnum.PARAMS_INVALID.rawValue,
+                    code: 0,
+                    userInfo: [NSLocalizedDescriptionKey: "shadow color is invalid"]
+                )
+            }
             let shadow = NSShadow()
             shadow.shadowBlurRadius = CGFloat(truncating: RCTConvert.nsNumber(shadowStyle["radius"]))
             shadow.shadowOffset = CGSize(width: CGFloat(truncating: RCTConvert.nsNumber(shadowStyle["dx"])), height: CGFloat(truncating: RCTConvert.nsNumber(shadowStyle["dy"])))
-            let color = getColor(RCTConvert.nsString(shadowStyle["color"]))
             shadow.shadowColor = color
             return shadow
         } else {
@@ -119,6 +223,45 @@ class Utils: NSObject {
         let knownExtension = [".jpeg", ".jpg", ".png"].first { lowercased.hasSuffix($0) }
         let stem = knownExtension.map { String(filename.dropLast($0.count)) } ?? filename
         return "\(stem)\(ext)"
+    }
+
+    static func isSafeOutputFilename(_ filename: String) -> Bool {
+        let trimmed = filename.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            return true
+        }
+        let lowercased = trimmed.lowercased()
+        guard trimmed != ".", trimmed != "..",
+              ![".jpeg", ".jpg", ".png"].contains(lowercased),
+              !filename.contains("/"), !filename.contains("\\"),
+              filename.rangeOfCharacter(from: .controlCharacters) == nil else {
+            return false
+        }
+        return true
+    }
+
+    static func sequentialAsyncMap<Input, Output>(
+        _ values: [Input],
+        transform: (Input) async throws -> Output
+    ) async throws -> [Output] {
+        var results: [Output] = []
+        results.reserveCapacity(values.count)
+        for value in values {
+            try Task.checkCancellation()
+            results.append(try await transform(value))
+            try Task.checkCancellation()
+        }
+        return results
+    }
+
+    static func renderAndReleaseSources<Source, Output>(
+        _ sources: inout [Source],
+        render: ([Source]) throws -> Output
+    ) rethrows -> Output {
+        defer {
+            sources.removeAll(keepingCapacity: false)
+        }
+        return try render(sources)
     }
 
     static func isBase64(_ uri: String?) -> Bool {

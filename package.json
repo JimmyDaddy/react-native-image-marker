@@ -29,7 +29,8 @@
   ],
   "scripts": {
     "test": "jest",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && npm run typecheck:api",
+    "typecheck:api": "tsc --noEmit --strict --skipLibCheck --esModuleInterop --verbatimModuleSyntax --moduleResolution node --module esnext --target esnext src/__tests__/image-mark-options.typecheck.ts",
     "typecheck:example": "npm --prefix example run typecheck",
     "typecheck:expo-example": "npm --prefix expo-example run typecheck",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
@@ -108,6 +109,10 @@
   },
   "jest": {
     "preset": "react-native",
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "<rootDir>/src/__tests__/.*\\.typecheck\\.ts$"
+    ],
     "modulePathIgnorePatterns": [
       "<rootDir>/example/node_modules",
       "<rootDir>/lib/"

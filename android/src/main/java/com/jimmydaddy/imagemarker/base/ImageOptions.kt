@@ -34,7 +34,15 @@ class ImageOptions(val options: ReadableMap) {
     if (!rotate.isFinite()) {
       throw MarkerError(ErrorCode.INVALID_PARAMS, "image rotation must be finite")
     }
-    alpha = if (options.hasKey("alpha")) (options.getDouble("alpha") * 255).toInt() else DEFAULT_ALPHA
+    val normalizedAlpha = if (options.hasKey("alpha") && !options.isNull("alpha")) {
+      options.getDouble("alpha")
+    } else {
+      1.0
+    }
+    if (!normalizedAlpha.isFinite() || normalizedAlpha !in 0.0..1.0) {
+      throw MarkerError(ErrorCode.INVALID_PARAMS, "image alpha must be finite and between zero and one")
+    }
+    alpha = (normalizedAlpha * DEFAULT_ALPHA).toInt()
   }
 
   fun applyStyle(): Paint {

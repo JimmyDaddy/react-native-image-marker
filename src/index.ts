@@ -6,6 +6,11 @@ import {
   normalizeImageMarkOptions,
   normalizeTextMarkOptions,
 } from './normalize';
+import {
+  validateImageMarkOptions,
+  validateMarkOptions,
+  validateTextMarkOptions,
+} from './validate';
 
 const LINKING_ERROR =
   `The package 'react-native-image-marker' doesn't seem to be linked. Make sure: \n\n` +
@@ -236,6 +241,7 @@ export interface PositionOptions {
 export interface TextStyle {
   /**
    * font color
+   * @defaultValue '#000000'
    * @example
    *  color: '#aacc22'
    */
@@ -898,7 +904,7 @@ export interface ImageMarkOptions {
    *  }
    * }]
    **/
-  watermarkImages: Array<WatermarkImageOptions>;
+  watermarkImages?: Array<WatermarkImageOptions>;
 }
 
 export interface TextWatermarkLayer extends TextOptions {
@@ -1118,6 +1124,8 @@ class Marker {
       throw new Error('please set watermark text!');
     }
 
+    validateTextMarkOptions(options);
+
     return getImageMarker().markWithText(normalizeTextMarkOptions(options));
   }
 
@@ -1183,6 +1191,8 @@ class Marker {
       throw new Error('please set mark image!');
     }
 
+    validateImageMarkOptions(options);
+
     return getImageMarker().markWithImage(normalizeImageMarkOptions(options));
   }
 
@@ -1225,6 +1235,7 @@ class Marker {
     if (!nativeOptions.watermarks || nativeOptions.watermarks.length === 0) {
       throw new Error('please set watermark text or image!');
     }
+    validateMarkOptions(options);
     return getImageMarker().markWithWatermarks(nativeOptions);
   }
 }

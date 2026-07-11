@@ -63,8 +63,9 @@ class MarkImageOptions(options: ReadableMap) : Options(options) {
     fun checkParams(opts: ReadableMap, promise: Promise): MarkImageOptions? {
       try {
         return MarkImageOptions(opts)
-      } catch (e: MarkerError) {
-        promise.reject(e.getErrorCode(), e.getErrMsg())
+      } catch (e: Exception) {
+        val markerError = MarkerError.fromInvalidParams(e, "Invalid image marker options")
+        promise.reject(markerError.getErrorCode(), markerError.getErrMsg())
       }
       return null
     }

@@ -27,8 +27,8 @@ open class Options(val options: ReadableMap) {
       "backgroundImage is required"
     )
     backgroundImage = ImageOptions(this.backgroundImageOpts!!)
-    quality = if (options.hasKey("quality")) options.getInt("quality") else 100
-    maxSize = if (options.hasKey("maxSize")) options.getInt("maxSize") else 2048
+    quality = readQuality(options)
+    maxSize = readMaxSize(options)
     filename = options.getString("filename")
     saveFormat = SaveFormat.getFormat(options.getString("saveFormat"))
     val matteColorValue = if (options.hasKey("matteColor")) {
@@ -49,11 +49,48 @@ open class Options(val options: ReadableMap) {
 
   companion object {
     const val PROP_ICON_URI = "uri"
+
+    internal fun readQuality(options: ReadableMap): Int {
+      val quality = if (options.hasKey("quality") && !options.isNull("quality")) {
+        options.getDouble("quality")
+      } else {
+        100.0
+      }
+      if (!quality.isFinite() || quality % 1.0 != 0.0 || quality !in 0.0..100.0) {
+        throw MarkerError(
+          ErrorCode.INVALID_PARAMS,
+          "quality must be a finite integer between zero and 100"
+        )
+      }
+      return quality.toInt()
+    }
+
+    internal fun readMaxSize(options: ReadableMap): Int {
+      val maxSize = if (options.hasKey("maxSize") && !options.isNull("maxSize")) {
+        options.getDouble("maxSize")
+      } else {
+        2048.0
+      }
+      if (
+        !maxSize.isFinite() ||
+        maxSize % 1.0 != 0.0 ||
+        maxSize <= 0.0 ||
+        maxSize > Int.MAX_VALUE.toDouble()
+      ) {
+        throw MarkerError(
+          ErrorCode.INVALID_PARAMS,
+          "maxSize must be a positive finite integer"
+        )
+      }
+      return maxSize.toInt()
+    }
+
     fun checkParams(opts: ReadableMap, promise: Promise): Options? {
       try {
         return Options(opts)
-      } catch (e: MarkerError) {
-        promise.reject(e.getErrorCode(), e.getErrMsg())
+      } catch (e: Exception) {
+        val markerError = MarkerError.fromInvalidParams(e, "Invalid marker options")
+        promise.reject(markerError.getErrorCode(), markerError.getErrMsg())
       }
       return null
     }

@@ -1,6 +1,7 @@
 package com.jimmydaddy.imagemarker.base
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
 import org.junit.Test
 
 class OutputFileNameTest {
@@ -58,5 +59,25 @@ class OutputFileNameTest {
       Constants.BASE64,
       OutputFileName.resolve("ignored.jpeg", SaveFormat.BASE64, "generated")
     )
+  }
+
+  @Test
+  fun rejectsPathSegmentsAndControlCharacters() {
+    for (filename in listOf("../escape", "folder/image", "folder\\image", ".", "..", "bad\u0000name")) {
+      val error = assertThrows(MarkerError::class.java) {
+        OutputFileName.resolve(filename, SaveFormat.PNG, "generated")
+      }
+
+      assertEquals(ErrorCode.INVALID_PARAMS.value, error.getErrorCode())
+    }
+  }
+
+  @Test
+  fun rejectsNamesThatOnlyContainAnImageExtension() {
+    val error = assertThrows(MarkerError::class.java) {
+      OutputFileName.resolve(".png", SaveFormat.PNG, "generated")
+    }
+
+    assertEquals(ErrorCode.INVALID_PARAMS.value, error.getErrorCode())
   }
 }

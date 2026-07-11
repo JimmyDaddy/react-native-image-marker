@@ -186,6 +186,14 @@ enum ImageMarkerRenderer {
         )
     }
 
+    static func scaledCanvasSize(_ size: CGSize, backgroundScale: CGFloat) -> CGSize {
+        let scale = backgroundScale.isFinite && backgroundScale > 0 ? backgroundScale : 1
+        return CGSize(
+            width: max((size.width * scale).rounded(.toNearestOrAwayFromZero), 1),
+            height: max((size.height * scale).rounded(.toNearestOrAwayFromZero), 1)
+        )
+    }
+
     static func renderCanvas(
         background image: UIImage,
         backgroundScale: CGFloat,
@@ -194,15 +202,18 @@ enum ImageMarkerRenderer {
         rotationCanvasMode: ImageMarkerRotationCanvasMode,
         drawLayers: (CGContext, CGSize) -> Void
     ) -> UIImage? {
-        let canvasSize = image.size
-        let renderScale = backgroundScale > 0 ? backgroundScale : 1
+        // Background scale changes the actual composition canvas, matching Android's
+        // logical bitmap size. UIImage.scale describes pixel density, so both @1x and Retina
+        // sources must use image.size here. Layer coordinates, font sizes and watermark sizes
+        // remain expressed in logical output units and are not implicitly scaled.
+        let canvasSize = scaledCanvasSize(image.size, backgroundScale: backgroundScale)
         let renderedSize = outputSize(
             canvasSize: canvasSize,
             rotation: backgroundRotate,
             mode: rotationCanvasMode,
-            scale: renderScale
+            scale: 1
         )
-        UIGraphicsBeginImageContextWithOptions(renderedSize, false, renderScale)
+        UIGraphicsBeginImageContextWithOptions(renderedSize, false, 1)
         defer {
             UIGraphicsEndImageContext()
         }

@@ -4,42 +4,68 @@ import android.graphics.Paint.Align
 import com.facebook.react.bridge.ReadableMap
 import com.jimmydaddy.imagemarker.base.Constants.DEFAULT_FONT_SIZE
 
-data class TextStyle(val options: ReadableMap?) {
-  var color: String? = if (null != options!!.getString("color")) options.getString("color") else null
-  var fontName: String? = if (null != options?.getString("fontName")) options.getString("fontName") else null
-  var fontSize: Float = if (options?.hasKey("fontSize") == true) options.getDouble("fontSize").toFloat() else DEFAULT_FONT_SIZE
-  var fontSizeRatio: Float? =
-    if (options?.hasKey("fontSizeRatio") == true && !options.isNull("fontSizeRatio")) {
-      options.getDouble("fontSizeRatio").toFloat()
-    } else {
-      null
-    }
-  var shadowLayerStyle: ShadowLayerStyle?
-  var textBackgroundStyle: TextBackgroundStyle?
-  var underline: Boolean = if (options?.hasKey("underline") == true) options.getBoolean("underline") else false
-  var skewX: Float? = if (options?.hasKey("skewX") == true) options.getDouble("skewX").toFloat() else 0f
-  var strikeThrough: Boolean = if (options?.hasKey("strikeThrough") == true) options.getBoolean("strikeThrough") else false
-  var textAlign: Align
-  var italic: Boolean = if (options?.hasKey("italic") == true) options.getBoolean("italic") else false
-  var bold: Boolean = if (options?.hasKey("bold") == true) options.getBoolean("bold") else false
-  var rotate: Int = if (options?.hasKey("rotate") == true) options.getInt("rotate") else 0
+class TextStyle(private val options: ReadableMap?) {
+  var color: String? = "#000000"
+  var fontName: String? = null
+  var fontSize: Float = DEFAULT_FONT_SIZE
+  var fontSizeRatio: Float? = null
+  var shadowLayerStyle: ShadowLayerStyle? = null
+  var textBackgroundStyle: TextBackgroundStyle? = null
+  var underline: Boolean = false
+  var skewX: Float = 0f
+  var strikeThrough: Boolean = false
+  var textAlign: Align = Align.LEFT
+  var italic: Boolean = false
+  var bold: Boolean = false
+  var rotate: Int = 0
 
   init {
-    val myShadowStyle = options?.getMap("shadowStyle")
-    shadowLayerStyle = myShadowStyle?.let { ShadowLayerStyle(it) }
-    val myTextBackgroundStyle = options?.getMap("textBackgroundStyle")
-    textBackgroundStyle = myTextBackgroundStyle?.let { TextBackgroundStyle(it) }
-    textAlign = Align.LEFT
-    if (options?.hasKey("textAlign") == true) {
-      textAlign = when (options.getString("textAlign")) {
-        "center" -> Align.CENTER
-        "right" -> Align.RIGHT
-        else -> Align.LEFT
+    try {
+      if (options != null) {
+        color = options.stringOrNull("color") ?: color
+        fontName = options.stringOrNull("fontName")
+        fontSize = options.numberOrNull("fontSize")?.toFloat() ?: DEFAULT_FONT_SIZE
+        fontSizeRatio = options.numberOrNull("fontSizeRatio")?.toFloat()
+        shadowLayerStyle = options.mapOrNull("shadowStyle")?.let(::ShadowLayerStyle)
+        textBackgroundStyle = options.mapOrNull("textBackgroundStyle")?.let(::TextBackgroundStyle)
+        underline = options.booleanOrDefault("underline", false)
+        skewX = options.numberOrNull("skewX")?.toFloat() ?: 0f
+        strikeThrough = options.booleanOrDefault("strikeThrough", false)
+        italic = options.booleanOrDefault("italic", false)
+        bold = options.booleanOrDefault("bold", false)
+        rotate = options.numberOrNull("rotate")?.toInt() ?: 0
+        textAlign = when (options.stringOrNull("textAlign")) {
+          "center" -> Align.CENTER
+          "right" -> Align.RIGHT
+          else -> Align.LEFT
+        }
+      }
+    } catch (error: MarkerError) {
+      throw error
+    } catch (error: Exception) {
+      throw MarkerError(ErrorCode.INVALID_PARAMS, "Invalid text style").apply {
+        initCause(error)
       }
     }
   }
 
   fun resolveFontSize(backgroundWidth: Int): Float {
     return fontSizeRatio?.let { backgroundWidth * it } ?: fontSize
+  }
+
+  private fun ReadableMap.stringOrNull(key: String): String? {
+    return if (hasKey(key) && !isNull(key)) getString(key) else null
+  }
+
+  private fun ReadableMap.numberOrNull(key: String): Double? {
+    return if (hasKey(key) && !isNull(key)) getDouble(key) else null
+  }
+
+  private fun ReadableMap.mapOrNull(key: String): ReadableMap? {
+    return if (hasKey(key) && !isNull(key)) getMap(key) else null
+  }
+
+  private fun ReadableMap.booleanOrDefault(key: String, defaultValue: Boolean): Boolean {
+    return if (hasKey(key) && !isNull(key)) getBoolean(key) else defaultValue
   }
 }

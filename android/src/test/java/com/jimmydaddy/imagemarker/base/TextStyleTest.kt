@@ -2,10 +2,31 @@ package com.jimmydaddy.imagemarker.base
 
 import com.facebook.react.bridge.ReadableMap
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Test
 import org.mockito.Mockito
 
 class TextStyleTest {
+  @Test
+  fun missingStyleUsesCompleteDefaults() {
+    val style = TextStyle(null)
+
+    assertEquals("#000000", style.color)
+    assertNull(style.fontName)
+    assertEquals(14f, style.fontSize, 0f)
+    assertNull(style.fontSizeRatio)
+    assertNull(style.shadowLayerStyle)
+    assertNull(style.textBackgroundStyle)
+    assertFalse(style.underline)
+    assertEquals(0f, style.skewX, 0f)
+    assertFalse(style.strikeThrough)
+    assertEquals(android.graphics.Paint.Align.LEFT, style.textAlign)
+    assertFalse(style.italic)
+    assertFalse(style.bold)
+    assertEquals(0, style.rotate)
+  }
+
   @Test
   fun resolveFontSizeUsesRatioWhenProvided() {
     val options = Mockito.mock(ReadableMap::class.java)

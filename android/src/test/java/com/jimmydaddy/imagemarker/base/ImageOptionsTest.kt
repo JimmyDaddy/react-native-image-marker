@@ -29,9 +29,27 @@ class ImageOptionsTest {
     }
   }
 
+  @Test
+  fun acceptsAlphaBoundaries() {
+    ImageOptions(imageOptions(alpha = 0.0))
+    ImageOptions(imageOptions(alpha = 1.0))
+  }
+
+  @Test
+  fun rejectsOutOfRangeAndNonFiniteAlpha() {
+    for (alpha in listOf(-0.01, 1.01, Double.NaN, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY)) {
+      val error = assertThrows(MarkerError::class.java) {
+        ImageOptions(imageOptions(alpha = alpha))
+      }
+
+      assertEquals(ErrorCode.INVALID_PARAMS.value, error.getErrorCode())
+    }
+  }
+
   private fun imageOptions(
     scale: Double = 1.0,
-    rotation: Double = 0.0
+    rotation: Double = 0.0,
+    alpha: Double = 1.0
   ): ReadableMap {
     val source = Mockito.mock(ReadableMap::class.java)
     Mockito.`when`(source.hasKey("uri")).thenReturn(true)
@@ -44,6 +62,9 @@ class ImageOptionsTest {
     Mockito.`when`(options.getDouble("scale")).thenReturn(scale)
     Mockito.`when`(options.hasKey("rotate")).thenReturn(true)
     Mockito.`when`(options.getDouble("rotate")).thenReturn(rotation)
+    Mockito.`when`(options.hasKey("alpha")).thenReturn(true)
+    Mockito.`when`(options.isNull("alpha")).thenReturn(false)
+    Mockito.`when`(options.getDouble("alpha")).thenReturn(alpha)
     return options
   }
 }

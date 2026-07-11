@@ -202,6 +202,35 @@ describe('Marker JS wrapper', () => {
     expect(options.watermarkImages[0].src).toBe('file:///tmp/watermark.png');
   });
 
+  it('supports the legacy watermarkImage-only markImage shape', async () => {
+    nativeModule.markWithImage.mockResolvedValue('/tmp/legacy-image.png');
+
+    await expect(
+      Marker.markImage({
+        backgroundImage: {
+          src: 'file:///tmp/background.png',
+        },
+        watermarkImage: {
+          src: 'file:///tmp/legacy-watermark.png',
+          alpha: 0.75,
+        },
+      })
+    ).resolves.toBe('/tmp/legacy-image.png');
+
+    expect(nativeModule.markWithImage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        watermarkImages: [],
+        watermarkImage: expect.objectContaining({
+          alpha: 0.75,
+          src: {
+            uri: 'file:///tmp/legacy-watermark.png',
+            __packager_asset: false,
+          },
+        }),
+      })
+    );
+  });
+
   it('rejects markImage calls without any image watermark', () => {
     expect(() =>
       Marker.markImage({
@@ -227,6 +256,171 @@ describe('Marker JS wrapper', () => {
         ],
       } as any)
     ).toThrow('please set mark image!');
+  });
+
+  it('rejects invalid quality values in every public marking API', () => {
+    const invalidQualityValues = [
+      Number.NaN,
+      Number.POSITIVE_INFINITY,
+      Number.NEGATIVE_INFINITY,
+      -1,
+      101,
+      50.5,
+    ];
+
+    invalidQualityValues.forEach((quality) => {
+      expect(() =>
+        Marker.markText({
+          backgroundImage: { src: 'file:///tmp/background.png' },
+          watermarkTexts: [{ text: 'quality' }],
+          quality,
+        })
+      ).toThrow('quality must be a finite integer between 0 and 100.');
+
+      expect(() =>
+        Marker.markImage({
+          backgroundImage: { src: 'file:///tmp/background.png' },
+          watermarkImage: { src: 'file:///tmp/watermark.png' },
+          quality,
+        })
+      ).toThrow('quality must be a finite integer between 0 and 100.');
+
+      expect(() =>
+        Marker.mark({
+          backgroundImage: { src: 'file:///tmp/background.png' },
+          watermarks: [{ type: 'text', text: 'quality' }],
+          quality,
+        })
+      ).toThrow('quality must be a finite integer between 0 and 100.');
+    });
+
+    expect(nativeModule.markWithText).not.toHaveBeenCalled();
+    expect(nativeModule.markWithImage).not.toHaveBeenCalled();
+    expect(nativeModule.markWithWatermarks).not.toHaveBeenCalled();
+  });
+
+  it('rejects invalid maxSize values before native normalization', () => {
+    for (const maxSize of [0, -1, 10.5, Number.NaN, Number.POSITIVE_INFINITY]) {
+      expect(() =>
+        Marker.markImage({
+          backgroundImage: { src: 'file:///tmp/background.png' },
+          watermarkImage: { src: 'file:///tmp/watermark.png' },
+          maxSize,
+        })
+      ).toThrow('maxSize must be a positive finite integer.');
+    }
+
+    expect(nativeModule.markWithImage).not.toHaveBeenCalled();
+  });
+
+  it('accepts quality and alpha boundary values', async () => {
+    nativeModule.markWithText.mockResolvedValue('/tmp/boundary-text.png');
+    nativeModule.markWithWatermarks.mockResolvedValue(
+      '/tmp/boundary-watermarks.png'
+    );
+
+    await expect(
+      Marker.markText({
+        backgroundImage: {
+          src: 'file:///tmp/background.png',
+          alpha: 0,
+        },
+        watermarkTexts: [{ text: 'boundary' }],
+        quality: 0,
+      })
+    ).resolves.toBe('/tmp/boundary-text.png');
+
+    await expect(
+      Marker.mark({
+        backgroundImage: {
+          src: 'file:///tmp/background.png',
+          alpha: 1,
+        },
+        watermarkImage: {
+          src: 'file:///tmp/legacy-watermark.png',
+          alpha: 0,
+        },
+        watermarkImages: [
+          {
+            src: 'file:///tmp/watermark.png',
+            alpha: 1,
+          },
+        ],
+        watermarks: [
+          {
+            type: 'image',
+            src: 'file:///tmp/mixed-watermark.png',
+            alpha: 0,
+          },
+        ],
+        quality: 100,
+      })
+    ).resolves.toBe('/tmp/boundary-watermarks.png');
+  });
+
+  it('rejects invalid alpha values at every nested image location', () => {
+    const invalidCases = [
+      {
+        invoke: () =>
+          Marker.markText({
+            backgroundImage: {
+              src: 'file:///tmp/background.png',
+              alpha: Number.NaN,
+            },
+            watermarkTexts: [{ text: 'background alpha' }],
+          }),
+        path: 'backgroundImage',
+      },
+      {
+        invoke: () =>
+          Marker.markImage({
+            backgroundImage: { src: 'file:///tmp/background.png' },
+            watermarkImage: {
+              src: 'file:///tmp/legacy-watermark.png',
+              alpha: -0.01,
+            },
+          }),
+        path: 'watermarkImage',
+      },
+      {
+        invoke: () =>
+          Marker.markImage({
+            backgroundImage: { src: 'file:///tmp/background.png' },
+            watermarkImages: [
+              {
+                src: 'file:///tmp/watermark.png',
+                alpha: 1.01,
+              },
+            ],
+          }),
+        path: 'watermarkImages[0]',
+      },
+      {
+        invoke: () =>
+          Marker.mark({
+            backgroundImage: { src: 'file:///tmp/background.png' },
+            watermarks: [
+              { type: 'text', text: 'first layer' },
+              {
+                type: 'image',
+                src: 'file:///tmp/mixed-watermark.png',
+                alpha: Number.POSITIVE_INFINITY,
+              },
+            ],
+          }),
+        path: 'watermarks[1]',
+      },
+    ];
+
+    invalidCases.forEach(({ invoke, path }) => {
+      expect(invoke).toThrow(
+        `${path}.alpha must be a finite number between 0 and 1.`
+      );
+    });
+
+    expect(nativeModule.markWithText).not.toHaveBeenCalled();
+    expect(nativeModule.markWithImage).not.toHaveBeenCalled();
+    expect(nativeModule.markWithWatermarks).not.toHaveBeenCalled();
   });
 
   it('sends legacy text and image watermarks as ordered native layers', async () => {

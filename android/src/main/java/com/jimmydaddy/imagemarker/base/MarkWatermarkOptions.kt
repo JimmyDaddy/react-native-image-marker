@@ -51,8 +51,9 @@ class MarkWatermarkOptions(options: ReadableMap) : Options(options) {
     fun checkParams(opts: ReadableMap, promise: Promise): MarkWatermarkOptions? {
       try {
         return MarkWatermarkOptions(opts)
-      } catch (e: MarkerError) {
-        promise.reject(e.getErrorCode(), e.getErrMsg())
+      } catch (e: Exception) {
+        val markerError = MarkerError.fromInvalidParams(e, "Invalid watermark options")
+        promise.reject(markerError.getErrorCode(), markerError.getErrMsg())
       }
       return null
     }
