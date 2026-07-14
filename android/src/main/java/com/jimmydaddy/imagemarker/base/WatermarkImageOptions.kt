@@ -20,10 +20,9 @@ data class WatermarkImageOptions(val options: ReadableMap?) {
         if (positionOptions != null && positionOptions.hasKey("Y")) Utils.handleDynamicToString(positionOptions.getDynamic("Y")) else null
       edgeInset =
         if (positionOptions != null && positionOptions.hasKey("edgeInset")) Utils.handleDynamicToString(positionOptions.getDynamic("edgeInset")) else null
-      positionEnum =
-        if (positionOptions != null && null != positionOptions.getString("position")) PositionEnum.getPosition(
-          positionOptions.getString("position")
-        ) else null
+      positionEnum = positionOptions
+        ?.getString("position")
+        ?.let(PositionEnum::getPosition)
       trimTransparentPadding =
         options.hasKey("trimTransparentPadding") && options.getBoolean("trimTransparentPadding")
     }

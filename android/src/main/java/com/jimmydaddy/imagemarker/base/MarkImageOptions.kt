@@ -1,6 +1,7 @@
 package com.jimmydaddy.imagemarker.base
 
 import com.facebook.react.bridge.Promise
+import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 
 class MarkImageOptions(options: ReadableMap) : Options(options) {
@@ -14,13 +15,7 @@ class MarkImageOptions(options: ReadableMap) : Options(options) {
         "marker image is required"
       )
     }
-    val myMarkerList = arrayListOf<WatermarkImageOptions>()
-    if (markerImagesOpts != null && markerImagesOpts.size() > 0) {
-      for (i in 0 until markerImagesOpts.size()) {
-        val marker = WatermarkImageOptions(markerImagesOpts.getMap(i))
-        myMarkerList.add(marker)
-      }
-    }
+    val myMarkerList = readWatermarkImages(markerImagesOpts)
     if (markerImageOpts != null) {
       val marker = ImageOptions(markerImageOpts)
       val positionOptions = options.getMap("watermarkPositions")
@@ -39,10 +34,9 @@ class MarkImageOptions(options: ReadableMap) : Options(options) {
       } else {
         null
       }
-      val positionEnum =
-        if (positionOptions?.getString("position") != null) PositionEnum.getPosition(
-          positionOptions.getString("position")
-        ) else null
+      val positionEnum = positionOptions
+        ?.getString("position")
+        ?.let(PositionEnum::getPosition)
       val trimTransparentPadding =
         markerImageOpts.hasKey("trimTransparentPadding") && markerImageOpts.getBoolean("trimTransparentPadding")
       val markerOpts = WatermarkImageOptions(
@@ -59,6 +53,20 @@ class MarkImageOptions(options: ReadableMap) : Options(options) {
   }
 
   companion object {
+    internal fun readWatermarkImages(watermarkImages: ReadableArray?): ArrayList<WatermarkImageOptions> {
+      if (watermarkImages == null || watermarkImages.size() <= 0) {
+        return arrayListOf()
+      }
+
+      return ArrayList<WatermarkImageOptions>(watermarkImages.size()).apply {
+        for (index in 0 until watermarkImages.size()) {
+          val markerMap = watermarkImages.getMap(index)
+            ?: throw MarkerError(ErrorCode.NULL_MAP, "watermarkImages[$index] is null")
+          add(WatermarkImageOptions(markerMap))
+        }
+      }
+    }
+
     @JvmStatic
     fun checkParams(opts: ReadableMap, promise: Promise): MarkImageOptions? {
       try {

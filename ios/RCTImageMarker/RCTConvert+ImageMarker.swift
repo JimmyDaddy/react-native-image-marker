@@ -7,47 +7,9 @@
 
 import Foundation
 import UIKit
-import CoreFoundation
 import React
-import CoreGraphics
 
 extension RCTConvert {
-    static func CGSize(_ json: Any, offset: Int) -> CGSize {
-        let arr = self.nsArray(json)
-        if arr!.count < offset + 2 {
-            NSLog("Too few elements in array (expected at least %zd): %@", 2 + offset, arr!)
-            return CoreGraphics.CGSize.zero
-        }
-        return CoreGraphics.CGSize(width: self.cgFloat(arr![offset]), height: self.cgFloat(arr![offset + 1]))
-    }
-
-    static func CGPoint(_ json: Any, offset: Int) -> CGPoint {
-        let arr = self.nsArray(json)
-        if arr!.count < offset + 2 {
-            NSLog("Too few elements in array (expected at least %zd): %@", 2 + offset, arr!)
-            return CoreGraphics.CGPoint.zero
-        }
-        return CoreGraphics.CGPoint(x: self.cgFloat(arr?[offset]), y: self.cgFloat(arr![offset + 1]))
-    }
-
-    static func CGRect(_ json: Any, offset: Int) -> CGRect {
-        let arr = self.nsArray(json)
-        if arr!.count < offset + 4 {
-            NSLog("Too few elements in array (expected at least %zd): %@", 4 + offset, arr!)
-            return CoreGraphics.CGRect.zero
-        }
-        return CoreGraphics.CGRect(x: self.cgFloat(arr![offset]), y: self.cgFloat(arr![offset + 1]), width: self.cgFloat(arr![offset + 2]), height: self.cgFloat(arr![offset + 3]))
-    }
-
-    static func CGColor(_ json: Any, offset: Int) -> CGColor? {
-        let arr = self.nsArray(json)
-        if arr!.count < offset + 4 {
-            NSLog("Too few elements in array (expected at least %zd): %@", 4 + offset, arr!)
-            return nil
-        }
-        return self.cgColor(arr?[offset..<4])
-    }
-
     static func MarkerPosition(_ value: Any?) -> MarkerPositionEnum {
         let MyEnumMap: [String: MarkerPositionEnum] = [
             "topLeft": MarkerPositionEnum.topLeft,

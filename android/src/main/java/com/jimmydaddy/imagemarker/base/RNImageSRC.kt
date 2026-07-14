@@ -10,9 +10,9 @@ data class RNImageSRC(val options: ReadableMap?) {
   var uri: String = ""
 
   init {
-    width = if (options?.hasKey("width") == true) options.getInt("width")!! else 0
+    width = if (options?.hasKey("width") == true) options.getInt("width") else 0
     height = if (options?.hasKey("height") == true) options.getInt("height") else 0
     scale = if (options?.hasKey("scale") == true) options.getInt("scale") else 1
-    uri = if (options?.hasKey("uri") == true) options.getString("uri").toString() else ""
+    uri = if (options?.hasKey("uri") == true) options.getString("uri").orEmpty() else ""
   }
 }

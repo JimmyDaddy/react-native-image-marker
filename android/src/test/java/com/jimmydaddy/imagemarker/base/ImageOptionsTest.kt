@@ -8,6 +8,18 @@ import org.mockito.Mockito
 
 class ImageOptionsTest {
   @Test
+  fun rejectsNullSourceMapAsMissingImage() {
+    val options = Mockito.mock(ReadableMap::class.java)
+    Mockito.`when`(options.hasKey("src")).thenReturn(true)
+    Mockito.`when`(options.isNull("src")).thenReturn(false)
+    Mockito.`when`(options.getMap("src")).thenReturn(null)
+
+    val error = assertThrows(MarkerError::class.java) { ImageOptions(options) }
+
+    assertEquals(ErrorCode.PARAMS_REQUIRED.value, error.getErrorCode())
+  }
+
+  @Test
   fun rejectsNonPositiveAndNonFiniteScale() {
     for (scale in listOf(0.0, -1.0, Double.NaN, Double.POSITIVE_INFINITY)) {
       val error = assertThrows(MarkerError::class.java) {
