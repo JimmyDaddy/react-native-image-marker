@@ -20,12 +20,13 @@ class ImageOptions(val options: ReadableMap) {
   private var alpha: Int
 
   init {
-    if (!options.hasKey("src")) {
+    if (!options.hasKey("src") || options.isNull("src")) {
       throw MarkerError(ErrorCode.PARAMS_REQUIRED, "image is required")
     }
-    var originalSRC = options.getMap("src")
+    val originalSRC = options.getMap("src")
+      ?: throw MarkerError(ErrorCode.PARAMS_REQUIRED, "image is required")
     src = RNImageSRC(originalSRC)
-    uri = originalSRC!!.getString(PROP_ICON_URI)
+    uri = originalSRC.getString(PROP_ICON_URI)
     scale = if (options.hasKey("scale")) options.getDouble("scale").toFloat() else DEFAULT_SCALE
     if (!scale.isFinite() || scale <= 0f) {
       throw MarkerError(ErrorCode.INVALID_PARAMS, "image scale must be finite and greater than zero")

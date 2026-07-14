@@ -7,8 +7,6 @@ import com.facebook.react.bridge.ReadableMap
 open class Options(val options: ReadableMap) {
   var backgroundImage: ImageOptions
 
-  private var backgroundImageOpts = options.getMap("backgroundImage")
-
   var quality: Int
 
   var filename: String?
@@ -22,11 +20,9 @@ open class Options(val options: ReadableMap) {
   var rotationCanvasMode: RotationCanvasMode
 
   init {
-    this.backgroundImageOpts ?: throw MarkerError(
-      ErrorCode.PARAMS_REQUIRED,
-      "backgroundImage is required"
-    )
-    backgroundImage = ImageOptions(this.backgroundImageOpts!!)
+    val backgroundImageOptions = options.getMap("backgroundImage")
+      ?: throw MarkerError(ErrorCode.PARAMS_REQUIRED, "backgroundImage is required")
+    backgroundImage = ImageOptions(backgroundImageOptions)
     quality = readQuality(options)
     maxSize = readMaxSize(options)
     filename = options.getString("filename")
