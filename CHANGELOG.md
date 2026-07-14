@@ -1,5 +1,9 @@
 # Changelog
 
+## <small>1.4.3 (2026-07-14)</small>
+
+* fix(native): guard nullable image marker inputs (#301) ([5225c88](https://github.com/JimmyDaddy/react-native-image-marker/commit/5225c88)), closes [#301](https://github.com/JimmyDaddy/react-native-image-marker/issues/301)
+
 ## <small>1.4.2 (2026-07-11)</small>
 
 * fix(ci): repair npm publish setup ([5a35143](https://github.com/JimmyDaddy/react-native-image-marker/commit/5a35143))
