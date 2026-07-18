@@ -1,0 +1,40 @@
+name: Feature request
+description: Propose a concrete image-marking use case or API improvement.
+title: '[Feature]: '
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Use case
+      description: Describe the result you need and why the current Marker APIs cannot produce it.
+    validations:
+      required: true
+  - type: textarea
+    id: desired
+    attributes:
+      label: Desired API or behavior
+      description: A small code example is more useful than a broad feature name.
+      render: typescript
+    validations:
+      required: true
+  - type: dropdown
+    id: platforms
+    attributes:
+      label: Required platforms
+      multiple: true
+      options:
+        - Android
+        - iOS
+        - Web / React Native Web
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: textarea
+    id: example
+    attributes:
+      label: Visual example
+      description: Attach a mock-up or input/output pair if the request changes rendered output.

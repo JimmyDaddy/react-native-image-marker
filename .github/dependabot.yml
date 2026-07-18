@@ -1,0 +1,80 @@
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '09:00'
+      timezone: Asia/Shanghai
+    open-pull-requests-limit: 10
+    groups:
+      root-development-tooling:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+    ignore:
+      # The root package is the minimum React Native compatibility fixture.
+      - dependency-name: react
+      - dependency-name: react-native
+      - dependency-name: '@types/react'
+      - dependency-name: '@types/react-native'
+      - dependency-name: '@react-native/*'
+      - dependency-name: metro-react-native-babel-preset
+
+  - package-ecosystem: npm
+    directory: /example
+    schedule:
+      interval: weekly
+      day: monday
+      time: '09:15'
+      timezone: Asia/Shanghai
+    open-pull-requests-limit: 5
+    groups:
+      minimum-example-tooling:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+    ignore:
+      # Keep this example pinned to the RN 0.73 compatibility floor.
+      - dependency-name: react
+      - dependency-name: react-native
+      - dependency-name: '@react-native/*'
+      - dependency-name: '@types/react'
+
+  - package-ecosystem: npm
+    directory: /expo-example
+    schedule:
+      interval: weekly
+      day: monday
+      time: '09:30'
+      timezone: Asia/Shanghai
+    open-pull-requests-limit: 10
+    groups:
+      current-expo-stack:
+        patterns:
+          - expo
+          - 'expo-*'
+          - '@expo/*'
+          - react
+          - react-dom
+          - react-native
+          - react-native-web
+
+  - package-ecosystem: npm
+    directory: /website
+    schedule:
+      interval: weekly
+      day: monday
+      time: '09:45'
+      timezone: Asia/Shanghai
+    open-pull-requests-limit: 10
+    groups:
+      documentation-tooling:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
