@@ -20,6 +20,7 @@ import { installWebSmokeHarness } from './smoke-harness.web';
 
 const backgroundUri = Asset.fromModule(require('./assets/bg.png')).uri;
 const logoUri = Asset.fromModule(require('./assets/icon.jpeg')).uri;
+type LayoutMode = 'single' | 'textTile' | 'logoTile';
 
 installWebSmokeHarness({ backgroundUri, logoUri });
 
@@ -42,6 +43,7 @@ function App() {
   const [text, setText] = useState('SHOT ON IMAGE MARKER');
   const [fontSize, setFontSize] = useState(54);
   const [position, setPosition] = useState<Position>(Position.bottomLeft);
+  const [layoutMode, setLayoutMode] = useState<LayoutMode>('single');
   const [format, setFormat] = useState<ImageFormat>(ImageFormat.jpg);
   const [result, setResult] = useState<{
     dataUrl: string;
@@ -79,19 +81,33 @@ function App() {
           {
             type: 'text',
             text: text.trim() || 'SHOT ON IMAGE MARKER',
-            position: {
-              position,
-              X: position === Position.bottomCenter ? 0 : 48,
-              Y: 48,
-            },
+            ...(layoutMode === 'textTile'
+              ? {
+                  layout: {
+                    type: 'tile' as const,
+                    gapX: '8%',
+                    gapY: '7%',
+                    offsetX: '-2%',
+                    stagger: true,
+                  },
+                }
+              : {
+                  position: {
+                    position,
+                    X: position === Position.bottomCenter ? 0 : 48,
+                    Y: 48,
+                  },
+                }),
             style: {
-              color: '#FFFFFF',
+              color: layoutMode === 'textTile' ? '#FFFFFF88' : '#FFFFFF',
               strokeStyle: {
                 color: '#101828CC',
                 width: 3,
               },
-              fontSize,
+              fontSize:
+                layoutMode === 'textTile' ? Math.min(fontSize, 42) : fontSize,
               bold: true,
+              rotate: layoutMode === 'textTile' ? -24 : 0,
               shadowStyle: {
                 color: '#11182799',
                 dx: 0,
@@ -109,14 +125,25 @@ function App() {
           {
             type: 'image',
             src: { uri: logoUri },
-            position: {
-              position: Position.topRight,
-              X: 48,
-              Y: 48,
-            },
-            scale: 0.16,
-            alpha: 0.92,
-            rotate: -6,
+            ...(layoutMode === 'logoTile'
+              ? {
+                  layout: {
+                    type: 'tile' as const,
+                    gapX: '8%',
+                    gapY: '8%',
+                    stagger: true,
+                  },
+                }
+              : {
+                  position: {
+                    position: Position.topRight,
+                    X: 48,
+                    Y: 48,
+                  },
+                }),
+            scale: layoutMode === 'logoTile' ? 0.08 : 0.16,
+            alpha: layoutMode === 'logoTile' ? 0.5 : 0.92,
+            rotate: layoutMode === 'logoTile' ? -12 : -6,
             trimTransparentPadding: true,
           },
         ],
@@ -144,7 +171,7 @@ function App() {
         setIsRendering(false);
       }
     }
-  }, [extension, fontSize, format, position, text]);
+  }, [extension, fontSize, format, layoutMode, position, text]);
 
   return (
     <SafeAreaView style={styles.page}>
@@ -272,6 +299,44 @@ function App() {
               </Pressable>
             </View>
 
+            <Text style={styles.label}>Watermark layout</Text>
+            <View style={styles.segmentedControl}>
+              {(
+                [
+                  { label: 'Single', value: 'single' },
+                  { label: 'Text tile', value: 'textTile' },
+                  { label: 'Logo tile', value: 'logoTile' },
+                ] as const
+              ).map((item) => {
+                const selected = layoutMode === item.value;
+                return (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    key={item.value}
+                    onPress={() => {
+                      setLayoutMode(item.value);
+                      setResult(null);
+                    }}
+                    style={({ pressed }) => [
+                      styles.segment,
+                      selected && styles.selectedSegment,
+                      pressed && styles.pressedButton,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.segmentText,
+                        selected && styles.selectedSegmentText,
+                      ]}
+                    >
+                      {item.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
             <Text style={styles.label}>Text anchor</Text>
             <View style={styles.segmentedControl}>
               {positions.map((item) => {
@@ -333,7 +398,11 @@ function App() {
             <View style={styles.layerNote}>
               <View style={styles.layerDot} />
               <Text style={styles.layerNoteText}>
-                Layer 1 · text badge{`\n`}Layer 2 · image logo at top right
+                {layoutMode === 'textTile'
+                  ? 'Layer 1 · staggered outlined text\nLayer 2 · image logo at top right'
+                  : layoutMode === 'logoTile'
+                  ? 'Layer 1 · text badge\nLayer 2 · repeated image logo grid'
+                  : 'Layer 1 · text badge\nLayer 2 · image logo at top right'}
               </Text>
             </View>
 

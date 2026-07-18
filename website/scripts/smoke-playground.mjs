@@ -92,6 +92,7 @@ try {
   await assertPreviewMime(playground, 'image/png');
   await assertVisibleLogo(playground);
   await assertCustomSelects(playground);
+  await assertLayoutControlsAndCode(page, playground);
 
   const code = await playground.locator('[data-web-code]').textContent();
   assert.match(
@@ -144,7 +145,7 @@ try {
   );
 
   console.log(
-    'Verified top navigation, custom theme/language/playground selectors, keyboard selection, first-viewport workbench layout, aligned controls, both playground routes, manual preview updates, generated code, download metadata, and the HTML sitemap.'
+    'Verified top navigation, custom selectors, first-viewport layout, tiled/single and outline controls, preview-to-code parity, both playground routes, downloads, and the HTML sitemap.'
   );
 } finally {
   await browser?.close();
@@ -186,6 +187,72 @@ async function assertVisibleLogo(playground) {
   });
 
   assert(orangePixels > 100, 'Default image watermark should be visible over the background.');
+}
+
+async function assertLayoutControlsAndCode(page, playground) {
+  await playground
+    .locator('[data-text-controls] details.advanced-controls summary')
+    .click();
+  await playground
+    .locator('[data-image-controls] details.advanced-controls summary')
+    .click();
+  const textTile = playground.locator('[data-layout-layer="text"][data-layout="tile"]');
+  const textSingle = playground.locator('[data-layout-layer="text"][data-layout="single"]');
+  const imageTile = playground.locator('[data-layout-layer="image"][data-layout="tile"]');
+  const imageSingle = playground.locator('[data-layout-layer="image"][data-layout="single"]');
+  const preview = playground.locator('[data-preview]');
+
+  assert.equal(await textTile.getAttribute('aria-pressed'), 'true');
+  assert.equal(await imageSingle.getAttribute('aria-pressed'), 'true');
+
+  let code = await playground.locator('[data-web-code]').textContent();
+  assert.match(code ?? '', /layout: \{\s*type: 'tile'/);
+  assert.match(code ?? '', /gapX: ["']8%["']/);
+  assert.match(code ?? '', /strokeStyle: \{ color: '#101828', width: 2 \}/);
+
+  let previousSource = await preview.getAttribute('src');
+  await playground.locator('[data-text-gap-x]').fill('12%');
+  await playground.locator('[data-stroke-width]').fill('4');
+  await playground.locator('[data-text-stagger]').uncheck();
+  await waitForPreviewChange(page, playground, previousSource);
+
+  code = await playground.locator('[data-web-code]').textContent();
+  assert.match(code ?? '', /gapX: ["']12%["']/);
+  assert.match(code ?? '', /stagger: false/);
+  assert.match(code ?? '', /strokeStyle: \{ color: '#101828', width: 4 \}/);
+
+  previousSource = await preview.getAttribute('src');
+  await textSingle.click();
+  await waitForPreviewChange(page, playground, previousSource);
+  code = await playground.locator('[data-web-code]').textContent();
+  assert.match(code ?? '', /position: \{ position: Position\.bottomLeft, X: 48, Y: 48 \}/);
+  assert.doesNotMatch(code ?? '', /layout:/);
+
+  previousSource = await preview.getAttribute('src');
+  await textTile.click();
+  await waitForPreviewChange(page, playground, previousSource);
+  previousSource = await preview.getAttribute('src');
+  await imageTile.click();
+  await waitForPreviewChange(page, playground, previousSource);
+  code = await playground.locator('[data-web-code]').textContent();
+  assert.equal((code ?? '').match(/layout:/g)?.length, 2);
+
+  previousSource = await preview.getAttribute('src');
+  await imageSingle.click();
+  await waitForPreviewChange(page, playground, previousSource);
+}
+
+async function waitForPreviewChange(page, playground, previousSource) {
+  await page.waitForFunction(
+    (previous) => {
+      const preview = document.querySelector(
+        '[data-marker-playground] [data-preview]'
+      );
+      return preview instanceof HTMLImageElement && preview.src !== previous;
+    },
+    previousSource
+  );
+  await waitForRendered(playground);
 }
 
 async function assertWorkbenchLayout(page) {

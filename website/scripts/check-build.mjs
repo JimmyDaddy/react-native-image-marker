@@ -33,6 +33,7 @@ const requiredFiles = [
   'react-native-image-marker/index.html',
   'CNAME',
   'media/watermark-after-dark.jpg',
+  'media/watermark-tiled.jpg',
   'media/marker-compass.png',
   'robots.txt',
   'sitemap-index.xml',

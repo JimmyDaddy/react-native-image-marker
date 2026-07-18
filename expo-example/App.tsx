@@ -19,10 +19,12 @@ import Marker, {
 
 const bundledBackground = require('./assets/bg.png');
 const logo = require('./assets/icon.jpeg');
+type DemoLayout = 'single' | 'tile';
 
 function App() {
   const [background, setBackground] = useState<any>(bundledBackground);
   const [result, setResult] = useState<string | null>(null);
+  const [layout, setLayout] = useState<DemoLayout>('single');
   const [isRendering, setIsRendering] = useState(false);
   const [message, setMessage] = useState(
     'Uses the native module through an Expo development build.'
@@ -49,23 +51,44 @@ function App() {
 
   const renderWatermark = useCallback(async () => {
     setIsRendering(true);
-    setMessage('Rendering text and image layers with the native module…');
+    setMessage(
+      layout === 'tile'
+        ? 'Rendering a staggered text pattern with the native module…'
+        : 'Rendering text and image layers with the native module…'
+    );
     try {
       const output = await Marker.mark({
         backgroundImage: { src: background },
         watermarks: [
           {
             type: 'text',
-            text: 'SHOT ON IMAGE MARKER',
-            position: { position: Position.bottomLeft, X: 36, Y: 36 },
+            text: layout === 'tile' ? 'CONFIDENTIAL' : 'SHOT ON IMAGE MARKER',
+            ...(layout === 'tile'
+              ? {
+                  layout: {
+                    type: 'tile' as const,
+                    gapX: '8%',
+                    gapY: '7%',
+                    offsetX: '-2%',
+                    stagger: true,
+                  },
+                }
+              : {
+                  position: {
+                    position: Position.bottomLeft,
+                    X: 36,
+                    Y: 36,
+                  },
+                }),
             style: {
-              color: '#FFFFFF',
+              color: layout === 'tile' ? '#FFFFFF88' : '#FFFFFF',
               strokeStyle: {
                 color: '#101828CC',
                 width: 2,
               },
-              fontSize: 34,
+              fontSize: layout === 'tile' ? 28 : 34,
               bold: true,
+              rotate: layout === 'tile' ? -24 : 0,
               shadowStyle: {
                 color: '#00000099',
                 dx: 0,
@@ -100,7 +123,7 @@ function App() {
     } finally {
       setIsRendering(false);
     }
-  }, [background]);
+  }, [background, layout]);
 
   return (
     <SafeAreaView style={styles.page}>
@@ -121,6 +144,35 @@ function App() {
             source={previewSource}
             style={styles.image}
           />
+          <View style={styles.layoutControl}>
+            {(['single', 'tile'] as const).map((item) => {
+              const selected = layout === item;
+              return (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
+                  key={item}
+                  onPress={() => {
+                    setLayout(item);
+                    setResult(null);
+                  }}
+                  style={[
+                    styles.layoutOption,
+                    selected && styles.selectedLayoutOption,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.layoutOptionText,
+                      selected && styles.selectedLayoutOptionText,
+                    ]}
+                  >
+                    {item === 'single' ? 'Corner signature' : 'Tiled pattern'}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
           <View style={styles.actions}>
             <Pressable
               onPress={chooseBackground}
@@ -185,6 +237,27 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   image: { width: '100%', aspectRatio: 4 / 3, backgroundColor: '#080B11' },
+  layoutControl: {
+    flexDirection: 'row',
+    gap: 8,
+    marginHorizontal: 16,
+    marginTop: 16,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: '#293247',
+    borderRadius: 12,
+    backgroundColor: '#0D121C',
+  },
+  layoutOption: {
+    flex: 1,
+    minHeight: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 9,
+  },
+  selectedLayoutOption: { backgroundColor: '#242D42' },
+  layoutOptionText: { color: '#8F9BB0', fontSize: 13, fontWeight: '700' },
+  selectedLayoutOptionText: { color: '#F4F6FB' },
   actions: { flexDirection: 'row', gap: 12, padding: 16 },
   primaryButton: {
     flex: 1,
