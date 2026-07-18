@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.0 (2026-07-18)
+
+* fix(ci): stabilize web example typecheck ([51af719](https://github.com/JimmyDaddy/react-native-image-marker/commit/51af719))
+* fix(ci): sync web example clean install ([0a540c4](https://github.com/JimmyDaddy/react-native-image-marker/commit/0a540c4))
+* fix(docs): correct production domain ([d78de8e](https://github.com/JimmyDaddy/react-native-image-marker/commit/d78de8e))
+* feat(web): add browser SDK and live documentation ([3e08838](https://github.com/JimmyDaddy/react-native-image-marker/commit/3e08838))
+
 ## <small>1.4.3 (2026-07-14)</small>
 
 * fix(native): guard nullable image marker inputs (#301) ([5225c88](https://github.com/JimmyDaddy/react-native-image-marker/commit/5225c88)), closes [#301](https://github.com/JimmyDaddy/react-native-image-marker/issues/301)
