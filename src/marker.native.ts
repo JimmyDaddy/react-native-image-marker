@@ -38,8 +38,10 @@ function getImageMarker(): Spec {
 class Marker {
   /** Save ordered layers and output settings for reuse across one or many images. */
   static createRecipe(options: WatermarkRecipeOptions): WatermarkRecipe {
-    return createWatermarkRecipe(options, (markOptions) =>
-      Marker.mark(markOptions)
+    return createWatermarkRecipe(
+      options,
+      (markOptions) => Marker.mark(markOptions),
+      1
     );
   }
 
