@@ -389,7 +389,8 @@ jobs:
           npm --prefix expo-example run bundle:smoke
 
       - name: Generate Expo development-build project
-        run: npm exec --prefix expo-example -- expo prebuild --platform android --clean --no-install
+        working-directory: expo-example
+        run: npx expo prebuild --platform android --clean --no-install
 
       - name: Compile New Architecture development build
         env:
