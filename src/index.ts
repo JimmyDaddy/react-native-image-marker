@@ -1,6 +1,12 @@
 import Marker from './marker';
 
 export type {
+  WatermarkBatchAbortedResult,
+  WatermarkBatchFulfilledResult,
+  WatermarkBatchOptions,
+  WatermarkBatchProgress,
+  WatermarkBatchRejectedResult,
+  WatermarkBatchResult,
   WatermarkRecipe,
   WatermarkRecipeInput,
   WatermarkRecipeOptions,

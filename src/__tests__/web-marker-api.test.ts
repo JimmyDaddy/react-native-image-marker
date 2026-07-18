@@ -56,6 +56,30 @@ describe('WebMarker public API', () => {
     ]);
   });
 
+  it('caps public Web recipe batches at four active renders', async () => {
+    let active = 0;
+    let maximumActive = 0;
+    mockRenderWebComposition.mockImplementation(async () => {
+      active += 1;
+      maximumActive = Math.max(maximumActive, active);
+      await new Promise((resolve) => setTimeout(resolve, 2));
+      active -= 1;
+      return 'data:image/png;base64,result';
+    });
+    const recipe = WebMarker.createRecipe({
+      watermarks: [{ type: 'text', text: 'Reusable' }],
+    });
+
+    await recipe.applyMany(
+      Array.from({ length: 8 }, (_, index) => ({
+        backgroundImage: { src: `/background-${index}.jpg` },
+      })),
+      { concurrency: 8 }
+    );
+
+    expect(maximumActive).toBe(4);
+  });
+
   it('keeps image arrays before the legacy image compatibility layer', async () => {
     const options: ImageMarkOptions = {
       backgroundImage: { src: '/background.jpg' },

@@ -31,9 +31,54 @@ export interface WatermarkRecipeInput {
   filename?: string;
 }
 
+export interface WatermarkBatchFulfilledResult<Result> {
+  status: 'fulfilled';
+  value: Result;
+}
+
+export interface WatermarkBatchRejectedResult {
+  status: 'rejected';
+  reason: unknown;
+}
+
+export interface WatermarkBatchAbortedResult {
+  status: 'aborted';
+  reason: Error;
+}
+
+export type WatermarkBatchResult<Result> =
+  | WatermarkBatchFulfilledResult<Result>
+  | WatermarkBatchRejectedResult
+  | WatermarkBatchAbortedResult;
+
+export interface WatermarkBatchProgress<Result> {
+  total: number;
+  settled: number;
+  succeeded: number;
+  failed: number;
+  aborted: number;
+  /** Index of the item that produced this progress update. */
+  index: number;
+  result: WatermarkBatchResult<Result>;
+}
+
+export interface WatermarkBatchOptions<Result> {
+  /** Requested worker count. Web is capped at 4 and native targets at 1. */
+  concurrency?: number;
+  /** Stops new items from starting. Already-running items are allowed to finish. */
+  signal?: AbortSignal;
+  /** Called once when each item is fulfilled, rejected, or skipped after abort. */
+  onProgress?: (progress: WatermarkBatchProgress<Result>) => void;
+}
+
 export interface WatermarkRecipe<Result = string> {
   /** Apply the saved layers and output settings to one source image. */
   apply(input: WatermarkRecipeInput): Promise<Result>;
+  /** Apply the recipe to many images while preserving input result order. */
+  applyMany(
+    inputs: readonly WatermarkRecipeInput[],
+    options?: WatermarkBatchOptions<Result>
+  ): Promise<Array<WatermarkBatchResult<Result>>>;
 }
 
 type RecipeRenderer<Result> = (options: MarkOptions) => Promise<Result>;
@@ -193,9 +238,62 @@ function createMarkOptions(
   };
 }
 
+function canonicalOutputFilename(
+  filename: string,
+  saveFormat: MarkOptions['saveFormat']
+): string | undefined {
+  const trimmed = filename.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+  const knownExtension = ['.jpeg', '.jpg', '.png'].find((extension) =>
+    trimmed.toLowerCase().endsWith(extension)
+  );
+  const stem = knownExtension
+    ? trimmed.slice(0, -knownExtension.length)
+    : trimmed;
+  const extension = saveFormat === 'png' ? '.png' : '.jpg';
+  return `${stem}${extension}`.toLowerCase();
+}
+
+function validateUniqueFilenames(
+  inputs: readonly WatermarkRecipeInput[],
+  saveFormat: MarkOptions['saveFormat']
+): void {
+  const seen = new Map<string, number>();
+  inputs.forEach((input, index) => {
+    if (input.filename === undefined) {
+      return;
+    }
+    if (typeof input.filename !== 'string') {
+      throw new Error(`inputs[${index}].filename must be a string.`);
+    }
+    const canonical = canonicalOutputFilename(input.filename, saveFormat);
+    if (!canonical) {
+      return;
+    }
+    const previousIndex = seen.get(canonical);
+    if (previousIndex !== undefined) {
+      throw new Error(
+        `Duplicate output filename "${canonical}" for inputs ${previousIndex} and ${index}.`
+      );
+    }
+    seen.set(canonical, index);
+  });
+}
+
+function abortResult<Result>(): WatermarkBatchResult<Result> {
+  const reason = new Error(
+    'Batch item was not started because the operation was aborted.'
+  );
+  reason.name = 'AbortError';
+  return { status: 'aborted', reason };
+}
+
 export function createWatermarkRecipe<Result>(
   options: WatermarkRecipeOptions,
-  renderer: RecipeRenderer<Result>
+  renderer: RecipeRenderer<Result>,
+  maximumConcurrency = 1
 ): WatermarkRecipe<Result> {
   const recipe = snapshotRecipeOptions(options);
 
@@ -209,6 +307,99 @@ export function createWatermarkRecipe<Result>(
   return {
     apply(input) {
       return applySnapshot(snapshotInput(input));
+    },
+
+    async applyMany(inputs, batchOptions = {}) {
+      if (!Array.isArray(inputs)) {
+        throw new Error('applyMany inputs must be an array.');
+      }
+      const requestedConcurrency = batchOptions.concurrency ?? 1;
+      if (
+        !Number.isFinite(requestedConcurrency) ||
+        !Number.isInteger(requestedConcurrency) ||
+        requestedConcurrency <= 0
+      ) {
+        throw new Error('concurrency must be a positive finite integer.');
+      }
+
+      const queuedInputs = inputs.map(snapshotInput);
+      validateUniqueFilenames(queuedInputs, recipe.saveFormat);
+      if (queuedInputs.length === 0) {
+        return [];
+      }
+
+      const concurrency = Math.min(
+        requestedConcurrency,
+        maximumConcurrency,
+        queuedInputs.length
+      );
+      const results: Array<WatermarkBatchResult<Result> | undefined> =
+        new Array(queuedInputs.length);
+      let cursor = 0;
+      let settled = 0;
+      let succeeded = 0;
+      let failed = 0;
+      let aborted = 0;
+
+      const report = (
+        index: number,
+        result: WatermarkBatchResult<Result>
+      ): void => {
+        settled += 1;
+        if (result.status === 'fulfilled') succeeded += 1;
+        else if (result.status === 'rejected') failed += 1;
+        else aborted += 1;
+        try {
+          batchOptions.onProgress?.({
+            total: queuedInputs.length,
+            settled,
+            succeeded,
+            failed,
+            aborted,
+            index,
+            result,
+          });
+        } catch {
+          // Progress observers must not interrupt the batch or change results.
+        }
+      };
+
+      const worker = async (): Promise<void> => {
+        while (!batchOptions.signal?.aborted) {
+          const index = cursor;
+          cursor += 1;
+          if (index >= queuedInputs.length) {
+            return;
+          }
+          const input = queuedInputs[index];
+          if (!input) {
+            return;
+          }
+          let result: WatermarkBatchResult<Result>;
+          try {
+            result = {
+              status: 'fulfilled',
+              value: await applySnapshot(input),
+            };
+          } catch (reason) {
+            result = { status: 'rejected', reason };
+          }
+          results[index] = result;
+          report(index, result);
+        }
+      };
+
+      await Promise.all(Array.from({ length: concurrency }, worker));
+
+      for (let index = 0; index < queuedInputs.length; index += 1) {
+        if (!results[index]) {
+          const result = abortResult<Result>();
+          results[index] = result;
+          report(index, result);
+        }
+      }
+
+      return results as Array<WatermarkBatchResult<Result>>;
     },
   };
 }

@@ -68,3 +68,23 @@ export const reusableRecipe: WatermarkRecipe = Marker.createRecipe({
   ],
   saveFormat: ImageFormat.jpg,
 });
+
+export const recipeBatch = reusableRecipe.applyMany(
+  [
+    {
+      backgroundImage: { src: 'file:///tmp/one.jpg' },
+      filename: 'one',
+    },
+    {
+      backgroundImage: { src: 'file:///tmp/two.jpg' },
+      filename: 'two',
+    },
+  ],
+  {
+    concurrency: 2,
+    onProgress(progress) {
+      const settled: number = progress.settled;
+      settled.toFixed(0);
+    },
+  }
+);

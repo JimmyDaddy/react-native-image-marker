@@ -83,6 +83,33 @@ describe('Marker JS wrapper', () => {
     );
   });
 
+  it('keeps public native recipe batches serial', async () => {
+    let active = 0;
+    let maximumActive = 0;
+    nativeModule.markWithWatermarks.mockImplementation(async () => {
+      active += 1;
+      maximumActive = Math.max(maximumActive, active);
+      await new Promise((resolve) => setTimeout(resolve, 2));
+      active -= 1;
+      return '/tmp/recipe.jpg';
+    });
+    const recipe = Marker.createRecipe({
+      watermarks: [{ type: 'text', text: 'Reusable' }],
+    });
+
+    const results = await recipe.applyMany(
+      [1, 2, 3].map((src) => ({ backgroundImage: { src } })),
+      { concurrency: 3 }
+    );
+
+    expect(maximumActive).toBe(1);
+    expect(
+      results.every(
+        (result: { status: string }) => result.status === 'fulfilled'
+      )
+    ).toBe(true);
+  });
+
   it('normalizes markText options before calling the native module', async () => {
     nativeModule.markWithText.mockResolvedValue('/tmp/text.png');
     const options = {
