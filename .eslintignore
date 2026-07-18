@@ -3,6 +3,7 @@ lib
 docs
 **/build/**
 **/dist/**
+coverage/**
 website/.astro/**
 website/src/content/docs/api/**
 

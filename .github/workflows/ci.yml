@@ -219,7 +219,7 @@ jobs:
           node-version: '22.22.0'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Run npm audit
         run: npm audit --audit-level=moderate
@@ -241,7 +241,7 @@ jobs:
 
       - name: Install root and Expo example dependencies
         run: |
-          npm install
+          npm ci
           npm --prefix expo-example install --ignore-scripts --no-audit --no-fund
 
       - name: Verify Expo clean-install bundle
@@ -262,7 +262,7 @@ jobs:
         run: npm run lint
 
       - name: Test
-        run: npm test -- --runInBand
+        run: npm test -- --coverage --runInBand
 
       - name: Build package
         run: npm run prepack
@@ -281,11 +281,13 @@ jobs:
         with:
           node-version: '22.22.0'
           cache: npm
-          cache-dependency-path: website/package-lock.json
+          cache-dependency-path: |
+            package-lock.json
+            website/package-lock.json
 
       - name: Install dependencies
         run: |
-          npm install
+          npm ci
           npm ci --prefix website
 
       - name: Build and verify documentation
@@ -311,16 +313,26 @@ jobs:
         with:
           node-version: '22.22.0'
           cache: npm
-          cache-dependency-path: expo-example/package-lock.json
+          cache-dependency-path: |
+            package-lock.json
+            expo-example/package-lock.json
 
       - name: Install dependencies
         run: |
-          npm install
+          npm ci
           npm --prefix example install --ignore-scripts --no-audit --no-fund
           npm ci --prefix expo-example --ignore-scripts --no-audit --no-fund
 
       - name: Test Web SDK
-        run: npm run test:web
+        run: npm run test:web -- --coverage
+
+      - name: Upload Web coverage report
+        uses: actions/upload-artifact@v7
+        with:
+          name: web-coverage-${{ github.sha }}
+          path: coverage
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Typecheck web example
         run: npm --prefix expo-example run typecheck
@@ -331,8 +343,8 @@ jobs:
       - name: Verify web platform resolution
         run: npm --prefix expo-example run verify:web-bundle
 
-      - name: Install Chromium
-        run: npm exec --prefix expo-example -- playwright install --with-deps chromium
+      - name: Install Playwright browsers
+        run: npm exec --prefix expo-example -- playwright install --with-deps chromium firefox webkit
 
       - name: Smoke test web example
         run: npm --prefix expo-example run smoke:web

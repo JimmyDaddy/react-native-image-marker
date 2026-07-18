@@ -37,7 +37,9 @@ jobs:
         with:
           node-version: '22.22.0'
           cache: npm
-          cache-dependency-path: website/package-lock.json
+          cache-dependency-path: |
+            package-lock.json
+            website/package-lock.json
 
       - name: Install dependencies
         run: |

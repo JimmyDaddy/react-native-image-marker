@@ -16,9 +16,12 @@ import Marker, {
   Position,
   TextBackgroundType,
 } from 'react-native-image-marker';
+import { installWebSmokeHarness } from './smoke-harness.web';
 
 const backgroundUri = Asset.fromModule(require('./assets/bg.png')).uri;
 const logoUri = Asset.fromModule(require('./assets/icon.jpeg')).uri;
+
+installWebSmokeHarness({ backgroundUri, logoUri });
 
 const positions = [
   { label: 'Left', value: Position.bottomLeft },

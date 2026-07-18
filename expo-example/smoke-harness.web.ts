@@ -1,0 +1,154 @@
+import Marker, {
+  ImageFormat,
+  Position,
+  RotationCanvasMode,
+} from 'react-native-image-marker';
+
+interface SmokeHarnessAssets {
+  backgroundUri: string;
+  logoUri: string;
+}
+
+interface ImageResult {
+  dataUrl: string;
+  width: number;
+  height: number;
+}
+
+interface WebSmokeHarness {
+  renderBlobAndFile(): Promise<ImageResult>;
+  renderLargeCropped(): Promise<ImageResult>;
+  renderCrossOrigin(url: string): Promise<string>;
+}
+
+declare global {
+  interface Window {
+    __IMAGE_MARKER_SMOKE__?: WebSmokeHarness;
+  }
+}
+
+async function fetchBlob(uri: string): Promise<Blob> {
+  const response = await fetch(uri);
+  if (!response.ok) {
+    throw new Error(`Unable to load smoke fixture: ${response.status}`);
+  }
+  return response.blob();
+}
+
+async function getDimensions(dataUrl: string): Promise<ImageResult> {
+  const image = new Image();
+  image.src = dataUrl;
+  await image.decode();
+  return {
+    dataUrl,
+    width: image.naturalWidth,
+    height: image.naturalHeight,
+  };
+}
+
+async function createLargeImage(): Promise<File> {
+  const canvas = document.createElement('canvas');
+  canvas.width = 4096;
+  canvas.height = 3072;
+  const context = canvas.getContext('2d');
+  if (!context) {
+    throw new Error('Canvas 2D is unavailable.');
+  }
+
+  const gradient = context.createLinearGradient(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+  gradient.addColorStop(0, '#0B3A69');
+  gradient.addColorStop(0.5, '#E5654B');
+  gradient.addColorStop(1, '#F9D58A');
+  context.fillStyle = gradient;
+  context.fillRect(0, 0, canvas.width, canvas.height);
+
+  const blob = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((result) => {
+      if (result) {
+        resolve(result);
+      } else {
+        reject(new Error('Unable to encode the large smoke fixture.'));
+      }
+    }, 'image/png');
+  });
+  return new File([blob], 'large-background.png', { type: 'image/png' });
+}
+
+function createHarness(assets: SmokeHarnessAssets): WebSmokeHarness {
+  return {
+    async renderBlobAndFile() {
+      const [backgroundBlob, logoBlob] = await Promise.all([
+        fetchBlob(assets.backgroundUri),
+        fetchBlob(assets.logoUri),
+      ]);
+      const backgroundFile = new File([backgroundBlob], 'background.png', {
+        type: backgroundBlob.type || 'image/png',
+      });
+      const dataUrl = await Marker.markImage({
+        backgroundImage: { src: backgroundFile },
+        watermarkImage: {
+          src: logoBlob,
+          position: { position: Position.center },
+          scale: 0.18,
+          alpha: 0.55,
+          rotate: 17,
+        },
+        saveFormat: ImageFormat.png,
+      });
+      return getDimensions(dataUrl);
+    },
+
+    async renderLargeCropped() {
+      const dataUrl = await Marker.markText({
+        backgroundImage: {
+          src: await createLargeImage(),
+          rotate: 90,
+          alpha: 0.8,
+        },
+        watermarkTexts: [
+          {
+            text: '4096 × 3072 → max 1024',
+            position: { position: Position.center },
+            style: {
+              color: '#FFFFFF',
+              fontSize: 48,
+              bold: true,
+            },
+          },
+        ],
+        maxSize: 1024,
+        rotationCanvasMode: RotationCanvasMode.crop,
+        saveFormat: ImageFormat.png,
+      });
+      return getDimensions(dataUrl);
+    },
+
+    async renderCrossOrigin(url: string) {
+      try {
+        await Marker.markText({
+          backgroundImage: { src: { uri: url } },
+          watermarkTexts: [{ text: 'CORS' }],
+          saveFormat: ImageFormat.png,
+        });
+      } catch (error) {
+        return error instanceof Error ? error.message : String(error);
+      }
+      throw new Error('Expected the cross-origin image to be rejected.');
+    },
+  };
+}
+
+export function installWebSmokeHarness(assets: SmokeHarnessAssets): void {
+  if (
+    typeof window === 'undefined' ||
+    !new URLSearchParams(window.location.search).has('smoke')
+  ) {
+    return;
+  }
+  window.__IMAGE_MARKER_SMOKE__ = createHarness(assets);
+}

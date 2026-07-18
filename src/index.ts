@@ -675,10 +675,8 @@ export interface TextMarkOptions {
    */
   rotationCanvasMode?: RotationCanvasMode;
   /**
-   * @deprecated since 1.2.0
-   * max image size see #49 #42
-   * android only
-   * **need RN version >= 0.60.0**,  fresco `MaxBitmapSize` [`ImagePipelineConfig.Builder.experiment().setMaxBitmapSize()`](https://github.com/facebook/fresco/blob/08ca5f40cc0b60b4db16d15e45552cafeae39ccb/imagepipeline/src/main/java/com/facebook/imagepipeline/core/ImagePipelineExperiments.java#L282), see [#49](https://github.com/JimmyDaddy/react-native-image-marker/issues/49#issuecomment-535303838)
+   * Maximum width or height used while decoding on Android and rendering on
+   * Web. Larger images keep their aspect ratio. Currently ignored on iOS.
    * @defaultValue 2048
    * @example
    * maxSize: 2048
@@ -857,10 +855,8 @@ export interface ImageMarkOptions {
    */
   rotationCanvasMode?: RotationCanvasMode;
   /**
-   * @deprecated since 1.2.0
-   * max image size see #49 #42
-   * android only
-   * **need RN version >= 0.60.0**,  fresco `MaxBitmapSize` [`ImagePipelineConfig.Builder.experiment().setMaxBitmapSize()`](https://github.com/facebook/fresco/blob/08ca5f40cc0b60b4db16d15e45552cafeae39ccb/imagepipeline/src/main/java/com/facebook/imagepipeline/core/ImagePipelineExperiments.java#L282), see [#49](https://github.com/JimmyDaddy/react-native-image-marker/issues/49#issuecomment-535303838)
+   * Maximum width or height used while decoding on Android and rendering on
+   * Web. Larger images keep their aspect ratio. Currently ignored on iOS.
    * @defaultValue 2048
    * @example
    * maxSize: 2048
@@ -983,9 +979,8 @@ export interface MarkOptions {
    */
   rotationCanvasMode?: RotationCanvasMode;
   /**
-   * @deprecated since 1.2.0
-   * max image size
-   * android only
+   * Maximum width or height used while decoding on Android and rendering on
+   * Web. Larger images keep their aspect ratio. Currently ignored on iOS.
    * @defaultValue 2048
    */
   maxSize?: number;

@@ -118,7 +118,13 @@
     "modulePathIgnorePatterns": [
       "<rootDir>/example/node_modules",
       "<rootDir>/lib/"
-    ]
+    ],
+    "coverageThreshold": {
+      "./src/web/": {
+        "branches": 65,
+        "lines": 75
+      }
+    }
   },
   "commitlint": {
     "extends": [
@@ -167,7 +173,8 @@
   },
   "eslintIgnore": [
     "node_modules/",
-    "lib/"
+    "lib/",
+    "coverage/"
   ],
   "prettier": {
     "quoteProps": "consistent",

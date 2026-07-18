@@ -24,6 +24,36 @@ export interface CanvasEncoder {
 export type WebOutputFormat = 'png' | 'jpg' | 'base64';
 
 const DEFAULT_EDGE_INSET = 20;
+export const DEFAULT_WEB_MAX_SIZE = 2048;
+
+/** Fit an image inside the same square pixel bound used by native loaders. */
+export function fitSizeWithinMax(
+  size: Size,
+  maxSize = DEFAULT_WEB_MAX_SIZE
+): Size {
+  if (!Number.isFinite(maxSize) || !Number.isInteger(maxSize) || maxSize <= 0) {
+    throw new Error('maxSize must be a positive finite integer.');
+  }
+  if (
+    !Number.isFinite(size.width) ||
+    !Number.isFinite(size.height) ||
+    size.width <= 0 ||
+    size.height <= 0
+  ) {
+    throw new Error('image dimensions must be finite numbers greater than 0.');
+  }
+
+  const largestDimension = Math.max(size.width, size.height);
+  if (largestDimension <= maxSize) {
+    return { ...size };
+  }
+
+  const ratio = maxSize / largestDimension;
+  return {
+    width: Math.max(Math.min(Math.round(size.width * ratio), maxSize), 1),
+    height: Math.max(Math.min(Math.round(size.height * ratio), maxSize), 1),
+  };
+}
 
 /** Resolve a pixel or percentage value against one canvas axis. */
 export function resolveSpreadValue(
