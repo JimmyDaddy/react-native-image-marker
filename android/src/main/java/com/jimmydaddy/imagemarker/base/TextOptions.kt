@@ -14,7 +14,7 @@ import android.util.Log
 import android.util.TypedValue
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableMap
-import com.facebook.react.views.text.ReactFontManager
+import com.facebook.react.common.assets.ReactFontManager
 import kotlin.math.ceil
 
 @Suppress("DEPRECATION")

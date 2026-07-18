@@ -221,7 +221,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run npm audit
+      - name: Enforce production dependency audit
+        run: npm audit --omit=dev --audit-level=moderate
+
+      - name: Report development-tooling audit
         run: npm audit --audit-level=moderate
         continue-on-error: true
 
@@ -349,6 +352,84 @@ jobs:
       - name: Smoke test web example
         run: npm --prefix expo-example run smoke:web
 
+  expo-current:
+    runs-on: ubuntu-latest
+    name: Expo 57 / RN 0.86 (New Architecture)
+    needs: changes
+    if: needs.changes.outputs.js == 'true'
+    timeout-minutes: 45
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v7
+
+      - name: Setup node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.22.0'
+          cache: npm
+          cache-dependency-path: expo-example/package-lock.json
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
+
+      - name: Install dependencies
+        run: npm ci --prefix expo-example --ignore-scripts --no-audit --no-fund
+
+      - name: Verify Expo versions and bundle
+        run: |
+          (cd expo-example && npx --yes expo-doctor@1.20.1)
+          npm --prefix expo-example run typecheck
+          npm --prefix expo-example run bundle:smoke
+
+      - name: Generate Expo development-build project
+        run: npm exec --prefix expo-example -- expo prebuild --platform android --clean --no-install
+
+      - name: Compile New Architecture development build
+        env:
+          NODE_ENV: production
+        run: |
+          cd expo-example/android
+          ./gradlew :app:assembleDebug -PreactNativeArchitectures=arm64-v8a --stacktrace --no-daemon
+
+  react-native-current:
+    runs-on: ubuntu-latest
+    name: RN 0.86 (New Architecture)
+    needs: changes
+    if: needs.changes.outputs.native == 'true'
+    timeout-minutes: 45
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v7
+
+      - name: Setup node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.22.0'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
+
+      - name: Install and build current React Native fixture
+        run: |
+          npm ci
+          bash scripts/test-react-native-current.sh
+
   install-dep:
     runs-on: macos-latest
     env:
@@ -411,7 +492,7 @@ jobs:
 
   android-build:
     runs-on: macos-latest
-    name: Android Build
+    name: RN 0.73 Android (Legacy + New Architecture)
     needs: [changes, install-dep]
     if: needs.changes.outputs.android == 'true'
     steps:
@@ -638,7 +719,7 @@ jobs:
       NO_FLIPPER: '1'
     needs: [changes, install-dep]
     if: needs.changes.outputs.ios == 'true'
-    name: iOS Build and Test
+    name: RN 0.73 iOS (Legacy Architecture)
     strategy:
       matrix:
         cocoapods: ['1.15.2']
