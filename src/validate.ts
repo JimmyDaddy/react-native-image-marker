@@ -36,10 +36,10 @@ function validateMaxSize(options: MarkRequestOptions): void {
 }
 
 function validateAlpha(
-  imageOptions: ImageOptions | undefined,
+  options: Pick<ImageOptions, 'alpha'> | undefined,
   path: string
 ): void {
-  const alpha = imageOptions?.alpha;
+  const alpha = options?.alpha;
 
   if (
     alpha !== undefined &&
@@ -114,6 +114,7 @@ function validateWatermarkLayout(
 }
 
 function validateTextOptions(options: TextOptions, path: string): void {
+  validateAlpha(options, path);
   const strokeStyle = options.style?.strokeStyle;
   if (strokeStyle) {
     if (!Number.isFinite(strokeStyle.width) || strokeStyle.width < 0) {

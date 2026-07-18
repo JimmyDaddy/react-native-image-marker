@@ -32,6 +32,7 @@ class FakeImage {
 }
 
 function createFakeCanvas() {
+  const globalAlphaHistory = [1];
   const canvas = {
     width: 0,
     height: 0,
@@ -85,8 +86,17 @@ function createFakeCanvas() {
       data: new Uint8ClampedArray(320 * 200 * 4).fill(255),
     })),
   };
+  let globalAlpha = 1;
+  Object.defineProperty(context, 'globalAlpha', {
+    configurable: true,
+    get: () => globalAlpha,
+    set: (value: number) => {
+      globalAlpha = value;
+      globalAlphaHistory.push(value);
+    },
+  });
   canvas.getContext.mockReturnValue(context);
-  return { canvas, context };
+  return { canvas, context, globalAlphaHistory };
 }
 
 function installFakeBrowserRuntime() {
@@ -284,6 +294,40 @@ describe('WebMarker browser render integration', () => {
       context.fillText.mock.invocationCallOrder[0]
     );
     expect(context.moveTo).toHaveBeenCalledWith(0, 0);
+  });
+
+  it('applies text alpha to the complete text layer and restores the canvas', async () => {
+    const canvases = installFakeBrowserRuntime();
+
+    await WebMarker.markText({
+      backgroundImage: { src: '/background.jpg' },
+      watermarkTexts: [
+        {
+          text: 'Translucent',
+          alpha: 0.35,
+          style: {
+            strokeStyle: { color: '#111827', width: 2 },
+            textBackgroundStyle: { color: '#F97316' },
+          },
+        },
+      ],
+      saveFormat: ImageFormat.png,
+    });
+
+    const { context, globalAlphaHistory } = canvases[0]!;
+    expect(globalAlphaHistory).toContain(0.35);
+    expect(context.globalAlpha).toBe(1);
+    expect(context.fillText).toHaveBeenCalledWith(
+      'Translucent',
+      expect.any(Number),
+      expect.any(Number)
+    );
+    expect(context.strokeText).toHaveBeenCalledWith(
+      'Translucent',
+      expect.any(Number),
+      expect.any(Number)
+    );
+    expect(context.fill).toHaveBeenCalled();
   });
 
   it('tiles outlined text using percentage gaps and staggered rows', async () => {

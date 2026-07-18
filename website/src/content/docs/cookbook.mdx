@@ -121,4 +121,46 @@ await Marker.mark({
 });
 ```
 
+### One recipe for a folder of images
+
+`createRecipe` snapshots the ordered layers and output settings. Each input supplies only its own background and optional filename. Batch results remain in input order, even when Web jobs finish in a different order.
+
+```ts
+const recipe = Marker.createRecipe({
+  watermarks: [
+    {
+      type: 'text',
+      text: '© Acme Studio',
+      position: { position: Position.bottomRight, X: 24, Y: 24 },
+      style: { color: '#FFFFFF', fontSize: 28, bold: true },
+    },
+  ],
+  saveFormat: ImageFormat.jpg,
+  quality: 90,
+});
+
+const controller = new AbortController();
+const results = await recipe.applyMany(
+  photos.map((src) => ({ backgroundImage: { src } })),
+  {
+    concurrency: 2,
+    signal: controller.signal,
+    onProgress({ settled, total, failed }) {
+      console.log(`${settled}/${total}; ${failed} failed`);
+    },
+  }
+);
+```
+
+Calling `controller.abort()` stops new items from starting. Items already rendering finish normally. A failed item is reported as `rejected` without stopping the rest of the queue.
+
+For browser file queues, opt into direct byte output:
+
+```ts
+const webRecipe = Marker.createRecipe(recipeOptions, { resultType: 'blob' });
+const blob = await webRecipe.apply({ backgroundImage: { src: file } });
+```
+
+The SDK does not create an object URL. Create and revoke one in your UI only when you need a preview.
+
 To try the Web SDK without installing anything, open the [live playground](/playground/). For native controls and the architecture status panel, run the [React Native example](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/example) or [Expo example](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/expo-example).

@@ -1,6 +1,6 @@
 ---
 title: Choose an API
-description: Pick markText, markImage, or mark based on the watermark layers you need.
+description: Pick markText, markImage, mark, or a reusable Recipe based on the work you need to do.
 ---
 
 import { TabItem, Tabs } from '@astrojs/starlight/components';
@@ -12,6 +12,7 @@ The three public methods share the same output options. Choose by layer type:
 | `Marker.markText` | One or many text watermarks | Text array order |
 | `Marker.markImage` | One or many image watermarks | Image array order |
 | `Marker.mark` | Text and image watermarks together | Exact `watermarks` array order |
+| `Marker.createRecipe` | Reuse ordered layers across one or many images | Exact `watermarks` array order |
 
 `markText` and `markImage` remain supported. Use `mark` when a single render needs both text and image layers or when cross-type ordering matters.
 
@@ -87,6 +88,12 @@ The three public methods share the same output options. Choose by layer type:
     ```
   </TabItem>
 </Tabs>
+
+## When to create a Recipe
+
+Use `createRecipe` when the watermark configuration stays the same while the background changes. A Recipe accepts only the modern ordered `watermarks` array; pass `backgroundImage` and `filename` to `apply()` or `applyMany()` for each input.
+
+`applyMany()` reports every item independently and preserves input order. Its default concurrency is 1. Web accepts up to 4 active jobs; iOS and Android stay at 1 to limit native memory pressure. An `AbortSignal` stops new work from being dispatched without claiming to interrupt a render already in progress.
 
 ## Layer order
 

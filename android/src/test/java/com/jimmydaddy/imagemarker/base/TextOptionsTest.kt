@@ -16,6 +16,21 @@ class TextOptionsTest {
   }
 
   @Test
+  fun parsesTextAlphaAndRejectsValuesOutsideTheUnitInterval() {
+    val options = Mockito.mock(ReadableMap::class.java)
+    Mockito.`when`(options.getString("text")).thenReturn("watermark")
+    Mockito.`when`(options.hasKey("alpha")).thenReturn(true)
+    Mockito.`when`(options.isNull("alpha")).thenReturn(false)
+    Mockito.`when`(options.getDouble("alpha")).thenReturn(0.35)
+
+    assertEquals(0.35, TextOptions(options).alpha, 0.0001)
+
+    Mockito.`when`(options.getDouble("alpha")).thenReturn(1.01)
+    val error = assertThrows(MarkerError::class.java) { TextOptions(options) }
+    assertEquals(ErrorCode.INVALID_PARAMS.value, error.getErrorCode())
+  }
+
+  @Test
   fun invalidStyleMapBecomesMarkerError() {
     val options = Mockito.mock(ReadableMap::class.java)
     Mockito.`when`(options.getString("text")).thenReturn("watermark")

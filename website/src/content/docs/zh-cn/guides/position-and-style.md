@@ -84,16 +84,16 @@ style: {
 
 以下文字样式可用于 iOS、Android 和 Web：
 
-| 属性 | 用途 |
-| --- | --- |
-| `color` | 文本颜色 |
-| `fontName` | 平台字体族或 iOS PostScript 名称 |
-| `fontSize` / `fontSizeRatio` | 固定或响应式大小 |
-| `bold`、`italic`、`underline`、`strikeThrough` | 字体装饰 |
-| `rotate`、`skewX` | 文本变换 |
-| `shadowStyle` | 阴影的偏移量、半径和颜色 |
-| `strokeStyle` | 文字描边的颜色和宽度 |
-| `textBackgroundStyle` | 内边距、颜色、拉伸模式和圆角半径 |
+| 属性                                           | 用途                             |
+| ---------------------------------------------- | -------------------------------- |
+| `color`                                        | 文本颜色                         |
+| `fontName`                                     | 平台字体族或 iOS PostScript 名称 |
+| `fontSize` / `fontSizeRatio`                   | 固定或响应式大小                 |
+| `bold`、`italic`、`underline`、`strikeThrough` | 字体装饰                         |
+| `rotate`、`skewX`                              | 文本变换                         |
+| `shadowStyle`                                  | 阴影的偏移量、半径和颜色         |
+| `strokeStyle`                                  | 文字描边的颜色和宽度             |
+| `textBackgroundStyle`                          | 内边距、颜色、拉伸模式和圆角半径 |
 
 当背景应贴合文本而不是拉伸时，请使用 `TextBackgroundType.none`。其序列化值为 `fit`。
 
@@ -113,6 +113,18 @@ style: {
 ```
 
 描边会计入锚点定位和平铺间距。将 `strokeStyle` 设为 `null` 或直接省略，即可保持原来的纯填充文字效果。
+
+### 文字透明度
+
+在文字图层上设置 `alpha`，即可同时调整文字填充、描边、阴影和背景的透明度，无需逐个改写颜色。取值范围为 `0` 到 `1`，默认值为 `1`。
+
+```ts
+{
+  text: 'CONFIDENTIAL',
+  alpha: 0.55,
+  style: { color: '#FFFFFF', fontSize: 32 },
+}
+```
 
 ### 自定义字体
 

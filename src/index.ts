@@ -512,6 +512,15 @@ export interface TextOptions {
    * text: 'hello world'
    **/
   text: string;
+
+  /**
+   * Opacity applied to the complete text layer, including its fill, outline,
+   * shadow, and background.
+   * @defaultValue 1
+   * @example
+   * alpha: 0.65
+   */
+  alpha?: number;
   /**
    * @deprecated since 1.2.4 use position instead
    * text position options

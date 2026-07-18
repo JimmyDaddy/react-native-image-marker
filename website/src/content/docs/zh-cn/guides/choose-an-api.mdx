@@ -1,6 +1,6 @@
 ---
 title: 选择 API
-description: 根据所需的水印图层，在 markText、markImage 或 mark 之间进行选择。
+description: 根据图层类型和处理方式，在 markText、markImage、mark 或可复用 Recipe 之间进行选择。
 ---
 
 import { TabItem, Tabs } from '@astrojs/starlight/components';
@@ -12,6 +12,7 @@ import { TabItem, Tabs } from '@astrojs/starlight/components';
 | `Marker.markText` | 一个或多个文本水印 | 文本数组顺序 |
 | `Marker.markImage` | 一个或多个图像水印 | 图像数组顺序 |
 | `Marker.mark` | 同时包含文本和图像水印 | 严格按照 `watermarks` 数组顺序 |
+| `Marker.createRecipe` | 将同一组有序图层用于一张或多张图片 | 严格按照 `watermarks` 数组顺序 |
 
 `markText` 和 `markImage` 仍受支持。当一次渲染需要同时包含文本和图像图层，或不同类型图层之间的顺序很重要时，请使用 `mark`。
 
@@ -87,6 +88,12 @@ import { TabItem, Tabs } from '@astrojs/starlight/components';
     ```
   </TabItem>
 </Tabs>
+
+## 什么时候创建 Recipe
+
+当水印配置保持不变、只有底图发生变化时，适合使用 `createRecipe`。Recipe 只接受现代的有序 `watermarks` 数组；每张图片的 `backgroundImage` 和 `filename` 应传给 `apply()` 或 `applyMany()`。
+
+`applyMany()` 会独立报告每一项，并保持输入顺序。默认并发为 1；Web 最多允许 4 个活动任务，iOS 和 Android 固定为 1，以控制原生内存压力。传入 `AbortSignal` 后会停止派发新任务，但不会宣称能够中断已经开始的渲染。
 
 ## 图层顺序
 

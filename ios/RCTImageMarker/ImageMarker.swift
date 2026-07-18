@@ -232,6 +232,7 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
 
         for origin in origins {
             context.saveGState()
+            context.setAlpha(textOpts.alpha)
             let posX = origin.x + outlineInset
             let posY = origin.y + outlineInset
 

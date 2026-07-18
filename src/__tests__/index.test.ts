@@ -449,7 +449,7 @@ describe('Marker JS wrapper', () => {
           src: 'file:///tmp/background.png',
           alpha: 0,
         },
-        watermarkTexts: [{ text: 'boundary' }],
+        watermarkTexts: [{ text: 'boundary', alpha: 0 }],
         quality: 0,
       })
     ).resolves.toBe('/tmp/boundary-text.png');
@@ -475,6 +475,11 @@ describe('Marker JS wrapper', () => {
             type: 'image',
             src: 'file:///tmp/mixed-watermark.png',
             alpha: 0,
+          },
+          {
+            type: 'text',
+            text: 'boundary',
+            alpha: 1,
           },
         ],
         quality: 100,
@@ -601,7 +606,7 @@ describe('Marker JS wrapper', () => {
     expect(nativeModule.markWithWatermarks).not.toHaveBeenCalled();
   });
 
-  it('rejects invalid alpha values at every nested image location', () => {
+  it('rejects invalid alpha values at every image and text layer location', () => {
     const invalidCases = [
       {
         invoke: () =>
@@ -652,6 +657,24 @@ describe('Marker JS wrapper', () => {
             ],
           }),
         path: 'watermarks[1]',
+      },
+      {
+        invoke: () =>
+          Marker.markText({
+            backgroundImage: { src: 'file:///tmp/background.png' },
+            watermarkTexts: [{ text: 'transparent text', alpha: Number.NaN }],
+          }),
+        path: 'watermarkTexts[0]',
+      },
+      {
+        invoke: () =>
+          Marker.mark({
+            backgroundImage: { src: 'file:///tmp/background.png' },
+            watermarks: [
+              { type: 'text', text: 'transparent text', alpha: -0.01 },
+            ],
+          }),
+        path: 'watermarks[0]',
       },
     ];
 

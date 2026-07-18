@@ -552,7 +552,7 @@ function drawTextAtPosition(
   }
 }
 
-function drawTextLayer(
+function drawTextLayerContent(
   context: WebCanvasContext,
   options: TextOptions,
   canvas: Size
@@ -606,6 +606,23 @@ function drawTextLayer(
     20
   );
   drawTextAtPosition(context, options, canvas, textLayout, position, rotation);
+}
+
+function drawTextLayer(
+  context: WebCanvasContext,
+  options: TextOptions,
+  canvas: Size
+) {
+  const previousAlpha = context.globalAlpha;
+  const alpha = resolveAlpha(options.alpha, 'watermark text alpha');
+  context.save();
+  try {
+    context.globalAlpha = previousAlpha * alpha;
+    drawTextLayerContent(context, options, canvas);
+  } finally {
+    context.globalAlpha = previousAlpha;
+    context.restore();
+  }
 }
 
 function fullSourceBounds(image: LoadedWebImage): SourceBounds {

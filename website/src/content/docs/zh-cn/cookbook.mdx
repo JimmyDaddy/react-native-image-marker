@@ -121,4 +121,46 @@ await Marker.mark({
 });
 ```
 
+### 一套配方处理整批图片
+
+`createRecipe` 会保存有序图层和导出设置。每次输入只需要提供自己的底图和可选文件名。即使 Web 任务完成顺序不同，批量结果也始终与输入顺序一致。
+
+```ts
+const recipe = Marker.createRecipe({
+  watermarks: [
+    {
+      type: 'text',
+      text: '© Acme Studio',
+      position: { position: Position.bottomRight, X: 24, Y: 24 },
+      style: { color: '#FFFFFF', fontSize: 28, bold: true },
+    },
+  ],
+  saveFormat: ImageFormat.jpg,
+  quality: 90,
+});
+
+const controller = new AbortController();
+const results = await recipe.applyMany(
+  photos.map((src) => ({ backgroundImage: { src } })),
+  {
+    concurrency: 2,
+    signal: controller.signal,
+    onProgress({ settled, total, failed }) {
+      console.log(`${settled}/${total}，${failed} 个失败`);
+    },
+  }
+);
+```
+
+调用 `controller.abort()` 后不会再派发新任务；已经开始渲染的图片仍会正常结束。单张图片失败会记录为 `rejected`，不会中断其他任务。
+
+浏览器批量处理本地文件时，可以显式返回二进制结果：
+
+```ts
+const webRecipe = Marker.createRecipe(recipeOptions, { resultType: 'blob' });
+const blob = await webRecipe.apply({ backgroundImage: { src: file } });
+```
+
+SDK 不会自动创建 Object URL。只有在界面需要预览时，才由调用方创建并及时释放。
+
 如需免安装体验 Web SDK，请打开[在线体验](/zh-cn/playground/)。如需使用原生交互控件和查看架构状态面板，请运行 [React Native 示例](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/example)或 [Expo 示例](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/expo-example)。

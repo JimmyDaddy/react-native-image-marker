@@ -58,6 +58,7 @@ const result = await Marker.markText({
   watermarkTexts: [
     {
       text: '© Acme Studio',
+      alpha: 0.85,
       position: {
         position: Position.bottomRight,
         X: 24,
@@ -87,6 +88,7 @@ const result = await Marker.markText({
   watermarkTexts: [
     {
       text: 'CONFIDENTIAL',
+      alpha: 0.55,
       layout: {
         type: 'tile',
         gapX: '8%',
@@ -108,6 +110,46 @@ const result = await Marker.markText({
 ```
 
 Use the same `layout` object on `watermarkImages` to repeat a logo. A tiled layer cannot also set `position`; invalid combinations fail with a clear error.
+
+### Reuse one recipe across a batch
+
+Save ordered layers once, then apply them to one image or an entire queue. Results stay in input order; one failed image does not stop the others. Native rendering stays serial, while Web can run up to four jobs at once.
+
+```ts
+const recipe = Marker.createRecipe({
+  watermarks: [
+    {
+      type: 'text',
+      text: '© Acme Studio',
+      position: { position: Position.bottomRight, X: 24, Y: 24 },
+      style: { color: '#FFFFFF', fontSize: 28 },
+    },
+  ],
+  saveFormat: ImageFormat.jpg,
+  quality: 90,
+});
+
+const controller = new AbortController();
+const results = await recipe.applyMany(
+  photos.map((src) => ({ backgroundImage: { src } })),
+  {
+    concurrency: 2,
+    signal: controller.signal,
+    onProgress: ({ settled, total }) => console.log(`${settled}/${total}`),
+  }
+);
+```
+
+On Web, request `Blob` results explicitly when processing many files without Data URL expansion:
+
+```ts
+const blobRecipe = Marker.createRecipe(recipeOptions, {
+  resultType: 'blob',
+});
+const blob = await blobRecipe.apply({ backgroundImage: { src: file } });
+```
+
+Blob mode is Web-only and does not create object URLs. The caller controls `URL.createObjectURL()` and `URL.revokeObjectURL()` when a preview is needed.
 
 ## Live Web SDK
 
