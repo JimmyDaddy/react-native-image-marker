@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.7.0](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.6.0...v1.7.0) (2026-07-18)
+
+### Features
+
+* add text stroke rendering ([#322](https://github.com/JimmyDaddy/react-native-image-marker/issues/322)) ([e98cdfd](https://github.com/JimmyDaddy/react-native-image-marker/commit/e98cdfd96d35dbfa58a416bc2c7388edc4927b8f))
+* add tiled watermark layouts ([#323](https://github.com/JimmyDaddy/react-native-image-marker/issues/323)) ([42511fd](https://github.com/JimmyDaddy/react-native-image-marker/commit/42511fdd452d049bd6385338c1053627a9a7d509))
+* showcase v1.7 watermark layouts ([#324](https://github.com/JimmyDaddy/react-native-image-marker/issues/324)) ([4d0c1c1](https://github.com/JimmyDaddy/react-native-image-marker/commit/4d0c1c15d643775bb0bf2c21bfe4eab3482c5931))
+
 ## [1.6.0](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.5.0...v1.6.0) (2026-07-18)
 
 ### Features

@@ -1,6 +1,6 @@
 {
   "name": "react-native-image-marker",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "packageManager": "npm@10.9.4",
   "description": "Add text and image watermarks in React Native and React Native Web",
   "main": "lib/commonjs/index",
