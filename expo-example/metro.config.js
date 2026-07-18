@@ -1,5 +1,6 @@
 const path = require('path');
-const exclusionList = require('metro-config/src/defaults/exclusionList');
+const exclusionList =
+  require('metro-config/private/defaults/exclusionList').default;
 const { getDefaultConfig } = require('expo/metro-config');
 
 const pak = require('../package.json');
@@ -7,12 +8,7 @@ const pak = require('../package.json');
 const root = path.resolve(__dirname, '..');
 const modules = Object.keys({
   ...pak.peerDependencies,
-}).concat([
-  'filesize',
-  'pako',
-  'react-native-image-marker',
-  'react-native-toast-message',
-]);
+}).concat(['react-native-image-marker']);
 const blockedModuleRoots = [
   path.join(root, 'node_modules'),
   path.join(root, 'example', 'node_modules'),

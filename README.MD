@@ -110,6 +110,7 @@ Layers render in array order, so later layers draw over earlier layers. `markTex
 - React Native New Architecture support since library v1.3.0
 - Legacy bridge fallback
 - Expo development builds through native autolinking
+- CI coverage for RN 0.73 legacy/new architecture, RN 0.86 New Architecture, and Expo SDK 57 / RN 0.86
 
 See the full [compatibility guide](https://image-marker.corerobin.com/compatibility/) when maintaining an older React Native app.
 
