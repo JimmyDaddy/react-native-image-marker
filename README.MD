@@ -1,5 +1,5 @@
 <div align="center">
-  <a href="https://mage-marker.corerobin.com">
+  <a href="https://image-marker.corerobin.com">
     <img src="assets/icon.png" alt="React Native Image Marker" width="128" />
   </a>
   <h1>React Native Image Marker</h1>
@@ -20,7 +20,7 @@ Install iOS pods and rebuild the native app:
 npx pod-install
 ```
 
-Expo projects must use a development build because this package's native code is not bundled with Expo Go. See the [Expo installation steps](https://mage-marker.corerobin.com/getting-started/).
+Expo projects must use a development build because this package's native code is not bundled with Expo Go. See the [Expo installation steps](https://image-marker.corerobin.com/getting-started/).
 
 ## Quick start
 
@@ -55,7 +55,7 @@ On iOS and Android, JPEG and PNG calls resolve with a native cache-file path. On
 
 ## Live Web SDK
 
-[Try the live playground](https://mage-marker.corerobin.com/playground/) to run the same `Marker.markText`, `Marker.markImage`, and `Marker.mark` API entirely in your browser. Images stay local.
+[Try the live playground](https://image-marker.corerobin.com/playground/) to run the same `Marker.markText`, `Marker.markImage`, and `Marker.mark` API entirely in your browser. Images stay local.
 
 The Web renderer accepts URL strings, `{ uri }`, data URLs, `Blob`, `File`, and loaded browser images. In Expo Web, resolve a numeric bundled asset first:
 
@@ -87,17 +87,17 @@ Layers render in array order, so later layers draw over earlier layers. `markTex
 - Legacy bridge fallback
 - Expo development builds through native autolinking
 
-See the full [compatibility guide](https://mage-marker.corerobin.com/compatibility/) when maintaining an older React Native app.
+See the full [compatibility guide](https://image-marker.corerobin.com/compatibility/) when maintaining an older React Native app.
 
 ## Documentation
 
-- [简体中文文档](https://mage-marker.corerobin.com/zh-cn/)
-- [Installation](https://mage-marker.corerobin.com/getting-started/)
-- [Live playground](https://mage-marker.corerobin.com/playground/)
-- [Guides](https://mage-marker.corerobin.com/guides/choose-an-api/)
-- [Visual cookbook](https://mage-marker.corerobin.com/cookbook/)
-- [Troubleshooting](https://mage-marker.corerobin.com/troubleshooting/)
-- [API reference](https://mage-marker.corerobin.com/api/)
+- [简体中文文档](https://image-marker.corerobin.com/zh-cn/)
+- [Installation](https://image-marker.corerobin.com/getting-started/)
+- [Live playground](https://image-marker.corerobin.com/playground/)
+- [Guides](https://image-marker.corerobin.com/guides/choose-an-api/)
+- [Visual cookbook](https://image-marker.corerobin.com/cookbook/)
+- [Troubleshooting](https://image-marker.corerobin.com/troubleshooting/)
+- [API reference](https://image-marker.corerobin.com/api/)
 
 ## Examples
 

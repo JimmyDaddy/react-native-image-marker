@@ -58,7 +58,7 @@ jobs:
   deploy:
     environment:
       name: github-pages
-      url: https://mage-marker.corerobin.com
+      url: https://image-marker.corerobin.com
     runs-on: ubuntu-latest
     needs: build
     steps:

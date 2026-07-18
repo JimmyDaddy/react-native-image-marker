@@ -68,7 +68,7 @@
   "bugs": {
     "url": "https://github.com/JimmyDaddy/react-native-image-marker/issues"
   },
-  "homepage": "https://mage-marker.corerobin.com",
+  "homepage": "https://image-marker.corerobin.com",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },

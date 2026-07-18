@@ -50,7 +50,7 @@ async function writeRedirect(legacyPath, targetPath) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex">
-    <link rel="canonical" href="https://mage-marker.corerobin.com${target}">
+    <link rel="canonical" href="https://image-marker.corerobin.com${target}">
     <meta http-equiv="refresh" content="0; url=${target}">
     <title>Documentation moved</title>
   </head>

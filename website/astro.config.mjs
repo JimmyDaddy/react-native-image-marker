@@ -44,7 +44,7 @@ const localizeTypeDocSidebar = {
 };
 
 export default defineConfig({
-  site: 'https://mage-marker.corerobin.com',
+  site: 'https://image-marker.corerobin.com',
   base: '/',
   trailingSlash: 'always',
   integrations: [
@@ -95,7 +95,7 @@ export default defineConfig({
           attrs: {
             property: 'og:image',
             content:
-              'https://mage-marker.corerobin.com/media/watermark-after-dark.jpg',
+              'https://image-marker.corerobin.com/media/watermark-after-dark.jpg',
           },
         },
         {
@@ -123,7 +123,7 @@ export default defineConfig({
           attrs: {
             name: 'twitter:image',
             content:
-              'https://mage-marker.corerobin.com/media/watermark-after-dark.jpg',
+              'https://image-marker.corerobin.com/media/watermark-after-dark.jpg',
           },
         },
         {

@@ -114,7 +114,7 @@ if (brokenLinks.length > 0) {
 }
 
 const cname = (await readFile(join(outputRoot, 'CNAME'), 'utf8')).trim();
-if (cname !== 'mage-marker.corerobin.com') {
+if (cname !== 'image-marker.corerobin.com') {
   throw new Error(`Unexpected CNAME value: ${cname}`);
 }
 
@@ -188,14 +188,14 @@ for (const fragment of [
 }
 
 const robots = await readFile(join(outputRoot, 'robots.txt'), 'utf8');
-if (!robots.includes('Sitemap: https://mage-marker.corerobin.com/sitemap-index.xml')) {
+if (!robots.includes('Sitemap: https://image-marker.corerobin.com/sitemap-index.xml')) {
   throw new Error('robots.txt does not point to the production sitemap index.');
 }
 
 const xmlSitemap = await readFile(join(outputRoot, 'sitemap-0.xml'), 'utf8');
 for (const url of [
-  'https://mage-marker.corerobin.com/sitemap/',
-  'https://mage-marker.corerobin.com/zh-cn/sitemap/',
+  'https://image-marker.corerobin.com/sitemap/',
+  'https://image-marker.corerobin.com/zh-cn/sitemap/',
 ]) {
   if (!xmlSitemap.includes(`<loc>${url}</loc>`)) {
     throw new Error(`XML sitemap is missing expected URL: ${url}`);
