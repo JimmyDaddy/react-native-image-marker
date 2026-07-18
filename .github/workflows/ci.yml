@@ -908,6 +908,8 @@ jobs:
         js-check,
         docs-site,
         web-example,
+        expo-current,
+        react-native-current,
         install-dep,
         android-build,
         android-api-level-test,
