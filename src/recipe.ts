@@ -24,6 +24,20 @@ export type WatermarkRecipeOptions = Omit<
   watermarks: readonly WatermarkLayer[];
 };
 
+/** Keep the existing string result used by native paths and Web data URLs. */
+export interface WatermarkStringRecipeResultOptions {
+  resultType?: 'string';
+}
+
+/** Return encoded browser bytes without creating an object URL. Web only. */
+export interface WatermarkBlobRecipeResultOptions {
+  resultType: 'blob';
+}
+
+export type WatermarkRecipeResultOptions =
+  | WatermarkStringRecipeResultOptions
+  | WatermarkBlobRecipeResultOptions;
+
 export interface WatermarkRecipeInput {
   /** Source image processed by this recipe invocation. */
   backgroundImage: ImageOptions;

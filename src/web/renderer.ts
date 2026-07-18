@@ -15,6 +15,7 @@ import {
 } from './browser';
 import type {
   LoadedWebImage,
+  WebCanvas,
   WebCanvasContext,
   WebTextMetrics,
 } from './browser';
@@ -745,12 +746,12 @@ function normalizeMatteColor(value: string | undefined): string {
   return `#${expanded.slice(0, 6).toUpperCase()}`;
 }
 
-/** Render a complete composition into a data URL. */
-export async function renderWebComposition(
+/** Render a complete composition into a browser canvas. */
+export async function renderWebCompositionToCanvas(
   backgroundImage: ImageOptions,
   layers: WebRenderLayer[],
   output: OutputOptions
-): Promise<string> {
+): Promise<WebCanvas> {
   if (!backgroundImage?.src) {
     throw new Error('please set image!');
   }
@@ -841,8 +842,22 @@ export async function renderWebComposition(
       context.restore();
     }
 
-    return encodeCanvas(canvas, format, output.quality);
+    return canvas;
   } finally {
     background.cleanup();
   }
+}
+
+/** Render a complete composition into a data URL. */
+export async function renderWebComposition(
+  backgroundImage: ImageOptions,
+  layers: WebRenderLayer[],
+  output: OutputOptions
+): Promise<string> {
+  const canvas = await renderWebCompositionToCanvas(
+    backgroundImage,
+    layers,
+    output
+  );
+  return encodeCanvas(canvas, output.saveFormat, output.quality);
 }

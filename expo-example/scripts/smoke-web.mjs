@@ -147,13 +147,21 @@ async function verifyBrowser(browserName, browserType) {
     const harnessResults = await page.evaluate(async (crossOriginUrl) => {
       const harness = window.__IMAGE_MARKER_SMOKE__;
       if (!harness) throw new Error('Web smoke harness was not installed.');
-      const [blobAndFile, largeCropped, tiledLayers] = await Promise.all([
-        harness.renderBlobAndFile(),
-        harness.renderLargeCropped(),
-        harness.renderTiledLayers(),
-      ]);
+      const [blobAndFile, recipeBlobs, largeCropped, tiledLayers] =
+        await Promise.all([
+          harness.renderBlobAndFile(),
+          harness.renderRecipeBlobs(),
+          harness.renderLargeCropped(),
+          harness.renderTiledLayers(),
+        ]);
       const corsMessage = await harness.renderCrossOrigin(crossOriginUrl);
-      return { blobAndFile, largeCropped, tiledLayers, corsMessage };
+      return {
+        blobAndFile,
+        recipeBlobs,
+        largeCropped,
+        tiledLayers,
+        corsMessage,
+      };
     }, `http://127.0.0.1:${crossOriginAddress.port}/fixture.jpeg`);
 
     assert.match(
@@ -162,6 +170,10 @@ async function verifyBrowser(browserName, browserType) {
     );
     assert(harnessResults.blobAndFile.width > 0);
     assert(harnessResults.blobAndFile.height > 0);
+    assert.equal(harnessResults.recipeBlobs.pngType, 'image/png');
+    assert.equal(harnessResults.recipeBlobs.jpegType, 'image/jpeg');
+    assert(harnessResults.recipeBlobs.pngSize > 1_000);
+    assert(harnessResults.recipeBlobs.jpegSize > 1_000);
     assert.deepEqual(
       {
         width: harnessResults.largeCropped.width,
@@ -192,7 +204,7 @@ async function verifyBrowser(browserName, browserType) {
     );
 
     console.log(
-      `Verified ${browserName}: Canvas pixels, tiled text/logo layers, JPG/PNG, Blob/File, CORS, rotation crop, alpha, and 4096px max-size rendering.`
+      `Verified ${browserName}: Canvas pixels, tiled text/logo layers, JPG/PNG, Blob/File, Blob recipe output, CORS, rotation crop, alpha, and 4096px max-size rendering.`
     );
   } finally {
     await browser.close();

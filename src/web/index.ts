@@ -7,9 +7,15 @@ import type {
   WatermarkLayer,
 } from '../index';
 import { createWatermarkRecipe } from '../recipe';
-import type { WatermarkRecipe, WatermarkRecipeOptions } from '../recipe';
-import { renderWebComposition } from './renderer';
+import type {
+  WatermarkBlobRecipeResultOptions,
+  WatermarkRecipe,
+  WatermarkRecipeOptions,
+  WatermarkRecipeResultOptions,
+} from '../recipe';
+import { renderWebComposition, renderWebCompositionToCanvas } from './renderer';
 import type { WebRenderLayer } from './renderer';
+import { encodeCanvasToBlob } from './helpers';
 import {
   validateImageMarkOptions,
   validateMarkOptions,
@@ -56,6 +62,28 @@ function appendCompatibilityLayers(
   }
 }
 
+function createMarkLayers(options: MarkOptions): WebRenderLayer[] {
+  if (!options?.backgroundImage?.src) {
+    throw new Error('please set image!');
+  }
+
+  const layers =
+    (options.watermarks?.length ?? 0) > 0
+      ? options.watermarks!.map(createOrderedLayer)
+      : [];
+  if (layers.length === 0) {
+    appendCompatibilityLayers(layers, options);
+  }
+  if (layers.length === 0) {
+    throw new Error('please set watermark text or image!');
+  }
+  if (layers.some((layer) => layer.type === 'image' && !layer.options.src)) {
+    throw new Error('please set mark image!');
+  }
+  validateMarkOptions(options);
+  return layers;
+}
+
 /**
  * Public image-marking API shared by native and Web targets.
  *
@@ -65,12 +93,49 @@ function appendCompatibilityLayers(
  */
 class Marker {
   /** Save ordered layers and output settings for reuse across one or many images. */
-  static createRecipe(options: WatermarkRecipeOptions): WatermarkRecipe {
+  static createRecipe<
+    ResultOptions extends WatermarkRecipeResultOptions | undefined = undefined
+  >(
+    options: WatermarkRecipeOptions,
+    resultOptions?: ResultOptions
+  ): WatermarkRecipe<
+    ResultOptions extends WatermarkBlobRecipeResultOptions ? Blob : string
+  > {
+    if (resultOptions?.resultType === 'blob') {
+      return createWatermarkRecipe(
+        options,
+        async (markOptions) => {
+          const canvas = await renderWebCompositionToCanvas(
+            markOptions.backgroundImage,
+            createMarkLayers(markOptions),
+            markOptions
+          );
+          return encodeCanvasToBlob(
+            canvas,
+            markOptions.saveFormat,
+            markOptions.quality
+          );
+        },
+        4
+      ) as WatermarkRecipe<
+        ResultOptions extends WatermarkBlobRecipeResultOptions ? Blob : string
+      >;
+    }
+    if (
+      resultOptions?.resultType !== undefined &&
+      resultOptions.resultType !== 'string'
+    ) {
+      throw new Error(
+        `Unsupported recipe result type: ${resultOptions.resultType}.`
+      );
+    }
     return createWatermarkRecipe(
       options,
       (markOptions) => Marker.mark(markOptions),
       4
-    );
+    ) as WatermarkRecipe<
+      ResultOptions extends WatermarkBlobRecipeResultOptions ? Blob : string
+    >;
   }
 
   /** Render one or more text watermark layers. */
@@ -111,26 +176,11 @@ class Marker {
 
   /** Render ordered mixed text and image watermark layers. */
   static async mark(options: MarkOptions): Promise<string> {
-    if (!options?.backgroundImage?.src) {
-      throw new Error('please set image!');
-    }
-
-    const layers =
-      (options.watermarks?.length ?? 0) > 0
-        ? options.watermarks!.map(createOrderedLayer)
-        : [];
-    if (layers.length === 0) {
-      appendCompatibilityLayers(layers, options);
-    }
-    if (layers.length === 0) {
-      throw new Error('please set watermark text or image!');
-    }
-    if (layers.some((layer) => layer.type === 'image' && !layer.options.src)) {
-      throw new Error('please set mark image!');
-    }
-    validateMarkOptions(options);
-
-    return renderWebComposition(options.backgroundImage, layers, options);
+    return renderWebComposition(
+      options.backgroundImage,
+      createMarkLayers(options),
+      options
+    );
   }
 }
 
@@ -138,6 +188,7 @@ export { Marker, Marker as WebMarker };
 export {
   degreesToRadians,
   encodeCanvas,
+  encodeCanvasToBlob,
   fitSizeWithinMax,
   getExpandedCanvasSize,
   getRotatedBounds,

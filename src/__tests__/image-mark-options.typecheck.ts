@@ -69,6 +69,14 @@ export const reusableRecipe: WatermarkRecipe = Marker.createRecipe({
   saveFormat: ImageFormat.jpg,
 });
 
+export const reusableBlobRecipe: WatermarkRecipe<Blob> = Marker.createRecipe(
+  {
+    watermarks: [{ type: 'text', text: 'Reusable Web bytes' }],
+    saveFormat: ImageFormat.png,
+  },
+  { resultType: 'blob' }
+);
+
 export const recipeBatch = reusableRecipe.applyMany(
   [
     {

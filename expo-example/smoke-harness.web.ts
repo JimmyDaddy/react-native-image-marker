@@ -17,6 +17,12 @@ interface ImageResult {
 
 interface WebSmokeHarness {
   renderBlobAndFile(): Promise<ImageResult>;
+  renderRecipeBlobs(): Promise<{
+    pngType: string;
+    pngSize: number;
+    jpegType: string;
+    jpegSize: number;
+  }>;
   renderLargeCropped(): Promise<ImageResult>;
   renderTiledLayers(): Promise<ImageResult>;
   renderCrossOrigin(url: string): Promise<string>;
@@ -102,6 +108,42 @@ function createHarness(assets: SmokeHarnessAssets): WebSmokeHarness {
         saveFormat: ImageFormat.png,
       });
       return getDimensions(dataUrl);
+    },
+
+    async renderRecipeBlobs() {
+      const commonOptions = {
+        watermarks: [
+          {
+            type: 'text' as const,
+            text: 'BLOB RECIPE',
+            position: { position: Position.bottomRight, X: 24, Y: 24 },
+            style: {
+              color: '#FFFFFF',
+              fontSize: 32,
+              bold: true,
+              strokeStyle: { color: '#111827', width: 2 },
+            },
+          },
+        ],
+      };
+      const pngRecipe = Marker.createRecipe(
+        { ...commonOptions, saveFormat: ImageFormat.png },
+        { resultType: 'blob' }
+      );
+      const jpegRecipe = Marker.createRecipe(
+        { ...commonOptions, saveFormat: ImageFormat.jpg, quality: 86 },
+        { resultType: 'blob' }
+      );
+      const [png, jpeg] = await Promise.all([
+        pngRecipe.apply({ backgroundImage: { src: assets.backgroundUri } }),
+        jpegRecipe.apply({ backgroundImage: { src: assets.backgroundUri } }),
+      ]);
+      return {
+        pngType: png.type,
+        pngSize: png.size,
+        jpegType: jpeg.type,
+        jpegSize: jpeg.size,
+      };
     },
 
     async renderLargeCropped() {

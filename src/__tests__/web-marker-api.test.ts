@@ -1,10 +1,21 @@
 import type { ImageMarkOptions, MarkOptions, TextMarkOptions } from '../index';
 
 const mockRenderWebComposition = jest.fn<Promise<string>, unknown[]>();
+const mockRenderWebCompositionToCanvas = jest.fn<
+  Promise<{
+    width: number;
+    height: number;
+    toDataURL: jest.Mock;
+    toBlob: jest.Mock;
+  }>,
+  unknown[]
+>();
 
 jest.mock('../web/renderer', () => ({
   renderWebComposition: (...args: unknown[]) =>
     mockRenderWebComposition(...args),
+  renderWebCompositionToCanvas: (...args: unknown[]) =>
+    mockRenderWebCompositionToCanvas(...args),
 }));
 
 const WebMarker = require('../web').default as typeof import('../web').default;
@@ -13,6 +24,15 @@ describe('WebMarker public API', () => {
   beforeEach(() => {
     mockRenderWebComposition.mockReset();
     mockRenderWebComposition.mockResolvedValue('data:image/png;base64,result');
+    mockRenderWebCompositionToCanvas.mockReset();
+    mockRenderWebCompositionToCanvas.mockResolvedValue({
+      width: 100,
+      height: 50,
+      toDataURL: jest.fn(),
+      toBlob: jest.fn((callback, type = 'image/png') =>
+        callback(new Blob(['blob-result'], { type }))
+      ),
+    });
   });
 
   it('maps markText options to ordered web text layers', async () => {
@@ -54,6 +74,35 @@ describe('WebMarker public API', () => {
         options: expect.objectContaining({ type: 'text', text: 'Reusable' }),
       },
     ]);
+  });
+
+  it('returns encoded bytes only for explicitly requested Blob recipes', async () => {
+    const recipe = WebMarker.createRecipe(
+      {
+        watermarks: [{ type: 'text', text: 'Reusable' }],
+        saveFormat: 'jpg' as ImageMarkOptions['saveFormat'],
+        quality: 84,
+      },
+      { resultType: 'blob' }
+    );
+
+    const result = await recipe.apply({
+      backgroundImage: { src: '/background.jpg' },
+    });
+
+    expect(result).toBeInstanceOf(Blob);
+    expect(result.type).toBe('image/jpeg');
+    expect(mockRenderWebComposition).not.toHaveBeenCalled();
+    expect(mockRenderWebCompositionToCanvas).toHaveBeenCalledWith(
+      { src: '/background.jpg' },
+      [
+        {
+          type: 'text',
+          options: expect.objectContaining({ type: 'text', text: 'Reusable' }),
+        },
+      ],
+      expect.objectContaining({ quality: 84, saveFormat: 'jpg' })
+    );
   });
 
   it('caps public Web recipe batches at four active renders', async () => {
