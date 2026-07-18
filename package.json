@@ -83,7 +83,7 @@
     "@types/react": "~18.2.45",
     "@types/react-native": "0.70.0",
     "commitlint": "^21.2.1",
-    "conventional-changelog-conventionalcommits": "9.3.1",
+    "conventional-changelog-conventionalcommits": "10.2.1",
     "del-cli": "^5.0.0",
     "eslint": "^8.4.1",
     "eslint-config-prettier": "^8.5.0",
