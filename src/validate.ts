@@ -2,6 +2,7 @@ import type {
   ImageMarkOptions,
   ImageOptions,
   MarkOptions,
+  TextOptions,
   TextMarkOptions,
 } from './index';
 
@@ -52,8 +53,28 @@ function validateCommonOptions(options: MarkRequestOptions): void {
   validateAlpha(options.backgroundImage, 'backgroundImage');
 }
 
+function validateTextOptions(textOptions: TextOptions, path: string): void {
+  const strokeStyle = textOptions.style?.strokeStyle;
+  if (!strokeStyle) {
+    return;
+  }
+  if (!Number.isFinite(strokeStyle.width) || strokeStyle.width < 0) {
+    throw new Error(
+      `${path}.style.strokeStyle.width must be a non-negative finite number.`
+    );
+  }
+  if (typeof strokeStyle.color !== 'string' || !strokeStyle.color.trim()) {
+    throw new Error(
+      `${path}.style.strokeStyle.color must be a non-empty string.`
+    );
+  }
+}
+
 export function validateTextMarkOptions(options: TextMarkOptions): void {
   validateCommonOptions(options);
+  options.watermarkTexts.forEach((textOptions, index) => {
+    validateTextOptions(textOptions, `watermarkTexts[${index}]`);
+  });
 }
 
 export function validateImageMarkOptions(options: ImageMarkOptions): void {
@@ -73,6 +94,11 @@ export function validateMarkOptions(options: MarkOptions): void {
   options.watermarks?.forEach((layer, index) => {
     if (layer.type === 'image') {
       validateAlpha(layer, `watermarks[${index}]`);
+    } else {
+      validateTextOptions(layer, `watermarks[${index}]`);
     }
+  });
+  options.watermarkTexts?.forEach((textOptions, index) => {
+    validateTextOptions(textOptions, `watermarkTexts[${index}]`);
   });
 }

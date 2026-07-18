@@ -18,6 +18,7 @@ class TextStyleTest {
     assertNull(style.fontSizeRatio)
     assertNull(style.shadowLayerStyle)
     assertNull(style.textBackgroundStyle)
+    assertNull(style.strokeStyle)
     assertFalse(style.underline)
     assertEquals(0f, style.skewX, 0f)
     assertFalse(style.strikeThrough)
@@ -48,5 +49,21 @@ class TextStyleTest {
     val style = TextStyle(options)
 
     assertEquals(24f, style.resolveFontSize(1000), 0.001f)
+  }
+
+  @Test
+  fun parsesTextStrokeStyle() {
+    val stroke = Mockito.mock(ReadableMap::class.java)
+    Mockito.`when`(stroke.getString("color")).thenReturn("#11223380")
+    Mockito.`when`(stroke.getDouble("width")).thenReturn(3.5)
+    val options = Mockito.mock(ReadableMap::class.java)
+    Mockito.`when`(options.hasKey("strokeStyle")).thenReturn(true)
+    Mockito.`when`(options.isNull("strokeStyle")).thenReturn(false)
+    Mockito.`when`(options.getMap("strokeStyle")).thenReturn(stroke)
+
+    val style = TextStyle(options)
+
+    assertEquals(3.5f, style.strokeStyle?.width ?: -1f, 0.001f)
+    assertEquals("#11223380", style.strokeStyle?.color)
   }
 }

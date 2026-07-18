@@ -80,6 +80,9 @@ function cloneTextStyle(style?: TextStyle): TextStyle | undefined {
     shadowStyle: style.shadowStyle
       ? { ...style.shadowStyle }
       : style.shadowStyle,
+    strokeStyle: style.strokeStyle
+      ? { ...style.strokeStyle }
+      : style.strokeStyle,
     textBackgroundStyle: cloneTextBackgroundStyle(style.textBackgroundStyle),
   };
 }

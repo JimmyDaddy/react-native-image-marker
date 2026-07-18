@@ -8,6 +8,11 @@ import type {
 } from '../index';
 import { renderWebComposition } from './renderer';
 import type { WebRenderLayer } from './renderer';
+import {
+  validateImageMarkOptions,
+  validateMarkOptions,
+  validateTextMarkOptions,
+} from '../validate';
 
 function createTextLayer(options: TextOptions): WebRenderLayer {
   return { type: 'text', options };
@@ -65,6 +70,7 @@ class Marker {
     if (!options.watermarkTexts || options.watermarkTexts.length === 0) {
       throw new Error('please set watermark text!');
     }
+    validateTextMarkOptions(options);
 
     return renderWebComposition(
       options.backgroundImage,
@@ -85,6 +91,7 @@ class Marker {
     if (watermarkImages.some((watermark) => !watermark.src)) {
       throw new Error('please set mark image!');
     }
+    validateImageMarkOptions(options);
 
     const layers: WebRenderLayer[] = [];
     appendCompatibilityLayers(layers, options);
@@ -110,6 +117,7 @@ class Marker {
     if (layers.some((layer) => layer.type === 'image' && !layer.options.src)) {
       throw new Error('please set mark image!');
     }
+    validateMarkOptions(options);
 
     return renderWebComposition(options.backgroundImage, layers, options);
   }

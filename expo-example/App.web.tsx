@@ -86,6 +86,10 @@ function App() {
             },
             style: {
               color: '#FFFFFF',
+              strokeStyle: {
+                color: '#101828CC',
+                width: 3,
+              },
               fontSize,
               bold: true,
               shadowStyle: {

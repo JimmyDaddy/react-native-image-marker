@@ -267,6 +267,16 @@ export interface TextStyle {
    */
   textBackgroundStyle?: TextBackgroundStyle | null;
   /**
+   * Optional outline drawn around the text before the fill. The width is
+   * measured in output-image pixels. Set `width` to `0` to disable it.
+   * @example
+   * strokeStyle: {
+   *   color: '#00000099',
+   *   width: 2,
+   * }
+   */
+  strokeStyle?: TextStrokeStyle | null;
+  /**
    * text underline style
    * @defaultValue false
    * @example
@@ -314,6 +324,14 @@ export interface TextStyle {
    *  rotate: 45
    */
   rotate?: number;
+}
+
+/** Outline style for text watermarks. */
+export interface TextStrokeStyle {
+  /** Outline color. */
+  color: string;
+  /** Non-negative outline width in output-image pixels. */
+  width: number;
 }
 
 /**

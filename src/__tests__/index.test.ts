@@ -313,6 +313,69 @@ describe('Marker JS wrapper', () => {
     expect(nativeModule.markWithImage).not.toHaveBeenCalled();
   });
 
+  it('preserves text stroke options without mutating the caller input', async () => {
+    nativeModule.markWithText.mockResolvedValue('/tmp/outlined-text.png');
+    const options = {
+      backgroundImage: { src: 'file:///tmp/background.png' },
+      watermarkTexts: [
+        {
+          text: 'Outlined',
+          style: {
+            color: '#FFFFFF',
+            strokeStyle: { color: '#00000099', width: 2 },
+          },
+        },
+      ],
+    };
+    deepFreeze(options);
+
+    await expect(Marker.markText(options)).resolves.toBe(
+      '/tmp/outlined-text.png'
+    );
+
+    const nativeStroke =
+      nativeModule.markWithText.mock.calls[0][0].watermarkTexts[0].style
+        .strokeStyle;
+    expect(nativeStroke).toEqual({ color: '#00000099', width: 2 });
+    expect(nativeStroke).not.toBe(options.watermarkTexts[0].style.strokeStyle);
+  });
+
+  it('rejects invalid text stroke styles before rendering', () => {
+    for (const width of [-1, Number.NaN, Number.POSITIVE_INFINITY]) {
+      expect(() =>
+        Marker.markText({
+          backgroundImage: { src: 'file:///tmp/background.png' },
+          watermarkTexts: [
+            {
+              text: 'Invalid outline',
+              style: { strokeStyle: { color: '#000000', width } },
+            },
+          ],
+        })
+      ).toThrow(
+        'watermarkTexts[0].style.strokeStyle.width must be a non-negative finite number.'
+      );
+    }
+
+    expect(() =>
+      Marker.mark({
+        backgroundImage: { src: 'file:///tmp/background.png' },
+        watermarks: [
+          {
+            type: 'text',
+            text: 'Invalid outline',
+            style: { strokeStyle: { color: '  ', width: 2 } },
+          },
+        ],
+      })
+    ).toThrow(
+      'watermarks[0].style.strokeStyle.color must be a non-empty string.'
+    );
+
+    expect(nativeModule.markWithText).not.toHaveBeenCalled();
+    expect(nativeModule.markWithWatermarks).not.toHaveBeenCalled();
+  });
+
   it('accepts quality and alpha boundary values', async () => {
     nativeModule.markWithText.mockResolvedValue('/tmp/boundary-text.png');
     nativeModule.markWithWatermarks.mockResolvedValue(

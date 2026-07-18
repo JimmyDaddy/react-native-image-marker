@@ -143,21 +143,32 @@ data class TextOptions(val options: ReadableMap) {
           .coerceAtLeast(textLayout.getLineWidth(a) + textLayout.getLineLeft(a)).toDouble()
       ).toInt()
     }
+    val strokeWidth = style.strokeStyle?.width ?: 0f
+    val outlineInset = strokeWidth / 2f
+    val visualTextWidth = ceil(textWidth + strokeWidth.toDouble()).toInt()
+    val visualTextHeight = ceil(textHeight + strokeWidth.toDouble()).toInt()
     val position = Position.getTextPosition(
       positionEnum,
       x,
       y,
       maxWidth,
       maxHeight,
-      textWidth,
-      textHeight,
+      visualTextWidth,
+      visualTextHeight,
       edgeInset
     )
-    val x = position.x
-    val y = position.y
+    val visualX = position.x
+    val visualY = position.y
+    val x = visualX + outlineInset
+    val y = visualY + outlineInset
 
     canvas.save()
-    val rotationPivot = rotationPivot(x, y, textWidth.toFloat(), textHeight.toFloat())
+    val rotationPivot = rotationPivot(
+      visualX,
+      visualY,
+      visualTextWidth.toFloat(),
+      visualTextHeight.toFloat()
+    )
     canvas.rotate(style.rotate.toFloat(), rotationPivot.first, rotationPivot.second)
 
     // Draw text background
@@ -166,17 +177,22 @@ data class TextOptions(val options: ReadableMap) {
       paint.style = Paint.Style.FILL
       paint.color = style.textBackgroundStyle!!.color
       val bgInsets = style.textBackgroundStyle!!.toEdgeInsets(maxWidth, maxHeight)
-      var bgRect = RectF(x - bgInsets.left, y - bgInsets.top, x + textWidth + bgInsets.right, y + textHeight + bgInsets.bottom)
+      var bgRect = RectF(
+        x - outlineInset - bgInsets.left,
+        y - outlineInset - bgInsets.top,
+        x + textWidth + outlineInset + bgInsets.right,
+        y + textHeight + outlineInset + bgInsets.bottom
+      )
       when (style.textBackgroundStyle!!.type) {
         "stretchX" -> {
-          bgRect = RectF(0f, y - bgInsets.top, maxWidth.toFloat(),
-            y + textHeight + bgInsets.bottom
+          bgRect = RectF(0f, y - outlineInset - bgInsets.top, maxWidth.toFloat(),
+            y + textHeight + outlineInset + bgInsets.bottom
           )
         }
 
         "stretchY" -> {
-          bgRect = RectF(x - bgInsets.left, 0f,
-            x + textWidth + bgInsets.right, maxHeight.toFloat())
+          bgRect = RectF(x - outlineInset - bgInsets.left, 0f,
+            x + textWidth + outlineInset + bgInsets.right, maxHeight.toFloat())
         }
       }
 
@@ -197,6 +213,17 @@ data class TextOptions(val options: ReadableMap) {
       else -> x
     }
     canvas.translate(textX, y)
+    val fillColor = textPaint.color
+    if (strokeWidth > 0f) {
+      textPaint.style = Paint.Style.STROKE
+      textPaint.strokeWidth = strokeWidth
+      textPaint.strokeJoin = Paint.Join.ROUND
+      textPaint.color = Color.parseColor(Utils.transRGBColor(style.strokeStyle!!.color))
+      textLayout.draw(canvas)
+      textPaint.clearShadowLayer()
+      textPaint.style = Paint.Style.FILL
+      textPaint.color = fillColor
+    }
     textLayout.draw(canvas)
     canvas.restore()
   }

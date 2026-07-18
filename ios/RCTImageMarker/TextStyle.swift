@@ -9,10 +9,38 @@ import Foundation
 import UIKit
 import React
 
+struct TextStrokeStyle {
+    let color: UIColor
+    let width: CGFloat
+
+    init(dicOpts opts: [AnyHashable: Any]) throws {
+        guard let colorValue = opts["color"] as? String,
+              !colorValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              let color = UIColor(hex: colorValue) else {
+            throw NSError(
+                domain: ErrorDomainEnum.PARAMS_INVALID.rawValue,
+                code: 0,
+                userInfo: [NSLocalizedDescriptionKey: "stroke color is invalid"]
+            )
+        }
+        let width = RCTConvert.cgFloat(opts["width"])
+        guard width.isFinite, width >= 0 else {
+            throw NSError(
+                domain: ErrorDomainEnum.PARAMS_INVALID.rawValue,
+                code: 0,
+                userInfo: [NSLocalizedDescriptionKey: "stroke width must be a non-negative finite number"]
+            )
+        }
+        self.color = color
+        self.width = width
+    }
+}
+
 class TextStyle: NSObject {
     var color: UIColor?
     var shadow: NSShadow?
     var textBackground: TextBackground?
+    var strokeStyle: TextStrokeStyle?
     var fontName: String?
     var fontSize: CGFloat = 14.0
     var fontSizeRatio: CGFloat?
@@ -32,6 +60,11 @@ class TextStyle: NSObject {
             self.shadow = nil
         }
         self.textBackground = try TextBackground(textBackgroundStyle: (opts["textBackgroundStyle"] as? [AnyHashable : Any]))
+        if let strokeStyle = opts["strokeStyle"] as? [AnyHashable: Any] {
+            self.strokeStyle = try TextStrokeStyle(dicOpts: strokeStyle)
+        } else {
+            self.strokeStyle = nil
+        }
         self.fontName = opts["fontName"] as? String
         self.fontSize = opts["fontSize"] != nil ? RCTConvert.cgFloat(opts["fontSize"]) : 14.0
         self.fontSizeRatio = opts["fontSizeRatio"] != nil ? RCTConvert.cgFloat(opts["fontSizeRatio"]) : nil
