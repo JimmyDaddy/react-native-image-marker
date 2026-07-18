@@ -58,6 +58,31 @@ describe('Marker JS wrapper', () => {
     });
   });
 
+  it('creates reusable native recipes through the public Marker API', async () => {
+    nativeModule.markWithWatermarks.mockResolvedValue('/tmp/recipe.jpg');
+    const recipe = Marker.createRecipe({
+      watermarks: [{ type: 'text', text: 'Reusable' }],
+      quality: 88,
+    });
+
+    await expect(
+      recipe.apply({
+        backgroundImage: { src: 'file:///tmp/background.jpg' },
+        filename: 'recipe-output',
+      })
+    ).resolves.toBe('/tmp/recipe.jpg');
+    expect(nativeModule.markWithWatermarks).toHaveBeenCalledWith(
+      expect.objectContaining({
+        quality: 88,
+        filename: 'recipe-output',
+        maxSize: 2048,
+        watermarks: [
+          expect.objectContaining({ type: 'text', text: 'Reusable' }),
+        ],
+      })
+    );
+  });
+
   it('normalizes markText options before calling the native module', async () => {
     nativeModule.markWithText.mockResolvedValue('/tmp/text.png');
     const options = {

@@ -7,6 +7,8 @@ import {
   normalizeTextMarkOptions,
 } from './normalize';
 import type { ImageMarkOptions, MarkOptions, TextMarkOptions } from './index';
+import { createWatermarkRecipe } from './recipe';
+import type { WatermarkRecipe, WatermarkRecipeOptions } from './recipe';
 import {
   validateImageMarkOptions,
   validateMarkOptions,
@@ -34,6 +36,13 @@ function getImageMarker(): Spec {
 
 /** Native iOS and Android implementation of the public Marker API. */
 class Marker {
+  /** Save ordered layers and output settings for reuse across one or many images. */
+  static createRecipe(options: WatermarkRecipeOptions): WatermarkRecipe {
+    return createWatermarkRecipe(options, (markOptions) =>
+      Marker.mark(markOptions)
+    );
+  }
+
   /** Mark text-only watermarks on an image. */
   static markText(options: TextMarkOptions): Promise<string> {
     const { backgroundImage, watermarkTexts } = options;

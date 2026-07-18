@@ -1,5 +1,11 @@
 import Marker from './marker';
 
+export type {
+  WatermarkRecipe,
+  WatermarkRecipeInput,
+  WatermarkRecipeOptions,
+} from './recipe';
+
 /**
  * Position enum for text watermark and image watermark
  * @enum
