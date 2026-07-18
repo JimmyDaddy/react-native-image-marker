@@ -60,7 +60,7 @@ object ImageMarkerRenderer {
           )
         )
       }
-      val paint = markOpts.imageOption.applyStyle().apply {
+      val paint = markOpts.imageOption.applyStyle(markOpts.blendMode).apply {
         // Preserve hard edges for QR codes, barcodes and pixel-art watermarks.
         isFilterBitmap = false
       }

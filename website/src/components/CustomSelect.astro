@@ -7,7 +7,12 @@ interface Option {
 interface Props {
   id: string;
   label: string;
-  name: 'text-position' | 'image-position' | 'format';
+  name:
+    | 'text-position'
+    | 'image-position'
+    | 'text-blend'
+    | 'image-blend'
+    | 'format';
   options: Option[];
   value: string;
 }

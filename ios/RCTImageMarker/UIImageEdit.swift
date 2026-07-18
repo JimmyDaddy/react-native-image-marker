@@ -172,6 +172,7 @@ struct ImageMarkerImageWatermark {
     let edgeInset: String?
     let trimTransparentPadding: Bool
     let layout: ImageMarkerWatermarkLayout?
+    let blendMode: CGBlendMode
 
     init(
         image: UIImage,
@@ -183,7 +184,8 @@ struct ImageMarkerImageWatermark {
         alpha: CGFloat,
         edgeInset: String? = nil,
         trimTransparentPadding: Bool = false,
-        layout: ImageMarkerWatermarkLayout? = nil
+        layout: ImageMarkerWatermarkLayout? = nil,
+        blendMode: CGBlendMode = .normal
     ) {
         self.image = image
         self.position = position
@@ -195,6 +197,7 @@ struct ImageMarkerImageWatermark {
         self.edgeInset = edgeInset
         self.trimTransparentPadding = trimTransparentPadding
         self.layout = layout
+        self.blendMode = blendMode
     }
 }
 
@@ -465,6 +468,8 @@ enum ImageMarkerRenderer {
         for rotatedOrigin in positions {
             context.saveGState()
             context.interpolationQuality = .none
+            context.setAlpha(watermark.alpha)
+            context.setBlendMode(watermark.blendMode)
             let markerCenter = CGPoint(
                 x: rotatedOrigin.x + rotatedSize.width / 2,
                 y: rotatedOrigin.y + rotatedSize.height / 2
@@ -492,15 +497,7 @@ enum ImageMarkerRenderer {
                 context.restoreGState()
             }
 
-            if watermark.alpha != 1.0 {
-                context.beginTransparencyLayer(auxiliaryInfo: nil)
-                context.setAlpha(watermark.alpha)
-                context.setBlendMode(.multiply)
-                drawMarker()
-                context.endTransparencyLayer()
-            } else {
-                drawMarker()
-            }
+            drawMarker()
             context.restoreGState()
         }
     }

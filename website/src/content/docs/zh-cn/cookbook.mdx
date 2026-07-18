@@ -121,18 +121,54 @@ await Marker.mark({
 });
 ```
 
+### 与照片自然融合的水印
+
+`multiply` 会保留 Logo 的深色细节并透出底图，`screen` 适合浅色文字；两者仍会与图层的 `alpha` 一起生效。
+
+```ts
+await Marker.mark({
+  backgroundImage: { src: photo },
+  watermarks: [
+    {
+      type: 'image',
+      src: logo,
+      blendMode: 'multiply',
+      position: { position: Position.center },
+      scale: 0.7,
+      alpha: 0.85,
+    },
+    {
+      type: 'text',
+      text: 'SCREEN LIGHT',
+      blendMode: 'screen',
+      position: { position: Position.bottomCenter, Y: 32 },
+      style: { color: '#FFE9B8', fontSize: 36, bold: true },
+    },
+  ],
+  saveFormat: ImageFormat.png,
+});
+```
+
 ### 一套配方处理整批图片
 
-`createRecipe` 会保存有序图层和导出设置。每次输入只需要提供自己的底图和可选文件名。即使 Web 任务完成顺序不同，批量结果也始终与输入顺序一致。
+`createRecipe` 会保存有序图层和导出设置。文字模板可以读取每张图片的变量，以及内置的 `index` 和 `filename`；`visibleWhen` 只在条件匹配时保留对应图层。即使 Web 任务完成顺序不同，批量结果也始终与输入顺序一致。
 
 ```ts
 const recipe = Marker.createRecipe({
+  schemaVersion: 1,
   watermarks: [
     {
       type: 'text',
-      text: '© Acme Studio',
+      text: '© {{studio}} · {{filename}} · #{{index}}',
       position: { position: Position.bottomRight, X: 24, Y: 24 },
       style: { color: '#FFFFFF', fontSize: 28, bold: true },
+    },
+    {
+      type: 'image',
+      src: logo,
+      visibleWhen: { variable: 'showLogo', equals: true },
+      position: { position: Position.topRight, X: 24, Y: 24 },
+      scale: 0.25,
     },
   ],
   saveFormat: ImageFormat.jpg,
@@ -141,7 +177,11 @@ const recipe = Marker.createRecipe({
 
 const controller = new AbortController();
 const results = await recipe.applyMany(
-  photos.map((src) => ({ backgroundImage: { src } })),
+  photos.map((src, index) => ({
+    backgroundImage: { src },
+    filename: `photo-${index + 1}`,
+    variables: { studio: 'Acme Studio', showLogo: index % 2 === 0 },
+  })),
   {
     concurrency: 2,
     signal: controller.signal,
@@ -150,9 +190,11 @@ const results = await recipe.applyMany(
     },
   }
 );
+
+const savedRecipe = JSON.stringify(recipe.toJSON());
 ```
 
-调用 `controller.abort()` 后不会再派发新任务；已经开始渲染的图片仍会正常结束。单张图片失败会记录为 `rejected`，不会中断其他任务。
+缺少模板变量或变量值不合法时，只会拒绝对应输入。调用 `controller.abort()` 后不会再派发新任务；已经开始渲染的图片仍会正常结束。单张图片失败会记录为 `rejected`，不会中断其他任务。
 
 浏览器批量处理本地文件时，可以显式返回二进制结果：
 

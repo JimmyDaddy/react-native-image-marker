@@ -31,6 +31,17 @@ class TextOptionsTest {
   }
 
   @Test
+  fun parsesTextBlendMode() {
+    val options = Mockito.mock(ReadableMap::class.java)
+    Mockito.`when`(options.getString("text")).thenReturn("watermark")
+    Mockito.`when`(options.hasKey("blendMode")).thenReturn(true)
+    Mockito.`when`(options.isNull("blendMode")).thenReturn(false)
+    Mockito.`when`(options.getString("blendMode")).thenReturn("overlay")
+
+    assertEquals(WatermarkBlendMode.OVERLAY, TextOptions(options).blendMode)
+  }
+
+  @Test
   fun invalidStyleMapBecomesMarkerError() {
     val options = Mockito.mock(ReadableMap::class.java)
     Mockito.`when`(options.getString("text")).thenReturn("watermark")

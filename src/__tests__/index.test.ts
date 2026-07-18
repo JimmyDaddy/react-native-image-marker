@@ -689,6 +689,44 @@ describe('Marker JS wrapper', () => {
     expect(nativeModule.markWithWatermarks).not.toHaveBeenCalled();
   });
 
+  it('preserves supported blend modes and rejects unknown modes before native calls', async () => {
+    nativeModule.markWithWatermarks.mockResolvedValue('/tmp/blended.png');
+    await expect(
+      Marker.mark({
+        backgroundImage: { src: 'file:///tmp/background.png' },
+        watermarks: [
+          {
+            type: 'image',
+            src: 'file:///tmp/logo.png',
+            blendMode: 'multiply',
+          },
+          { type: 'text', text: 'Light', blendMode: 'screen' },
+        ],
+      })
+    ).resolves.toBe('/tmp/blended.png');
+    expect(nativeModule.markWithWatermarks.mock.calls[0][0].watermarks).toEqual(
+      [
+        expect.objectContaining({ blendMode: 'multiply' }),
+        expect.objectContaining({ blendMode: 'screen' }),
+      ]
+    );
+
+    nativeModule.markWithWatermarks.mockClear();
+    expect(() =>
+      Marker.mark({
+        backgroundImage: { src: 'file:///tmp/background.png' },
+        watermarks: [
+          {
+            type: 'text',
+            text: 'Invalid',
+            blendMode: 'difference' as any,
+          },
+        ],
+      })
+    ).toThrow('watermarks[0].blendMode is not supported: difference.');
+    expect(nativeModule.markWithWatermarks).not.toHaveBeenCalled();
+  });
+
   it('sends legacy text and image watermarks as ordered native layers', async () => {
     nativeModule.markWithWatermarks.mockResolvedValueOnce('/tmp/final.jpg');
     const options = {

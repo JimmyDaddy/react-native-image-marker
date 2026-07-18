@@ -19,7 +19,7 @@ import Marker, {
 
 const bundledBackground = require('./assets/bg.png');
 const logo = require('./assets/icon.jpeg');
-type DemoLayout = 'single' | 'tile';
+type DemoLayout = 'single' | 'tile' | 'blend';
 
 function App() {
   const [background, setBackground] = useState<any>(bundledBackground);
@@ -54,6 +54,8 @@ function App() {
     setMessage(
       layout === 'tile'
         ? 'Rendering a staggered text pattern with the native module…'
+        : layout === 'blend'
+        ? 'Compositing screen text and a multiply logo…'
         : 'Rendering text and image layers with the native module…'
     );
     try {
@@ -62,7 +64,13 @@ function App() {
         watermarks: [
           {
             type: 'text',
-            text: layout === 'tile' ? 'CONFIDENTIAL' : 'SHOT ON IMAGE MARKER',
+            text:
+              layout === 'tile'
+                ? 'CONFIDENTIAL'
+                : layout === 'blend'
+                ? 'SCREEN LIGHT'
+                : 'SHOT ON IMAGE MARKER',
+            blendMode: layout === 'blend' ? 'screen' : 'normal',
             ...(layout === 'tile'
               ? {
                   layout: {
@@ -75,13 +83,21 @@ function App() {
                 }
               : {
                   position: {
-                    position: Position.bottomLeft,
-                    X: 36,
+                    position:
+                      layout === 'blend'
+                        ? Position.bottomCenter
+                        : Position.bottomLeft,
+                    X: layout === 'blend' ? 0 : 36,
                     Y: 36,
                   },
                 }),
             style: {
-              color: layout === 'tile' ? '#FFFFFF88' : '#FFFFFF',
+              color:
+                layout === 'tile'
+                  ? '#FFFFFF88'
+                  : layout === 'blend'
+                  ? '#FFE9B8'
+                  : '#FFFFFF',
               strokeStyle: {
                 color: '#101828CC',
                 width: 2,
@@ -106,10 +122,14 @@ function App() {
           {
             type: 'image',
             src: logo,
-            position: { position: Position.topRight, X: 36, Y: 36 },
-            scale: 0.16,
-            alpha: 0.9,
-            rotate: -6,
+            blendMode: layout === 'blend' ? 'multiply' : 'normal',
+            position:
+              layout === 'blend'
+                ? { position: Position.center, X: 0, Y: 0 }
+                : { position: Position.topRight, X: 36, Y: 36 },
+            scale: layout === 'blend' ? 0.72 : 0.16,
+            alpha: layout === 'blend' ? 0.84 : 0.9,
+            rotate: layout === 'blend' ? -8 : -6,
           },
         ],
         filename: `image-marker-${Date.now()}`,
@@ -145,7 +165,7 @@ function App() {
             style={styles.image}
           />
           <View style={styles.layoutControl}>
-            {(['single', 'tile'] as const).map((item) => {
+            {(['single', 'tile', 'blend'] as const).map((item) => {
               const selected = layout === item;
               return (
                 <Pressable
@@ -167,7 +187,11 @@ function App() {
                       selected && styles.selectedLayoutOptionText,
                     ]}
                   >
-                    {item === 'single' ? 'Corner signature' : 'Tiled pattern'}
+                    {item === 'single'
+                      ? 'Corner signature'
+                      : item === 'tile'
+                      ? 'Tiled pattern'
+                      : 'Blend modes'}
                   </Text>
                 </Pressable>
               );

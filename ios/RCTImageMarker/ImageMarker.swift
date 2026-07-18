@@ -233,6 +233,7 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         for origin in origins {
             context.saveGState()
             context.setAlpha(textOpts.alpha)
+            context.setBlendMode(textOpts.blendMode)
             let posX = origin.x + outlineInset
             let posY = origin.y + outlineInset
 
@@ -320,7 +321,8 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
                 alpha: watermarkOptions.imageOption.alpha,
                 edgeInset: watermarkOptions.edgeInset,
                 trimTransparentPadding: watermarkOptions.trimTransparentPadding,
-                layout: watermarkOptions.layout
+                layout: watermarkOptions.layout,
+                blendMode: watermarkOptions.blendMode
             )
         }
 
@@ -362,7 +364,8 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
                         alpha: imageOptions.imageOption.alpha,
                         edgeInset: imageOptions.edgeInset,
                         trimTransparentPadding: imageOptions.trimTransparentPadding,
-                        layout: imageOptions.layout
+                        layout: imageOptions.layout,
+                        blendMode: imageOptions.blendMode
                     )
                     try ImageMarkerRenderer.drawImageWatermark(context: context, canvasSize: canvasSize, watermark: watermark)
                     imageIndex += 1

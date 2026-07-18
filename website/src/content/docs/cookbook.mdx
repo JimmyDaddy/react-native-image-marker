@@ -121,18 +121,54 @@ await Marker.mark({
 });
 ```
 
+### A watermark that blends with the photo
+
+`multiply` keeps darker logo details and lets the photo show through; `screen` is useful for light lettering. Both still respect the layer's `alpha` value.
+
+```ts
+await Marker.mark({
+  backgroundImage: { src: photo },
+  watermarks: [
+    {
+      type: 'image',
+      src: logo,
+      blendMode: 'multiply',
+      position: { position: Position.center },
+      scale: 0.7,
+      alpha: 0.85,
+    },
+    {
+      type: 'text',
+      text: 'SCREEN LIGHT',
+      blendMode: 'screen',
+      position: { position: Position.bottomCenter, Y: 32 },
+      style: { color: '#FFE9B8', fontSize: 36, bold: true },
+    },
+  ],
+  saveFormat: ImageFormat.png,
+});
+```
+
 ### One recipe for a folder of images
 
-`createRecipe` snapshots the ordered layers and output settings. Each input supplies only its own background and optional filename. Batch results remain in input order, even when Web jobs finish in a different order.
+`createRecipe` snapshots the ordered layers and output settings. A text template can read per-image variables plus the built-in `index` and `filename`; `visibleWhen` includes a layer only when its condition matches. Batch results remain in input order, even when Web jobs finish in a different order.
 
 ```ts
 const recipe = Marker.createRecipe({
+  schemaVersion: 1,
   watermarks: [
     {
       type: 'text',
-      text: '© Acme Studio',
+      text: '© {{studio}} · {{filename}} · #{{index}}',
       position: { position: Position.bottomRight, X: 24, Y: 24 },
       style: { color: '#FFFFFF', fontSize: 28, bold: true },
+    },
+    {
+      type: 'image',
+      src: logo,
+      visibleWhen: { variable: 'showLogo', equals: true },
+      position: { position: Position.topRight, X: 24, Y: 24 },
+      scale: 0.25,
     },
   ],
   saveFormat: ImageFormat.jpg,
@@ -141,7 +177,11 @@ const recipe = Marker.createRecipe({
 
 const controller = new AbortController();
 const results = await recipe.applyMany(
-  photos.map((src) => ({ backgroundImage: { src } })),
+  photos.map((src, index) => ({
+    backgroundImage: { src },
+    filename: `photo-${index + 1}`,
+    variables: { studio: 'Acme Studio', showLogo: index % 2 === 0 },
+  })),
   {
     concurrency: 2,
     signal: controller.signal,
@@ -150,9 +190,11 @@ const results = await recipe.applyMany(
     },
   }
 );
+
+const savedRecipe = JSON.stringify(recipe.toJSON());
 ```
 
-Calling `controller.abort()` stops new items from starting. Items already rendering finish normally. A failed item is reported as `rejected` without stopping the rest of the queue.
+Missing template variables or invalid variable values reject only that input. Calling `controller.abort()` stops new items from starting. Items already rendering finish normally. A failed item is reported as `rejected` without stopping the rest of the queue.
 
 For browser file queues, opt into direct byte output:
 

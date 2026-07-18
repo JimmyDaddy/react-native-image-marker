@@ -1,4 +1,5 @@
 import Marker, {
+  type BlendMode,
   ImageFormat,
   type ImageMarkOptions,
   type TextMarkOptions,
@@ -6,6 +7,8 @@ import Marker, {
   type WatermarkLayout,
   type WatermarkRecipe,
 } from '../index';
+
+export const photographicBlendMode: BlendMode = 'overlay';
 
 // The deprecated single-watermark shape remains source-compatible for users
 // that have not migrated to watermarkImages yet.
@@ -62,9 +65,19 @@ export const tiledText: TextMarkOptions = {
 };
 
 export const reusableRecipe: WatermarkRecipe = Marker.createRecipe({
+  schemaVersion: 1,
   watermarks: [
-    { type: 'text', text: 'Reusable' },
-    { type: 'image', src: 'file:///tmp/logo.png' },
+    {
+      type: 'text',
+      text: '{{label}} #{{index}}',
+      blendMode: photographicBlendMode,
+      visibleWhen: { variable: 'showLabel', equals: true },
+    },
+    {
+      type: 'image',
+      src: 'file:///tmp/logo.png',
+      blendMode: 'multiply',
+    },
   ],
   saveFormat: ImageFormat.jpg,
 });
@@ -82,10 +95,12 @@ export const recipeBatch = reusableRecipe.applyMany(
     {
       backgroundImage: { src: 'file:///tmp/one.jpg' },
       filename: 'one',
+      variables: { label: 'ONE', showLabel: true },
     },
     {
       backgroundImage: { src: 'file:///tmp/two.jpg' },
       filename: 'two',
+      variables: { label: 'TWO', showLabel: false },
     },
   ],
   {

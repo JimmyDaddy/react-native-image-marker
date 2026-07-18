@@ -126,6 +126,35 @@ Set `alpha` on a text layer to fade the complete watermark—including its fill,
 }
 ```
 
+## Blend modes
+
+Set `blendMode` on a text or image watermark when the layer should react to the photo beneath it. The default is `normal`; the cross-platform set is `multiply`, `screen`, `overlay`, `darken`, and `lighten`.
+
+```ts
+await Marker.mark({
+  backgroundImage: { src: photo },
+  watermarks: [
+    {
+      type: 'image',
+      src: logo,
+      blendMode: 'multiply',
+      alpha: 0.85,
+      position: { position: Position.center },
+    },
+    {
+      type: 'text',
+      text: 'SCREEN LIGHT',
+      blendMode: 'screen',
+      position: { position: Position.bottomCenter, Y: 32 },
+      style: { color: '#FFE9B8', fontSize: 36, bold: true },
+    },
+  ],
+  saveFormat: ImageFormat.png,
+});
+```
+
+`alpha` is applied together with the blend mode. Keep `normal` for logos whose brand colors must remain exact; use the other modes when a photographic or printed effect is more important. Background-image options do not accept `blendMode`.
+
 ### Custom fonts
 
 The package does not bundle fonts.
@@ -139,4 +168,4 @@ Confirm the font in a normal React Native `<Text>` or Web Canvas first, then pas
 
 ## Image layers
 
-Image watermarks support `scale`, `rotate`, `alpha`, `position`, `layout`, and `trimTransparentPadding`. Transparent outer pixels are trimmed before scaling, rotation, positioning, or tiling. Tune `scale` for the intended output image size.
+Image watermarks support `scale`, `rotate`, `alpha`, `blendMode`, `position`, `layout`, and `trimTransparentPadding`. Transparent outer pixels are trimmed before scaling, rotation, positioning, or tiling. Tune `scale` for the intended output image size.

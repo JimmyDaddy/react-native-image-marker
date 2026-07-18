@@ -1,4 +1,5 @@
 import type {
+  BlendMode,
   ImageMarkOptions,
   ImageOptions,
   MarkOptions,
@@ -7,6 +8,15 @@ import type {
   WatermarkImageOptions,
   WatermarkLayout,
 } from './index';
+
+const SUPPORTED_BLEND_MODES = new Set<BlendMode>([
+  'normal',
+  'multiply',
+  'screen',
+  'overlay',
+  'darken',
+  'lighten',
+]);
 
 type MarkRequestOptions = TextMarkOptions | ImageMarkOptions | MarkOptions;
 
@@ -46,6 +56,17 @@ function validateAlpha(
     (!Number.isFinite(alpha) || alpha < 0 || alpha > 1)
   ) {
     throw new Error(`${path}.alpha must be a finite number between 0 and 1.`);
+  }
+}
+
+function validateBlendMode(
+  blendMode: BlendMode | undefined,
+  path: string
+): void {
+  if (blendMode !== undefined && !SUPPORTED_BLEND_MODES.has(blendMode)) {
+    throw new Error(
+      `${path}.blendMode is not supported: ${String(blendMode)}.`
+    );
   }
 }
 
@@ -115,6 +136,7 @@ function validateWatermarkLayout(
 
 function validateTextOptions(options: TextOptions, path: string): void {
   validateAlpha(options, path);
+  validateBlendMode(options.blendMode, path);
   const strokeStyle = options.style?.strokeStyle;
   if (strokeStyle) {
     if (!Number.isFinite(strokeStyle.width) || strokeStyle.width < 0) {
@@ -141,6 +163,7 @@ function validateImageOptions(
   hasExternalPosition = false
 ): void {
   validateAlpha(options, path);
+  validateBlendMode(options.blendMode, path);
   validateWatermarkLayout(
     options.layout,
     options.position !== undefined || hasExternalPosition,

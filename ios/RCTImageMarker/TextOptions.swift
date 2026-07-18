@@ -16,6 +16,7 @@ class TextOptions: NSObject {
     var position: MarkerPositionEnum = .none
     var text: String
     var alpha: CGFloat = 1.0
+    var blendMode: CGBlendMode = .normal
     var style: TextStyle
     var layout: ImageMarkerWatermarkLayout?
 
@@ -47,5 +48,6 @@ class TextOptions: NSObject {
         let styleOpts = opts["style"] as? [AnyHashable: Any] ?? [:]
         self.style = try TextStyle(dicOpts: styleOpts)
         self.alpha = try Utils.resolvedAlpha(opts["alpha"], fieldName: "text")
+        self.blendMode = try ImageMarkerBlendMode.resolve(opts["blendMode"], fieldName: "text blendMode")
     }
 }

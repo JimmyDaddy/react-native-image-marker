@@ -3,7 +3,7 @@
     <img src="assets/icon.png" alt="React Native Image Marker" width="128" />
   </a>
   <h1>React Native Image Marker</h1>
-  <p>Text, logos, readable outlines, and repeating watermark layouts for iOS, Android, and Web.</p>
+  <p>Text, logos, repeating layouts, natural blend modes, and personalized batches for iOS, Android, and Web.</p>
 
 [![npm version](https://img.shields.io/npm/v/react-native-image-marker.svg?label=npm)](https://www.npmjs.com/package/react-native-image-marker)
 
@@ -111,18 +111,54 @@ const result = await Marker.markText({
 
 Use the same `layout` object on `watermarkImages` to repeat a logo. A tiled layer cannot also set `position`; invalid combinations fail with a clear error.
 
-### Reuse one recipe across a batch
+### Blend a watermark into the photo
 
-Save ordered layers once, then apply them to one image or an entire queue. Results stay in input order; one failed image does not stop the others. Native rendering stays serial, while Web can run up to four jobs at once.
+Set `blendMode` on a text or image layer when a plain overlay looks too flat. The same six modes—`normal`, `multiply`, `screen`, `overlay`, `darken`, and `lighten`—work on iOS, Android, and Web.
+
+```ts
+const result = await Marker.mark({
+  backgroundImage: { src: require('./images/background.jpg') },
+  watermarks: [
+    {
+      type: 'image',
+      src: require('./images/logo.png'),
+      blendMode: 'multiply',
+      position: { position: Position.center },
+      scale: 0.7,
+      alpha: 0.85,
+    },
+    {
+      type: 'text',
+      text: 'SCREEN LIGHT',
+      blendMode: 'screen',
+      position: { position: Position.bottomCenter, Y: 32 },
+      style: { color: '#FFE9B8', fontSize: 36, bold: true },
+    },
+  ],
+  saveFormat: ImageFormat.png,
+});
+```
+
+### Personalize one recipe across a batch
+
+Save ordered layers once, then inject safe string, number, or boolean variables for each image. Templates also expose `{{index}}` and `{{filename}}`; `visibleWhen` can include or skip a layer without rebuilding the recipe. Results stay in input order, and one failed image does not stop the others.
 
 ```ts
 const recipe = Marker.createRecipe({
+  schemaVersion: 1,
   watermarks: [
     {
       type: 'text',
-      text: '© Acme Studio',
+      text: '© {{studio}} · {{filename}} · #{{index}}',
       position: { position: Position.bottomRight, X: 24, Y: 24 },
       style: { color: '#FFFFFF', fontSize: 28 },
+    },
+    {
+      type: 'image',
+      src: require('./images/logo.png'),
+      visibleWhen: { variable: 'showLogo', equals: true },
+      position: { position: Position.topRight, X: 24, Y: 24 },
+      scale: 0.25,
     },
   ],
   saveFormat: ImageFormat.jpg,
@@ -131,13 +167,19 @@ const recipe = Marker.createRecipe({
 
 const controller = new AbortController();
 const results = await recipe.applyMany(
-  photos.map((src) => ({ backgroundImage: { src } })),
+  photos.map((src, index) => ({
+    backgroundImage: { src },
+    filename: `photo-${index + 1}`,
+    variables: { studio: 'Acme Studio', showLogo: index % 2 === 0 },
+  })),
   {
     concurrency: 2,
     signal: controller.signal,
     onProgress: ({ settled, total }) => console.log(`${settled}/${total}`),
   }
 );
+
+const savedRecipe = JSON.stringify(recipe.toJSON());
 ```
 
 On Web, request `Blob` results explicitly when processing many files without Data URL expansion:

@@ -30,6 +30,8 @@ data class TextOptions(val options: ReadableMap) {
   private var layout: WatermarkLayout?
   internal var alpha: Double = 1.0
     private set
+  internal var blendMode: WatermarkBlendMode = WatermarkBlendMode.NORMAL
+    private set
 
   init {
     try {
@@ -47,6 +49,7 @@ data class TextOptions(val options: ReadableMap) {
           "text alpha must be finite and between zero and one"
         )
       }
+      blendMode = WatermarkBlendMode.fromOptions(options, "text blendMode")
       val positionOptions = if (options.hasKey("position") && !options.isNull("position")) {
         options.getMap("position")
       } else {
@@ -96,6 +99,7 @@ data class TextOptions(val options: ReadableMap) {
   ) {
     val textPaint = TextPaint(Paint.ANTI_ALIAS_FLAG or Paint.DEV_KERN_TEXT_FLAG)
     textPaint.isAntiAlias = true
+    blendMode.applyTo(textPaint)
     if (null != style.shadowLayerStyle) {
       textPaint.setShadowLayer(
         style.shadowLayerStyle!!.radius,
@@ -220,6 +224,7 @@ data class TextOptions(val options: ReadableMap) {
         val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.LINEAR_TEXT_FLAG)
         paint.style = Paint.Style.FILL
         paint.color = colorWithLayerAlpha(style.textBackgroundStyle!!.color)
+        blendMode.applyTo(paint)
         val bgInsets = style.textBackgroundStyle!!.toEdgeInsets(maxWidth, maxHeight)
         var bgRect = RectF(
           drawX - outlineInset - bgInsets.left,

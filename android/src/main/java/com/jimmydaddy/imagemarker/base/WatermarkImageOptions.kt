@@ -10,6 +10,7 @@ data class WatermarkImageOptions(val options: ReadableMap?) {
   var positionEnum: PositionEnum? = null
   var trimTransparentPadding: Boolean = false
   var layout: WatermarkLayout? = null
+  var blendMode: WatermarkBlendMode = WatermarkBlendMode.NORMAL
 
   init {
     if (options != null) {
@@ -31,6 +32,7 @@ data class WatermarkImageOptions(val options: ReadableMap?) {
       } else {
         null
       }
+      blendMode = WatermarkBlendMode.fromOptions(options, "image blendMode")
       if (layout?.isTile == true && positionOptions != null) {
         throw IllegalArgumentException("layout cannot be combined with position")
       }
@@ -44,7 +46,8 @@ data class WatermarkImageOptions(val options: ReadableMap?) {
     edgeInset: String?,
     position: PositionEnum?,
     trimTransparentPadding: Boolean = false,
-    layout: WatermarkLayout? = null
+    layout: WatermarkLayout? = null,
+    blendMode: WatermarkBlendMode = WatermarkBlendMode.NORMAL
   ) : this(null) {
     imageOption = watermarkImage
     this.x = x
@@ -53,6 +56,7 @@ data class WatermarkImageOptions(val options: ReadableMap?) {
     this.positionEnum = position
     this.trimTransparentPadding = trimTransparentPadding
     this.layout = layout
+    this.blendMode = blendMode
     if (layout?.isTile == true && (x != null || y != null || edgeInset != null || position != null)) {
       throw IllegalArgumentException("layout cannot be combined with position")
     }

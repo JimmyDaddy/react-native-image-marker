@@ -91,9 +91,11 @@ import { TabItem, Tabs } from '@astrojs/starlight/components';
 
 ## 什么时候创建 Recipe
 
-当水印配置保持不变、只有底图发生变化时，适合使用 `createRecipe`。Recipe 只接受现代的有序 `watermarks` 数组；每张图片的 `backgroundImage` 和 `filename` 应传给 `apply()` 或 `applyMany()`。
+当水印结构保持不变、只有底图或显示内容发生变化时，适合使用 `createRecipe`。Recipe 只接受现代的有序 `watermarks` 数组；每张图片的 `backgroundImage`、`filename` 和可选 `variables` 应传给 `apply()` 或 `applyMany()`。文字模板可以读取 `{{variableName}}`、`{{index}}` 和 `{{filename}}`；`visibleWhen` 可以按条件保留图层。
 
 `applyMany()` 会独立报告每一项，并保持输入顺序。默认并发为 1；Web 最多允许 4 个活动任务，iOS 和 Android 固定为 1，以控制原生内存压力。传入 `AbortSignal` 后会停止派发新任务，但不会宣称能够中断已经开始的渲染。
+
+需要保存 Recipe 时请设置 `schemaVersion: 1`，并持久化 `recipe.toJSON()`，不要保存内部运行时状态。
 
 ## 图层顺序
 
