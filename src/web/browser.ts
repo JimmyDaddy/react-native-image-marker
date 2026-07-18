@@ -3,6 +3,11 @@ export interface WebCanvas {
   height: number;
   getContext(contextId: '2d'): WebCanvasContext | null;
   toDataURL(type?: string, quality?: number): string;
+  toBlob(
+    callback: (blob: Blob | null) => void,
+    type?: string,
+    quality?: number
+  ): void;
 }
 
 export interface WebCanvasContext {

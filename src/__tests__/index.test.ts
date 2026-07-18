@@ -83,6 +83,15 @@ describe('Marker JS wrapper', () => {
     );
   });
 
+  it('rejects Web-only Blob recipe output on native targets', () => {
+    expect(() =>
+      Marker.createRecipe(
+        { watermarks: [{ type: 'text', text: 'Reusable' }] },
+        { resultType: 'blob' }
+      )
+    ).toThrow('Blob recipe output is only supported on Web.');
+  });
+
   it('keeps public native recipe batches serial', async () => {
     let active = 0;
     let maximumActive = 0;

@@ -8,7 +8,12 @@ import {
 } from './normalize';
 import type { ImageMarkOptions, MarkOptions, TextMarkOptions } from './index';
 import { createWatermarkRecipe } from './recipe';
-import type { WatermarkRecipe, WatermarkRecipeOptions } from './recipe';
+import type {
+  WatermarkBlobRecipeResultOptions,
+  WatermarkRecipe,
+  WatermarkRecipeOptions,
+  WatermarkRecipeResultOptions,
+} from './recipe';
 import {
   validateImageMarkOptions,
   validateMarkOptions,
@@ -37,12 +42,32 @@ function getImageMarker(): Spec {
 /** Native iOS and Android implementation of the public Marker API. */
 class Marker {
   /** Save ordered layers and output settings for reuse across one or many images. */
-  static createRecipe(options: WatermarkRecipeOptions): WatermarkRecipe {
+  static createRecipe<
+    ResultOptions extends WatermarkRecipeResultOptions | undefined = undefined
+  >(
+    options: WatermarkRecipeOptions,
+    resultOptions?: ResultOptions
+  ): WatermarkRecipe<
+    ResultOptions extends WatermarkBlobRecipeResultOptions ? Blob : string
+  > {
+    if (resultOptions?.resultType === 'blob') {
+      throw new Error('Blob recipe output is only supported on Web.');
+    }
+    if (
+      resultOptions?.resultType !== undefined &&
+      resultOptions.resultType !== 'string'
+    ) {
+      throw new Error(
+        `Unsupported recipe result type: ${resultOptions.resultType}.`
+      );
+    }
     return createWatermarkRecipe(
       options,
       (markOptions) => Marker.mark(markOptions),
       1
-    );
+    ) as WatermarkRecipe<
+      ResultOptions extends WatermarkBlobRecipeResultOptions ? Blob : string
+    >;
   }
 
   /** Mark text-only watermarks on an image. */

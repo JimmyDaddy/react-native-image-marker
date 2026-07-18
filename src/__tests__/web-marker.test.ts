@@ -1,5 +1,6 @@
 import {
   encodeCanvas,
+  encodeCanvasToBlob,
   fitSizeWithinMax,
   getExpandedCanvasSize,
   getRotatedBounds,
@@ -127,6 +128,95 @@ describe('WebMarker pure helpers', () => {
       'data:image/png;base64,abc'
     );
     expect(canvas.toDataURL).toHaveBeenCalledWith('image/png', 1);
+  });
+
+  it('encodes PNG and JPEG recipes as browser Blobs', async () => {
+    const canvas = {
+      width: 100,
+      height: 50,
+      toDataURL: jest.fn(),
+      toBlob: jest.fn(
+        (
+          callback: (blob: Blob | null) => void,
+          type = 'image/png',
+          _quality?: number
+        ) => callback(new Blob(['encoded'], { type }))
+      ),
+    };
+
+    await expect(encodeCanvasToBlob(canvas, 'png', undefined)).resolves.toEqual(
+      expect.objectContaining({ type: 'image/png' })
+    );
+    expect(canvas.toBlob).toHaveBeenNthCalledWith(
+      1,
+      expect.any(Function),
+      'image/png',
+      1
+    );
+
+    await expect(encodeCanvasToBlob(canvas, 'jpg', 82)).resolves.toEqual(
+      expect.objectContaining({ type: 'image/jpeg' })
+    );
+    expect(canvas.toBlob).toHaveBeenNthCalledWith(
+      2,
+      expect.any(Function),
+      'image/jpeg',
+      0.82
+    );
+  });
+
+  it('reports unsupported, failed, and unexpected Blob encoders', async () => {
+    const baseCanvas = {
+      width: 100,
+      height: 50,
+      toDataURL: jest.fn(),
+    };
+
+    await expect(encodeCanvasToBlob(baseCanvas, 'png', 100)).rejects.toThrow(
+      'does not support Canvas toBlob'
+    );
+    await expect(
+      encodeCanvasToBlob(
+        {
+          ...baseCanvas,
+          toBlob: (callback) => callback(null),
+        },
+        'png',
+        100
+      )
+    ).rejects.toThrow('could not encode');
+    await expect(
+      encodeCanvasToBlob(
+        {
+          ...baseCanvas,
+          toBlob: (callback) =>
+            callback(new Blob(['wrong'], { type: 'image/webp' })),
+        },
+        'png',
+        100
+      )
+    ).rejects.toThrow('unexpected MIME type: image/webp');
+  });
+
+  it('reports tainted Blob exports as a CORS problem', async () => {
+    const securityError = Object.assign(new Error('Tainted canvases'), {
+      name: 'SecurityError',
+    });
+
+    await expect(
+      encodeCanvasToBlob(
+        {
+          width: 100,
+          height: 50,
+          toDataURL: jest.fn(),
+          toBlob: () => {
+            throw securityError;
+          },
+        },
+        'png',
+        100
+      )
+    ).rejects.toThrow(/tainted.*CORS|CORS.*tainted/i);
   });
 
   it('reports tainted canvas exports as a CORS problem', () => {

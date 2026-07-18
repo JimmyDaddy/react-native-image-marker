@@ -8,8 +8,11 @@ export type {
   WatermarkBatchRejectedResult,
   WatermarkBatchResult,
   WatermarkRecipe,
+  WatermarkBlobRecipeResultOptions,
   WatermarkRecipeInput,
   WatermarkRecipeOptions,
+  WatermarkRecipeResultOptions,
+  WatermarkStringRecipeResultOptions,
 } from './recipe';
 
 /**

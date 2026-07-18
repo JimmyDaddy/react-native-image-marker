@@ -36,6 +36,10 @@ function createFakeCanvas() {
     width: 0,
     height: 0,
     toDataURL: jest.fn((type = 'image/png') => `data:${type};base64,rendered`),
+    toBlob: jest.fn(
+      (callback: (blob: Blob | null) => void, type = 'image/png') =>
+        callback(new Blob(['rendered'], { type }))
+    ),
     getContext: jest.fn(),
   };
   const context = {

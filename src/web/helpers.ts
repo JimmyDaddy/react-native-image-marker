@@ -19,6 +19,11 @@ export interface CanvasEncoder {
   width: number;
   height: number;
   toDataURL(type?: string, quality?: number): string;
+  toBlob?(
+    callback: (blob: Blob | null) => void,
+    type?: string,
+    quality?: number
+  ): void;
 }
 
 export type WebOutputFormat = 'png' | 'jpg' | 'base64';
@@ -280,4 +285,62 @@ export function encodeCanvas(
     }
     throw error;
   }
+}
+
+/** Encode a rendered canvas without expanding its bytes into a data URL. */
+export function encodeCanvasToBlob(
+  canvas: CanvasEncoder,
+  format: string | undefined,
+  quality: number | undefined
+): Promise<Blob> {
+  const normalizedFormat = normalizeOutputFormat(format);
+  const normalizedQuality = normalizeQuality(quality);
+  const mimeType = normalizedFormat === 'jpg' ? 'image/jpeg' : 'image/png';
+  if (typeof canvas.toBlob !== 'function') {
+    return Promise.reject(
+      new Error('This browser does not support Canvas toBlob() encoding.')
+    );
+  }
+
+  return new Promise((resolve, reject) => {
+    try {
+      canvas.toBlob!(
+        (blob) => {
+          if (!blob) {
+            reject(
+              new Error('The browser could not encode the rendered canvas.')
+            );
+            return;
+          }
+          if (blob.type !== mimeType) {
+            reject(
+              new Error(
+                `The browser encoded an unexpected MIME type: ${
+                  blob.type || 'empty'
+                }.`
+              )
+            );
+            return;
+          }
+          resolve(blob);
+        },
+        mimeType,
+        normalizedQuality / 100
+      );
+    } catch (error) {
+      const errorName =
+        error && typeof error === 'object' && 'name' in error
+          ? String((error as { name?: unknown }).name)
+          : '';
+      if (errorName === 'SecurityError') {
+        reject(
+          new Error(
+            'Unable to export the canvas because an image tainted it. Configure CORS on remote images (Access-Control-Allow-Origin) or use a local file/data URL.'
+          )
+        );
+        return;
+      }
+      reject(error);
+    }
+  });
 }
