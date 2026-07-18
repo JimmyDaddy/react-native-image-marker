@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.6.0](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.5.0...v1.6.0) (2026-07-18)
+
+### Features
+
+* **web:** harden browser rendering compatibility ([9e1256a](https://github.com/JimmyDaddy/react-native-image-marker/commit/9e1256a2117c4c76e142f45d7cef758e60a661c1))
+
+### Bug Fixes
+
+* **ci:** generate lockfile with npm 10 ([21f025f](https://github.com/JimmyDaddy/react-native-image-marker/commit/21f025f79ff00758db646a0c1996838b55fa0b39))
+* **ci:** require modern compatibility jobs ([7a81903](https://github.com/JimmyDaddy/react-native-image-marker/commit/7a81903ae5baccf660ab0c3daa8cc70bea3eb740))
+* **ci:** run Expo prebuild in example ([2cc19e0](https://github.com/JimmyDaddy/react-native-image-marker/commit/2cc19e06071b95d3b1dd1104893660b907da5f7b))
+* **expo:** resolve config plugin from host app ([0ac0220](https://github.com/JimmyDaddy/react-native-image-marker/commit/0ac02200d8b5484d92a6cbf3232ff3c58b5ba0fd))
+* **release:** pin compatible changelog preset ([45e9db6](https://github.com/JimmyDaddy/react-native-image-marker/commit/45e9db62330991e92087aea4605009dc721f4d01))
+
 ## 1.5.0 (2026-07-18)
 
 * fix(ci): stabilize web example typecheck ([51af719](https://github.com/JimmyDaddy/react-native-image-marker/commit/51af719))
