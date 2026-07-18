@@ -622,14 +622,4 @@ extension UIImage {
         return UIImage(cgImage: croppedImage, scale: sourceImage.scale, orientation: .up)
     }
 
-    static func transBase64(_ base64Str: String) -> UIImage? {
-        let trimmedString = base64Str.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let encodedString = trimmedString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-            let imgURL = URL(string: encodedString),
-            let imageData = try? Data(contentsOf: imgURL),
-            let image = UIImage(data: imageData) else {
-            return nil
-        }
-        return image
-    }
 }

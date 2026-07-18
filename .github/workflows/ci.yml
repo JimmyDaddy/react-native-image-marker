@@ -866,6 +866,8 @@ jobs:
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testJPEGUsesExplicitMatteWhilePNGPreservesTransparency \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testTrimsTransparentWatermarkPaddingBeforeAnchoredPositioning \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testOptionsPreferFilenameAndProvideRenderingDefaults \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testMaxSizeDefaultsValidatesAndBuildsBoundedLoadRequests \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testImageIODownsamplesDataAndBase64BeforeRendering \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testRejectsInvalidQualityAlphaAndUnsafeFilenames \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testParsesShadowHexColorAndRejectsInvalidValues \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testBackgroundScaleChangesCanvasWithoutImplicitlyScalingLayers \

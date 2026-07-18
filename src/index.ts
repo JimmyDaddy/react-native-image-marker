@@ -700,8 +700,8 @@ export interface TextMarkOptions {
    */
   rotationCanvasMode?: RotationCanvasMode;
   /**
-   * Maximum width or height used while decoding on Android and rendering on
-   * Web. Larger images keep their aspect ratio. Currently ignored on iOS.
+   * Maximum width or height used while decoding or rendering source images.
+   * Larger images keep their aspect ratio on iOS, Android, and Web.
    * @defaultValue 2048
    * @example
    * maxSize: 2048
@@ -903,8 +903,8 @@ export interface ImageMarkOptions {
    */
   rotationCanvasMode?: RotationCanvasMode;
   /**
-   * Maximum width or height used while decoding on Android and rendering on
-   * Web. Larger images keep their aspect ratio. Currently ignored on iOS.
+   * Maximum width or height used while decoding or rendering source images.
+   * Larger images keep their aspect ratio on iOS, Android, and Web.
    * @defaultValue 2048
    * @example
    * maxSize: 2048
@@ -1027,8 +1027,8 @@ export interface MarkOptions {
    */
   rotationCanvasMode?: RotationCanvasMode;
   /**
-   * Maximum width or height used while decoding on Android and rendering on
-   * Web. Larger images keep their aspect ratio. Currently ignored on iOS.
+   * Maximum width or height used while decoding or rendering source images.
+   * Larger images keep their aspect ratio on iOS, Android, and Web.
    * @defaultValue 2048
    */
   maxSize?: number;
