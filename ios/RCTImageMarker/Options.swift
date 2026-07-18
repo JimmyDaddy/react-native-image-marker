@@ -13,7 +13,7 @@ class Options: NSObject {
     var backgroundImage: ImageOptions
     var quality: Int = 100
     var saveFormat: String?
-    var maxSize: Int?
+    var maxSize: Int = 2048
     var filename: String?
     var matteColor: UIColor = .white
     var rotationCanvasMode: ImageMarkerRotationCanvasMode = .expand
@@ -37,7 +37,20 @@ class Options: NSObject {
             self.quality = Int(qualityValue)
         }
         self.saveFormat = opts["saveFormat"] as? String
-        self.maxSize = opts["maxSize"] as? Int
+        if let rawMaxSize = opts["maxSize"], !Utils.isNULL(rawMaxSize) {
+            guard let maxSizeNumber = rawMaxSize as? NSNumber,
+                  CFGetTypeID(maxSizeNumber) != CFBooleanGetTypeID() else {
+                throw NSError(domain: ErrorDomainEnum.PARAMS_INVALID.rawValue, code: 0, userInfo: [NSLocalizedDescriptionKey: "maxSize must be a positive finite integer"])
+            }
+            let maxSizeValue = maxSizeNumber.doubleValue
+            guard maxSizeValue.isFinite,
+                  maxSizeValue.rounded(.towardZero) == maxSizeValue,
+                  let parsedMaxSize = Int(exactly: maxSizeValue),
+                  parsedMaxSize > 0 else {
+                throw NSError(domain: ErrorDomainEnum.PARAMS_INVALID.rawValue, code: 0, userInfo: [NSLocalizedDescriptionKey: "maxSize must be a positive finite integer"])
+            }
+            self.maxSize = parsedMaxSize
+        }
         self.filename = opts["filename"] as? String ?? opts["fileName"] as? String
         if let filename = self.filename, !Utils.isSafeOutputFilename(filename) {
             throw NSError(domain: ErrorDomainEnum.PARAMS_INVALID.rawValue, code: 0, userInfo: [NSLocalizedDescriptionKey: "filename must be a safe basename"])

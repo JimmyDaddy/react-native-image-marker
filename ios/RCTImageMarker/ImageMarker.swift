@@ -17,7 +17,7 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
     public var bridge: RCTBridge!
     private let operationLimiter = ImageMarkerAsyncLimiter(limit: 1)
     
-    func loadImages(with imageOptions: [ImageOptions]) async throws -> [UIImage] {
+    func loadImages(with imageOptions: [ImageOptions], maxSize: Int) async throws -> [UIImage] {
         let className = "RCTImageLoader"
         let classType: AnyClass? = NSClassFromString(className)
         guard let bridge = self.bridge,
@@ -25,14 +25,14 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
             throw NSError(domain: ErrorDomainEnum.BASE.rawValue, code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to get ImageLoader module"])
         }
         return try await Utils.sequentialAsyncMap(imageOptions) { img in
-            try await self.loadImage(img, using: imageLoader)
+            try await self.loadImage(img, maxSize: maxSize, using: imageLoader)
         }
     }
 
-    private func loadImage(_ imageOptions: ImageOptions, using imageLoader: RCTImageLoader) async throws -> UIImage {
+    private func loadImage(_ imageOptions: ImageOptions, maxSize: Int, using imageLoader: RCTImageLoader) async throws -> UIImage {
         if Utils.isBase64(imageOptions.uri) {
             try Task.checkCancellation()
-            guard let image = UIImage.transBase64(imageOptions.uri) else {
+            guard let image = Utils.downsampleBase64Image(imageOptions.uri, maxSize: maxSize) else {
                 throw NSError(domain: ErrorDomainEnum.BASE.rawValue, code: 3, userInfo: [NSLocalizedDescriptionKey: "Failed to load image"])
             }
             try Task.checkCancellation()
@@ -42,13 +42,14 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         guard let request = RCTConvert.nsurlRequest(imageOptions.src) else {
             throw NSError(domain: ErrorDomainEnum.BASE.rawValue, code: 3, userInfo: [NSLocalizedDescriptionKey: "Failed to create URL request for image: \(imageOptions.uri)"])
         }
+        let loadRequest = Utils.imageLoadRequest(for: imageOptions.rnSrc, maxSize: maxSize)
         let loadedImage: UIImage = try await ImageMarkerCancellableContinuation.run { completion in
             return imageLoader.loadImage(
                 with: request,
-                size: CGSizeMake(imageOptions.rnSrc.width, imageOptions.rnSrc.height),
-                scale: imageOptions.rnSrc.scale,
+                size: loadRequest.size,
+                scale: loadRequest.scale,
                 clipped: false,
-                resizeMode: RCTResizeMode.cover
+                resizeMode: loadRequest.resizeMode
             ) { _, _ in
                 // Progress is intentionally ignored.
             } partialLoad: { _ in
@@ -377,7 +378,7 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         Task(priority: .userInitiated) {
             do {
                 let result = try await self.operationLimiter.withPermit {
-                    var images = try await self.loadImages(with: [markOpts.backgroundImage])
+                    var images = try await self.loadImages(with: [markOpts.backgroundImage], maxSize: markOpts.maxSize)
                     let renderedImage = try Utils.renderAndReleaseSources(&images) { sources in
                         try self.markImgWithText(sources[0], markOpts)
                     }
@@ -403,7 +404,7 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
             do {
                 let result = try await self.operationLimiter.withPermit {
                     let waterImages = markOpts.watermarkImages.map { $0.imageOption }
-                    var images = try await self.loadImages(with: [markOpts.backgroundImage] + waterImages)
+                    var images = try await self.loadImages(with: [markOpts.backgroundImage] + waterImages, maxSize: markOpts.maxSize)
                     let renderedImage = try Utils.renderAndReleaseSources(&images) { sources in
                         try self.markImage(
                             with: sources[0],
@@ -433,7 +434,7 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
             do {
                 let result = try await self.operationLimiter.withPermit {
                     let waterImages = markOpts.imageLayers.map { $0.imageOption }
-                    var images = try await self.loadImages(with: [markOpts.backgroundImage] + waterImages)
+                    var images = try await self.loadImages(with: [markOpts.backgroundImage] + waterImages, maxSize: markOpts.maxSize)
                     let renderedImage = try Utils.renderAndReleaseSources(&images) { sources in
                         try self.markWatermarks(
                             with: sources[0],

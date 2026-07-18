@@ -7,8 +7,15 @@
 //
 
 import Foundation
+import ImageIO
 import UIKit
 import React
+
+struct ImageMarkerImageLoadRequest {
+    let size: CGSize
+    let scale: CGFloat
+    let resizeMode: RCTResizeMode
+}
 
 actor ImageMarkerAsyncLimiter {
     private struct Waiter {
@@ -183,6 +190,77 @@ enum ImageMarkerCancellableContinuation {
 }
 
 class Utils: NSObject {
+    static func imageLoadRequest(for source: RNImageSRC, maxSize: Int) -> ImageMarkerImageLoadRequest {
+        let width = source.width
+        let height = source.height
+        let sourceScale = source.scale
+        let hasKnownSize = width.isFinite && height.isFinite && sourceScale.isFinite
+            && width > 0 && height > 0 && sourceScale > 0
+
+        guard hasKnownSize else {
+            let boundedSize = CGFloat(maxSize)
+            return ImageMarkerImageLoadRequest(
+                size: CGSize(width: boundedSize, height: boundedSize),
+                scale: 1,
+                resizeMode: .contain
+            )
+        }
+
+        let pixelWidth = width * sourceScale
+        let pixelHeight = height * sourceScale
+        let largestPixelDimension = max(pixelWidth, pixelHeight)
+        if largestPixelDimension <= CGFloat(maxSize) {
+            return ImageMarkerImageLoadRequest(
+                size: CGSize(width: width, height: height),
+                scale: sourceScale,
+                resizeMode: .cover
+            )
+        }
+
+        let ratio = CGFloat(maxSize) / largestPixelDimension
+        return ImageMarkerImageLoadRequest(
+            size: CGSize(
+                width: max((pixelWidth * ratio).rounded(), 1),
+                height: max((pixelHeight * ratio).rounded(), 1)
+            ),
+            scale: 1,
+            resizeMode: .contain
+        )
+    }
+
+    static func downsampleImageData(_ data: Data, maxSize: Int) -> UIImage? {
+        let sourceOptions = [
+            kCGImageSourceShouldCache: false,
+        ] as CFDictionary
+        guard let source = CGImageSourceCreateWithData(data as CFData, sourceOptions) else {
+            return nil
+        }
+        let thumbnailOptions = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: maxSize,
+            kCGImageSourceShouldCacheImmediately: true,
+        ] as CFDictionary
+        guard let thumbnail = CGImageSourceCreateThumbnailAtIndex(source, 0, thumbnailOptions) else {
+            return nil
+        }
+        return UIImage(cgImage: thumbnail, scale: 1, orientation: .up)
+    }
+
+    static func downsampleBase64Image(_ value: String, maxSize: Int) -> UIImage? {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let comma = trimmed.firstIndex(of: ","),
+              trimmed[..<comma].lowercased().contains(";base64") else {
+            return nil
+        }
+        let encoded = String(trimmed[trimmed.index(after: comma)...])
+        let decodedValue = encoded.removingPercentEncoding ?? encoded
+        guard let data = Data(base64Encoded: decodedValue, options: .ignoreUnknownCharacters) else {
+            return nil
+        }
+        return downsampleImageData(data, maxSize: maxSize)
+    }
+
     static func resolvedTextColor(_ value: String?) -> UIColor {
         guard let value else {
             return .black

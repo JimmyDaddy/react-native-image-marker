@@ -581,6 +581,63 @@ final class ImageMarkerExampleUITests: XCTestCase {
     XCTAssertEqual(Utils.canonicalOutputFilename("output.JPEG", ext: ".png"), "output.png")
   }
 
+  func testMaxSizeDefaultsValidatesAndBuildsBoundedLoadRequests() throws {
+    let background: [AnyHashable: Any] = [
+      "src": ["uri": "file:///tmp/background.png"],
+    ]
+    XCTAssertEqual(try Options(dicOpts: ["backgroundImage": background]).maxSize, 2048)
+    XCTAssertEqual(
+      try Options(dicOpts: ["backgroundImage": background, "maxSize": 1024]).maxSize,
+      1024
+    )
+    for maxSize: Any in [0, -1, 10.5, Double.nan, Double.infinity, true, "1024"] {
+      assertInvalidParams {
+        _ = try Options(dicOpts: ["backgroundImage": background, "maxSize": maxSize])
+      }
+    }
+
+    let small = Utils.imageLoadRequest(
+      for: RNImageSRC(dicOpts: ["width": CGFloat(100), "height": CGFloat(50), "scale": CGFloat(2)]),
+      maxSize: 512
+    )
+    XCTAssertEqual(small.size, CGSize(width: 100, height: 50))
+    XCTAssertEqual(small.scale, 2, accuracy: 0.001)
+    XCTAssertEqual(small.resizeMode, .cover)
+
+    let large = Utils.imageLoadRequest(
+      for: RNImageSRC(dicOpts: ["width": CGFloat(2000), "height": CGFloat(1000), "scale": CGFloat(2)]),
+      maxSize: 1000
+    )
+    XCTAssertEqual(large.size, CGSize(width: 1000, height: 500))
+    XCTAssertEqual(large.scale, 1, accuracy: 0.001)
+    XCTAssertEqual(large.resizeMode, .contain)
+
+    let unknown = Utils.imageLoadRequest(
+      for: RNImageSRC(dicOpts: ["uri": "https://example.com/image.jpg"]),
+      maxSize: 768
+    )
+    XCTAssertEqual(unknown.size, CGSize(width: 768, height: 768))
+    XCTAssertEqual(unknown.scale, 1, accuracy: 0.001)
+    XCTAssertEqual(unknown.resizeMode, .contain)
+  }
+
+  func testImageIODownsamplesDataAndBase64BeforeRendering() throws {
+    let source = makeSolidImage(size: CGSize(width: 400, height: 200), color: .blue)
+    let data = try XCTUnwrap(source.pngData())
+
+    let downsampled = try XCTUnwrap(Utils.downsampleImageData(data, maxSize: 100))
+    XCTAssertEqual(downsampled.imageOrientation, .up)
+    XCTAssertEqual(downsampled.scale, 1, accuracy: 0.001)
+    XCTAssertEqual(downsampled.cgImage?.width, 100)
+    XCTAssertEqual(downsampled.cgImage?.height, 50)
+
+    let dataURI = "data:image/png;base64,\(data.base64EncodedString())"
+    let base64Image = try XCTUnwrap(Utils.downsampleBase64Image(dataURI, maxSize: 80))
+    XCTAssertEqual(base64Image.cgImage?.width, 80)
+    XCTAssertEqual(base64Image.cgImage?.height, 40)
+    XCTAssertNil(Utils.downsampleBase64Image("data:image/png,not-base64", maxSize: 80))
+  }
+
   func testRejectsInvalidQualityAlphaAndUnsafeFilenames() throws {
     let background: [AnyHashable: Any] = [
       "src": ["uri": "file:///tmp/background.png"],
