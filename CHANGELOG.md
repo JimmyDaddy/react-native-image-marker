@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.9.0](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.8.0...v1.9.0) (2026-07-18)
+
+### Features
+
+* add dynamic recipes and blend modes ([#332](https://github.com/JimmyDaddy/react-native-image-marker/pull/332)) ([c71a0e3](https://github.com/JimmyDaddy/react-native-image-marker/commit/c71a0e3ae3f50d259af66b1549517d750dfd5845))
+
 ## [1.8.0](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.7.0...v1.8.0) (2026-07-18)
 
 ### Features
