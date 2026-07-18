@@ -651,6 +651,10 @@ function useViewModel(props: ImageMarkerLabProps) {
             : positionOptions,
         style: {
           color: '#F8FAFC',
+          strokeStyle: {
+            color: '#0F172ACC',
+            width: 2,
+          },
           fontName: nextConfig.fontName,
           fontSize: nextConfig.fontSize,
           underline: nextConfig.underline,

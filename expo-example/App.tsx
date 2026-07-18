@@ -60,6 +60,10 @@ function App() {
             position: { position: Position.bottomLeft, X: 36, Y: 36 },
             style: {
               color: '#FFFFFF',
+              strokeStyle: {
+                color: '#101828CC',
+                width: 2,
+              },
               fontSize: 34,
               bold: true,
               shadowStyle: {

@@ -118,6 +118,10 @@ function createHarness(assets: SmokeHarnessAssets): WebSmokeHarness {
               color: '#FFFFFF',
               fontSize: 48,
               bold: true,
+              strokeStyle: {
+                color: '#111827',
+                width: 3,
+              },
             },
           },
         ],

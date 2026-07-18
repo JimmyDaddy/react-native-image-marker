@@ -18,6 +18,9 @@ export interface WebCanvasContext {
   shadowOffsetX: number;
   shadowOffsetY: number;
   imageSmoothingEnabled: boolean;
+  lineJoin: string;
+  lineWidth: number;
+  strokeStyle: unknown;
   save(): void;
   restore(): void;
   beginPath(): void;
@@ -42,6 +45,7 @@ export interface WebCanvasContext {
   ): void;
   drawImage(...args: unknown[]): void;
   fillText(text: string, x: number, y: number): void;
+  strokeText(text: string, x: number, y: number): void;
   measureText(text: string): WebTextMetrics;
   getImageData(
     sx: number,

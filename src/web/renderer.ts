@@ -375,13 +375,14 @@ function drawTextBackground(
   style: TextBackgroundStyle,
   origin: Point,
   layout: TextLayout,
-  canvas: Size
+  canvas: Size,
+  outlineInset = 0
 ) {
   const padding = resolvePadding(style, canvas);
-  let x = origin.x - padding.left;
-  let y = origin.y - padding.top;
-  let width = layout.width + padding.left + padding.right;
-  let height = layout.height + padding.top + padding.bottom;
+  let x = origin.x - outlineInset - padding.left;
+  let y = origin.y - outlineInset - padding.top;
+  let width = layout.width + outlineInset * 2 + padding.left + padding.right;
+  let height = layout.height + outlineInset * 2 + padding.top + padding.bottom;
 
   if ((style.type as string | null | undefined) === 'stretchX') {
     x = 0;
@@ -464,25 +465,35 @@ function drawTextLayer(
 ) {
   const style = options.style;
   const layout = measureTextLayout(context, options.text, style, canvas.width);
-  const position = resolveAnchoredPosition(
+  const strokeWidth = style?.strokeStyle?.width ?? 0;
+  const outlineInset = strokeWidth / 2;
+  const visualSize = {
+    width: layout.width + outlineInset * 2,
+    height: layout.height + outlineInset * 2,
+  };
+  const visualPosition = resolveAnchoredPosition(
     options.position ?? options.positionOptions,
     canvas,
-    layout,
+    visualSize,
     20
   );
+  const position = {
+    x: visualPosition.x + outlineInset,
+    y: visualPosition.y + outlineInset,
+  };
   const rotation = resolveRotation(style?.rotate, 'text rotation');
 
   context.save();
   try {
     if (rotation !== 0) {
       context.translate(
-        position.x + layout.width / 2,
-        position.y + layout.height / 2
+        visualPosition.x + visualSize.width / 2,
+        visualPosition.y + visualSize.height / 2
       );
       context.rotate(degreesToRadians(rotation));
       context.translate(
-        -(position.x + layout.width / 2),
-        -(position.y + layout.height / 2)
+        -(visualPosition.x + visualSize.width / 2),
+        -(visualPosition.y + visualSize.height / 2)
       );
     }
 
@@ -492,7 +503,8 @@ function drawTextLayer(
         style.textBackgroundStyle,
         position,
         layout,
-        canvas
+        canvas,
+        outlineInset
       );
     }
 
@@ -504,6 +516,9 @@ function drawTextLayer(
     context.shadowOffsetX = style?.shadowStyle?.dx ?? 0;
     context.shadowOffsetY = style?.shadowStyle?.dy ?? 0;
     context.shadowColor = style?.shadowStyle?.color ?? 'transparent';
+    context.lineJoin = 'round';
+    context.lineWidth = strokeWidth;
+    context.strokeStyle = style?.strokeStyle?.color ?? '#000000';
 
     const textX = getAlignedTextX(style?.textAlign, position.x, layout.width);
     if (style?.skewX) {
@@ -514,7 +529,15 @@ function drawTextLayer(
 
     layout.lines.forEach((line, lineIndex) => {
       const lineY = position.y + lineIndex * layout.lineHeight;
-      context.fillText(line.text, textX, lineY);
+      if (strokeWidth > 0) {
+        context.strokeText(line.text, textX, lineY);
+        const shadowColor = context.shadowColor;
+        context.shadowColor = 'transparent';
+        context.fillText(line.text, textX, lineY);
+        context.shadowColor = shadowColor;
+      } else {
+        context.fillText(line.text, textX, lineY);
+      }
       context.save();
       context.translate(position.x, position.y);
       drawTextDecorations(

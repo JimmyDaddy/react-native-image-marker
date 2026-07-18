@@ -415,6 +415,37 @@ class ImageMarkerRendererTest {
   }
 
   @Test
+  fun textStrokeRendersWhenTheFillIsTransparent() {
+    val output = ImageMarkerRenderer.renderTextWatermarks(
+      solidBitmap(180, 90, Color.WHITE),
+      textOptions(
+        x = 12,
+        y = 12,
+        style = JavaOnlyMap.of(
+          "color", "#00000000",
+          "fontSize", 34,
+          "strokeStyle", JavaOnlyMap.of(
+            "color", "#E11D48",
+            "width", 4
+          )
+        )
+      ),
+      reactContext()
+    )
+
+    var outlinePixels = 0
+    for (y in 0 until output.height) {
+      for (x in 0 until output.width) {
+        val pixel = output.getPixel(x, y)
+        if (Color.red(pixel) > 180 && Color.green(pixel) < 100 && Color.blue(pixel) < 130) {
+          outlinePixels += 1
+        }
+      }
+    }
+    assertTrue("Expected the transparent text fill to retain a visible outline", outlinePixels > 0)
+  }
+
+  @Test
   fun rotatedTextAtNonZeroCoordinatesKeepsItsLocalCenter() {
     val style = JavaOnlyMap.of(
       "color", "#00000000",

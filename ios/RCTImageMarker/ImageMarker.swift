@@ -189,25 +189,35 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         if textOpts.style.skewX != 0 {
             attributes[.obliqueness] = textOpts.style.skewX
         }
+        let strokeWidth = textOpts.style.strokeStyle?.width ?? 0
+        let outlineInset = strokeWidth / 2
+        if let strokeStyle = textOpts.style.strokeStyle, strokeWidth > 0 {
+            attributes[.strokeColor] = strokeStyle.color
+            attributes[.strokeWidth] = -(strokeWidth / max(font.pointSize, 1) * 100)
+        }
 
         let attributedText = NSAttributedString(string: textOpts.text, attributes: attributes)
         let textRect = attributedText.boundingRect(with: canvasSize, options: .usesLineFragmentOrigin, context: nil)
         let size = textRect.size
+        let visualSize = CGSize(
+            width: size.width + strokeWidth,
+            height: size.height + strokeWidth
+        )
         let renderPosition = ImageMarkerRenderPosition(rawValue: textOpts.position.rawValue as String) ?? .none
-        let origin = ImageMarkerRenderer.markerOrigin(
+        let visualOrigin = ImageMarkerRenderer.markerOrigin(
             position: renderPosition,
             offsetX: textOpts.X,
             offsetY: textOpts.Y,
             canvasSize: canvasSize,
-            itemSize: size,
+            itemSize: visualSize,
             edgeInset: textOpts.edgeInset
         )
-        let posX = origin.x
-        let posY = origin.y
+        let posX = visualOrigin.x + outlineInset
+        let posY = visualOrigin.y + outlineInset
 
         if textOpts.style.rotate != 0 {
             let rotation = CGAffineTransform(rotationAngle: CGFloat(textOpts.style.rotate) * .pi / 180)
-            let textRectWithPos = CGRect(x: posX, y: posY, width: size.width, height: size.height)
+            let textRectWithPos = CGRect(origin: visualOrigin, size: visualSize)
             context.translateBy(x: textRectWithPos.midX, y: textRectWithPos.midY)
             context.concatenate(rotation)
             context.translateBy(x: -(textRectWithPos.midX), y: -(textRectWithPos.midY))
@@ -219,15 +229,25 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
             let stretchX = bgEdgeInsets.left + bgEdgeInsets.right
             let stretchY = bgEdgeInsets.top + bgEdgeInsets.bottom
             var bgRect = CGRect(
-                x: posX - bgEdgeInsets.left,
-                y: posY - bgEdgeInsets.top,
-                width: size.width + stretchX,
-                height: size.height + stretchY
+                x: posX - outlineInset - bgEdgeInsets.left,
+                y: posY - outlineInset - bgEdgeInsets.top,
+                width: size.width + strokeWidth + stretchX,
+                height: size.height + strokeWidth + stretchY
             )
             if textBackground.typeBg == "stretchX" {
-                bgRect = CGRect(x: 0, y: posY - bgEdgeInsets.top, width: w, height: size.height + stretchY)
+                bgRect = CGRect(
+                    x: 0,
+                    y: posY - outlineInset - bgEdgeInsets.top,
+                    width: w,
+                    height: size.height + strokeWidth + stretchY
+                )
             } else if textBackground.typeBg == "stretchY" {
-                bgRect = CGRect(x: posX - bgEdgeInsets.left, y: 0, width: size.width + stretchX, height: h)
+                bgRect = CGRect(
+                    x: posX - outlineInset - bgEdgeInsets.left,
+                    y: 0,
+                    width: size.width + strokeWidth + stretchX,
+                    height: h
+                )
             }
 
             bgRect.inset(by: bgEdgeInsets)

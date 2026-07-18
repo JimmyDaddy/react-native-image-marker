@@ -50,6 +50,7 @@ function createFakeCanvas() {
     shadowOffsetX: 0,
     shadowOffsetY: 0,
     imageSmoothingEnabled: true,
+    lineJoin: 'miter',
     lineWidth: 1,
     strokeStyle: '#000000',
     save: jest.fn(),
@@ -69,6 +70,7 @@ function createFakeCanvas() {
     transform: jest.fn(),
     drawImage: jest.fn(),
     fillText: jest.fn(),
+    strokeText: jest.fn(),
     stroke: jest.fn(),
     measureText: jest.fn((text: string) => ({
       width: text.length * 10,
@@ -247,6 +249,37 @@ describe('WebMarker browser render integration', () => {
     expect(context.textAlign).toBe('right');
     expect(context.font).toContain('italic 700');
     expect(context.shadowBlur).toBe(4);
+  });
+
+  it('draws a text outline before the fill and includes it in anchoring', async () => {
+    const canvases = installFakeBrowserRuntime();
+
+    await WebMarker.markText({
+      backgroundImage: { src: '/background.jpg' },
+      watermarkTexts: [
+        {
+          text: 'Outline',
+          position: { position: Position.topLeft, X: 0, Y: 0 },
+          style: {
+            color: '#FFFFFF',
+            strokeStyle: { color: '#111827', width: 6 },
+            textBackgroundStyle: { color: '#F97316' },
+          },
+        },
+      ],
+      saveFormat: ImageFormat.png,
+    });
+
+    const { context } = canvases[0]!;
+    expect(context.strokeStyle).toBe('#111827');
+    expect(context.lineWidth).toBe(6);
+    expect(context.lineJoin).toBe('round');
+    expect(context.strokeText).toHaveBeenCalledWith('Outline', 3, 3);
+    expect(context.fillText).toHaveBeenCalledWith('Outline', 3, 3);
+    expect(context.strokeText.mock.invocationCallOrder[0]).toBeLessThan(
+      context.fillText.mock.invocationCallOrder[0]
+    );
+    expect(context.moveTo).toHaveBeenCalledWith(0, 0);
   });
 
   it('bounds large inputs before applying background and watermark scales', async () => {

@@ -11,6 +11,7 @@ class TextStyle(private val options: ReadableMap?) {
   var fontSizeRatio: Float? = null
   var shadowLayerStyle: ShadowLayerStyle? = null
   var textBackgroundStyle: TextBackgroundStyle? = null
+  var strokeStyle: TextStrokeStyle? = null
   var underline: Boolean = false
   var skewX: Float = 0f
   var strikeThrough: Boolean = false
@@ -28,6 +29,7 @@ class TextStyle(private val options: ReadableMap?) {
         fontSizeRatio = options.numberOrNull("fontSizeRatio")?.toFloat()
         shadowLayerStyle = options.mapOrNull("shadowStyle")?.let(::ShadowLayerStyle)
         textBackgroundStyle = options.mapOrNull("textBackgroundStyle")?.let(::TextBackgroundStyle)
+        strokeStyle = options.mapOrNull("strokeStyle")?.let(::TextStrokeStyle)
         underline = options.booleanOrDefault("underline", false)
         skewX = options.numberOrNull("skewX")?.toFloat() ?: 0f
         strikeThrough = options.booleanOrDefault("strikeThrough", false)
