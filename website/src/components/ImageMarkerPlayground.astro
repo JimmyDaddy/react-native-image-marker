@@ -1,0 +1,1929 @@
+---
+import CustomSelect from './CustomSelect.astro';
+
+interface Props {
+  locale?: 'en' | 'zh-CN';
+}
+
+const { locale = 'en' } = Astro.props;
+const isZh = locale === 'zh-CN';
+const base = import.meta.env.BASE_URL;
+const idPrefix = isZh ? 'marker-playground-zh' : 'marker-playground-en';
+
+const strings = isZh
+  ? {
+      eyebrow: '在线体验',
+      title: '试着给图片加上水印。',
+      description:
+        '选择示例或自己的图片，调整文字和 Logo，然后保存结果。所有处理只在当前浏览器中完成。',
+      privacy: '图片不上传',
+      steps: ['选择内容', '调整样式', '保存或复制代码'],
+      webBadge: '实时预览',
+      previewTitle: '效果',
+      resultLabel: '图片地址',
+      emptyResult: '生成后会显示图片地址',
+      copyResult: '复制图片地址',
+      download: '保存图片',
+      render: '更新预览',
+      rendering: '正在渲染…',
+      ready: '可以开始',
+      pending: '有改动，点击更新预览',
+      rendered: '预览已更新',
+      failed: '渲染失败',
+      reset: '恢复示例',
+      background: '底图',
+      chooseBackground: '选择本地底图',
+      defaultBackground: '使用内置底图',
+      presets: '想添加什么？',
+      textPreset: '只加文字',
+      imagePreset: '只加 Logo',
+      mixedPreset: '文字 + Logo',
+      textLayer: '文字设置',
+      text: '文字内容',
+      textPlaceholder: '输入水印文字',
+      color: '颜色',
+      fontSize: '字号',
+      bold: '粗体',
+      rotation: '旋转',
+      position: '位置',
+      offsetX: 'X 偏移',
+      offsetY: 'Y 偏移',
+      imageLayer: 'Logo 设置',
+      chooseLogo: '选择本地 Logo',
+      defaultLogo: '使用内置 Logo',
+      opacity: '透明度',
+      scale: '缩放',
+      advanced: '位置与旋转',
+      output: '保存设置',
+      format: '格式',
+      quality: '质量',
+      qualityHint: 'JPEG 的质量差异最明显；PNG 通常忽略此值。',
+      autoPreview: '自动更新预览',
+      autoPreviewHint: '关闭后可一次调整多项，再点击更新预览。',
+      codeTitle: '把这个效果用到项目里',
+      codeDescription: '下面的代码已经包含当前设置，可直接复制。',
+      webTab: 'Web',
+      nativeTab: 'React Native',
+      copyCode: '复制代码',
+      copied: '已复制',
+      copyFailed: '复制失败，请手动选择文本。',
+      sourceLoaded: '已载入本地图片',
+      sourceFailed: '无法读取这张图片。',
+      noFile: '请先选择图片文件。',
+      fileTooLarge: '图片文件过大；在线体验限制为 12 MB。',
+      imageTooLarge: '图片像素过大；在线体验限制为 1600 万像素。',
+      dimensions: '尺寸',
+      elapsed: '耗时',
+      localNote: '本地图片不会离开你的设备。刷新页面后，选择的文件会被清除。',
+      differencesTitle: 'Web 与原生输出有什么不同？',
+      differences: [
+        ['保存结果', 'Web 返回可直接预览和保存的图片地址；iOS 和 Android 返回临时文件路径。'],
+        ['外观差异', '浏览器和手机使用的字体绘制方式不同，文字大小和边缘可能有轻微差别。'],
+        ['远程图片', '使用其他网站的图片时，对方服务器需要允许跨域访问（CORS）。'],
+      ],
+      anchors: {
+        topLeft: '左上',
+        topCenter: '顶部居中',
+        topRight: '右上',
+        center: '居中',
+        bottomLeft: '左下',
+        bottomCenter: '底部居中',
+        bottomRight: '右下',
+      },
+      generatedAlt: 'React Native Image Marker Web SDK 生成的水印图片',
+      builtInAlt: '等待 Web SDK 渲染的山间湖泊示例底图',
+      filename: 'image-marker-web-demo',
+    }
+  : {
+      eyebrow: 'Live playground',
+      title: 'Add a watermark to an image.',
+      description:
+        'Use the sample or choose your own image, adjust the text and logo, then save the result. Everything runs in this browser tab.',
+      privacy: 'Images are not uploaded',
+      steps: ['Choose content', 'Adjust the look', 'Save or copy code'],
+      webBadge: 'Live preview',
+      previewTitle: 'Result',
+      resultLabel: 'Image URL',
+      emptyResult: 'The image URL will appear here',
+      copyResult: 'Copy image URL',
+      download: 'Save image',
+      render: 'Update preview',
+      rendering: 'Rendering…',
+      ready: 'Ready',
+      pending: 'Changes ready. Update the preview.',
+      rendered: 'Preview updated',
+      failed: 'Render failed',
+      reset: 'Reset demo',
+      background: 'Background',
+      chooseBackground: 'Choose local background',
+      defaultBackground: 'Use built-in background',
+      presets: 'What do you want to add?',
+      textPreset: 'Text only',
+      imagePreset: 'Logo only',
+      mixedPreset: 'Text + logo',
+      textLayer: 'Text settings',
+      text: 'Watermark text',
+      textPlaceholder: 'Enter watermark text',
+      color: 'Color',
+      fontSize: 'Font size',
+      bold: 'Bold',
+      rotation: 'Rotation',
+      position: 'Position',
+      offsetX: 'X offset',
+      offsetY: 'Y offset',
+      imageLayer: 'Logo settings',
+      chooseLogo: 'Choose local logo',
+      defaultLogo: 'Use built-in logo',
+      opacity: 'Opacity',
+      scale: 'Scale',
+      advanced: 'Position and rotation',
+      output: 'Save settings',
+      format: 'Format',
+      quality: 'Quality',
+      qualityHint: 'Quality is most visible in JPEG output; browsers usually ignore it for PNG.',
+      autoPreview: 'Update preview automatically',
+      autoPreviewHint: 'Turn this off to make several changes before rendering again.',
+      codeTitle: 'Use this result in your project',
+      codeDescription: 'The code below already includes your current settings.',
+      webTab: 'Web',
+      nativeTab: 'React Native',
+      copyCode: 'Copy code',
+      copied: 'Copied',
+      copyFailed: 'Copy failed. Select the text manually.',
+      sourceLoaded: 'Local image loaded',
+      sourceFailed: 'This image could not be read.',
+      noFile: 'Choose an image file first.',
+      fileTooLarge: 'That image is too large. The playground limit is 12 MB.',
+      imageTooLarge: 'That image has too many pixels. The playground limit is 16 megapixels.',
+      dimensions: 'Dimensions',
+      elapsed: 'Time',
+      localNote: 'Local images never leave your device. Selected files are cleared when you refresh.',
+      differencesTitle: 'How does Web output differ from native?',
+      differences: [
+        ['Saved result', 'Web returns an image URL you can preview or save. iOS and Android return a temporary file path.'],
+        ['Small visual differences', 'Browsers and phones draw fonts differently, so text size and edges may vary slightly.'],
+        ['Remote images', 'Images from another website require that server to allow cross-origin access (CORS).'],
+      ],
+      anchors: {
+        topLeft: 'Top left',
+        topCenter: 'Top center',
+        topRight: 'Top right',
+        center: 'Center',
+        bottomLeft: 'Bottom left',
+        bottomCenter: 'Bottom center',
+        bottomRight: 'Bottom right',
+      },
+      generatedAlt: 'Watermarked image generated by the React Native Image Marker Web SDK',
+      builtInAlt: 'Alpine lake sample waiting for the Web SDK render',
+      filename: 'image-marker-web-demo',
+    };
+
+const anchors = Object.entries(strings.anchors);
+const formats = [
+  { value: 'png', label: 'PNG' },
+  { value: 'jpg', label: 'JPEG' },
+];
+---
+
+<section
+  class="marker-playground not-content"
+  data-marker-playground
+  data-locale={locale}
+  data-background-url={`${base}media/playground-background.jpg`}
+  data-logo-url={`${base}media/marker-compass.png`}
+  data-ready={strings.ready}
+  data-rendering={strings.rendering}
+  data-rendered={strings.rendered}
+  data-failed={strings.failed}
+  data-pending={strings.pending}
+  data-source-loaded={strings.sourceLoaded}
+  data-source-failed={strings.sourceFailed}
+  data-no-file={strings.noFile}
+  data-file-too-large={strings.fileTooLarge}
+  data-image-too-large={strings.imageTooLarge}
+  data-empty-result={strings.emptyResult}
+  data-copied={strings.copied}
+  data-copy-failed={strings.copyFailed}
+  data-generated-alt={strings.generatedAlt}
+  data-filename={strings.filename}
+>
+  <header class="playground-heading">
+    <div>
+      <p class="eyebrow">{strings.eyebrow}</p>
+      <h1>{strings.title}</h1>
+      <p class="heading-description">{strings.description}</p>
+    </div>
+    <span class="privacy-badge">
+      <span aria-hidden="true"></span>
+      {strings.privacy}
+    </span>
+  </header>
+
+  <ol class="playground-steps" aria-label={isZh ? '使用步骤' : 'How to use the playground'}>
+    {strings.steps.map((step, index) => (
+      <li>
+        <span>{index + 1}</span>
+        {step}
+      </li>
+    ))}
+  </ol>
+
+  <div class="playground-shell">
+    <section class="preview-panel" aria-labelledby={`${idPrefix}-preview-title`}>
+      <div class="panel-heading">
+        <div>
+          <p class="panel-kicker">{strings.webBadge}</p>
+          <h3 id={`${idPrefix}-preview-title`}>{strings.previewTitle}</h3>
+        </div>
+        <div class="panel-tools">
+          <label class="live-preview-toggle">
+            <input type="checkbox" checked data-live-preview />
+            <span>
+              <strong>{strings.autoPreview}</strong>
+              <small class="sr-only">{strings.autoPreviewHint}</small>
+            </span>
+          </label>
+          <button class="quiet-button" type="button" data-reset>{strings.reset}</button>
+        </div>
+      </div>
+
+      <div class="preview-frame" data-preview-frame aria-busy="true">
+        <img
+          src={`${base}media/playground-background.jpg`}
+          alt={strings.builtInAlt}
+          width="1600"
+          height="1000"
+          data-preview
+        />
+        <div class="render-overlay" data-render-overlay aria-hidden="true">
+          <span class="spinner" aria-hidden="true"></span>
+          <span>{strings.rendering}</span>
+        </div>
+      </div>
+
+      <div class="render-meta" aria-live="polite" aria-atomic="true">
+        <span class="render-state" data-render-state>
+          <span aria-hidden="true"></span>
+          <span data-status-text>{strings.ready}</span>
+        </span>
+        <span class="metric"><strong>{strings.dimensions}</strong> <span data-dimensions>—</span></span>
+        <span class="metric"><strong>{strings.elapsed}</strong> <span data-elapsed>—</span></span>
+      </div>
+
+      <div class="result-row">
+        <div class="result-value">
+          <span>{strings.resultLabel}</span>
+          <code data-result-uri>{strings.emptyResult}</code>
+        </div>
+        <button class="icon-button" type="button" data-copy-result disabled title={strings.copyResult}>
+          <span class="sr-only">{strings.copyResult}</span>
+          <span aria-hidden="true">⧉</span>
+        </button>
+      </div>
+
+      <div class="preview-actions">
+        <button class="primary-button" type="button" data-render>{strings.render}</button>
+        <a class="secondary-button is-disabled" href="#" data-download aria-disabled="true">
+          {strings.download}
+        </a>
+      </div>
+    </section>
+
+    <form class="controls-panel" data-controls>
+      <fieldset class="control-section preset-section">
+        <legend>{strings.presets}</legend>
+        <div class="segmented-control" data-mode-control>
+          <button type="button" data-mode="text">{strings.textPreset}</button>
+          <button type="button" data-mode="image">{strings.imagePreset}</button>
+          <button type="button" data-mode="mixed" class="is-active" aria-pressed="true">
+            {strings.mixedPreset}
+          </button>
+        </div>
+      </fieldset>
+
+      <fieldset class="control-section source-section">
+        <legend>{strings.background}</legend>
+        <div class="file-row">
+          <input
+            id={`${idPrefix}-background-file`}
+            type="file"
+            accept="image/*"
+            data-background-file
+          />
+          <label class="file-button" for={`${idPrefix}-background-file`}>
+            {strings.chooseBackground}
+          </label>
+          <button type="button" class="text-button" data-default-background>
+            {strings.defaultBackground}
+          </button>
+        </div>
+        <p class="field-hint">{strings.localNote}</p>
+      </fieldset>
+
+      <fieldset class="control-section" data-text-controls>
+        <legend>{strings.textLayer}</legend>
+        <label class="field field-full">
+          <span>{strings.text}</span>
+          <input
+            type="text"
+            value="SHOT ON IMAGE MARKER"
+            placeholder={strings.textPlaceholder}
+            data-text
+          />
+        </label>
+
+        <div class="field-grid field-grid-3">
+          <label class="field color-field">
+            <span>{strings.color}</span>
+            <span class="color-input-wrap">
+              <input type="color" value="#ffffff" data-color />
+              <code data-color-value>#FFFFFF</code>
+            </span>
+          </label>
+          <label class="field range-field">
+            <span>{strings.fontSize} <output data-font-size-output>56 px</output></span>
+            <input type="range" min="18" max="120" value="56" step="1" data-font-size />
+          </label>
+          <label class="check-field">
+            <input type="checkbox" checked data-bold />
+            <span>{strings.bold}</span>
+          </label>
+        </div>
+
+        <details class="advanced-controls">
+          <summary>{strings.advanced}</summary>
+          <div class="field-grid advanced-grid">
+            <label class="field range-field">
+              <span>{strings.rotation} <output data-text-rotation-output>−3°</output></span>
+              <input type="range" min="-45" max="45" value="-3" step="1" data-text-rotation />
+            </label>
+            <CustomSelect
+              id={`${idPrefix}-text-position`}
+              label={strings.position}
+              name="text-position"
+              options={anchors.map(([value, label]) => ({ value, label }))}
+              value="bottomLeft"
+            />
+            <label class="field compact-field">
+              <span>{strings.offsetX}</span>
+              <input type="number" min="-500" max="500" value="48" step="1" data-text-x />
+            </label>
+            <label class="field compact-field">
+              <span>{strings.offsetY}</span>
+              <input type="number" min="-500" max="500" value="48" step="1" data-text-y />
+            </label>
+          </div>
+        </details>
+      </fieldset>
+
+      <fieldset class="control-section" data-image-controls>
+        <legend>{strings.imageLayer}</legend>
+        <div class="file-row">
+          <input id={`${idPrefix}-logo-file`} type="file" accept="image/*" data-logo-file />
+          <label class="file-button" for={`${idPrefix}-logo-file`}>{strings.chooseLogo}</label>
+          <button type="button" class="text-button" data-default-logo>{strings.defaultLogo}</button>
+        </div>
+
+        <div class="field-grid image-basic-grid">
+          <label class="field range-field">
+            <span>{strings.opacity} <output data-opacity-output>100%</output></span>
+            <input type="range" min="0" max="1" value="1" step="0.05" data-opacity />
+          </label>
+          <label class="field range-field">
+            <span>{strings.scale} <output data-scale-output>72%</output></span>
+            <input type="range" min="0.1" max="1" value="0.72" step="0.02" data-scale />
+          </label>
+        </div>
+
+        <details class="advanced-controls">
+          <summary>{strings.advanced}</summary>
+          <div class="field-grid advanced-grid">
+            <label class="field range-field">
+              <span>{strings.rotation} <output data-image-rotation-output>0°</output></span>
+              <input type="range" min="-180" max="180" value="0" step="1" data-image-rotation />
+            </label>
+            <CustomSelect
+              id={`${idPrefix}-image-position`}
+              label={strings.position}
+              name="image-position"
+              options={anchors.map(([value, label]) => ({ value, label }))}
+              value="topRight"
+            />
+            <label class="field compact-field">
+              <span>{strings.offsetX}</span>
+              <input type="number" min="-500" max="500" value="42" step="1" data-image-x />
+            </label>
+            <label class="field compact-field">
+              <span>{strings.offsetY}</span>
+              <input type="number" min="-500" max="500" value="42" step="1" data-image-y />
+            </label>
+          </div>
+        </details>
+      </fieldset>
+
+      <fieldset class="control-section output-section">
+        <legend>{strings.output}</legend>
+        <div class="field-grid output-grid">
+          <CustomSelect
+            id={`${idPrefix}-format`}
+            label={strings.format}
+            name="format"
+            options={formats}
+            value="png"
+          />
+          <label class="field range-field">
+            <span>{strings.quality} <output data-quality-output>92</output></span>
+            <input type="range" min="10" max="100" value="92" step="1" data-quality />
+          </label>
+        </div>
+        <p class="field-hint">{strings.qualityHint}</p>
+      </fieldset>
+    </form>
+  </div>
+
+  <section class="code-panel" aria-labelledby={`${idPrefix}-code-title`}>
+    <div class="code-heading">
+      <div>
+        <h3 id={`${idPrefix}-code-title`}>{strings.codeTitle}</h3>
+        <p>{strings.codeDescription}</p>
+      </div>
+      <button class="quiet-button" type="button" data-copy-code>{strings.copyCode}</button>
+    </div>
+    <div class="code-tabs" role="tablist" aria-label={strings.codeTitle}>
+      <button
+        id={`${idPrefix}-web-tab`}
+        type="button"
+        role="tab"
+        aria-selected="true"
+        aria-controls={`${idPrefix}-web-code`}
+        tabindex="0"
+        data-code-tab="web"
+      >
+        {strings.webTab}
+      </button>
+      <button
+        id={`${idPrefix}-native-tab`}
+        type="button"
+        role="tab"
+        aria-selected="false"
+        aria-controls={`${idPrefix}-native-code`}
+        tabindex="-1"
+        data-code-tab="native"
+      >
+        {strings.nativeTab}
+      </button>
+    </div>
+    <div
+      id={`${idPrefix}-web-code`}
+      class="code-view"
+      role="tabpanel"
+      aria-labelledby={`${idPrefix}-web-tab`}
+      data-code-panel="web"
+    >
+      <pre><code data-web-code></code></pre>
+    </div>
+    <div
+      id={`${idPrefix}-native-code`}
+      class="code-view"
+      role="tabpanel"
+      aria-labelledby={`${idPrefix}-native-tab`}
+      data-code-panel="native"
+      hidden
+    >
+      <pre><code data-native-code></code></pre>
+    </div>
+  </section>
+
+  <aside class="differences" aria-labelledby={`${idPrefix}-differences-title`}>
+    <h3 id={`${idPrefix}-differences-title`}>{strings.differencesTitle}</h3>
+    <dl>
+      {strings.differences.map(([term, description]) => (
+        <div>
+          <dt>{term}</dt>
+          <dd>{description}</dd>
+        </div>
+      ))}
+    </dl>
+  </aside>
+</section>
+
+<script>
+  type PlaygroundMode = 'text' | 'image' | 'mixed';
+  type CodeTarget = 'web' | 'native';
+  type MarkerSdk = typeof import('../../../src/index');
+  type PositionEnum = MarkerSdk['Position'];
+
+  interface PlaygroundState {
+    mode: PlaygroundMode;
+    backgroundSrc: string;
+    logoSrc: string;
+    result: string;
+    codeTarget: CodeTarget;
+    renderSequence: number;
+  }
+
+  const MAX_FILE_BYTES = 12 * 1024 * 1024;
+  const MAX_IMAGE_PIXELS = 16_000_000;
+
+  const sdkPromise = import('../../../src/index');
+
+  const asElement = <T extends Element>(root: ParentNode, selector: string): T => {
+    const element = root.querySelector<T>(selector);
+    if (!element) throw new Error(`Missing playground element: ${selector}`);
+    return element;
+  };
+
+  const numberValue = (input: HTMLInputElement) => Number(input.value);
+
+  const readFileAsDataUrl = (file?: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      if (!file) {
+        reject(new Error('No file selected'));
+        return;
+      }
+      const reader = new FileReader();
+      reader.addEventListener('load', () => resolve(String(reader.result)));
+      reader.addEventListener('error', () => reject(reader.error ?? new Error('File read failed')));
+      reader.readAsDataURL(file);
+    });
+
+  const copyText = async (value: string): Promise<void> => {
+    if (!navigator.clipboard?.writeText) throw new Error('Clipboard API unavailable');
+    await navigator.clipboard.writeText(value);
+  };
+
+  const imageDimensions = (src: string): Promise<{ width: number; height: number }> =>
+    new Promise((resolve, reject) => {
+      const image = new Image();
+      image.addEventListener('load', () =>
+        resolve({ width: image.naturalWidth, height: image.naturalHeight })
+      );
+      image.addEventListener('error', () => reject(new Error('Output image failed to load')));
+      image.src = src;
+    });
+
+  document.querySelectorAll<HTMLElement>('[data-marker-playground]').forEach((root) => {
+    if (root.dataset.initialized === 'true') return;
+    root.dataset.initialized = 'true';
+
+    const defaultBackground = root.dataset.backgroundUrl ?? '';
+    const defaultLogo = root.dataset.logoUrl ?? '';
+    const state: PlaygroundState = {
+      mode: 'mixed',
+      backgroundSrc: defaultBackground,
+      logoSrc: defaultLogo,
+      result: '',
+      codeTarget: 'web',
+      renderSequence: 0,
+    };
+
+    const previewFrame = asElement<HTMLElement>(root, '[data-preview-frame]');
+    const preview = asElement<HTMLImageElement>(root, '[data-preview]');
+    const statusText = asElement<HTMLElement>(root, '[data-status-text]');
+    const status = asElement<HTMLElement>(root, '[data-render-state]');
+    const dimensions = asElement<HTMLElement>(root, '[data-dimensions]');
+    const elapsed = asElement<HTMLElement>(root, '[data-elapsed]');
+    const resultUri = asElement<HTMLElement>(root, '[data-result-uri]');
+    const renderButton = asElement<HTMLButtonElement>(root, '[data-render]');
+    const livePreview = asElement<HTMLInputElement>(root, '[data-live-preview]');
+    const download = asElement<HTMLAnchorElement>(root, '[data-download]');
+    const copyResultButton = asElement<HTMLButtonElement>(root, '[data-copy-result]');
+    const backgroundFile = asElement<HTMLInputElement>(root, '[data-background-file]');
+    const logoFile = asElement<HTMLInputElement>(root, '[data-logo-file]');
+    const textInput = asElement<HTMLInputElement>(root, '[data-text]');
+    const colorInput = asElement<HTMLInputElement>(root, '[data-color]');
+    const colorValue = asElement<HTMLElement>(root, '[data-color-value]');
+    const fontSize = asElement<HTMLInputElement>(root, '[data-font-size]');
+    const bold = asElement<HTMLInputElement>(root, '[data-bold]');
+    const textRotation = asElement<HTMLInputElement>(root, '[data-text-rotation]');
+    const textPosition = asElement<HTMLSelectElement>(root, '[data-text-position]');
+    const textX = asElement<HTMLInputElement>(root, '[data-text-x]');
+    const textY = asElement<HTMLInputElement>(root, '[data-text-y]');
+    const opacity = asElement<HTMLInputElement>(root, '[data-opacity]');
+    const scale = asElement<HTMLInputElement>(root, '[data-scale]');
+    const imageRotation = asElement<HTMLInputElement>(root, '[data-image-rotation]');
+    const imagePosition = asElement<HTMLSelectElement>(root, '[data-image-position]');
+    const imageX = asElement<HTMLInputElement>(root, '[data-image-x]');
+    const imageY = asElement<HTMLInputElement>(root, '[data-image-y]');
+    const format = asElement<HTMLSelectElement>(root, '[data-format]');
+    const quality = asElement<HTMLInputElement>(root, '[data-quality]');
+    const webCode = asElement<HTMLElement>(root, '[data-web-code]');
+    const nativeCode = asElement<HTMLElement>(root, '[data-native-code]');
+
+    const getTextLayer = (Position: PositionEnum) => ({
+      text: textInput.value || 'IMAGE MARKER',
+      position: {
+        position: Position[textPosition.value as keyof PositionEnum],
+        X: numberValue(textX),
+        Y: numberValue(textY),
+      },
+      style: {
+        color: colorInput.value.toUpperCase(),
+        fontSize: numberValue(fontSize),
+        bold: bold.checked,
+        rotate: numberValue(textRotation),
+        shadowStyle: {
+          color: '#07102299',
+          dx: 0,
+          dy: 4,
+          radius: 9,
+        },
+      },
+    });
+
+    const getImageLayer = (Position: PositionEnum) => ({
+      src: state.logoSrc,
+      position: {
+        position: Position[imagePosition.value as keyof PositionEnum],
+        X: numberValue(imageX),
+        Y: numberValue(imageY),
+      },
+      alpha: numberValue(opacity),
+      scale: numberValue(scale),
+      rotate: numberValue(imageRotation),
+      trimTransparentPadding: true,
+    });
+
+    const methodName = (): 'markText' | 'markImage' | 'mark' => {
+      if (state.mode === 'text') return 'markText';
+      if (state.mode === 'image') return 'markImage';
+      return 'mark';
+    };
+
+    const positionCode = (position: string, x: string, y: string) =>
+      `{ position: Position.${position}, X: ${Number(x)}, Y: ${Number(y)} }`;
+
+    const textLayerCode = () => `{
+  text: ${JSON.stringify(textInput.value || 'IMAGE MARKER')},
+  position: ${positionCode(textPosition.value, textX.value, textY.value)},
+  style: {
+    color: '${colorInput.value.toUpperCase()}',
+    fontSize: ${Number(fontSize.value)},
+    bold: ${bold.checked},
+    rotate: ${Number(textRotation.value)},
+    shadowStyle: { color: '#07102299', dx: 0, dy: 4, radius: 9 },
+  },
+}`;
+
+    const imageLayerCode = (target: CodeTarget) => `{
+  src: ${target === 'web' ? "'/logo.png'" : "require('./logo.png')"},
+  position: ${positionCode(imagePosition.value, imageX.value, imageY.value)},
+  alpha: ${Number(opacity.value)},
+  scale: ${Number(scale.value)},
+  rotate: ${Number(imageRotation.value)},
+  trimTransparentPadding: true,
+}`;
+
+    const indentCode = (value: string, spaces: number) =>
+      value.replace(/^/gm, ' '.repeat(spaces));
+
+    const createCode = (target: CodeTarget): string => {
+      const method = methodName();
+      const background = target === 'web' ? "'/photo.jpg'" : "require('./photo.jpg')";
+      const outputFormat = format.value === 'jpg' ? 'jpg' : 'png';
+      let layers = '';
+
+      if (method === 'markText') {
+        layers = `    watermarkTexts: [\n${indentCode(textLayerCode(), 6)}\n    ],`;
+      } else if (method === 'markImage') {
+        layers = `    watermarkImages: [\n${indentCode(imageLayerCode(target), 6)}\n    ],`;
+      } else {
+        const imageCode = imageLayerCode(target).replace(/^\{/, "{\n  type: 'image',");
+        const textCode = textLayerCode().replace(/^\{/, "{\n  type: 'text',");
+        layers = `    watermarks: [\n${indentCode(imageCode, 6)},\n${indentCode(textCode, 6)},\n    ],`;
+      }
+
+      const resultComment = target === 'web'
+        ? '// Resolves to a data:image/... URL on Web.'
+        : '// Resolves to a cache-file path on iOS and Android.';
+
+      return `import Marker, { ImageFormat, Position } from 'react-native-image-marker';
+
+${resultComment}
+export async function createMarkedImage(): Promise<string> {
+  return Marker.${method}({
+    backgroundImage: { src: ${background} },
+${layers}
+    saveFormat: ImageFormat.${outputFormat},
+    quality: ${Number(quality.value)},
+    filename: 'marked-photo',
+  });
+}`;
+    };
+
+    const updateCode = () => {
+      webCode.textContent = createCode('web');
+      nativeCode.textContent = createCode('native');
+    };
+
+    const updateOutputs = () => {
+      colorValue.textContent = colorInput.value.toUpperCase();
+      asElement<HTMLOutputElement>(root, '[data-font-size-output]').value = `${fontSize.value} px`;
+      asElement<HTMLOutputElement>(root, '[data-text-rotation-output]').value = `${Number(textRotation.value) < 0 ? '−' : ''}${Math.abs(Number(textRotation.value))}°`;
+      asElement<HTMLOutputElement>(root, '[data-opacity-output]').value = `${Math.round(Number(opacity.value) * 100)}%`;
+      asElement<HTMLOutputElement>(root, '[data-scale-output]').value = `${Math.round(Number(scale.value) * 100)}%`;
+      asElement<HTMLOutputElement>(root, '[data-image-rotation-output]').value = `${Number(imageRotation.value) < 0 ? '−' : ''}${Math.abs(Number(imageRotation.value))}°`;
+      asElement<HTMLOutputElement>(root, '[data-quality-output]').value = quality.value;
+      updateCode();
+    };
+
+    const setStatus = (kind: 'ready' | 'rendering' | 'rendered' | 'failed', message?: string) => {
+      root.dataset.renderStatus = kind;
+      previewFrame.setAttribute('aria-busy', kind === 'rendering' ? 'true' : 'false');
+      status.dataset.state = kind;
+      const key = kind === 'rendering' ? 'rendering' : kind;
+      statusText.textContent = message ?? root.dataset[key] ?? '';
+      renderButton.disabled = kind === 'rendering';
+      renderButton.textContent = kind === 'rendering'
+        ? root.dataset.rendering ?? ''
+        : root.dataset.render ?? renderButton.dataset.defaultLabel ?? renderButton.textContent;
+    };
+
+    renderButton.dataset.defaultLabel = renderButton.textContent ?? '';
+    root.dataset.render = renderButton.textContent ?? '';
+
+    const updateMode = (mode: PlaygroundMode) => {
+      state.mode = mode;
+      root.dataset.mode = mode;
+      root.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach((button) => {
+        const selected = button.dataset.mode === mode;
+        button.classList.toggle('is-active', selected);
+        button.setAttribute('aria-pressed', String(selected));
+      });
+      updateCode();
+    };
+
+    const sourceAlt = preview.alt;
+    let renderInFlight = false;
+    let queuedSequence = 0;
+    let renderTimer = 0;
+
+    const clearResult = () => {
+      state.result = '';
+      preview.src = state.backgroundSrc;
+      preview.alt = sourceAlt;
+      dimensions.textContent = '—';
+      elapsed.textContent = '—';
+      resultUri.textContent = root.dataset.emptyResult ?? '';
+      resultUri.removeAttribute('title');
+      copyResultButton.disabled = true;
+      download.href = '#';
+      download.removeAttribute('download');
+      download.classList.add('is-disabled');
+      download.setAttribute('aria-disabled', 'true');
+    };
+
+    const render = async (sequence: number) => {
+      if (renderInFlight) {
+        queuedSequence = Math.max(queuedSequence, sequence);
+        return;
+      }
+
+      renderInFlight = true;
+      const startedAt = performance.now();
+      setStatus('rendering');
+
+      try {
+        const sdk = await sdkPromise;
+        const outputFormat = format.value === 'jpg' ? 'jpg' : 'png';
+        const common = {
+          backgroundImage: { src: state.backgroundSrc },
+          saveFormat: outputFormat === 'jpg' ? sdk.ImageFormat.jpg : sdk.ImageFormat.png,
+          quality: numberValue(quality),
+          filename: root.dataset.filename ?? 'image-marker-web-demo',
+        };
+        const textLayer = getTextLayer(sdk.Position);
+        const imageLayer = getImageLayer(sdk.Position);
+
+        let result: string;
+        if (state.mode === 'text') {
+          result = await sdk.default.markText({ ...common, watermarkTexts: [textLayer] });
+        } else if (state.mode === 'image') {
+          result = await sdk.default.markImage({ ...common, watermarkImages: [imageLayer] });
+        } else {
+          result = await sdk.default.mark({
+            ...common,
+            watermarks: [
+              { type: 'image', ...imageLayer },
+              { type: 'text', ...textLayer },
+            ],
+          });
+        }
+
+        if (sequence !== state.renderSequence) return;
+        const size = await imageDimensions(result);
+        if (sequence !== state.renderSequence) return;
+
+        state.result = result;
+        preview.src = result;
+        preview.alt = root.dataset.generatedAlt ?? '';
+        dimensions.textContent = `${size.width} × ${size.height}`;
+        elapsed.textContent = `${Math.round(performance.now() - startedAt)} ms`;
+        resultUri.textContent = `${result.slice(0, 42)}…${result.slice(-16)}`;
+        copyResultButton.disabled = false;
+        download.href = result;
+        download.download = `${root.dataset.filename ?? 'image-marker-web-demo'}.${outputFormat}`;
+        download.classList.remove('is-disabled');
+        download.removeAttribute('aria-disabled');
+        setStatus('rendered');
+      } catch (error) {
+        if (sequence !== state.renderSequence) return;
+        const message = error instanceof Error ? error.message : String(error);
+        elapsed.textContent = `${Math.round(performance.now() - startedAt)} ms`;
+        setStatus('failed', `${root.dataset.failed ?? ''}: ${message}`);
+      } finally {
+        renderInFlight = false;
+        if (queuedSequence > sequence) {
+          const nextSequence = queuedSequence;
+          queuedSequence = 0;
+          void render(nextSequence);
+        }
+      }
+    };
+
+    const requestRender = () => {
+      window.clearTimeout(renderTimer);
+      updateOutputs();
+      const sequence = ++state.renderSequence;
+      clearResult();
+      void render(sequence);
+    };
+
+    const scheduleRender = () => {
+      window.clearTimeout(renderTimer);
+      updateOutputs();
+      const sequence = ++state.renderSequence;
+      if (!livePreview.checked) {
+        queuedSequence = 0;
+        setStatus('ready', root.dataset.pending);
+        return;
+      }
+      clearResult();
+      setStatus('rendering');
+      renderTimer = window.setTimeout(() => void render(sequence), 220);
+    };
+
+    asElement<HTMLFormElement>(root, '[data-controls]').addEventListener('submit', (event) => {
+      event.preventDefault();
+      requestRender();
+    });
+
+    root.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach((button) => {
+      button.addEventListener('click', () => {
+        updateMode((button.dataset.mode ?? 'mixed') as PlaygroundMode);
+        scheduleRender();
+      });
+    });
+
+    const liveInputs = [
+      textInput,
+      colorInput,
+      fontSize,
+      bold,
+      textRotation,
+      textPosition,
+      textX,
+      textY,
+      opacity,
+      scale,
+      imageRotation,
+      imagePosition,
+      imageX,
+      imageY,
+      format,
+      quality,
+    ];
+    liveInputs.forEach((input) => input.addEventListener('input', scheduleRender));
+    format.addEventListener('change', scheduleRender);
+    textPosition.addEventListener('change', scheduleRender);
+    imagePosition.addEventListener('change', scheduleRender);
+    livePreview.addEventListener('change', () => {
+      if (livePreview.checked) {
+        requestRender();
+      } else {
+        window.clearTimeout(renderTimer);
+        queuedSequence = 0;
+        ++state.renderSequence;
+        setStatus('ready', root.dataset.pending);
+      }
+    });
+
+    const bindFileInput = (
+      input: HTMLInputElement,
+      onLoad: (src: string) => void
+    ) => {
+      input.addEventListener('change', async () => {
+        const file = input.files?.[0];
+        if (!file) {
+          setStatus('failed', root.dataset.noFile);
+          return;
+        }
+        try {
+          if (file.size > MAX_FILE_BYTES) {
+            throw new Error(root.dataset.fileTooLarge);
+          }
+          const src = await readFileAsDataUrl(file);
+          const size = await imageDimensions(src);
+          if (size.width * size.height > MAX_IMAGE_PIXELS) {
+            throw new Error(root.dataset.imageTooLarge);
+          }
+          onLoad(src);
+          setStatus('ready', root.dataset.sourceLoaded);
+          scheduleRender();
+        } catch (error) {
+          const expectedMessage = error instanceof Error
+            && [root.dataset.fileTooLarge, root.dataset.imageTooLarge].includes(error.message)
+            ? error.message
+            : undefined;
+          const message = expectedMessage ?? root.dataset.sourceFailed;
+          setStatus('failed', message);
+        }
+      });
+    };
+
+    bindFileInput(backgroundFile, (src) => {
+      state.backgroundSrc = src;
+    });
+    bindFileInput(logoFile, (src) => {
+      state.logoSrc = src;
+    });
+
+    asElement<HTMLButtonElement>(root, '[data-default-background]').addEventListener('click', () => {
+      state.backgroundSrc = defaultBackground;
+      backgroundFile.value = '';
+      scheduleRender();
+    });
+    asElement<HTMLButtonElement>(root, '[data-default-logo]').addEventListener('click', () => {
+      state.logoSrc = defaultLogo;
+      logoFile.value = '';
+      scheduleRender();
+    });
+
+    asElement<HTMLButtonElement>(root, '[data-reset]').addEventListener('click', () => {
+      asElement<HTMLFormElement>(root, '[data-controls]').reset();
+      state.backgroundSrc = defaultBackground;
+      state.logoSrc = defaultLogo;
+      backgroundFile.value = '';
+      logoFile.value = '';
+      updateMode('mixed');
+      scheduleRender();
+    });
+
+    renderButton.addEventListener('click', requestRender);
+
+    copyResultButton.addEventListener('click', async () => {
+      if (!state.result) return;
+      try {
+        await copyText(state.result);
+        setStatus('rendered', root.dataset.copied);
+      } catch {
+        setStatus('failed', root.dataset.copyFailed);
+      }
+    });
+
+    root.querySelectorAll<HTMLButtonElement>('[data-code-tab]').forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const target = (tab.dataset.codeTab ?? 'web') as CodeTarget;
+        state.codeTarget = target;
+        root.querySelectorAll<HTMLButtonElement>('[data-code-tab]').forEach((candidate) => {
+          const selected = candidate === tab;
+          candidate.setAttribute('aria-selected', String(selected));
+          candidate.tabIndex = selected ? 0 : -1;
+        });
+        root.querySelectorAll<HTMLElement>('[data-code-panel]').forEach((panel) => {
+          panel.hidden = panel.dataset.codePanel !== target;
+        });
+      });
+
+      tab.addEventListener('keydown', (event) => {
+        const tabs = [...root.querySelectorAll<HTMLButtonElement>('[data-code-tab]')];
+        const currentIndex = tabs.indexOf(tab);
+        let nextIndex: number | undefined;
+        if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+        if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % tabs.length;
+        if (event.key === 'Home') nextIndex = 0;
+        if (event.key === 'End') nextIndex = tabs.length - 1;
+        if (nextIndex === undefined) return;
+        event.preventDefault();
+        const next = tabs[nextIndex];
+        next?.click();
+        next?.focus();
+      });
+    });
+
+    asElement<HTMLButtonElement>(root, '[data-copy-code]').addEventListener('click', async (event) => {
+      const button = event.currentTarget as HTMLButtonElement;
+      try {
+        await copyText(state.codeTarget === 'web' ? webCode.textContent ?? '' : nativeCode.textContent ?? '');
+        const original = button.textContent;
+        button.textContent = root.dataset.copied ?? '';
+        window.setTimeout(() => {
+          button.textContent = original;
+        }, 1500);
+      } catch {
+        setStatus('failed', root.dataset.copyFailed);
+      }
+    });
+
+    download.addEventListener('click', (event) => {
+      if (!state.result) event.preventDefault();
+    });
+
+    updateMode('mixed');
+    updateOutputs();
+    requestRender();
+  });
+</script>
+
+<style>
+  .marker-playground {
+    --playground-panel: color-mix(in srgb, var(--marker-panel) 94%, black);
+    --playground-panel-raised: color-mix(in srgb, var(--marker-panel) 84%, white 4%);
+    --playground-line: var(--marker-border);
+    position: relative;
+    width: 100%;
+    margin: 0 0 5rem;
+    color: var(--marker-ink);
+  }
+
+  :global(.content-panel:has(.marker-playground)) {
+    padding-inline: 1.5rem;
+  }
+
+  :global(.content-panel:has(.marker-playground) > .sl-container) {
+    max-width: 100rem;
+    margin-inline: auto;
+  }
+
+  .marker-playground,
+  .marker-playground * {
+    box-sizing: border-box;
+  }
+
+  .playground-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .eyebrow,
+  .panel-kicker {
+    margin: 0 0 0.55rem;
+    color: var(--marker-coral);
+    font-size: 0.7rem;
+    font-weight: 760;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+  }
+
+  .playground-heading h1 {
+    max-width: 20ch;
+    margin: 0;
+    color: var(--marker-ink);
+    font-size: clamp(1.8rem, 3vw, 2.7rem);
+    line-height: 1.08;
+    letter-spacing: -0.045em;
+  }
+
+  .heading-description {
+    max-width: 66ch;
+    margin: 0.45rem 0 0;
+    color: var(--marker-muted);
+    font-size: 0.86rem;
+    line-height: 1.55;
+  }
+
+  .privacy-badge {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 0.48rem;
+    min-height: 2.1rem;
+    padding: 0.35rem 0.72rem;
+    border: 1px solid var(--playground-line);
+    border-radius: 999px;
+    color: var(--marker-muted);
+    background: var(--playground-panel);
+    font-size: 0.75rem;
+    font-weight: 650;
+  }
+
+  .privacy-badge > span {
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50%;
+    background: #3bb273;
+    box-shadow: 0 0 0 0.2rem color-mix(in srgb, #3bb273 16%, transparent);
+  }
+
+  .playground-steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    margin: 0 0 0.75rem;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid var(--playground-line);
+    border-radius: 0.85rem;
+    background: var(--playground-panel);
+    list-style: none;
+  }
+
+  .playground-steps li {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-width: 0;
+    padding: 0.55rem 0.75rem;
+    color: var(--marker-muted);
+    font-size: 0.72rem;
+    font-weight: 650;
+  }
+
+  .playground-steps li + li {
+    border-inline-start: 1px solid var(--playground-line);
+  }
+
+  .playground-steps span {
+    display: inline-grid;
+    flex: none;
+    width: 1.35rem;
+    height: 1.35rem;
+    place-items: center;
+    border-radius: 50%;
+    color: var(--marker-ink);
+    background: var(--playground-panel-raised);
+    font-family: var(--sl-font-mono);
+    font-size: 0.62rem;
+  }
+
+  .playground-shell {
+    display: grid;
+    grid-template-areas: 'controls preview';
+    grid-template-columns: minmax(21rem, 27rem) minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+    margin: 0;
+  }
+
+  .preview-panel,
+  .controls-panel,
+  .code-panel,
+  .differences {
+    min-width: 0;
+    border: 1px solid var(--playground-line);
+    border-radius: 1.15rem;
+    background: var(--playground-panel);
+  }
+
+  .preview-panel {
+    grid-area: preview;
+    position: sticky;
+    top: 5rem;
+    padding: 1rem;
+  }
+
+  .controls-panel {
+    grid-area: controls;
+    position: sticky;
+    top: 5rem;
+    max-height: calc(100vh - 6rem);
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+  }
+
+  .panel-heading,
+  .code-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .panel-heading {
+    margin-bottom: 0.9rem;
+  }
+
+  .panel-tools {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 0.55rem;
+  }
+
+  .panel-heading h3,
+  .code-heading h3,
+  .differences h3 {
+    margin: 0;
+    color: var(--marker-ink);
+    font-size: 1.05rem;
+    letter-spacing: -0.025em;
+  }
+
+  .preview-frame {
+    position: relative;
+    overflow: hidden;
+    min-height: 16rem;
+    border: 1px solid var(--playground-line);
+    border-radius: 0.8rem;
+    background: #090b11;
+  }
+
+  .preview-frame img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 10;
+    object-fit: contain;
+  }
+
+  .render-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    color: white;
+    background: rgb(7 10 18 / 62%);
+    font-size: 0.82rem;
+    font-weight: 650;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 120ms ease;
+  }
+
+  [data-render-status='rendering'] .render-overlay {
+    opacity: 1;
+  }
+
+  .spinner {
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid rgb(255 255 255 / 28%);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 700ms linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .render-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.55rem 1rem;
+    min-height: 2.65rem;
+    padding: 0.65rem 0.2rem 0;
+    color: var(--marker-muted);
+    font-family: var(--sl-font-mono);
+    font-size: 0.68rem;
+  }
+
+  .render-state {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.42rem;
+    margin-right: auto;
+  }
+
+  .render-state > span:first-child {
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50%;
+    background: var(--marker-muted);
+  }
+
+  .render-state[data-state='rendering'] > span:first-child {
+    background: var(--marker-blue);
+  }
+
+  .render-state[data-state='rendered'] > span:first-child {
+    background: #3bb273;
+  }
+
+  .render-state[data-state='failed'] > span:first-child {
+    background: var(--marker-coral);
+  }
+
+  .metric strong {
+    color: var(--marker-ink);
+    font-weight: 650;
+  }
+
+  .result-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.6rem;
+    align-items: center;
+    margin-top: 0.2rem;
+    padding: 0.68rem 0.72rem;
+    border: 1px solid var(--playground-line);
+    border-radius: 0.7rem;
+    background: color-mix(in srgb, var(--playground-panel) 72%, black);
+  }
+
+  .result-value {
+    min-width: 0;
+  }
+
+  .result-value > span {
+    display: block;
+    margin-bottom: 0.2rem;
+    color: var(--marker-muted);
+    font-size: 0.65rem;
+    font-weight: 680;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .result-value code {
+    display: block;
+    overflow: hidden;
+    color: var(--marker-ink);
+    font-size: 0.68rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .preview-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.65rem;
+    margin-top: 0.8rem;
+  }
+
+  .live-preview-toggle {
+    display: flex;
+    min-height: 2rem;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 0;
+    padding: 0.3rem 0.6rem;
+    border: 1px solid var(--playground-line);
+    border-radius: 999px;
+    color: var(--marker-ink);
+    background: var(--playground-panel-raised);
+    cursor: pointer;
+  }
+
+  .live-preview-toggle input {
+    flex: none;
+    width: 1rem;
+    height: 1rem;
+    margin: 0;
+    accent-color: var(--marker-blue);
+  }
+
+  .live-preview-toggle strong,
+  .live-preview-toggle small {
+    display: block;
+  }
+
+  .live-preview-toggle strong {
+    font-size: 0.7rem;
+    line-height: 1.2;
+  }
+
+  .live-preview-toggle small {
+    margin-top: 0.2rem;
+    color: var(--marker-muted);
+    font-size: 0.65rem;
+    line-height: 1.45;
+  }
+
+  button,
+  select,
+  input,
+  .secondary-button,
+  .file-button {
+    font: inherit;
+  }
+
+  button,
+  .secondary-button,
+  .file-button {
+    min-height: 2.55rem;
+    border-radius: 0.65rem;
+    cursor: pointer;
+  }
+
+  button:focus-visible,
+  select:focus-visible,
+  input:focus-visible,
+  .secondary-button:focus-visible,
+  input[type='file']:focus-visible + .file-button {
+    outline: 2px solid var(--marker-blue);
+    outline-offset: 2px;
+  }
+
+  .primary-button,
+  .secondary-button,
+  .file-button,
+  .quiet-button,
+  .icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--playground-line);
+    font-size: 0.78rem;
+    font-weight: 690;
+    text-decoration: none;
+  }
+
+  .primary-button {
+    border-color: var(--marker-blue);
+    color: #0b1020;
+    background: var(--marker-blue);
+  }
+
+  .secondary-button,
+  .file-button,
+  .quiet-button,
+  .icon-button {
+    color: var(--marker-ink);
+    background: var(--playground-panel-raised);
+  }
+
+  .primary-button:hover:not(:disabled),
+  .secondary-button:hover:not(.is-disabled),
+  .file-button:hover,
+  .quiet-button:hover:not(:disabled),
+  .icon-button:hover:not(:disabled) {
+    filter: brightness(1.08);
+  }
+
+  button:disabled,
+  .is-disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  .quiet-button {
+    min-height: 2rem;
+    padding: 0.3rem 0.65rem;
+  }
+
+  .icon-button {
+    width: 2.2rem;
+    min-height: 2.2rem;
+    padding: 0;
+    font-size: 1rem;
+  }
+
+  .controls-panel {
+    border-radius: 1rem;
+  }
+
+  .control-section {
+    min-width: 0;
+    min-inline-size: 0;
+    margin: 0;
+    padding: 1rem;
+    border: 0;
+    border-bottom: 1px solid var(--playground-line);
+  }
+
+  .control-section:last-child {
+    border-bottom: 0;
+  }
+
+  .control-section legend {
+    width: 100%;
+    margin: 0 0 0.75rem;
+    padding: 0;
+    color: var(--marker-ink);
+    font-size: 0.8rem;
+    font-weight: 720;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+  }
+
+  .segmented-control {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.35rem;
+    padding: 0.28rem;
+    border: 1px solid var(--playground-line);
+    border-radius: 0.72rem;
+    background: color-mix(in srgb, var(--playground-panel) 76%, black);
+  }
+
+  .segmented-control button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.2rem;
+    padding: 0.4rem 0.45rem;
+    border: 0;
+    color: var(--marker-muted);
+    background: transparent;
+    font-size: 0.73rem;
+    font-weight: 680;
+    line-height: 1.2;
+    text-align: center;
+  }
+
+  .segmented-control button.is-active {
+    color: var(--marker-ink);
+    background: var(--playground-panel-raised);
+    box-shadow: 0 0 0 1px var(--playground-line);
+  }
+
+  .file-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+  }
+
+  input[type='file'] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .file-button {
+    min-height: 2.2rem;
+    padding: 0.36rem 0.65rem;
+    line-height: 1.2;
+    text-align: center;
+  }
+
+  .text-button {
+    display: inline-flex;
+    align-items: center;
+    min-height: auto;
+    padding: 0.3rem 0.2rem;
+    border: 0;
+    color: var(--marker-blue);
+    background: transparent;
+    font-size: 0.7rem;
+    font-weight: 650;
+    line-height: 1.2;
+  }
+
+  .field-hint {
+    margin: 0.55rem 0 0;
+    color: var(--marker-muted);
+    font-size: 0.66rem;
+    line-height: 1.5;
+  }
+
+  .field-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) repeat(2, minmax(4.7rem, 0.55fr));
+    align-items: end;
+    gap: 0.65rem;
+    margin-top: 0.75rem;
+  }
+
+  .field-grid-3 {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.2fr);
+  }
+
+  .image-basic-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .field-grid-3 .check-field {
+    grid-column: 1 / -1;
+  }
+
+  .advanced-controls {
+    margin-top: 0.8rem;
+    padding-top: 0.7rem;
+    border-top: 1px solid var(--playground-line);
+  }
+
+  .advanced-controls summary {
+    color: var(--marker-blue);
+    font-size: 0.7rem;
+    font-weight: 680;
+    cursor: pointer;
+  }
+
+  .advanced-controls summary::marker {
+    color: var(--marker-muted);
+  }
+
+  .advanced-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .field,
+  .check-field {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 0.35rem;
+    color: var(--marker-muted);
+    font-size: 0.67rem;
+    font-weight: 650;
+    line-height: 1.35;
+  }
+
+  .field-full {
+    width: 100%;
+  }
+
+  .field > span:first-child,
+  .check-field > span {
+    min-height: 1rem;
+  }
+
+  .field output {
+    float: right;
+    color: var(--marker-ink);
+    font-family: var(--sl-font-mono);
+    font-size: 0.62rem;
+  }
+
+  .field input[type='text'],
+  .field input[type='number'],
+  .field select {
+    width: 100%;
+    height: 2.35rem;
+    min-width: 0;
+    padding: 0 0.62rem;
+    border: 1px solid var(--playground-line);
+    border-radius: 0.55rem;
+    color: var(--marker-ink);
+    background: var(--playground-panel-raised);
+    font-size: 0.75rem;
+  }
+
+  .color-input-wrap {
+    display: grid;
+    grid-template-columns: 2.35rem 1fr;
+    align-items: center;
+    height: 2.35rem;
+    overflow: hidden;
+    border: 1px solid var(--playground-line);
+    border-radius: 0.55rem;
+    background: var(--playground-panel-raised);
+  }
+
+  .color-input-wrap input {
+    width: 2.35rem;
+    height: 2.35rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .color-input-wrap code {
+    padding-left: 0.45rem;
+    color: var(--marker-ink);
+    font-size: 0.65rem;
+  }
+
+  .range-field input[type='range'] {
+    width: 100%;
+    min-width: 0;
+    height: 2.35rem;
+    margin: 0;
+    accent-color: var(--marker-blue);
+    cursor: pointer;
+  }
+
+  .check-field {
+    align-self: end;
+    flex-direction: row;
+    align-items: center;
+    min-height: 2.35rem;
+    padding: 0 0.65rem;
+    border: 1px solid var(--playground-line);
+    border-radius: 0.55rem;
+    color: var(--marker-ink);
+    background: var(--playground-panel-raised);
+  }
+
+  .check-field input {
+    width: 1rem;
+    height: 1rem;
+    margin: 0;
+    accent-color: var(--marker-blue);
+  }
+
+  [data-mode='text'] [data-image-controls],
+  [data-mode='image'] [data-text-controls] {
+    display: none;
+  }
+
+  .output-grid {
+    grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr);
+    margin-top: 0;
+  }
+
+  .code-panel {
+    margin-top: 1rem;
+    overflow: hidden;
+  }
+
+  .code-heading {
+    padding: 1rem;
+    border-bottom: 1px solid var(--playground-line);
+  }
+
+  .code-heading p {
+    margin: 0.3rem 0 0;
+    color: var(--marker-muted);
+    font-size: 0.74rem;
+  }
+
+  .code-tabs {
+    display: flex;
+    gap: 0.2rem;
+    padding: 0.55rem 0.8rem 0;
+  }
+
+  .code-tabs button {
+    min-height: 2.1rem;
+    padding: 0.35rem 0.7rem;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    color: var(--marker-muted);
+    background: transparent;
+    font-size: 0.72rem;
+    font-weight: 690;
+  }
+
+  .code-tabs button[aria-selected='true'] {
+    border-bottom-color: var(--marker-coral);
+    color: var(--marker-ink);
+  }
+
+  .code-view {
+    border-top: 1px solid var(--playground-line);
+    background: #0c0f17;
+  }
+
+  .code-view pre {
+    max-height: 31rem;
+    margin: 0;
+    padding: 1.15rem;
+    overflow: auto;
+    background: transparent;
+    font-size: 0.72rem;
+    line-height: 1.65;
+  }
+
+  .code-view code {
+    color: #dfe5f4;
+  }
+
+  .differences {
+    margin-top: 1rem;
+    padding: 1rem;
+  }
+
+  .differences dl {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0;
+    margin: 0.9rem 0 0;
+    border-top: 1px solid var(--playground-line);
+    border-left: 1px solid var(--playground-line);
+  }
+
+  .differences dl > div {
+    padding: 0.9rem;
+    border-right: 1px solid var(--playground-line);
+    border-bottom: 1px solid var(--playground-line);
+  }
+
+  .differences dt {
+    color: var(--marker-ink);
+    font-size: 0.72rem;
+    font-weight: 720;
+  }
+
+  .differences dd {
+    margin: 0.35rem 0 0;
+    color: var(--marker-muted);
+    font-size: 0.7rem;
+    line-height: 1.55;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  @media (max-width: 52rem) {
+    .playground-shell {
+      grid-template-areas:
+        'preview'
+        'controls';
+      grid-template-columns: 1fr;
+    }
+
+    .preview-panel,
+    .controls-panel {
+      position: static;
+      max-height: none;
+    }
+
+    .controls-panel {
+      overflow-y: visible;
+      scrollbar-gutter: auto;
+    }
+  }
+
+  @media (max-width: 44rem) {
+    :global(.content-panel:has(.marker-playground)) {
+      padding-inline: 0.75rem;
+    }
+
+    .marker-playground {
+      margin-bottom: 3rem;
+    }
+
+    .playground-heading {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .playground-heading h1 {
+      font-size: clamp(2rem, 11vw, 3rem);
+    }
+
+    .preview-panel,
+    .control-section,
+    .differences,
+    .code-heading {
+      padding: 0.8rem;
+    }
+
+    .preview-frame {
+      min-height: 10rem;
+    }
+
+    .render-meta {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .render-state {
+      margin-right: 0;
+    }
+
+    .preview-actions,
+    .field-grid,
+    .field-grid-3,
+    .output-grid,
+    .differences dl {
+      grid-template-columns: 1fr;
+    }
+
+    .playground-steps li {
+      gap: 0.4rem;
+      padding-inline: 0.45rem;
+      font-size: 0.66rem;
+    }
+
+    .compact-field {
+      min-width: 0;
+    }
+
+    .code-heading {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .code-view pre {
+      max-height: 26rem;
+      font-size: 0.66rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .render-overlay {
+      transition: none;
+    }
+
+    .spinner {
+      animation: none;
+    }
+  }
+</style>

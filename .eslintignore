@@ -1,7 +1,10 @@
-node_modules
+**/node_modules/**
 lib
 docs
 **/build/**
+**/dist/**
+website/.astro/**
+website/src/content/docs/api/**
 
 base64.js
 example/src/bas64bg.js

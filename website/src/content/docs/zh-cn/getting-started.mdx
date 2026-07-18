@@ -1,0 +1,138 @@
+---
+title: 安装
+description: 为 React Native、Expo 开发构建或 Web 安装 React Native Image Marker。
+---
+
+import { Aside, Steps, TabItem, Tabs } from '@astrojs/starlight/components';
+
+React Native Image Marker 在 iOS 和 Android 上使用原生代码，在 Web 上使用 Canvas 2D 实现。只需安装一次；原生目标需要链接并重新构建，Web 则直接在浏览器中运行。
+
+<Tabs>
+  <TabItem label="React Native">
+    <Steps>
+      1. 安装软件包。
+
+         ```sh
+         npm install react-native-image-marker
+         ```
+
+      2. 如果项目包含 iOS 目标，请安装 iOS Pods。
+
+         ```sh
+         npx pod-install
+         ```
+
+      3. 重新构建原生应用。
+
+         ```sh
+         npx react-native run-android
+         # or
+         npx react-native run-ios
+         ```
+    </Steps>
+  </TabItem>
+
+  <TabItem label="Expo 开发构建">
+    <Steps>
+      1. 安装软件包和 Expo 开发客户端。
+
+         ```sh
+         npx expo install react-native-image-marker expo-dev-client
+         ```
+
+      2. 在本地构建并安装原生应用。
+
+         ```sh
+         npx expo run:android
+         # or
+         npx expo run:ios
+         ```
+
+         也可以使用 EAS Build 创建并安装开发构建。
+
+      3. 安装原生应用后，启动开发服务器。
+
+         ```sh
+         npx expo start
+         ```
+    </Steps>
+  </TabItem>
+  <TabItem label="Web / Expo Web">
+    <Steps>
+      1. 安装软件包。
+
+         ```sh
+         npm install react-native-image-marker
+         ```
+
+      2. 传入浏览器可读取的图像源，例如 URL、数据 URL、`Blob`、`File` 或 `{ uri }`。
+
+         ```ts
+         const backgroundImage = { src: '/images/background.jpg' };
+         ```
+
+         在 Expo Web 中，请先转换数字形式的打包资源：
+
+         ```ts
+         import { Asset } from 'expo-asset';
+
+         const backgroundImage = {
+           src: { uri: Asset.fromModule(require('./background.jpg')).uri },
+         };
+         ```
+
+         如果项目尚未直接依赖资源解析器，请运行 `npx expo install expo-asset`。
+
+      3. 调用 `Marker.markText`、`Marker.markImage` 或 `Marker.mark`。Web 端会返回可直接显示或下载的图片地址。
+    </Steps>
+  </TabItem>
+</Tabs>
+
+<Aside type="caution" title="不支持 Expo Go">
+  此限制针对 iOS 和 Android：Expo Go 没有内置对应原生模块。请改用开发构建，通过 `npx expo run:ios` 或 `npx expo run:android` 在本地构建，或者使用 EAS Build。Expo Web 直接在浏览器中运行，不需要该原生模块。
+</Aside>
+
+## 添加第一个水印
+
+`Marker.markText` 会渲染一个或多个文本图层，并返回生成图像的路径。
+
+```ts
+import Marker, { ImageFormat, Position } from 'react-native-image-marker';
+
+const result = await Marker.markText({
+  backgroundImage: {
+    src: require('./images/background.jpg'),
+  },
+  watermarkTexts: [
+    {
+      text: '© Acme Studio',
+      position: {
+        position: Position.bottomRight,
+        X: 24,
+        Y: 24,
+      },
+      style: {
+        color: '#FFFFFF',
+        fontSize: 28,
+      },
+    },
+  ],
+  filename: 'marked-photo',
+  saveFormat: ImageFormat.jpg,
+  quality: 92,
+});
+```
+
+如需仅包含图像的图层或混合图层，请参阅[选择 API](/zh-cn/guides/choose-an-api/)。
+
+## 支持的图像源
+
+在 iOS 和 Android 上，可以使用 React Native 中已有的相同图像源形式：
+
+- 通过 `require('./image.png')` 引入的打包资源
+- React Native 图像加载器支持的 URI 对象或远程 URI
+- 完整的 `data:image/...;base64,...` 数据 URL
+
+在 Web 上，可使用 URL 字符串、`{ uri }`、数据 URL、`Blob`、`File` 或已加载的浏览器图像。远程 URL 必须允许 CORS；数字形式的 React Native 资源 ID 需要先解析成 URL。
+
+原生 JPEG 和 PNG 输出会写入平台缓存目录；Web 输出始终是数据 URL，原生端请求 `ImageFormat.base64` 时也会返回内存中的数据 URL。

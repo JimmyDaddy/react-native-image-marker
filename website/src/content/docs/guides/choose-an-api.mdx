@@ -1,0 +1,104 @@
+---
+title: Choose an API
+description: Pick markText, markImage, or mark based on the watermark layers you need.
+---
+
+import { TabItem, Tabs } from '@astrojs/starlight/components';
+
+The three public methods share the same output options. Choose by layer type:
+
+| Method | Use it for | Layer order |
+| --- | --- | --- |
+| `Marker.markText` | One or many text watermarks | Text array order |
+| `Marker.markImage` | One or many image watermarks | Image array order |
+| `Marker.mark` | Text and image watermarks together | Exact `watermarks` array order |
+
+`markText` and `markImage` remain supported. Use `mark` when a single render needs both text and image layers or when cross-type ordering matters.
+
+<Tabs>
+  <TabItem label="Text">
+    ```ts
+    import Marker, { ImageFormat, Position } from 'react-native-image-marker';
+
+    const result = await Marker.markText({
+      backgroundImage: { src: require('./background.jpg') },
+      watermarkTexts: [
+        {
+          text: 'PRIVATE',
+          position: { position: Position.center },
+          style: {
+            color: '#FFFFFF99',
+            fontSize: 42,
+            bold: true,
+            rotate: -18,
+          },
+        },
+      ],
+      saveFormat: ImageFormat.png,
+    });
+    ```
+  </TabItem>
+
+  <TabItem label="Image">
+    ```ts
+    import Marker, { ImageFormat, Position } from 'react-native-image-marker';
+
+    const result = await Marker.markImage({
+      backgroundImage: { src: require('./background.jpg') },
+      watermarkImages: [
+        {
+          src: require('./logo.png'),
+          position: {
+            position: Position.topRight,
+            X: 20,
+            Y: 20,
+          },
+          scale: 0.5,
+          alpha: 0.9,
+        },
+      ],
+      saveFormat: ImageFormat.png,
+    });
+    ```
+  </TabItem>
+
+  <TabItem label="Mixed layers">
+    ```ts
+    import Marker, { ImageFormat, Position } from 'react-native-image-marker';
+
+    const result = await Marker.mark({
+      backgroundImage: { src: require('./background.jpg') },
+      watermarks: [
+        {
+          type: 'image',
+          src: require('./logo.png'),
+          position: { position: Position.topRight, X: 20, Y: 20 },
+          scale: 0.5,
+        },
+        {
+          type: 'text',
+          text: 'Acme Studio',
+          position: { position: Position.bottomCenter, Y: 24 },
+          style: { color: '#FFFFFF', fontSize: 28 },
+        },
+      ],
+      saveFormat: ImageFormat.png,
+    });
+    ```
+  </TabItem>
+</Tabs>
+
+## Layer order
+
+Layers render in array order. A later layer is drawn over an earlier one. This is especially important with `Marker.mark`, where text and image layers share the same array.
+
+## Legacy properties
+
+Prefer the plural arrays and current position property:
+
+| Avoid in new code | Use instead |
+| --- | --- |
+| `positionOptions` on text | `position` |
+| `watermarkImage` | `watermarkImages` |
+| `watermarkPositions` | `position` on each image layer |
+| Separate calls for mixed content | One `Marker.mark` call |

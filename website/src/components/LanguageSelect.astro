@@ -1,0 +1,56 @@
+---
+const pathname = Astro.url.pathname;
+const isZh = pathname === '/zh-cn/' || pathname.startsWith('/zh-cn/');
+const isNotFound = pathname === '/404/' || pathname === '/zh-cn/404/';
+const englishHref = isNotFound
+  ? '/'
+  : isZh
+    ? pathname.slice('/zh-cn'.length) || '/'
+    : pathname;
+const chineseHref = isNotFound ? '/zh-cn/' : isZh ? pathname : `/zh-cn${pathname}`;
+---
+
+<details class="preference-menu language-select" data-language-menu>
+  <summary aria-label={isZh ? '切换语言' : 'Change language'}>
+    <span class="preference-icon" aria-hidden="true">文</span>
+    <span>{isZh ? '简体中文' : 'English'}</span>
+    <span class="preference-caret" aria-hidden="true">⌄</span>
+  </summary>
+  <div class="preference-popover" role="menu">
+    <a href={englishHref} role="menuitem" aria-current={!isZh ? 'page' : undefined}>
+      <span class="preference-choice-icon" aria-hidden="true">EN</span>
+      <span>
+        <strong>English</strong>
+        <small>English documentation</small>
+      </span>
+      <span class="selected-check" aria-hidden="true">✓</span>
+    </a>
+    <a href={chineseHref} role="menuitem" aria-current={isZh ? 'page' : undefined}>
+      <span class="preference-choice-icon" aria-hidden="true">中</span>
+      <span>
+        <strong>简体中文</strong>
+        <small>中文文档</small>
+      </span>
+      <span class="selected-check" aria-hidden="true">✓</span>
+    </a>
+  </div>
+</details>
+
+<script>
+  document.querySelectorAll<HTMLDetailsElement>('[data-language-menu]').forEach((menu) => {
+    if (menu.dataset.initialized === 'true') return;
+    menu.dataset.initialized = 'true';
+
+    document.addEventListener('click', (event) => {
+      if (menu.open && event.target instanceof Node && !menu.contains(event.target)) {
+        menu.open = false;
+      }
+    });
+    menu.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        menu.open = false;
+        menu.querySelector('summary')?.focus();
+      }
+    });
+  });
+</script>

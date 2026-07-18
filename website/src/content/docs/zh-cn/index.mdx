@@ -1,0 +1,42 @@
+---
+title: React Native Image Marker
+description: 在 iOS、Android 和浏览器中给图片添加文字或 Logo 水印。
+template: splash
+hero:
+  title: 给图片加水印，就这么简单。
+  tagline: 添加文字或 Logo，在 iOS、Android 和浏览器中直接导出；图片始终留在本地。
+  actions:
+    - text: 在浏览器中试用
+      link: /zh-cn/playground/
+      icon: right-arrow
+      variant: primary
+    - text: 开始使用
+      link: /zh-cn/getting-started/
+      variant: minimal
+pagefind: false
+---
+
+import ProductStage from '../../../components/ProductStage.astro';
+
+<ProductStage locale="zh-CN" />
+
+## 按照要添加的内容选择方法
+
+<div class="principles-grid">
+  <article class="principle">
+    <strong><code>Marker.markText</code></strong>
+    <p>添加一段或多段文字，并调整字体、颜色、背景、阴影、角度和位置。</p>
+  </article>
+  <article class="principle">
+    <strong><code>Marker.markImage</code></strong>
+    <p>把 Logo、二维码、图标或其他图片放到照片上。</p>
+  </article>
+  <article class="principle">
+    <strong><code>Marker.mark</code></strong>
+    <p>同时添加文字和图片，并决定哪一项显示在上面。</p>
+  </article>
+</div>
+
+所有处理都在设备或浏览器中完成，不需要账号，也不会上传图片。添加多个水印时，列表中靠后的内容会显示在上面。
+
+[在线运行 Web SDK](/zh-cn/playground/)、[安装此库](/zh-cn/getting-started/)，或直接查看[如何选择 API](/zh-cn/guides/choose-an-api/)。

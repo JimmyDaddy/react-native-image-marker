@@ -1,0 +1,29 @@
+---
+title: Sitemap
+description: Browse every guide, example, and API reference on the React Native Image Marker website.
+---
+
+Use this page to find the shortest path to the documentation you need.
+
+## Start here
+
+- [Overview](/) — see what Image Marker can do.
+- [Live playground](/playground/) — add a watermark in your browser and copy the code.
+- [Installation](/getting-started/) — install the package and create your first watermark.
+- [Compatibility](/compatibility/) — check supported platforms and Expo requirements.
+
+## Guides and examples
+
+- [Choose an API](/guides/choose-an-api/) — decide between `markText`, `markImage`, and `mark`.
+- [Position and style](/guides/position-and-style/) — place text and logos and adjust their appearance.
+- [Output and image quality](/guides/output-and-quality/) — choose a format, quality, and background color.
+- [Visual cookbook](/cookbook/) — start from complete examples.
+
+## Reference and help
+
+- [API reference](/api/) — browse methods, options, and types.
+- [Troubleshooting](/troubleshooting/) — solve common setup and output problems.
+- [Versions and migration](/migration/) — update an existing integration.
+- [简体中文网站地图](/zh-cn/sitemap/) — browse the Chinese documentation.
+
+Search engines can also read the [XML sitemap](/sitemap-index.xml).

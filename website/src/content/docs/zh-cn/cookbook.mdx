@@ -1,0 +1,88 @@
+---
+title: 视觉示例集
+description: 展示文字、图片、多图层、旋转和阴影水印实际效果的示例。
+---
+
+这些图片来自仓库中的示例用例。先用它们确认你需要的功能，再按照相应指南使用当前代码。
+
+<div class="cookbook-grid">
+  <figure class="cookbook-card">
+    <img src="/media/sample1.png" alt="瀑布照片底部附近放置了一层文字水印" loading="lazy" />
+    <figcaption>带有颜色、样式和锚点定位的文字图层</figcaption>
+  </figure>
+  <figure class="cookbook-card">
+    <img src="/media/imagewatermark.png" alt="彩色背景上放置了一层图片水印" loading="lazy" />
+    <figcaption>缩放后定位于背景之上的图片图层</figcaption>
+  </figure>
+  <figure class="cookbook-card">
+    <img src="/media/multipletexts.png" alt="多个样式各自独立的文字水印" loading="lazy" />
+    <figcaption>多个拥有独立样式的文字图层</figcaption>
+  </figure>
+  <figure class="cookbook-card">
+    <img src="/media/rotateimageicon.png" alt="背景上放置了一层旋转后的图片水印" loading="lazy" />
+    <figcaption>旋转后的图片图层</figcaption>
+  </figure>
+</div>
+
+## 常用配方
+
+### 低调的角落签名
+
+```ts
+await Marker.markText({
+  backgroundImage: { src: photo },
+  watermarkTexts: [
+    {
+      text: '© Acme Studio',
+      position: { position: Position.bottomRight, X: 20, Y: 20 },
+      style: { color: '#FFFFFFB3', fontSizeRatio: 0.022 },
+    },
+  ],
+  saveFormat: ImageFormat.jpg,
+  quality: 92,
+});
+```
+
+### 清晰的二维码水印
+
+```ts
+await Marker.markImage({
+  backgroundImage: { src: photo },
+  watermarkImages: [
+    {
+      src: qrCode,
+      position: { position: Position.bottomLeft, X: 24, Y: 24 },
+      scale: 0.5,
+      trimTransparentPadding: true,
+    },
+  ],
+  saveFormat: ImageFormat.png,
+});
+```
+
+### 位于文字标签下方的 Logo
+
+使用 `Marker.mark` 时，后面的图层会绘制在前面的图层之上。
+
+```ts
+await Marker.mark({
+  backgroundImage: { src: photo },
+  watermarks: [
+    {
+      type: 'image',
+      src: logo,
+      position: { position: Position.center },
+      alpha: 0.8,
+    },
+    {
+      type: 'text',
+      text: 'APPROVED',
+      position: { position: Position.center },
+      style: { color: '#FFFFFF', fontSize: 32, bold: true },
+    },
+  ],
+  saveFormat: ImageFormat.png,
+});
+```
+
+如需免安装体验 Web SDK，请打开[在线体验](/zh-cn/playground/)。如需使用原生交互控件和查看架构状态面板，请运行 [React Native 示例](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/example)或 [Expo 示例](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/expo-example)。

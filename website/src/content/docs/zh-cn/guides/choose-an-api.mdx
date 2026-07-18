@@ -1,0 +1,104 @@
+---
+title: 选择 API
+description: 根据所需的水印图层，在 markText、markImage 或 mark 之间进行选择。
+---
+
+import { TabItem, Tabs } from '@astrojs/starlight/components';
+
+三个公开方法共用相同的输出选项。请根据图层类型进行选择：
+
+| 方法 | 适用场景 | 图层顺序 |
+| --- | --- | --- |
+| `Marker.markText` | 一个或多个文本水印 | 文本数组顺序 |
+| `Marker.markImage` | 一个或多个图像水印 | 图像数组顺序 |
+| `Marker.mark` | 同时包含文本和图像水印 | 严格按照 `watermarks` 数组顺序 |
+
+`markText` 和 `markImage` 仍受支持。当一次渲染需要同时包含文本和图像图层，或不同类型图层之间的顺序很重要时，请使用 `mark`。
+
+<Tabs>
+  <TabItem label="文本">
+    ```ts
+    import Marker, { ImageFormat, Position } from 'react-native-image-marker';
+
+    const result = await Marker.markText({
+      backgroundImage: { src: require('./background.jpg') },
+      watermarkTexts: [
+        {
+          text: 'PRIVATE',
+          position: { position: Position.center },
+          style: {
+            color: '#FFFFFF99',
+            fontSize: 42,
+            bold: true,
+            rotate: -18,
+          },
+        },
+      ],
+      saveFormat: ImageFormat.png,
+    });
+    ```
+  </TabItem>
+
+  <TabItem label="图像">
+    ```ts
+    import Marker, { ImageFormat, Position } from 'react-native-image-marker';
+
+    const result = await Marker.markImage({
+      backgroundImage: { src: require('./background.jpg') },
+      watermarkImages: [
+        {
+          src: require('./logo.png'),
+          position: {
+            position: Position.topRight,
+            X: 20,
+            Y: 20,
+          },
+          scale: 0.5,
+          alpha: 0.9,
+        },
+      ],
+      saveFormat: ImageFormat.png,
+    });
+    ```
+  </TabItem>
+
+  <TabItem label="混合图层">
+    ```ts
+    import Marker, { ImageFormat, Position } from 'react-native-image-marker';
+
+    const result = await Marker.mark({
+      backgroundImage: { src: require('./background.jpg') },
+      watermarks: [
+        {
+          type: 'image',
+          src: require('./logo.png'),
+          position: { position: Position.topRight, X: 20, Y: 20 },
+          scale: 0.5,
+        },
+        {
+          type: 'text',
+          text: 'Acme Studio',
+          position: { position: Position.bottomCenter, Y: 24 },
+          style: { color: '#FFFFFF', fontSize: 28 },
+        },
+      ],
+      saveFormat: ImageFormat.png,
+    });
+    ```
+  </TabItem>
+</Tabs>
+
+## 图层顺序
+
+图层按照数组顺序渲染。后面的图层会绘制在前面的图层之上。使用 `Marker.mark` 时这一点尤为重要，因为文本和图像图层共用同一个数组。
+
+## 旧版属性
+
+请优先使用复数形式的数组和当前的定位属性：
+
+| 新代码中避免使用 | 改用 |
+| --- | --- |
+| 文本上的 `positionOptions` | `position` |
+| `watermarkImage` | `watermarkImages` |
+| `watermarkPositions` | 每个图像图层上的 `position` |
+| 为混合内容分别调用方法 | 一次调用 `Marker.mark` |

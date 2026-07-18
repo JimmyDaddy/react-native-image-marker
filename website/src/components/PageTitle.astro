@@ -1,0 +1,18 @@
+---
+import DefaultPageTitle from '@astrojs/starlight/components/PageTitle.astro';
+
+const pathname = Astro.url.pathname;
+const isPlayground = pathname === '/playground/' || pathname === '/zh-cn/playground/';
+---
+
+{
+  isPlayground
+    ? <span data-playground-page-title hidden></span>
+    : <DefaultPageTitle />
+}
+
+<style is:global>
+  .content-panel:has([data-playground-page-title]) {
+    display: none;
+  }
+</style>

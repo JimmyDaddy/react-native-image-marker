@@ -1,22 +1,4 @@
-import { NativeModules, Platform } from 'react-native';
-import type { Spec } from './NativeImageMarker';
-import NativeImageMarker from './NativeImageMarker';
-import {
-  createNativeMarkOptions,
-  normalizeImageMarkOptions,
-  normalizeTextMarkOptions,
-} from './normalize';
-import {
-  validateImageMarkOptions,
-  validateMarkOptions,
-  validateTextMarkOptions,
-} from './validate';
-
-const LINKING_ERROR =
-  `The package 'react-native-image-marker' doesn't seem to be linked. Make sure: \n\n` +
-  Platform.select({ ios: "- You have run 'pod install'\n", default: '' }) +
-  '- You rebuilt the app after installing the package\n' +
-  '- You are not using Expo Go\n';
+import Marker from './marker';
 
 /**
  * Position enum for text watermark and image watermark
@@ -137,7 +119,6 @@ interface Padding {
    * paddingHorizontal: 10
    * // or
    * paddingHorizontal: '10%'
-   * @since 2.0.0
    **/
   paddingHorizontal?: number | string;
   /**
@@ -146,7 +127,6 @@ interface Padding {
    * paddingVertical: 10
    * // or
    * paddingVertical: '10%'
-   * @since 2.0.0
    */
   paddingVertical?: number | string;
 
@@ -172,24 +152,24 @@ interface Padding {
 /**
  * PositionOptions for text watermark and image watermark. When `position` is set, `X` and `Y` are treated as offsets from that anchor.
  * @example
- * positionOptions: {
+ * position: {
  *  X: 10,
  *  Y: 10,
  * }
  * // or
- * positionOptions: {
+ * position: {
  *  position: Position.topLeft,
  * }
  * // or
- * positionOptions: {
+ * position: {
  *  position: Position.topRight,
  *  X: 60, // 60px from the right edge
  *  Y: 60, // 60px from the top edge
  * }
  * // or
- * positionOptions: {
+ * position: {
  *  X: '10%', // relative to the width of the background image
- *  Y: '10%', // relative to the width of the background image
+ *  Y: '10%', // relative to the height of the background image
  * }
  */
 export interface PositionOptions {
@@ -230,7 +210,7 @@ export interface PositionOptions {
  *      color: '#aacc22'
  *    },
  *    underline: true,
- *    skewX: 45,
+ *    skewX: -0.25,
  *    strikeThrough: true,
  *    textAlign: 'left',
  *    italic: true,
@@ -294,13 +274,13 @@ export interface TextStyle {
    */
   underline?: boolean;
   /**
-   * css italic with degree, you can use italic instead
+   * Horizontal text shear factor. Use `italic` for font-provided italics.
    * @example
-   *  skewX: 45
+   *  skewX: -0.25
    */
   skewX?: number;
   /**
-   * text stroke
+   * text strikethrough
    * @defaultValue false
    * @example
    *  strikeThrough: true
@@ -461,7 +441,7 @@ export interface TextBackgroundStyle extends Padding {
  * Text options for text watermark
  * @example
  *  text: 'hello world',
- *  positionOptions: {
+ *  position: {
  *    X: 10,
  *    Y: 10,
  *    // or
@@ -484,7 +464,7 @@ export interface TextBackgroundStyle extends Padding {
  *      color: '#aacc22'
  *    },
  *    underline: true,
- *    skewX: 45,
+ *    skewX: -0.25,
  *    strikeThrough: true,
  *    textAlign: 'left',
  *    italic: true,
@@ -515,7 +495,7 @@ export interface TextOptions {
   /**
    * text position options
    * @example
-   *  positionOptions: {
+   *  position: {
    *   X: 10,
    *   Y: 10,
    *   // or
@@ -548,7 +528,7 @@ export interface TextOptions {
    *  textAlign: 'left',
    *  italic: true,
    *  // or
-   *  // skewX: 45,
+   *  // skewX: -0.25,
    *  bold: true,
    *  rotate: 45
    * }
@@ -568,7 +548,7 @@ export interface TextOptions {
  *  watermarkTexts: [
  *  {
  *    text: 'hello world',
- *    positionOptions: {
+ *    position: {
  *      X: 10,
  *      Y: 10,
  *      // or
@@ -595,7 +575,7 @@ export interface TextOptions {
  *      textAlign: 'left',
  *      italic: true,
  *      //or
- *      // skewX: 45,
+ *      // skewX: -0.25,
  *      bold: true,
  *      rotate: 45
  *    }
@@ -606,7 +586,6 @@ export interface TextOptions {
  */
 export interface TextMarkOptions {
   /**
-   * FIXME: ImageSourcePropType type define bug
    * background image options
    * @example
    * backgroundImage: {
@@ -623,7 +602,7 @@ export interface TextMarkOptions {
    * watermarkTexts: [
    * {
    *  text: 'hello world',
-   *  positionOptions: {
+   *  position: {
    *    X: 10,
    *    Y: 10,
    *    // or
@@ -650,7 +629,7 @@ export interface TextMarkOptions {
    *    textAlign: 'left',
    *    italic: true,
    *    //or
-   *    // skewX: 45,
+   *    // skewX: -0.25,
    *    bold: true,
    *    rotate: 45
    *  }
@@ -658,7 +637,8 @@ export interface TextMarkOptions {
    **/
   watermarkTexts: TextOptions[];
   /**
-   * image quality `0-100`, `100` is best quality. If you want the quality to have more effect, try to set the image export format to the compressible format `jpg`. see #159
+   * Integer image quality from `0` to `100`, where `100` is best. Quality has
+   * the most visible effect when the output format is `jpg`. See #159.
    * @defaultValue 100
    * @example
    * quality: 100
@@ -718,7 +698,7 @@ export interface TextMarkOptions {
  */
 export interface ImageOptions {
   /**
-   * image src, local image
+   * Image source. Supports React Native image sources and base64 data URLs.
    * @example
    * src: require('./images/logo.png')
    */
@@ -738,7 +718,7 @@ export interface ImageOptions {
    */
   rotate?: number;
   /**
-   * transparent of background image `0 - 1`
+   * Image opacity from `0` (transparent) to `1` (opaque).
    * @defaultValue 1
    * @example
    * alpha: 0.5
@@ -747,7 +727,7 @@ export interface ImageOptions {
 }
 
 /**
- * Text options for image watermark
+ * Options for one image watermark layer.
  * @example
  *  src: require('./images/logo.png'),
  *  scale: 0.5,
@@ -771,7 +751,7 @@ export interface WatermarkImageOptions extends ImageOptions {
 }
 
 /**
- * Text options for image watermark
+ * Options for rendering image-only watermark layers.
  * @example
  *
  *  backgroundImage: {
@@ -808,7 +788,6 @@ export interface WatermarkImageOptions extends ImageOptions {
  */
 export interface ImageMarkOptions {
   /**
-   * FIXME: ImageSourcePropType type define bug
    * background image options
    * @example
    *  backgroundImage: {
@@ -847,7 +826,7 @@ export interface ImageMarkOptions {
    */
   watermarkPositions?: PositionOptions; // watermark position options see @PositionOptions
   /**
-   * image quality `0-100`, `100` is best quality.
+   * Integer image quality from `0` to `100`, where `100` is best.
    * @defaultValue 100
    * @example
    * quality: 100
@@ -979,7 +958,7 @@ export interface MarkOptions {
    */
   watermarkImages?: Array<WatermarkImageOptions>;
   /**
-   * image quality `0-100`, `100` is best quality.
+   * Integer image quality from `0` to `100`, where `100` is best.
    * @defaultValue 100
    */
   quality?: number;
@@ -1010,234 +989,6 @@ export interface MarkOptions {
    * @defaultValue 2048
    */
   maxSize?: number;
-}
-
-function getImageMarker(): Spec {
-  return (NativeImageMarker ??
-    NativeModules.ImageMarker ??
-    new Proxy(
-      {},
-      {
-        get() {
-          throw new Error(LINKING_ERROR);
-        },
-      }
-    )) as Spec;
-}
-
-class Marker {
-  /** @ignore ignore constructors for typedoc only */
-  constructor() {}
-  /**
-   * Mark text-only watermarks on an image.
-   *
-   * This remains the supported API for text-only use cases. Use {@link mark}
-   * when text and image watermarks need to be composed together in one ordered
-   * native render pass.
-   * @param options
-   * @returns {Promise<string>} image url or base64 string
-   * @example
-   * const options = {
-   *  backgroundImage: {
-   *   src: require('./images/test.jpg'),
-   *   scale: 1,
-   *   rotate: 20,
-   *   alpha: 0.5,
-   *  },
-   *  watermarkTexts: [
-   *  {
-   *    text: 'hello',
-   *    positionOptions: {
-   *      position: Position.center,
-   *    },
-   *    style: {
-   *      color: '#ff00ff',
-   *      fontSize: 30,
-   *      fontName: 'Arial',
-   *      rotate: 30,
-   *      shadowStyle: {
-   *        dx: 10,
-   *        dy: 10,
-   *        radius: 10,
-   *        color: '#ffaa22',
-   *      },
-   *      textBackgroundStyle: {
-   *        paddingX: 10,
-   *        paddingY: 10,
-   *        type: TextBackgroundType.none,
-   *        color: '#faaaff',
-   *      },
-   *      underline: true,
-   *      strikeThrough: true,
-   *      textAlign: 'left',
-   *      italic: true,
-   *      bold: true,
-   *    },
-   *  },
-   *  {
-   *    text: 'world',
-   *    positionOptions: {
-   *      X: 10,
-   *      Y: 10,
-   *    },
-   *    style: {
-   *     color: '#AAFFDD',
-   *     fontSize: 30,
-   *     fontName: 'Arial',
-   *     rotate: 170,
-   *     shadowStyle: {
-   *      dx: 10,
-   *      dy: 10,
-   *      radius: 10,
-   *      color: '#ffaa22',
-   *     },
-   *     textBackgroundStyle: {
-   *      paddingX: 10,
-   *      paddingY: 10,
-   *      type: TextBackgroundType.stretchX,
-   *      color: '#faaaff',
-   *     },
-   *     textAlign: 'right',
-   *     skewX: 10,
-   *  ],
-   *  scale: 1,
-   *  quality: 100,
-   *  filename: 'test',
-   *  saveFormat: ImageFormat.png,
-   * };
-   * ImageMarker.markText(options).then((res) => {
-   *  console.log(res);
-   * }).catch((err) => {
-   *  console.log(err);
-   * });
-   * // or
-   * await ImageMarker.markText(options);
-   */
-  static markText(options: TextMarkOptions): Promise<string> {
-    const { backgroundImage, watermarkTexts } = options;
-
-    if (!backgroundImage || !backgroundImage.src) {
-      throw new Error('please set image!');
-    }
-
-    if (!watermarkTexts || watermarkTexts.length === 0) {
-      throw new Error('please set watermark text!');
-    }
-
-    validateTextMarkOptions(options);
-
-    return getImageMarker().markWithText(normalizeTextMarkOptions(options));
-  }
-
-  /**
-   * Mark image-only watermarks on a background image.
-   *
-   * This remains the supported API for image-only use cases. Use {@link mark}
-   * when text and image watermarks need to be composed together in one ordered
-   * native render pass.
-   * @param options
-   * @returns {Promise<string>} image url or base64 string
-   * @example
-   * const options = {
-   *  backgroundImage: {
-   *    src: require('./images/test.jpg'),
-   *    scale: 1,
-   *    rotate: 20,
-   *    alpha: 0.5,
-   *  },
-   *  quality: 100,
-   *  filename: 'test',
-   *  saveFormat: ImageFormat.png,
-   *  watermarkImages: [
-   *    {
-   *      src: require('./images/logo.png'),
-   *      scale: 0.5,
-   *      rotate: 45,
-   *      alpha: 0.5,
-   *      position: {
-   *        X: 10,
-   *        Y: 10,
-   *      },
-   *    },
-   *    {
-   *      src: require('./images/logo1.png'),
-   *      scale: 0.5,
-   *      rotate: 45,
-   *      alpha: 0.5,
-   *      position: {
-   *        position: Position.center,
-   *     },
-   *    },
-   *  ],
-   * };
-   * ImageMarker.markImage(options).then((res) => {
-   *  console.log(res);
-   * }).catch((err) => {
-   *  console.log(err);
-   * });
-   * // or
-   * await ImageMarker.markImage(options);
-   */
-  static markImage(options: ImageMarkOptions): Promise<string> {
-    const { backgroundImage, watermarkImage, watermarkImages = [] } = options;
-
-    if (!backgroundImage || !backgroundImage.src) {
-      throw new Error('please set image!');
-    }
-    if (!watermarkImage?.src && watermarkImages.length === 0) {
-      throw new Error('please set mark image!');
-    }
-    if (watermarkImages.some((item) => !item.src)) {
-      throw new Error('please set mark image!');
-    }
-
-    validateImageMarkOptions(options);
-
-    return getImageMarker().markWithImage(normalizeImageMarkOptions(options));
-  }
-
-  /**
-   * Mark ordered text and image watermark layers with one call.
-   *
-   * Use this for mixed text and image layers. Layers are rendered natively in
-   * array order, so later layers draw over earlier layers.
-   *
-   * @param options
-   * @returns {Promise<string>} image url or base64 string
-   * @example
-   * const result = await ImageMarker.mark({
-   *   backgroundImage: { src: require('./images/background.jpg') },
-   *   watermarks: [
-   *     {
-   *       type: 'text',
-   *       text: 'Demo',
-   *       position: { position: Position.bottomCenter, Y: 24 },
-   *       style: { color: '#ffffff', fontSize: 32 },
-   *     },
-   *     {
-   *       type: 'image',
-   *       src: require('./images/logo.png'),
-   *       position: { position: Position.topRight, X: 24, Y: 24 },
-   *       scale: 0.5,
-   *     },
-   *   ],
-   *   saveFormat: ImageFormat.png,
-   * });
-   */
-  static mark(options: MarkOptions): Promise<string> {
-    const { backgroundImage } = options;
-
-    if (!backgroundImage || !backgroundImage.src) {
-      throw new Error('please set image!');
-    }
-
-    const nativeOptions = createNativeMarkOptions(options);
-    if (!nativeOptions.watermarks || nativeOptions.watermarks.length === 0) {
-      throw new Error('please set watermark text or image!');
-    }
-    validateMarkOptions(options);
-    return getImageMarker().markWithWatermarks(nativeOptions);
-  }
 }
 
 export default Marker;

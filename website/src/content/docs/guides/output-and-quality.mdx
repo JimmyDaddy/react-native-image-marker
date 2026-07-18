@@ -1,0 +1,72 @@
+---
+title: Output and image quality
+description: Choose JPEG, PNG, or base64 output and control quality, transparency, rotation, and filenames.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## Output formats
+
+| `saveFormat` | Native result | Web result | Best for |
+| --- | --- | --- | --- |
+| `ImageFormat.jpg` | Cache-file path | JPEG data URL | Photos and smaller files |
+| `ImageFormat.png` | Cache-file path | PNG data URL | Transparency, QR codes, icons, and sharp edges |
+| `ImageFormat.base64` | PNG data URL | PNG data URL | In-memory transfer when you explicitly need base64 |
+
+JPEG is the compatibility default. Set the format explicitly when output behavior matters.
+
+```ts
+const result = await Marker.markImage({
+  backgroundImage: { src: require('./background.png') },
+  watermarkImages: [
+    {
+      src: require('./logo.png'),
+      trimTransparentPadding: true,
+    },
+  ],
+  filename: 'marked-photo',
+  saveFormat: ImageFormat.png,
+});
+```
+
+## Quality
+
+`quality` accepts an integer from `0–100`, where `100` is the highest quality. It has the most visible effect on JPEG because PNG output is lossless. Browser and native JPEG encoders can produce different bytes and file sizes for the same value.
+
+For QR codes, barcodes, pixel art, and line-art logos, choose PNG. JPEG compression can soften hard edges even at high quality.
+
+## JPEG and transparency
+
+JPEG has no alpha channel. When transparent pixels are saved as JPEG, `matteColor` selects the solid color placed behind them. The default is white.
+
+```ts
+saveFormat: ImageFormat.jpg,
+quality: 92,
+matteColor: '#FFFFFF',
+```
+
+<Aside type="tip">
+  Use PNG when the final image itself must remain transparent.
+</Aside>
+
+## Rotated backgrounds
+
+The default `RotationCanvasMode.expand` grows the output canvas so the full rotated image remains visible. Choose `crop` to keep the original canvas size and clip content outside it.
+
+```ts
+backgroundImage: {
+  src: require('./background.jpg'),
+  rotate: 30,
+},
+rotationCanvasMode: RotationCanvasMode.crop,
+```
+
+## Filenames and storage
+
+On native targets, the returned JPEG or PNG lives in the app's cache directory. `filename` must be a safe basename, not a directory path. A supplied `.jpg`, `.jpeg`, or `.png` suffix is normalized to match `saveFormat`.
+
+Cache output does not automatically appear in the photo library. Pass the returned path to your preferred media-library or file-system package when you need a permanent copy.
+
+Web does not write a cache file: it returns a data URL and does not use `filename`. Set an anchor's `download` attribute or use your own browser file workflow when saving it.
+
+Data URLs keep more image data in JavaScript memory. This applies to every Web output and native base64 output, so avoid unnecessarily large source images.

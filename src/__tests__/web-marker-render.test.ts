@@ -1,0 +1,242 @@
+import WebMarker from '../web';
+import { ImageFormat, Position } from '../index';
+import { loadWebImage } from '../web/browser';
+
+class FakeImage {
+  static instances: FakeImage[] = [];
+
+  complete = true;
+  crossOrigin: string | null = null;
+  crossOriginWhenSrcWasSet: string | null = null;
+  naturalHeight = 200;
+  naturalWidth = 320;
+  onerror: ((event?: unknown) => void) | null = null;
+  onload: (() => void) | null = null;
+  private value = '';
+
+  constructor() {
+    FakeImage.instances.push(this);
+  }
+
+  get src() {
+    return this.value;
+  }
+
+  set src(value: string) {
+    this.crossOriginWhenSrcWasSet = this.crossOrigin;
+    this.value = value;
+    queueMicrotask(() => this.onload?.());
+  }
+
+  async decode() {}
+}
+
+function createFakeCanvas() {
+  const canvas = {
+    width: 0,
+    height: 0,
+    toDataURL: jest.fn((type = 'image/png') => `data:${type};base64,rendered`),
+    getContext: jest.fn(),
+  };
+  const context = {
+    canvas,
+    globalAlpha: 1,
+    fillStyle: '#000000',
+    font: '',
+    textAlign: 'left',
+    textBaseline: 'top',
+    shadowBlur: 0,
+    shadowColor: 'transparent',
+    shadowOffsetX: 0,
+    shadowOffsetY: 0,
+    imageSmoothingEnabled: true,
+    lineWidth: 1,
+    strokeStyle: '#000000',
+    save: jest.fn(),
+    restore: jest.fn(),
+    beginPath: jest.fn(),
+    closePath: jest.fn(),
+    clip: jest.fn(),
+    moveTo: jest.fn(),
+    lineTo: jest.fn(),
+    quadraticCurveTo: jest.fn(),
+    rect: jest.fn(),
+    fill: jest.fn(),
+    fillRect: jest.fn(),
+    translate: jest.fn(),
+    rotate: jest.fn(),
+    scale: jest.fn(),
+    transform: jest.fn(),
+    drawImage: jest.fn(),
+    fillText: jest.fn(),
+    stroke: jest.fn(),
+    measureText: jest.fn((text: string) => ({
+      width: text.length * 10,
+      actualBoundingBoxAscent: 12,
+      actualBoundingBoxDescent: 4,
+    })),
+    getImageData: jest.fn(() => ({
+      data: new Uint8ClampedArray(320 * 200 * 4).fill(255),
+    })),
+  };
+  canvas.getContext.mockReturnValue(context);
+  return { canvas, context };
+}
+
+function installFakeBrowserRuntime() {
+  const canvases: ReturnType<typeof createFakeCanvas>[] = [];
+  FakeImage.instances = [];
+  Object.defineProperty(globalThis, 'document', {
+    configurable: true,
+    value: {
+      createElement(name: string) {
+        if (name !== 'canvas') {
+          throw new Error(`Unexpected element: ${name}`);
+        }
+        const entry = createFakeCanvas();
+        canvases.push(entry);
+        return entry.canvas;
+      },
+    },
+  });
+  Object.defineProperty(globalThis, 'Image', {
+    configurable: true,
+    value: FakeImage,
+  });
+  return canvases;
+}
+
+describe('WebMarker browser render integration', () => {
+  const originalDocument = Object.getOwnPropertyDescriptor(
+    globalThis,
+    'document'
+  );
+  const originalImage = Object.getOwnPropertyDescriptor(globalThis, 'Image');
+
+  afterEach(() => {
+    if (originalDocument) {
+      Object.defineProperty(globalThis, 'document', originalDocument);
+    } else {
+      delete (globalThis as { document?: unknown }).document;
+    }
+    if (originalImage) {
+      Object.defineProperty(globalThis, 'Image', originalImage);
+    } else {
+      delete (globalThis as { Image?: unknown }).Image;
+    }
+  });
+
+  it('runs the public mixed-layer API through the Canvas renderer', async () => {
+    const canvases = installFakeBrowserRuntime();
+
+    await expect(
+      WebMarker.mark({
+        backgroundImage: { src: '/background.jpg' },
+        watermarks: [
+          {
+            type: 'image',
+            src: '/logo.png',
+            position: { position: Position.topRight, X: 12, Y: 12 },
+            scale: 0.25,
+          },
+          {
+            type: 'text',
+            text: 'Web SDK',
+            position: { position: Position.bottomLeft, X: 16, Y: 16 },
+            style: { color: '#FFFFFF', fontSize: 24 },
+          },
+        ],
+        saveFormat: ImageFormat.png,
+      })
+    ).resolves.toBe('data:image/png;base64,rendered');
+
+    expect(canvases).toHaveLength(1);
+    expect(canvases[0]?.canvas.toDataURL).toHaveBeenCalledWith('image/png', 1);
+    expect(canvases[0]?.context.drawImage).toHaveBeenCalledTimes(2);
+    expect(canvases[0]?.context.fillText).toHaveBeenCalledWith(
+      'Web SDK',
+      expect.any(Number),
+      expect.any(Number)
+    );
+  });
+
+  it('wraps long text and splits words that exceed the canvas width', async () => {
+    const canvases = installFakeBrowserRuntime();
+    const longWord = 'x'.repeat(65);
+
+    await WebMarker.markText({
+      backgroundImage: { src: '/background.jpg' },
+      watermarkTexts: [
+        {
+          text: `short words before ${longWord}`,
+          position: { position: Position.topRight, X: 0, Y: 0 },
+        },
+      ],
+      saveFormat: ImageFormat.png,
+    });
+
+    const calls = canvases[0]?.context.fillText.mock.calls ?? [];
+    expect(calls).toHaveLength(4);
+    expect(calls.map(([line]) => line)).toEqual([
+      'short words before',
+      'x'.repeat(32),
+      'x'.repeat(32),
+      'x',
+    ]);
+    expect(calls.every(([, x]) => Number(x) >= 0)).toBe(true);
+  });
+
+  it('uses skewX directly as the Canvas shear factor', async () => {
+    const canvases = installFakeBrowserRuntime();
+
+    await WebMarker.markText({
+      backgroundImage: { src: '/background.jpg' },
+      watermarkTexts: [{ text: 'Skew', style: { skewX: -0.25 } }],
+      saveFormat: ImageFormat.png,
+    });
+
+    expect(canvases[0]?.context.transform).toHaveBeenCalledWith(
+      1,
+      0,
+      -0.25,
+      1,
+      0,
+      0
+    );
+  });
+
+  it('normalizes translucent matte colors to opaque RGB', async () => {
+    const canvases = installFakeBrowserRuntime();
+
+    await WebMarker.markImage({
+      backgroundImage: { src: '/background.jpg' },
+      watermarkImages: [{ src: '/logo.png' }],
+      saveFormat: ImageFormat.jpg,
+      matteColor: '#FF000080',
+    });
+
+    expect(canvases[0]?.context.fillStyle).toBe('#FF0000');
+  });
+
+  it('rejects matte colors outside the native hex subset', async () => {
+    await expect(
+      WebMarker.markText({
+        backgroundImage: { src: '/background.jpg' },
+        watermarkTexts: [{ text: 'Invalid matte' }],
+        saveFormat: ImageFormat.png,
+        matteColor: 'red',
+      })
+    ).rejects.toThrow(
+      'matteColor must use #RGB, #RGBA, #RRGGBB, or #RRGGBBAA.'
+    );
+  });
+
+  it('enables anonymous CORS before assigning protocol-relative URLs', async () => {
+    installFakeBrowserRuntime();
+
+    await loadWebImage('//cdn.example.com/logo.png');
+
+    expect(FakeImage.instances[0]?.crossOrigin).toBe('anonymous');
+    expect(FakeImage.instances[0]?.crossOriginWhenSrcWasSet).toBe('anonymous');
+  });
+});

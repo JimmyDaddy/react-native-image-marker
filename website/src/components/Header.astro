@@ -1,0 +1,244 @@
+---
+import config from 'virtual:starlight/user-config';
+
+import Search from '@astrojs/starlight/components/Search.astro';
+import SiteTitle from '@astrojs/starlight/components/SiteTitle.astro';
+import SocialIcons from '@astrojs/starlight/components/SocialIcons.astro';
+import LanguageSelect from './LanguageSelect.astro';
+import ThemeSelect from './ThemeSelect.astro';
+
+const shouldRenderSearch =
+  config.pagefind ||
+  config.components.Search !== '@astrojs/starlight/components/Search.astro';
+const pathname = Astro.url.pathname;
+const isZh = pathname === '/zh-cn/' || pathname.startsWith('/zh-cn/');
+const links = isZh
+  ? [
+      { label: '在线体验', href: '/zh-cn/playground/' },
+      { label: '快速开始', href: '/zh-cn/getting-started/' },
+      { label: '使用指南', href: '/zh-cn/guides/choose-an-api/' },
+      { label: 'API', href: '/zh-cn/api/' },
+    ]
+  : [
+      { label: 'Playground', href: '/playground/' },
+      { label: 'Get started', href: '/getting-started/' },
+      { label: 'Guides', href: '/guides/choose-an-api/' },
+      { label: 'API', href: '/api/' },
+    ];
+
+const isActive = (href: string) => {
+  if (href.includes('/guides/')) {
+    return pathname.startsWith(isZh ? '/zh-cn/guides/' : '/guides/');
+  }
+
+  if (href.endsWith('/api/')) {
+    return pathname.startsWith(isZh ? '/zh-cn/api/' : '/api/');
+  }
+
+  return pathname === href;
+};
+---
+
+<div class="header">
+  <div class="title-wrapper sl-flex">
+    <SiteTitle />
+  </div>
+
+  <nav class="primary-nav print:hidden" aria-label={isZh ? '主导航' : 'Primary'} data-primary-nav>
+    {links.map((link) => (
+      <a href={link.href} aria-current={isActive(link.href) ? 'page' : undefined}>
+        {link.label}
+      </a>
+    ))}
+  </nav>
+
+  <div class="search-wrapper sl-flex print:hidden">
+    {shouldRenderSearch && <Search />}
+  </div>
+
+  <details class="mobile-nav print:hidden">
+    <summary>{isZh ? '菜单' : 'Menu'}</summary>
+    <div class="mobile-nav-menu">
+      {links.map((link) => (
+        <a href={link.href} aria-current={isActive(link.href) ? 'page' : undefined}>
+          {link.label}
+        </a>
+      ))}
+    </div>
+  </details>
+
+  <div class="sl-hidden md:sl-flex print:hidden right-group">
+    <div class="sl-flex social-icons">
+      <SocialIcons />
+    </div>
+    <ThemeSelect />
+    <LanguageSelect />
+  </div>
+</div>
+
+<style>
+  @layer starlight.core {
+    .header {
+      display: flex;
+      gap: var(--sl-nav-gap);
+      justify-content: space-between;
+      align-items: center;
+      height: 100%;
+    }
+
+    .title-wrapper,
+    .search-wrapper {
+      min-width: 0;
+    }
+
+    .title-wrapper {
+      overflow: clip;
+      padding: 0.25rem;
+      margin: -0.25rem;
+    }
+
+    .primary-nav {
+      display: none;
+      align-items: center;
+      gap: 0.18rem;
+      white-space: nowrap;
+    }
+
+    .primary-nav a {
+      padding: 0.42rem 0.62rem;
+      border-radius: 0.55rem;
+      color: var(--sl-color-gray-2);
+      font-size: 0.78rem;
+      font-weight: 650;
+      text-decoration: none;
+    }
+
+    .primary-nav a:hover {
+      color: var(--sl-color-white);
+      background: var(--sl-color-gray-6);
+    }
+
+    .primary-nav a[aria-current='page'] {
+      color: var(--sl-color-text-accent);
+      background: var(--sl-color-accent-low);
+    }
+
+    .mobile-nav {
+      position: relative;
+      flex: none;
+    }
+
+    .mobile-nav summary {
+      padding: 0.42rem 0.55rem;
+      border-radius: 0.55rem;
+      color: var(--sl-color-gray-2);
+      font-size: 0.75rem;
+      font-weight: 650;
+      cursor: pointer;
+      list-style: none;
+    }
+
+    .mobile-nav summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .mobile-nav summary:hover,
+    .mobile-nav[open] summary {
+      color: var(--sl-color-white);
+      background: var(--sl-color-gray-6);
+    }
+
+    .mobile-nav-menu {
+      position: absolute;
+      z-index: 10;
+      top: calc(100% + 0.65rem);
+      inset-inline-end: 0;
+      display: grid;
+      width: min(15rem, calc(100vw - 2rem));
+      padding: 0.45rem;
+      border: 1px solid var(--sl-color-gray-5);
+      border-radius: 0.75rem;
+      background: var(--sl-color-bg-nav);
+      box-shadow: 0 0.8rem 2rem rgb(0 0 0 / 18%);
+    }
+
+    .mobile-nav-menu a {
+      padding: 0.65rem 0.75rem;
+      border-radius: 0.5rem;
+      color: var(--sl-color-gray-2);
+      font-size: 0.82rem;
+      font-weight: 650;
+      text-decoration: none;
+    }
+
+    .mobile-nav-menu a:hover,
+    .mobile-nav-menu a[aria-current='page'] {
+      color: var(--sl-color-text-accent);
+      background: var(--sl-color-accent-low);
+    }
+
+    .right-group,
+    .social-icons {
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .social-icons::after {
+      content: '';
+      height: 2rem;
+      border-inline-end: 1px solid var(--sl-color-gray-5);
+    }
+
+    @media (min-width: 50rem) {
+      :global(:root[data-has-sidebar]) {
+        --__sidebar-pad: calc(2 * var(--sl-nav-pad-x));
+      }
+
+      :global(:root:not([data-has-toc])) {
+        --__toc-width: 0rem;
+      }
+
+      .header {
+        --__sidebar-width: max(
+          0rem,
+          var(--sl-content-inline-start, 0rem) - var(--sl-nav-pad-x)
+        );
+        --__main-column-fr: calc(
+          (
+              100% + var(--__sidebar-pad, 0rem) -
+                var(--__toc-width, var(--sl-sidebar-width)) -
+                (2 * var(--__toc-width, var(--sl-nav-pad-x))) -
+                var(--sl-content-inline-start, 0rem) - var(--sl-content-width)
+            ) / 2
+        );
+        display: grid;
+        grid-template-columns:
+          minmax(
+            calc(
+              var(--__sidebar-width) +
+                max(0rem, var(--__main-column-fr) - var(--sl-nav-gap))
+            ),
+            auto
+          )
+          1fr
+          auto
+          auto;
+        align-content: center;
+      }
+    }
+
+    @media (min-width: 72rem) {
+      .header {
+        grid-template-columns: auto auto minmax(12rem, 1fr) auto;
+      }
+
+      .primary-nav {
+        display: flex;
+      }
+
+      .mobile-nav {
+        display: none;
+      }
+    }
+  }
+</style>

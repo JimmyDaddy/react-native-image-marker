@@ -1,0 +1,67 @@
+name: Deploy documentation site
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'src/index.ts'
+      - 'src/marker.ts'
+      - 'src/marker.web.ts'
+      - 'src/web/**'
+      - 'website/**'
+      - 'README.MD'
+      - 'package.json'
+      - '.github/workflows/docs-site.yml'
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          npm install
+          npm ci --prefix website
+
+      - name: Build documentation
+        run: npm run docs
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: website/dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: https://mage-marker.corerobin.com
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

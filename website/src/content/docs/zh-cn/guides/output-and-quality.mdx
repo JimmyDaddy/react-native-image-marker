@@ -1,0 +1,72 @@
+---
+title: 输出与图像质量
+description: 选择 JPEG、PNG 或 base64 输出，并控制质量、透明度、旋转和文件名。
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## 输出格式
+
+| `saveFormat` | 原生结果 | Web 结果 | 最适合 |
+| --- | --- | --- | --- |
+| `ImageFormat.jpg` | 缓存文件路径 | JPEG 数据 URL | 照片和较小的文件 |
+| `ImageFormat.png` | 缓存文件路径 | PNG 数据 URL | 透明效果、二维码、图标和清晰边缘 |
+| `ImageFormat.base64` | PNG 数据 URL | PNG 数据 URL | 明确需要 base64 时在内存中传递 |
+
+JPEG 是兼容性默认选项。当输出行为很重要时，请显式设置格式。
+
+```ts
+const result = await Marker.markImage({
+  backgroundImage: { src: require('./background.png') },
+  watermarkImages: [
+    {
+      src: require('./logo.png'),
+      trimTransparentPadding: true,
+    },
+  ],
+  filename: 'marked-photo',
+  saveFormat: ImageFormat.png,
+});
+```
+
+## 质量
+
+`quality` 接受 `0–100` 之间的整数，其中 `100` 表示最高质量。它对 JPEG 的影响最明显，因为 PNG 输出是无损的。浏览器与原生 JPEG 编码器使用相同数值时，仍可能产生不同的字节与文件大小。
+
+对于二维码、条形码、像素画和线条图标，请选择 PNG。即使质量设置得很高，JPEG 压缩也可能使清晰边缘变得模糊。
+
+## JPEG 与透明度
+
+JPEG 没有 alpha 通道。当透明像素保存为 JPEG 时，`matteColor` 用于选择填充其背后的纯色。默认颜色为白色。
+
+```ts
+saveFormat: ImageFormat.jpg,
+quality: 92,
+matteColor: '#FFFFFF',
+```
+
+<Aside type="tip">
+  当最终图像本身必须保持透明时，请使用 PNG。
+</Aside>
+
+## 旋转背景图
+
+默认的 `RotationCanvasMode.expand` 会扩大输出画布，使旋转后的完整图像仍然可见。选择 `crop` 可保持原始画布大小，并裁剪画布以外的内容。
+
+```ts
+backgroundImage: {
+  src: require('./background.jpg'),
+  rotate: 30,
+},
+rotationCanvasMode: RotationCanvasMode.crop,
+```
+
+## 文件名与存储
+
+在原生目标上，返回的 JPEG 或 PNG 位于应用缓存目录中。`filename` 必须是安全的基本文件名，而不能是目录路径。提供的 `.jpg`、`.jpeg` 或 `.png` 后缀会被规范化，以匹配 `saveFormat`。
+
+缓存输出不会自动出现在照片图库中。当你需要永久保存副本时，请将返回的路径传给你选用的媒体库或文件系统包。
+
+Web 不会写入缓存文件，而是返回数据 URL，也不会使用 `filename`。保存时可设置链接的 `download` 属性，或接入自己的浏览器文件流程。
+
+数据 URL 会让更多图像数据占用 JavaScript 内存。这适用于所有 Web 输出以及原生 base64 输出，因此应避免不必要地使用超大源图。

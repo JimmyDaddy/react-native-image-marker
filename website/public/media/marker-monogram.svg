@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" role="img" aria-labelledby="title">
+  <title id="title">Warm orange compass watermark</title>
+  <circle cx="110" cy="110" r="96" fill="#ff5a36" stroke="#fff4e8" stroke-width="12"/>
+  <path d="M110 42 130 88 178 110 130 132 110 178 90 132 42 110 90 88Z" fill="#10141c"/>
+  <circle cx="110" cy="110" r="23" fill="#fff4e8"/>
+</svg>

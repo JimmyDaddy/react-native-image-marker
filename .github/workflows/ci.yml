@@ -16,6 +16,8 @@ jobs:
       android: ${{ steps.filter.outputs.android }}
       ios: ${{ steps.filter.outputs.ios }}
       js: ${{ steps.filter.outputs.js }}
+      web: ${{ steps.filter.outputs.web }}
+      docs: ${{ steps.filter.outputs.docs }}
       native: ${{ steps.filter.outputs.native }}
       security: ${{ steps.filter.outputs.security }}
     steps:
@@ -127,24 +129,44 @@ jobs:
                   ".eslintignore",
                   ".eslintrc.js",
                   ".github/workflows/ci.yml",
-                  "docs/**",
-                  "README.MD",
-                  "assets/**",
-                  "scripts/copy-doc-assets.js",
                   "example/package.json",
                   "example/package-lock.json",
                   "example/tsconfig.json",
                   "example/src/**",
-                  "expo-example/App.tsx",
-                  "expo-example/metro.config.js",
-                  "expo-example/package.json",
-                  "expo-example/tsconfig.json",
+                  "expo-example/**",
+              ]
+          )
+          web = any_changed(
+              [
+                  "src/index.ts",
+                  "src/marker.ts",
+                  "src/marker.web.ts",
+                  "src/web/**",
+                  "package.json",
+                  "package-lock.json",
+                  "expo-example/**",
+                  ".github/workflows/ci.yml",
+              ]
+          )
+          docs = any_changed(
+              [
+                  "src/index.ts",
+                  "src/marker.ts",
+                  "src/marker.web.ts",
+                  "src/web/**",
+                  "website/**",
+                  "README.MD",
+                  "package.json",
+                  ".github/workflows/ci.yml",
+                  ".github/workflows/docs-site.yml",
               ]
           )
           security = any_changed(
               [
                   "package.json",
                   "package-lock.json",
+                  "website/package.json",
+                  "website/package-lock.json",
                   "example/package.json",
                   "example/package-lock.json",
                   "expo-example/package.json",
@@ -165,6 +187,8 @@ jobs:
               "android": android,
               "ios": ios,
               "js": js,
+              "web": web,
+              "docs": docs,
               "native": android or ios,
               "security": security,
           }
@@ -243,14 +267,74 @@ jobs:
       - name: Build package
         run: npm run prepack
 
-      - name: Verify generated docs are current
+  docs-site:
+    runs-on: ubuntu-latest
+    name: Documentation Site
+    needs: changes
+    if: needs.changes.outputs.docs == 'true'
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v4
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+
+      - name: Install dependencies
         run: |
-          npm run docs
-          if [ -n "$(git status --porcelain -- docs/latest)" ]; then
-            git status --short -- docs/latest
-            git diff -- docs/latest
-            exit 1
-          fi
+          npm install
+          npm ci --prefix website
+
+      - name: Build and verify documentation
+        run: npm run docs
+
+      - name: Install Chromium
+        run: npm exec --prefix website -- playwright install --with-deps chromium
+
+      - name: Smoke test live playground
+        run: npm --prefix website run smoke
+
+  web-example:
+    runs-on: ubuntu-latest
+    name: React Native Web Example
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v4
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: expo-example/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          npm install
+          npm ci --prefix expo-example --ignore-scripts --no-audit --no-fund
+
+      - name: Test Web SDK
+        run: npm run test:web
+
+      - name: Typecheck web example
+        run: npm --prefix expo-example run typecheck
+
+      - name: Export web example
+        run: npm --prefix expo-example run bundle:web
+
+      - name: Verify web platform resolution
+        run: npm --prefix expo-example run verify:web-bundle
+
+      - name: Install Chromium
+        run: npm exec --prefix expo-example -- playwright install --with-deps chromium
+
+      - name: Smoke test web example
+        run: npm --prefix expo-example run smoke:web
 
   install-dep:
     runs-on: macos-latest
@@ -727,6 +811,8 @@ jobs:
         changes,
         security,
         js-check,
+        docs-site,
+        web-example,
         install-dep,
         android-build,
         android-api-level-test,

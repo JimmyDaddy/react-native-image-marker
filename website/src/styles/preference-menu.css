@@ -1,0 +1,151 @@
+@layer starlight.core {
+  .preference-menu {
+    position: relative;
+    flex: none;
+  }
+
+  .preference-menu > summary {
+    display: flex;
+    min-height: 2.35rem;
+    align-items: center;
+    gap: 0.42rem;
+    padding: 0.45rem 0.55rem;
+    border: 1px solid transparent;
+    border-radius: 0.6rem;
+    color: var(--sl-color-gray-2);
+    font-size: var(--sl-text-sm);
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .preference-menu > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .preference-menu > summary:hover,
+  .preference-menu[open] > summary {
+    border-color: var(--sl-color-gray-5);
+    color: var(--sl-color-white);
+    background: var(--sl-color-gray-6);
+  }
+
+  .preference-icon {
+    display: inline-grid;
+    width: 1.2rem;
+    height: 1.2rem;
+    place-items: center;
+    color: var(--sl-color-text-accent);
+    font-size: 0.72rem;
+    font-weight: 800;
+  }
+
+  .preference-caret {
+    margin-inline-start: 0.1rem;
+    color: var(--sl-color-gray-3);
+    font-size: 0.8rem;
+    transition: transform 120ms ease;
+  }
+
+  .preference-menu[open] .preference-caret {
+    transform: rotate(180deg);
+  }
+
+  .preference-popover {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + 0.55rem);
+    inset-inline-end: 0;
+    display: grid;
+    width: 15.5rem;
+    padding: 0.4rem;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.85rem;
+    background: var(--sl-color-bg-nav);
+    box-shadow: 0 0.9rem 2.4rem rgb(0 0 0 / 24%);
+  }
+
+  .preference-popover :is(a, button) {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr) 1rem;
+    min-height: 3.55rem;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.65rem;
+    border: 0;
+    border-radius: 0.6rem;
+    color: var(--sl-color-gray-2);
+    background: transparent;
+    font: inherit;
+    text-align: start;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .preference-popover :is(a, button):hover,
+  .preference-popover a[aria-current='page'],
+  .preference-popover button[aria-checked='true'] {
+    color: var(--sl-color-white);
+    background: var(--sl-color-accent-low);
+  }
+
+  .preference-popover :is(a, button):focus-visible {
+    outline: 2px solid var(--sl-color-accent);
+    outline-offset: -2px;
+  }
+
+  .preference-choice-icon {
+    display: inline-grid;
+    width: 2rem;
+    height: 2rem;
+    place-items: center;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.55rem;
+    color: var(--sl-color-text-accent);
+    background: var(--sl-color-gray-6);
+    font-size: 0.68rem;
+    font-weight: 750;
+  }
+
+  .preference-popover strong,
+  .preference-popover small {
+    display: block;
+  }
+
+  .preference-popover strong {
+    font-size: 0.8rem;
+    line-height: 1.25;
+  }
+
+  .preference-popover small {
+    margin-top: 0.18rem;
+    color: var(--sl-color-gray-3);
+    font-size: 0.65rem;
+    line-height: 1.3;
+  }
+
+  .selected-check {
+    visibility: hidden;
+    color: var(--sl-color-text-accent);
+    font-weight: 800;
+  }
+
+  .preference-popover a[aria-current='page'] .selected-check,
+  .preference-popover button[aria-checked='true'] .selected-check {
+    visibility: visible;
+  }
+
+  @media (max-width: 50rem) {
+    .preference-popover {
+      inset-inline-start: 0;
+      inset-inline-end: auto;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .preference-caret {
+      transition: none;
+    }
+  }
+}

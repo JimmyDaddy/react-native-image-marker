@@ -1,0 +1,316 @@
+---
+interface Option {
+  value: string;
+  label: string;
+}
+
+interface Props {
+  id: string;
+  label: string;
+  name: 'text-position' | 'image-position' | 'format';
+  options: Option[];
+  value: string;
+}
+
+const { id, label, name, options, value } = Astro.props;
+const selected = options.find((option) => option.value === value) ?? options[0];
+const nativeAttributes = { [`data-${name}`]: '' };
+---
+
+<div class="field custom-select-field">
+  <span id={`${id}-label`}>{label}</span>
+  <div class="custom-select" data-custom-select data-select-name={name}>
+    <select
+      class="native-select"
+      hidden
+      tabindex="-1"
+      aria-hidden="true"
+      {...nativeAttributes}
+    >
+      {options.map((option) => (
+        <option value={option.value} selected={option.value === value}>{option.label}</option>
+      ))}
+    </select>
+    <button
+      id={`${id}-trigger`}
+      class="custom-select-trigger"
+      type="button"
+      aria-haspopup="listbox"
+      aria-expanded="false"
+      aria-labelledby={`${id}-label ${id}-value`}
+      data-select-trigger
+    >
+      <span id={`${id}-value`} data-select-value>{selected?.label}</span>
+      <span class="select-caret" aria-hidden="true">⌄</span>
+    </button>
+    <div
+      id={`${id}-listbox`}
+      class="custom-select-menu"
+      role="listbox"
+      aria-labelledby={`${id}-label`}
+      data-select-menu
+      hidden
+    >
+      {options.map((option) => (
+        <button
+          type="button"
+          role="option"
+          aria-selected={option.value === value ? 'true' : 'false'}
+          data-select-option={option.value}
+        >
+          <span>{option.label}</span>
+          <span class="option-check" aria-hidden="true">✓</span>
+        </button>
+      ))}
+    </div>
+  </div>
+</div>
+
+<script>
+  const closeCustomSelect = (root: HTMLElement, restoreFocus = false) => {
+    const trigger = root.querySelector<HTMLButtonElement>('[data-select-trigger]');
+    const menu = root.querySelector<HTMLElement>('[data-select-menu]');
+    if (!trigger || !menu) return;
+    menu.hidden = true;
+    trigger.setAttribute('aria-expanded', 'false');
+    if (restoreFocus) trigger.focus();
+  };
+
+  const closeOtherCustomSelects = (current: HTMLElement) => {
+    document.querySelectorAll<HTMLElement>('[data-custom-select]').forEach((candidate) => {
+      if (candidate !== current) closeCustomSelect(candidate);
+    });
+  };
+
+  document.querySelectorAll<HTMLElement>('[data-custom-select]').forEach((root) => {
+    if (root.dataset.initialized === 'true') return;
+    root.dataset.initialized = 'true';
+
+    const select = root.querySelector<HTMLSelectElement>('select');
+    const trigger = root.querySelector<HTMLButtonElement>('[data-select-trigger]');
+    const value = root.querySelector<HTMLElement>('[data-select-value]');
+    const menu = root.querySelector<HTMLElement>('[data-select-menu]');
+    const options = [...root.querySelectorAll<HTMLButtonElement>('[data-select-option]')];
+    if (!select || !trigger || !value || !menu) return;
+
+    const sync = () => {
+      const selectedOption = options.find((option) => option.dataset.selectOption === select.value);
+      value.textContent = selectedOption?.querySelector('span')?.textContent ?? select.value;
+      options.forEach((option) => {
+        option.setAttribute('aria-selected', String(option === selectedOption));
+      });
+    };
+
+    const open = (focusIndex?: number) => {
+      closeOtherCustomSelects(root);
+      menu.hidden = false;
+      trigger.setAttribute('aria-expanded', 'true');
+      if (focusIndex !== undefined) options[focusIndex]?.focus();
+    };
+
+    const choose = (option: HTMLButtonElement) => {
+      const nextValue = option.dataset.selectOption;
+      if (!nextValue) return;
+      select.value = nextValue;
+      sync();
+      select.dispatchEvent(new Event('input', { bubbles: true }));
+      closeCustomSelect(root, true);
+    };
+
+    trigger.addEventListener('click', () => {
+      if (menu.hidden) open();
+      else closeCustomSelect(root);
+    });
+    trigger.addEventListener('keydown', (event) => {
+      const selectedIndex = Math.max(0, options.findIndex((option) => option.dataset.selectOption === select.value));
+      if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        open(selectedIndex);
+      }
+      if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        open(selectedIndex);
+      }
+      if (event.key === 'Home') {
+        event.preventDefault();
+        open(0);
+      }
+      if (event.key === 'End') {
+        event.preventDefault();
+        open(options.length - 1);
+      }
+    });
+
+    options.forEach((option) => {
+      option.addEventListener('click', () => choose(option));
+      option.addEventListener('keydown', (event) => {
+        const currentIndex = options.indexOf(option);
+        let nextIndex: number | undefined;
+        if (event.key === 'ArrowDown') nextIndex = (currentIndex + 1) % options.length;
+        if (event.key === 'ArrowUp') nextIndex = (currentIndex - 1 + options.length) % options.length;
+        if (event.key === 'Home') nextIndex = 0;
+        if (event.key === 'End') nextIndex = options.length - 1;
+        if (nextIndex !== undefined) {
+          event.preventDefault();
+          options[nextIndex]?.focus();
+        }
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          closeCustomSelect(root, true);
+        }
+      });
+    });
+
+    select.addEventListener('change', sync);
+    select.addEventListener('input', sync);
+    select.form?.addEventListener('reset', () => requestAnimationFrame(sync));
+    sync();
+  });
+
+  document.addEventListener('click', (event) => {
+    const target = event.target;
+    if (!(target instanceof Node)) return;
+    document.querySelectorAll<HTMLElement>('[data-custom-select]').forEach((root) => {
+      if (!root.contains(target)) closeCustomSelect(root);
+    });
+  });
+</script>
+
+<style>
+  .field {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 0.35rem;
+    color: var(--marker-muted);
+    font-size: 0.67rem;
+    font-weight: 650;
+    line-height: 1.35;
+  }
+
+  .field > span:first-child {
+    min-height: 1rem;
+  }
+
+  .custom-select {
+    position: relative;
+    min-width: 0;
+  }
+
+  .custom-select:has(.custom-select-menu:not([hidden])) {
+    z-index: 30;
+  }
+
+  .native-select {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    border: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .custom-select-trigger {
+    display: flex;
+    width: 100%;
+    height: 2.35rem;
+    min-height: 2.35rem;
+    min-width: 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
+    padding: 0 0.62rem;
+    border: 1px solid var(--playground-line);
+    border-radius: 0.55rem;
+    color: var(--marker-ink);
+    background: var(--playground-panel-raised);
+    font: inherit;
+    font-size: 0.75rem;
+    font-weight: 650;
+    text-align: start;
+    cursor: pointer;
+  }
+
+  .custom-select-trigger:hover,
+  .custom-select-trigger[aria-expanded='true'] {
+    border-color: color-mix(in srgb, var(--marker-blue) 70%, var(--playground-line));
+    background: color-mix(in srgb, var(--playground-panel-raised) 86%, var(--marker-blue));
+  }
+
+  .custom-select-trigger:focus-visible,
+  .custom-select-menu button:focus-visible {
+    outline: 2px solid var(--marker-blue);
+    outline-offset: 2px;
+  }
+
+  .select-caret {
+    flex: none;
+    color: var(--marker-muted);
+    font-size: 0.8rem;
+    transition: transform 120ms ease;
+  }
+
+  .custom-select-trigger[aria-expanded='true'] .select-caret {
+    transform: rotate(180deg);
+  }
+
+  .custom-select-menu {
+    position: absolute;
+    z-index: 30;
+    top: calc(100% + 0.35rem);
+    inset-inline: 0;
+    max-height: 14rem;
+    padding: 0.3rem;
+    overflow-y: auto;
+    border: 1px solid var(--playground-line);
+    border-radius: 0.65rem;
+    background: color-mix(in srgb, var(--playground-panel) 96%, black);
+    box-shadow: 0 0.75rem 1.8rem rgb(0 0 0 / 28%);
+  }
+
+  .custom-select-menu[hidden] {
+    display: none;
+  }
+
+  .custom-select-menu button {
+    display: flex;
+    width: 100%;
+    min-height: 2.15rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
+    padding: 0.42rem 0.55rem;
+    border: 0;
+    border-radius: 0.45rem;
+    color: var(--marker-muted);
+    background: transparent;
+    font: inherit;
+    font-size: 0.72rem;
+    font-weight: 650;
+    text-align: start;
+    cursor: pointer;
+  }
+
+  .custom-select-menu button:hover,
+  .custom-select-menu button[aria-selected='true'] {
+    color: var(--marker-ink);
+    background: color-mix(in srgb, var(--marker-blue) 16%, transparent);
+  }
+
+  .option-check {
+    visibility: hidden;
+    color: var(--marker-blue);
+    font-weight: 800;
+  }
+
+  [aria-selected='true'] .option-check {
+    visibility: visible;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .select-caret {
+      transition: none;
+    }
+  }
+</style>

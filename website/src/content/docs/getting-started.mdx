@@ -1,0 +1,138 @@
+---
+title: Installation
+description: Install React Native Image Marker for React Native, Expo development builds, or Web.
+---
+
+import { Aside, Steps, TabItem, Tabs } from '@astrojs/starlight/components';
+
+React Native Image Marker uses native code on iOS and Android and a Canvas 2D implementation on Web. Install it once; native targets must link and rebuild, while Web runs directly in the browser.
+
+<Tabs>
+  <TabItem label="React Native">
+    <Steps>
+      1. Install the package.
+
+         ```sh
+         npm install react-native-image-marker
+         ```
+
+      2. Install iOS pods when your project has an iOS target.
+
+         ```sh
+         npx pod-install
+         ```
+
+      3. Rebuild the native app.
+
+         ```sh
+         npx react-native run-android
+         # or
+         npx react-native run-ios
+         ```
+    </Steps>
+  </TabItem>
+
+  <TabItem label="Expo development build">
+    <Steps>
+      1. Install the package and Expo's development client.
+
+         ```sh
+         npx expo install react-native-image-marker expo-dev-client
+         ```
+
+      2. Build and install your native app locally.
+
+         ```sh
+         npx expo run:android
+         # or
+         npx expo run:ios
+         ```
+
+         Alternatively, create and install a development build with EAS Build.
+
+      3. Start the development server after the native app is installed.
+
+         ```sh
+         npx expo start
+         ```
+    </Steps>
+  </TabItem>
+  <TabItem label="Web / Expo Web">
+    <Steps>
+      1. Install the package.
+
+         ```sh
+         npm install react-native-image-marker
+         ```
+
+      2. Pass a browser-readable image source such as a URL, data URL, `Blob`, `File`, or `{ uri }`.
+
+         ```ts
+         const backgroundImage = { src: '/images/background.jpg' };
+         ```
+
+         In Expo Web, convert a numeric bundled asset before passing it to Marker:
+
+         ```ts
+         import { Asset } from 'expo-asset';
+
+         const backgroundImage = {
+           src: { uri: Asset.fromModule(require('./background.jpg')).uri },
+         };
+         ```
+
+         Add the resolver explicitly with `npx expo install expo-asset` if it is not already a direct dependency.
+
+      3. Call `Marker.markText`, `Marker.markImage`, or `Marker.mark`. On Web, the result is an image URL you can display or download.
+    </Steps>
+  </TabItem>
+</Tabs>
+
+<Aside type="caution" title="Expo Go is not supported">
+  This restriction applies to iOS and Android: their native module is not bundled with Expo Go. Use a development build instead—build locally with `npx expo run:ios` or `npx expo run:android`, or create a development build with EAS Build. Expo Web runs in the browser and does not need the native module.
+</Aside>
+
+## Add your first watermark
+
+`Marker.markText` renders one or more text layers and resolves with the generated image path.
+
+```ts
+import Marker, { ImageFormat, Position } from 'react-native-image-marker';
+
+const result = await Marker.markText({
+  backgroundImage: {
+    src: require('./images/background.jpg'),
+  },
+  watermarkTexts: [
+    {
+      text: '© Acme Studio',
+      position: {
+        position: Position.bottomRight,
+        X: 24,
+        Y: 24,
+      },
+      style: {
+        color: '#FFFFFF',
+        fontSize: 28,
+      },
+    },
+  ],
+  filename: 'marked-photo',
+  saveFormat: ImageFormat.jpg,
+  quality: 92,
+});
+```
+
+For image-only or mixed layers, see [Choose an API](/guides/choose-an-api/).
+
+## Accepted image sources
+
+On iOS and Android, use the same source shapes you already use in React Native:
+
+- A bundled asset from `require('./image.png')`
+- A URI object or remote URI supported by React Native's image loader
+- A complete `data:image/...;base64,...` data URL
+
+On Web, use a URL string, `{ uri }`, data URL, `Blob`, `File`, or loaded browser image. Remote URLs must permit CORS. Numeric React Native asset IDs must first be resolved to a URL.
+
+Native JPEG and PNG output is written to the platform cache directory. Web output is always a data URL; native `ImageFormat.base64` also returns an in-memory data URL.

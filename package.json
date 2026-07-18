@@ -1,7 +1,7 @@
 {
   "name": "react-native-image-marker",
   "version": "1.4.3",
-  "description": "Add text or icon watermark to your images",
+  "description": "Add text and image watermarks in React Native and React Native Web",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
   "types": "lib/typescript/index.d.ts",
@@ -29,6 +29,7 @@
   ],
   "scripts": {
     "test": "jest",
+    "test:web": "jest src/__tests__/web-marker.test.ts src/__tests__/web-marker-api.test.ts src/__tests__/web-marker-render.test.ts --runInBand",
     "typecheck": "tsc --noEmit && npm run typecheck:api",
     "typecheck:api": "tsc --noEmit --strict --skipLibCheck --esModuleInterop --verbatimModuleSyntax --moduleResolution node --module esnext --target esnext src/__tests__/image-mark-options.typecheck.ts",
     "typecheck:example": "npm --prefix example run typecheck",
@@ -41,11 +42,15 @@
     "bootstrap": "yarn example && yarn install && yarn example pods && yarn expo-example && yarn expo-example expo-install",
     "bootstrap-m1": "yarn example && yarn install && yarn example m1-pods",
     "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build",
-    "docs": "typedoc --gitRevision master --excludePrivate --tsconfig tsconfig.doc.json && node scripts/copy-doc-assets.js",
+    "docs": "npm --prefix website run build",
+    "docs:dev": "npm --prefix website run dev",
     "expo-install": "yarn expo-example expo-install"
   },
   "keywords": [
     "react-native",
+    "react-native-web",
+    "web",
+    "canvas",
     "ios",
     "android",
     "image",
@@ -63,7 +68,7 @@
   "bugs": {
     "url": "https://github.com/JimmyDaddy/react-native-image-marker/issues"
   },
-  "homepage": "https://jimmydaddy.github.io/react-native-image-marker",
+  "homepage": "https://mage-marker.corerobin.com",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
@@ -92,9 +97,6 @@
     "react-native": "0.73.3",
     "react-native-builder-bob": "^0.40.15",
     "release-it": "^17.10.0",
-    "typedoc": "0.28.19",
-    "typedoc-plugin-localization": "^3.1.0",
-    "typedoc-plugin-rename-defaults": "^0.7.3",
     "typescript": "^5.9.3"
   },
   "resolutions": {

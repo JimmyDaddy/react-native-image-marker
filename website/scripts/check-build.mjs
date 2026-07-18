@@ -1,0 +1,207 @@
+import { access, readFile, readdir } from 'node:fs/promises';
+import { extname, join } from 'node:path';
+
+const outputRoot = new URL('../dist/', import.meta.url).pathname;
+const requiredFiles = [
+  'index.html',
+  '404.html',
+  'getting-started/index.html',
+  'playground/index.html',
+  'compatibility/index.html',
+  'cookbook/index.html',
+  'troubleshooting/index.html',
+  'sitemap/index.html',
+  'api/index.html',
+  'zh-cn/index.html',
+  'zh-cn/getting-started/index.html',
+  'zh-cn/playground/index.html',
+  'zh-cn/compatibility/index.html',
+  'zh-cn/guides/choose-an-api/index.html',
+  'zh-cn/guides/position-and-style/index.html',
+  'zh-cn/guides/output-and-quality/index.html',
+  'zh-cn/cookbook/index.html',
+  'zh-cn/troubleshooting/index.html',
+  'zh-cn/sitemap/index.html',
+  'zh-cn/migration/index.html',
+  'zh-cn/api/index.html',
+  'zh-cn/api/classes/marker/index.html',
+  'classes/Marker.html',
+  'interfaces/TextMarkOptions.html',
+  'usage-guide.html',
+  'v1.0.x/index.html',
+  'react-native-image-marker/classes/Marker.html',
+  'react-native-image-marker/index.html',
+  'CNAME',
+  'media/watermark-after-dark.jpg',
+  'media/marker-compass.png',
+  'robots.txt',
+  'sitemap-index.xml',
+  'sitemap-0.xml',
+];
+
+for (const relativePath of requiredFiles) {
+  await access(join(outputRoot, relativePath));
+}
+
+async function collectHtml(directory) {
+  const entries = await readdir(directory, { withFileTypes: true });
+  const files = [];
+
+  for (const entry of entries) {
+    const path = join(directory, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...(await collectHtml(path)));
+    } else if (extname(entry.name) === '.html') {
+      files.push(path);
+    }
+  }
+
+  return files;
+}
+
+const staleDeploymentReference =
+  /jimmydaddy\.github\.io\/react-native-image-marker|(?:href|src)=["']\/react-native-image-marker\//g;
+const offenders = [];
+const brokenLinks = [];
+
+function outputPathForUrl(urlPath) {
+  const decoded = decodeURIComponent(urlPath);
+  const relativePath = decoded.replace(/^\//, '');
+
+  if (relativePath === '') {
+    return join(outputRoot, 'index.html');
+  }
+
+  if (relativePath.endsWith('/')) {
+    return join(outputRoot, relativePath, 'index.html');
+  }
+
+  return join(outputRoot, relativePath);
+}
+
+for (const file of await collectHtml(outputRoot)) {
+  const html = await readFile(file, 'utf8');
+  if (staleDeploymentReference.test(html)) {
+    offenders.push(file.slice(outputRoot.length));
+  }
+  staleDeploymentReference.lastIndex = 0;
+
+  for (const match of html.matchAll(/(?:href|src)=["']([^"']+)["']/g)) {
+    const reference = match[1];
+    if (!reference.startsWith('/') || reference.startsWith('//')) {
+      continue;
+    }
+
+    const urlPath = reference.split(/[?#]/, 1)[0];
+    try {
+      await access(outputPathForUrl(urlPath));
+    } catch {
+      brokenLinks.push(`${file.slice(outputRoot.length)} -> ${reference}`);
+    }
+  }
+}
+
+if (offenders.length > 0) {
+  throw new Error(
+    `Found stale references to the previous GitHub Pages URL:\n${offenders.join(
+      '\n'
+    )}`
+  );
+}
+
+if (brokenLinks.length > 0) {
+  throw new Error(`Found broken internal links:\n${brokenLinks.join('\n')}`);
+}
+
+const cname = (await readFile(join(outputRoot, 'CNAME'), 'utf8')).trim();
+if (cname !== 'mage-marker.corerobin.com') {
+  throw new Error(`Unexpected CNAME value: ${cname}`);
+}
+
+const chineseHome = await readFile(
+  join(outputRoot, 'zh-cn/index.html'),
+  'utf8'
+);
+const requiredChineseHomeFragments = [
+  '<html lang="zh-CN"',
+  'hreflang="en"',
+  'hreflang="zh-CN"',
+  'href="/zh-cn/"',
+  '开始使用',
+  '这张图加了什么',
+  '在浏览器中试用',
+  '/zh-cn/playground/',
+  '/zh-cn/getting-started/',
+];
+
+for (const fragment of requiredChineseHomeFragments) {
+  if (!chineseHome.includes(fragment)) {
+    throw new Error(
+      `Chinese homepage is missing expected content: ${fragment}`
+    );
+  }
+}
+
+const chineseApi = await readFile(
+  join(outputRoot, 'zh-cn/api/classes/marker/index.html'),
+  'utf8'
+);
+for (const label of ['API 参考', '枚举', '类', '接口', '类型别名']) {
+  if (!chineseApi.includes(label)) {
+    throw new Error(`Chinese API sidebar is missing expected label: ${label}`);
+  }
+}
+
+const englishPlayground = await readFile(
+  join(outputRoot, 'playground/index.html'),
+  'utf8'
+);
+for (const fragment of [
+  'Add a watermark to an image.',
+  'Live preview',
+  'Save image',
+  'Update preview automatically',
+]) {
+  if (!englishPlayground.includes(fragment)) {
+    throw new Error(
+      `English playground is missing expected content: ${fragment}`
+    );
+  }
+}
+
+const chinesePlayground = await readFile(
+  join(outputRoot, 'zh-cn/playground/index.html'),
+  'utf8'
+);
+for (const fragment of [
+  '<html lang="zh-CN"',
+  '试着给图片加上水印。',
+  '实时预览',
+  '保存图片',
+  '自动更新预览',
+]) {
+  if (!chinesePlayground.includes(fragment)) {
+    throw new Error(
+      `Chinese playground is missing expected content: ${fragment}`
+    );
+  }
+}
+
+const robots = await readFile(join(outputRoot, 'robots.txt'), 'utf8');
+if (!robots.includes('Sitemap: https://mage-marker.corerobin.com/sitemap-index.xml')) {
+  throw new Error('robots.txt does not point to the production sitemap index.');
+}
+
+const xmlSitemap = await readFile(join(outputRoot, 'sitemap-0.xml'), 'utf8');
+for (const url of [
+  'https://mage-marker.corerobin.com/sitemap/',
+  'https://mage-marker.corerobin.com/zh-cn/sitemap/',
+]) {
+  if (!xmlSitemap.includes(`<loc>${url}</loc>`)) {
+    throw new Error(`XML sitemap is missing expected URL: ${url}`);
+  }
+}
+
+console.log(
+  `Verified ${requiredFiles.length} required pages, internal links, and the custom domain.`
+);

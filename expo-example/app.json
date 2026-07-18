@@ -25,6 +25,7 @@
       "package": "com.jimmydaddy.expoexample"
     },
     "web": {
+      "bundler": "metro",
       "favicon": "./assets/favicon.png"
     },
     "plugins": [

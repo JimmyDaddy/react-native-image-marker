@@ -1,0 +1,201 @@
+---
+interface Props {
+  locale?: 'en' | 'zh-CN';
+}
+
+const base = import.meta.env.BASE_URL;
+const { locale = 'en' } = Astro.props;
+
+const strings = locale === 'zh-CN'
+  ? {
+      platformLabel: '支持的运行环境',
+      platforms: ['图片不上传', 'iOS + Android', '浏览器', '新架构', 'Expo 开发构建'],
+      kicker: '能做什么',
+      title: '文字、Logo，想怎么加都可以。',
+      description:
+        '给本地图片添加文字或 Logo，分别调整样式和位置，再导出 JPEG、PNG 或 base64。所有处理都在设备或浏览器中完成。',
+      capabilities: [
+        ['文字水印', '设置字体、颜色、背景、阴影和角度。'],
+        ['Logo 水印', '调整大小、角度、透明度并裁掉透明边缘。'],
+        ['放在准确位置', '选择九宫格位置，或直接填写 X/Y 坐标。'],
+        ['按需要导出', '保存为 JPEG、PNG 或 base64，并控制图片质量。'],
+      ],
+      installLabel: '安装命令',
+      coastAlt: '海岸风景上叠加了样式标签、标题、时间戳和图片 Logo 水印',
+      compositionTitle: '文字 + Logo',
+      compositionMeta: '一次完成',
+      breakdownKicker: '示例说明',
+      breakdownTitle: '这张图加了什么',
+      breakdownDescription: '四项内容都可以单独调整。',
+      layers: [
+        ['标签', '字体、颜色与背景'],
+        ['标题', '字号、阴影与位置'],
+        ['时间', '位置与像素偏移'],
+        ['Logo', '大小与透明度'],
+      ],
+      breakdownSummary: '水印会按照列表顺序依次叠加。',
+      galleryLabel: '更多水印输出示例',
+      gallery: [
+        {
+          src: 'watermark-after-dark.jpg',
+          alt: '夜间街道上叠加了多层文字、旋转说明和图片 Logo 水印',
+          title: '文字和 Logo',
+          meta: '角度 · 顺序 · 样式',
+        },
+        {
+          src: 'watermark-image-layer.jpg',
+          alt: '混凝土建筑上叠加了大型半透明钴蓝色图片水印',
+          title: '大型 Logo',
+          meta: '大小 · 透明度 · 位置',
+        },
+        {
+          src: 'watermark-waypoint.jpg',
+          alt: '航拍山路上通过绝对坐标精准放置了图片目标标记',
+          title: '指定位置',
+          meta: '坐标 · PNG 导出',
+        },
+      ],
+    }
+  : {
+      platformLabel: 'Supported environments',
+      platforms: [
+        'No uploads',
+        'iOS + Android',
+        'Web browsers',
+        'New Architecture',
+        'Expo development builds',
+      ],
+      kicker: 'What you can do',
+      title: 'Add text, logos, or both.',
+      description:
+        'Add text or logos to a local image, adjust each item, then export JPEG, PNG, or base64. Everything runs on the device or in the browser.',
+      capabilities: [
+        ['Text watermarks', 'Set the font, color, background, shadow, and angle.'],
+        ['Logo watermarks', 'Resize, rotate, fade, and trim transparent edges.'],
+        ['Exact placement', 'Choose a preset position or enter X/Y coordinates.'],
+        ['Useful output', 'Save JPEG, PNG, or base64 and control image quality.'],
+      ],
+      installLabel: 'Install command',
+      coastAlt:
+        'Coastal landscape with a styled label, title, timestamp, and image logo watermark',
+      compositionTitle: 'Text + logo',
+      compositionMeta: 'Created in one pass',
+      breakdownKicker: 'Example explained',
+      breakdownTitle: 'What was added to this image',
+      breakdownDescription: 'Each of these four items can be adjusted separately.',
+      layers: [
+        ['Label', 'Font, color, and background'],
+        ['Title', 'Size, shadow, and position'],
+        ['Time', 'Position and pixel offsets'],
+        ['Logo', 'Size and opacity'],
+      ],
+      breakdownSummary: 'Watermarks are added in the order they appear in your list.',
+      galleryLabel: 'More watermark output examples',
+      gallery: [
+        {
+          src: 'watermark-after-dark.jpg',
+          alt: 'Night street with multiple text layers, a rotated caption, and an image logo watermark',
+          title: 'Text and logo',
+          meta: 'Angle · order · style',
+        },
+        {
+          src: 'watermark-image-layer.jpg',
+          alt: 'Concrete architecture with a large translucent cobalt image watermark',
+          title: 'Large logo',
+          meta: 'Size · opacity · position',
+        },
+        {
+          src: 'watermark-waypoint.jpg',
+          alt: 'Aerial mountain road with an image target precisely placed at absolute coordinates',
+          title: 'Exact placement',
+          meta: 'Coordinates · PNG output',
+        },
+      ],
+    };
+---
+
+<div class="platform-row" aria-label={strings.platformLabel}>
+  {strings.platforms.map((platform) => <span class="platform-chip">{platform}</span>)}
+</div>
+
+<section class="product-stage" aria-labelledby="core-capabilities-title">
+  <div class="product-copy">
+    <div>
+      <p class="product-kicker">{strings.kicker}</p>
+      <h2 id="core-capabilities-title">{strings.title}</h2>
+      <p>{strings.description}</p>
+    </div>
+
+    <div class="capability-list">
+      {strings.capabilities.map(([title, description], index) => (
+        <article class="capability-item">
+          <span class="capability-index">{String(index + 1).padStart(2, '0')}</span>
+          <div>
+            <h3>{title}</h3>
+            <p>{description}</p>
+          </div>
+        </article>
+      ))}
+    </div>
+
+    <div class="install-block" aria-label={strings.installLabel}>
+      <code>npm install react-native-image-marker</code>
+    </div>
+  </div>
+
+  <div class="product-preview">
+    <figure class="preview-card preview-card-primary">
+      <img
+        src={`${base}media/watermark-coast.jpg`}
+        alt={strings.coastAlt}
+        width="1586"
+        height="992"
+        loading="eager"
+        decoding="async"
+      />
+      <figcaption>
+        <strong>{strings.compositionTitle}</strong>
+        <span>{strings.compositionMeta}</span>
+      </figcaption>
+    </figure>
+
+    <section class="layer-breakdown" aria-labelledby="layer-breakdown-title">
+      <div class="layer-breakdown-heading">
+        <p>{strings.breakdownKicker}</p>
+        <h3 id="layer-breakdown-title">{strings.breakdownTitle}</h3>
+        <span>{strings.breakdownDescription}</span>
+      </div>
+      <ol>
+        {strings.layers.map(([title, description], index) => (
+          <li>
+            <span>{String(index + 1).padStart(2, '0')}</span>
+            <div>
+              <strong>{title}</strong>
+              <small>{description}</small>
+            </div>
+          </li>
+        ))}
+      </ol>
+      <p class="layer-breakdown-summary">{strings.breakdownSummary}</p>
+    </section>
+  </div>
+
+  <div class="showcase-grid" aria-label={strings.galleryLabel}>
+    {strings.gallery.map((item) => (
+      <figure class="showcase-card">
+        <img
+          src={`${base}media/${item.src}`}
+          alt={item.alt}
+          width="1586"
+          height="992"
+          loading="lazy"
+          decoding="async"
+        />
+        <figcaption>
+          <strong>{item.title}</strong>
+          <span>{item.meta}</span>
+        </figcaption>
+      </figure>
+    ))}
+  </div>
+</section>
