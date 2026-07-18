@@ -119,6 +119,7 @@ export { Marker, Marker as WebMarker };
 export {
   degreesToRadians,
   encodeCanvas,
+  fitSizeWithinMax,
   getExpandedCanvasSize,
   getRotatedBounds,
   normalizeOutputFormat,

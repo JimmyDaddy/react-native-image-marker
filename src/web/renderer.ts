@@ -21,6 +21,7 @@ import type {
 import {
   degreesToRadians,
   encodeCanvas,
+  fitSizeWithinMax,
   getExpandedCanvasSize,
   getRotatedBounds,
   normalizeOutputFormat,
@@ -36,7 +37,7 @@ export type WebRenderLayer =
 
 type OutputOptions = Pick<
   MarkOptions,
-  'quality' | 'saveFormat' | 'matteColor' | 'rotationCanvasMode'
+  'quality' | 'saveFormat' | 'matteColor' | 'rotationCanvasMode' | 'maxSize'
 >;
 
 interface SourceBounds extends Size {
@@ -583,14 +584,18 @@ function getVisibleSourceBounds(image: LoadedWebImage): SourceBounds {
 async function drawImageLayer(
   context: WebCanvasContext,
   options: WatermarkImageOptions,
-  canvas: Size
+  canvas: Size,
+  maxSize: number | undefined
 ) {
   const image = await loadWebImage(options.src);
   try {
     const sourceBounds = options.trimTransparentPadding
       ? getVisibleSourceBounds(image)
       : fullSourceBounds(image);
-    const scale = resolveScale(options.scale, 'watermark image scale');
+    const boundedImageSize = fitSizeWithinMax(image, maxSize);
+    const decodeScale = boundedImageSize.width / image.width;
+    const scale =
+      resolveScale(options.scale, 'watermark image scale') * decodeScale;
     const alpha = resolveAlpha(options.alpha, 'watermark image alpha');
     const rotation = resolveRotation(
       options.rotate,
@@ -696,9 +701,16 @@ export async function renderWebComposition(
   const background = await loadWebImage(backgroundImage.src);
 
   try {
+    const boundedBackgroundSize = fitSizeWithinMax(background, output.maxSize);
     const compositionSize = {
-      width: Math.max(Math.round(background.width * backgroundScale), 1),
-      height: Math.max(Math.round(background.height * backgroundScale), 1),
+      width: Math.max(
+        Math.round(boundedBackgroundSize.width * backgroundScale),
+        1
+      ),
+      height: Math.max(
+        Math.round(boundedBackgroundSize.height * backgroundScale),
+        1
+      ),
     };
     const outputSize =
       canvasMode === 'expand'
@@ -742,7 +754,12 @@ export async function renderWebComposition(
         if (layer.type === 'text') {
           drawTextLayer(context, layer.options, compositionSize);
         } else {
-          await drawImageLayer(context, layer.options, compositionSize);
+          await drawImageLayer(
+            context,
+            layer.options,
+            compositionSize,
+            output.maxSize
+          );
         }
       }
     } finally {

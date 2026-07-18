@@ -112,6 +112,7 @@ describe('WebMarker browser render integration', () => {
     'document'
   );
   const originalImage = Object.getOwnPropertyDescriptor(globalThis, 'Image');
+  const originalURL = Object.getOwnPropertyDescriptor(globalThis, 'URL');
 
   afterEach(() => {
     if (originalDocument) {
@@ -123,6 +124,11 @@ describe('WebMarker browser render integration', () => {
       Object.defineProperty(globalThis, 'Image', originalImage);
     } else {
       delete (globalThis as { Image?: unknown }).Image;
+    }
+    if (originalURL) {
+      Object.defineProperty(globalThis, 'URL', originalURL);
+    } else {
+      delete (globalThis as { URL?: unknown }).URL;
     }
   });
 
@@ -184,6 +190,131 @@ describe('WebMarker browser render integration', () => {
       'x',
     ]);
     expect(calls.every(([, x]) => Number(x) >= 0)).toBe(true);
+  });
+
+  it('renders styled text backgrounds, decorations, alignment, and shadows', async () => {
+    const canvases = installFakeBrowserRuntime();
+
+    await WebMarker.markText({
+      backgroundImage: { src: '/background.jpg', rotate: 8, alpha: 0.8 },
+      watermarkTexts: [
+        {
+          text: 'Styled\nwatermark',
+          position: { position: Position.center, X: 5, Y: -3 },
+          style: {
+            color: '#F8FAFC',
+            fontName: 'Marker "Display"',
+            fontSizeRatio: 0.08,
+            italic: true,
+            bold: true,
+            textAlign: 'right',
+            rotate: -12,
+            skewX: 0.15,
+            underline: true,
+            strikeThrough: true,
+            shadowStyle: {
+              color: '#111827AA',
+              dx: 2,
+              dy: 3,
+              radius: 4,
+            },
+            textBackgroundStyle: {
+              type: 'stretchX' as any,
+              color: '#0F172ACC',
+              padding: '4 8 6 10',
+              paddingX: '2%',
+              paddingTop: 5,
+              cornerRadius: {
+                all: { x: '20%', y: 8 },
+                topRight: { x: 4, y: 5 },
+              },
+            },
+          },
+        },
+      ],
+      saveFormat: ImageFormat.jpg,
+      matteColor: '#abc8',
+      quality: 74,
+    });
+
+    const { context, canvas } = canvases[0]!;
+    expect(canvas.toDataURL).toHaveBeenCalledWith('image/jpeg', 0.74);
+    expect(context.fillRect).toHaveBeenCalled();
+    expect(context.quadraticCurveTo).toHaveBeenCalledTimes(4);
+    expect(context.fill).toHaveBeenCalled();
+    expect(context.stroke).toHaveBeenCalledTimes(2);
+    expect(context.transform).toHaveBeenCalledWith(1, 0, 0.15, 1, 0, 0);
+    expect(context.textAlign).toBe('right');
+    expect(context.font).toContain('italic 700');
+    expect(context.shadowBlur).toBe(4);
+  });
+
+  it('bounds large inputs before applying background and watermark scales', async () => {
+    const canvases = installFakeBrowserRuntime();
+
+    await WebMarker.markImage({
+      backgroundImage: { src: '/background.jpg', scale: 1.5 },
+      watermarkImages: [
+        {
+          src: '/logo.png',
+          scale: 0.5,
+          trimTransparentPadding: true,
+        },
+      ],
+      maxSize: 100,
+      rotationCanvasMode: 'crop' as any,
+      saveFormat: ImageFormat.png,
+    });
+
+    expect(canvases[0]?.canvas).toMatchObject({ width: 150, height: 95 });
+    expect(canvases[0]?.context.drawImage).toHaveBeenNthCalledWith(
+      1,
+      expect.any(FakeImage),
+      0,
+      0,
+      150,
+      95
+    );
+    expect(canvases[1]?.context.getImageData).toHaveBeenCalledWith(
+      0,
+      0,
+      320,
+      200
+    );
+    expect(canvases[0]?.context.scale).toHaveBeenCalledWith(0.15625, 0.15625);
+  });
+
+  it('loads Blob/File-compatible sources and revokes their object URL', async () => {
+    installFakeBrowserRuntime();
+    const createObjectURL = jest.fn(() => 'blob:image-marker-test');
+    const revokeObjectURL = jest.fn();
+    Object.defineProperty(globalThis, 'URL', {
+      configurable: true,
+      value: { createObjectURL, revokeObjectURL },
+    });
+    const source = {
+      arrayBuffer: async () => new ArrayBuffer(0),
+      size: 10,
+      type: 'image/png',
+    };
+
+    const loaded = await loadWebImage(source);
+
+    expect(createObjectURL).toHaveBeenCalledWith(source);
+    expect(loaded).toMatchObject({ width: 320, height: 200 });
+    loaded.cleanup();
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:image-marker-test');
+  });
+
+  it('explains numeric and unsupported browser image sources', async () => {
+    installFakeBrowserRuntime();
+
+    await expect(loadWebImage(42)).rejects.toThrow(
+      'Numeric React Native asset IDs are not available on web.'
+    );
+    await expect(loadWebImage({ nope: true })).rejects.toThrow(
+      'Unsupported web image source.'
+    );
   });
 
   it('uses skewX directly as the Canvas shear factor', async () => {

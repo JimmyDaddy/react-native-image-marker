@@ -1,5 +1,6 @@
 import {
   encodeCanvas,
+  fitSizeWithinMax,
   getExpandedCanvasSize,
   getRotatedBounds,
   resolveAnchoredPosition,
@@ -16,6 +17,26 @@ describe('WebMarker pure helpers', () => {
     expect(resolveSpreadValue('12.5%', 400)).toBe(50);
     expect(resolveSpreadValue(' 18 ', 400)).toBe(18);
     expect(resolveSpreadValue(undefined, 400)).toBeUndefined();
+  });
+
+  it('bounds large image dimensions without changing their aspect ratio', () => {
+    expect(fitSizeWithinMax({ width: 4000, height: 3000 }, 1000)).toEqual({
+      width: 1000,
+      height: 750,
+    });
+    expect(fitSizeWithinMax({ width: 640, height: 480 }, 1000)).toEqual({
+      width: 640,
+      height: 480,
+    });
+  });
+
+  it('rejects invalid web image bounds', () => {
+    expect(() => fitSizeWithinMax({ width: 640, height: 480 }, 0)).toThrow(
+      'maxSize must be a positive finite integer.'
+    );
+    expect(() => fitSizeWithinMax({ width: 0, height: 480 }, 1000)).toThrow(
+      'image dimensions must be finite numbers greater than 0.'
+    );
   });
 
   it('uses the compatibility inset for named anchors', () => {
