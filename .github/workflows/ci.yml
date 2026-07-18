@@ -857,6 +857,8 @@ jobs:
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testWatermarkOrientationMatchesUprightPixelReference \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testNormalizesUIImageOrientationBeforeCGImageRendering \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testKeepsAlreadyUprightUIImageInstance \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testTileLayoutResolvesOffsetsStaggerAndCopyLimit \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testTiledImageRepeatsAcrossCanvas \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testPositionDefaultsAndEdgeInsetOverrides \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testRotatesFortyFiveDegreesWithExpandedTransparentCanvas \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testRotatesFortyFiveDegreesWithCroppedOriginalCanvas \

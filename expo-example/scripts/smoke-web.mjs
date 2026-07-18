@@ -147,12 +147,13 @@ async function verifyBrowser(browserName, browserType) {
     const harnessResults = await page.evaluate(async (crossOriginUrl) => {
       const harness = window.__IMAGE_MARKER_SMOKE__;
       if (!harness) throw new Error('Web smoke harness was not installed.');
-      const [blobAndFile, largeCropped] = await Promise.all([
+      const [blobAndFile, largeCropped, tiledLayers] = await Promise.all([
         harness.renderBlobAndFile(),
         harness.renderLargeCropped(),
+        harness.renderTiledLayers(),
       ]);
       const corsMessage = await harness.renderCrossOrigin(crossOriginUrl);
-      return { blobAndFile, largeCropped, corsMessage };
+      return { blobAndFile, largeCropped, tiledLayers, corsMessage };
     }, `http://127.0.0.1:${crossOriginAddress.port}/fixture.jpeg`);
 
     assert.match(
@@ -172,6 +173,17 @@ async function verifyBrowser(browserName, browserType) {
       harnessResults.largeCropped.dataUrl,
       /^data:image\/png;base64,/
     );
+    assert.match(
+      harnessResults.tiledLayers.dataUrl,
+      /^data:image\/png;base64,/
+    );
+    assert(harnessResults.tiledLayers.width > 0);
+    assert(harnessResults.tiledLayers.height > 0);
+    await assertVisibleComposition(
+      page,
+      baselineSource,
+      harnessResults.tiledLayers.dataUrl
+    );
     assert.match(harnessResults.corsMessage, /Access-Control-Allow-Origin/i);
     assert.deepEqual(
       pageErrors,
@@ -180,7 +192,7 @@ async function verifyBrowser(browserName, browserType) {
     );
 
     console.log(
-      `Verified ${browserName}: Canvas pixels, JPG/PNG, Blob/File, CORS, rotation crop, alpha, and 4096px max-size rendering.`
+      `Verified ${browserName}: Canvas pixels, tiled text/logo layers, JPG/PNG, Blob/File, CORS, rotation crop, alpha, and 4096px max-size rendering.`
     );
   } finally {
     await browser.close();

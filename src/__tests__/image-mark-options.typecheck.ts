@@ -2,6 +2,7 @@ import Marker, {
   type ImageMarkOptions,
   type TextMarkOptions,
   type TextStrokeStyle,
+  type WatermarkLayout,
 } from '../index';
 
 // The deprecated single-watermark shape remains source-compatible for users
@@ -43,4 +44,17 @@ export const outlinedText: TextMarkOptions = {
       style: { color: '#FFFFFF', strokeStyle: textStroke },
     },
   ],
+};
+
+export const tiledLayout: WatermarkLayout = {
+  type: 'tile',
+  gapX: '8%',
+  gapY: 24,
+  offsetX: '-2.5%',
+  stagger: true,
+};
+
+export const tiledText: TextMarkOptions = {
+  backgroundImage: { src: 'file:///tmp/background.png' },
+  watermarkTexts: [{ text: 'CONFIDENTIAL', layout: tiledLayout }],
 };

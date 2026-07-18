@@ -282,6 +282,90 @@ describe('WebMarker browser render integration', () => {
     expect(context.moveTo).toHaveBeenCalledWith(0, 0);
   });
 
+  it('tiles outlined text using percentage gaps and staggered rows', async () => {
+    const canvases = installFakeBrowserRuntime();
+
+    await WebMarker.markText({
+      backgroundImage: { src: '/background.jpg' },
+      watermarkTexts: [
+        {
+          text: 'Tile',
+          layout: {
+            type: 'tile',
+            gapX: 40,
+            gapY: 24,
+            stagger: true,
+          },
+          style: {
+            rotate: -20,
+            strokeStyle: { color: '#111827', width: 2 },
+          },
+        },
+      ],
+      saveFormat: ImageFormat.png,
+    });
+
+    const { context } = canvases[0]!;
+    expect(context.fillText.mock.calls.length).toBeGreaterThan(10);
+    expect(context.strokeText).toHaveBeenCalledTimes(
+      context.fillText.mock.calls.length
+    );
+    expect(context.rotate).toHaveBeenCalledWith(expect.any(Number));
+    const xValues = context.fillText.mock.calls.map(([, x]) => x);
+    expect(new Set(xValues).size).toBeGreaterThan(4);
+  });
+
+  it('decodes a tiled image layer once and repeats it before the next layer', async () => {
+    const canvases = installFakeBrowserRuntime();
+
+    await WebMarker.mark({
+      backgroundImage: { src: '/background.jpg' },
+      watermarks: [
+        {
+          type: 'image',
+          src: '/logo.png',
+          scale: 0.1,
+          layout: { type: 'tile', gapX: 32, gapY: 20 },
+        },
+        {
+          type: 'text',
+          text: 'Top layer',
+          layout: { type: 'tile', gapX: 80, gapY: 40 },
+        },
+      ],
+      saveFormat: ImageFormat.png,
+    });
+
+    expect(FakeImage.instances).toHaveLength(2);
+    const { context } = canvases[0]!;
+    expect(context.drawImage).toHaveBeenCalledTimes(26);
+    expect(context.drawImage.mock.invocationCallOrder.at(-1)).toBeLessThan(
+      context.fillText.mock.invocationCallOrder[0]!
+    );
+  });
+
+  it('fails before drawing a tile layer that exceeds the copy limit', async () => {
+    const canvases = installFakeBrowserRuntime();
+
+    await expect(
+      WebMarker.markText({
+        backgroundImage: { src: '/background.jpg', scale: 10 },
+        watermarkTexts: [
+          {
+            text: 'x',
+            layout: { type: 'tile' },
+            style: { fontSize: 1 },
+          },
+        ],
+        saveFormat: ImageFormat.png,
+      })
+    ).rejects.toThrow(
+      'tile layout exceeds the maximum of 4096 copies per layer.'
+    );
+
+    expect(canvases[0]?.context.fillText).not.toHaveBeenCalled();
+  });
+
   it('bounds large inputs before applying background and watermark scales', async () => {
     const canvases = installFakeBrowserRuntime();
 

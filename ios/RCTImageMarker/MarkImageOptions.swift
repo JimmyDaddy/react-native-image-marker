@@ -39,13 +39,23 @@ class MarkImageOptions: Options {
                 singlePosition = positionOpts["position"] != nil ? RCTConvert.MarkerPosition(positionOpts["position"]) : .none
             }
             let trimTransparentPadding = watermarkImageOpts["trimTransparentPadding"] as? Bool ?? false
+            let layout = try (watermarkImageOpts["layout"] as? [AnyHashable: Any])
+                .map(ImageMarkerWatermarkLayout.init(dicOpts:))
+            if layout?.isTile == true, singleImagePositionOpts != nil {
+                throw NSError(
+                    domain: ErrorDomainEnum.PARAMS_INVALID.rawValue,
+                    code: 0,
+                    userInfo: [NSLocalizedDescriptionKey: "layout cannot be combined with position"]
+                )
+            }
             let watermarkImageOptions = WatermarkImageOptions(
                 watermarkImage: singleImageOptions,
                 X: singleX,
                 Y: singleY,
                 edgeInset: singleEdgeInset,
                 position: singlePosition,
-                trimTransparentPadding: trimTransparentPadding
+                trimTransparentPadding: trimTransparentPadding,
+                layout: layout
             )
             self.watermarkImages.append(watermarkImageOptions)
         }

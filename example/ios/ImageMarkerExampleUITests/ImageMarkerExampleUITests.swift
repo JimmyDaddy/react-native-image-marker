@@ -246,6 +246,77 @@ final class ImageMarkerExampleUITests: XCTestCase {
     XCTAssertTrue(image.normalizedForImageMarker() === image)
   }
 
+  func testTileLayoutResolvesOffsetsStaggerAndCopyLimit() throws {
+    let layout = try ImageMarkerWatermarkLayout(dicOpts: [
+      "type": "tile",
+      "gapX": 20,
+      "gapY": 10,
+      "offsetX": "10%",
+      "offsetY": -5,
+      "stagger": true,
+    ])
+
+    let placements = try layout.placements(
+      canvasSize: CGSize(width: 100, height: 60),
+      itemSize: CGSize(width: 20, height: 10)
+    )
+    XCTAssertEqual(placements[0].x, -10, accuracy: 0.001)
+    XCTAssertEqual(placements[0].y, -5, accuracy: 0.001)
+    XCTAssertEqual(placements[1].x, 30, accuracy: 0.001)
+    let secondRow = placements.filter { $0.y == 15 }
+    XCTAssertEqual(secondRow[0].x, 10, accuracy: 0.001)
+    XCTAssertEqual(secondRow[1].x, 50, accuracy: 0.001)
+
+    let dense = try ImageMarkerWatermarkLayout(dicOpts: ["type": "tile"])
+    XCTAssertThrowsError(
+      try dense.placements(
+        canvasSize: CGSize(width: 100, height: 100),
+        itemSize: CGSize(width: 1, height: 1)
+      )
+    ) { error in
+      XCTAssertEqual(
+        error.localizedDescription,
+        "tile layout exceeds the maximum of 4096 copies per layer"
+      )
+    }
+  }
+
+  func testTiledImageRepeatsAcrossCanvas() throws {
+    let background = makeSolidImage(size: CGSize(width: 12, height: 8), color: .red)
+    let marker = makeSolidImage(size: CGSize(width: 2, height: 2), color: .blue)
+    let layout = try ImageMarkerWatermarkLayout(dicOpts: [
+      "type": "tile",
+      "gapX": 2,
+      "gapY": 2,
+    ])
+
+    let rendered = try XCTUnwrap(
+      try ImageMarkerRenderer.renderImageWatermarks(
+        background: background,
+        watermarks: [
+          ImageMarkerImageWatermark(
+            image: marker,
+            position: .none,
+            offsetX: nil,
+            offsetY: nil,
+            scale: 1,
+            rotate: 0,
+            alpha: 1,
+            layout: layout
+          )
+        ],
+        backgroundScale: 1,
+        backgroundRotate: 0,
+        backgroundAlpha: 1
+      )
+    )
+
+    XCTAssertEqual(
+      bluePixelCount(in: rendered, xRange: 0..<12, yRange: 0..<8),
+      24
+    )
+  }
+
   func testPositionDefaultsAndEdgeInsetOverrides() throws {
     let canvasSize = CGSize(width: 100, height: 80)
     let itemSize = CGSize(width: 20, height: 10)
@@ -307,7 +378,7 @@ final class ImageMarkerExampleUITests: XCTestCase {
   func testRotatesFortyFiveDegreesWithExpandedTransparentCanvas() throws {
     let background = makeSolidImage(size: CGSize(width: 40, height: 20), color: .red)
     let renderedImage = try XCTUnwrap(
-      ImageMarkerRenderer.renderImageWatermarks(
+      try ImageMarkerRenderer.renderImageWatermarks(
         background: background,
         watermarks: [],
         backgroundScale: 1,
@@ -328,7 +399,7 @@ final class ImageMarkerExampleUITests: XCTestCase {
   func testRotatesFortyFiveDegreesWithCroppedOriginalCanvas() throws {
     let background = makeSolidImage(size: CGSize(width: 40, height: 20), color: .red)
     let renderedImage = try XCTUnwrap(
-      ImageMarkerRenderer.renderImageWatermarks(
+      try ImageMarkerRenderer.renderImageWatermarks(
         background: background,
         watermarks: [],
         backgroundScale: 1,
@@ -392,7 +463,7 @@ final class ImageMarkerExampleUITests: XCTestCase {
     XCTAssertEqual(trimmedWatermark.size.height, 4, accuracy: 0.001)
 
     let renderedImage = try XCTUnwrap(
-      ImageMarkerRenderer.renderImageWatermarks(
+      try ImageMarkerRenderer.renderImageWatermarks(
         background: background,
         watermarks: [
           ImageMarkerImageWatermark(
@@ -592,7 +663,7 @@ final class ImageMarkerExampleUITests: XCTestCase {
         "backgroundImage": background.merging(["scale": scenario.scale]) { _, new in new },
       ])
       let renderedImage = try XCTUnwrap(
-        ImageMarkerRenderer.renderImageWatermarks(
+        try ImageMarkerRenderer.renderImageWatermarks(
           background: backgroundImage,
           watermarks: [
             ImageMarkerImageWatermark(
@@ -651,7 +722,7 @@ final class ImageMarkerExampleUITests: XCTestCase {
       XCTAssertEqual(retinaWatermark.size, CGSize(width: 2, height: 2))
 
       let renderedImage = try XCTUnwrap(
-        ImageMarkerRenderer.renderImageWatermarks(
+        try ImageMarkerRenderer.renderImageWatermarks(
           background: retinaImage,
           watermarks: [
             ImageMarkerImageWatermark(
@@ -852,7 +923,7 @@ final class ImageMarkerExampleUITests: XCTestCase {
 
     for rotation in [CGFloat(45), CGFloat(90)] {
       let renderedImage = try XCTUnwrap(
-        ImageMarkerRenderer.renderImageWatermarks(
+        try ImageMarkerRenderer.renderImageWatermarks(
           background: background,
           watermarks: [
             ImageMarkerImageWatermark(
@@ -882,7 +953,7 @@ final class ImageMarkerExampleUITests: XCTestCase {
     let watermark = makeSolidImage(size: CGSize(width: 10, height: 10), color: .blue)
 
     let renderedImage = try XCTUnwrap(
-      ImageMarkerRenderer.renderImageWatermarks(
+      try ImageMarkerRenderer.renderImageWatermarks(
         background: background,
         watermarks: [
           ImageMarkerImageWatermark(
@@ -915,7 +986,7 @@ final class ImageMarkerExampleUITests: XCTestCase {
     let watermark = makeSolidImage(size: CGSize(width: 5, height: 5), color: .blue)
 
     let renderedImage = try XCTUnwrap(
-      ImageMarkerRenderer.renderImageWatermarks(
+      try ImageMarkerRenderer.renderImageWatermarks(
         background: background,
         watermarks: [
           ImageMarkerImageWatermark(
@@ -943,7 +1014,7 @@ final class ImageMarkerExampleUITests: XCTestCase {
     let watermark = makeCheckerImage(size: CGSize(width: 4, height: 4))
 
     let renderedImage = try XCTUnwrap(
-      ImageMarkerRenderer.renderImageWatermarks(
+      try ImageMarkerRenderer.renderImageWatermarks(
         background: background,
         watermarks: [
           ImageMarkerImageWatermark(
@@ -986,7 +1057,7 @@ final class ImageMarkerExampleUITests: XCTestCase {
       (name: "rotation=90", scale: CGFloat(1), rotation: CGFloat(90), expected: [UIColor.blue, .red, .yellow, .green]),
     ] {
       let renderedImage = try XCTUnwrap(
-        ImageMarkerRenderer.renderImageWatermarks(
+        try ImageMarkerRenderer.renderImageWatermarks(
           background: background,
           watermarks: [
             ImageMarkerImageWatermark(
