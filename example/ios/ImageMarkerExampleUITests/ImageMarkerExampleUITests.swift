@@ -668,6 +668,14 @@ final class ImageMarkerExampleUITests: XCTestCase {
       }
     }
 
+    XCTAssertEqual(try Utils.resolvedAlpha(0.35, fieldName: "text"), 0.35, accuracy: 0.001)
+    XCTAssertEqual(try Utils.resolvedAlpha(nil, fieldName: "text"), 1, accuracy: 0.001)
+    for alpha: Any in [-0.01, 1.01, Double.nan, Double.infinity, true, "0.5"] {
+      assertInvalidParams {
+        _ = try Utils.resolvedAlpha(alpha, fieldName: "text")
+      }
+    }
+
     for filename in [".", "..", ".png", ".jpg", ".jpeg", "../escape", "nested/file", "nested\\file", "bad\nname"] {
       assertInvalidParams {
         _ = try Options(dicOpts: ["backgroundImage": background, "filename": filename])

@@ -268,6 +268,30 @@ class Utils: NSObject {
         return UIColor(hex: value) ?? .clear
     }
 
+    static func resolvedAlpha(_ rawValue: Any?, fieldName: String) throws -> CGFloat {
+        guard let rawValue, !isNULL(rawValue) else {
+            return 1
+        }
+        guard let alphaNumber = rawValue as? NSNumber,
+              CFGetTypeID(alphaNumber) != CFBooleanGetTypeID() else {
+            throw NSError(
+                domain: ErrorDomainEnum.PARAMS_INVALID.rawValue,
+                code: 0,
+                userInfo: [NSLocalizedDescriptionKey: "\(fieldName) alpha must be between zero and one"]
+            )
+        }
+
+        let alpha = CGFloat(truncating: alphaNumber)
+        guard alpha.isFinite, (0...1).contains(alpha) else {
+            throw NSError(
+                domain: ErrorDomainEnum.PARAMS_INVALID.rawValue,
+                code: 0,
+                userInfo: [NSLocalizedDescriptionKey: "\(fieldName) alpha must be between zero and one"]
+            )
+        }
+        return alpha
+    }
+
     static func getShadowStyle(_ shadowStyle: [AnyHashable: Any]?) throws -> NSShadow? {
         if let shadowStyle = shadowStyle {
             guard let colorValue = shadowStyle["color"] as? String,

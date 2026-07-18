@@ -15,6 +15,7 @@ class TextOptions: NSObject {
     var edgeInset: String?
     var position: MarkerPositionEnum = .none
     var text: String
+    var alpha: CGFloat = 1.0
     var style: TextStyle
     var layout: ImageMarkerWatermarkLayout?
 
@@ -45,5 +46,6 @@ class TextOptions: NSObject {
         self.text = text
         let styleOpts = opts["style"] as? [AnyHashable: Any] ?? [:]
         self.style = try TextStyle(dicOpts: styleOpts)
+        self.alpha = try Utils.resolvedAlpha(opts["alpha"], fieldName: "text")
     }
 }

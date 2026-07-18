@@ -84,16 +84,16 @@ Do not set both `fontSize` and `fontSizeRatio` unless you have verified which be
 
 These text options work on iOS, Android, and Web:
 
-| Property | Purpose |
-| --- | --- |
-| `color` | Text color |
-| `fontName` | Platform font family or iOS PostScript name |
-| `fontSize` / `fontSizeRatio` | Fixed or responsive size |
-| `bold`, `italic`, `underline`, `strikeThrough` | Font decorations |
-| `rotate`, `skewX` | Transform the text |
-| `shadowStyle` | Shadow offset, radius, and color |
-| `strokeStyle` | Outline color and width |
-| `textBackgroundStyle` | Padding, color, stretch mode, and corner radius |
+| Property                                       | Purpose                                         |
+| ---------------------------------------------- | ----------------------------------------------- |
+| `color`                                        | Text color                                      |
+| `fontName`                                     | Platform font family or iOS PostScript name     |
+| `fontSize` / `fontSizeRatio`                   | Fixed or responsive size                        |
+| `bold`, `italic`, `underline`, `strikeThrough` | Font decorations                                |
+| `rotate`, `skewX`                              | Transform the text                              |
+| `shadowStyle`                                  | Shadow offset, radius, and color                |
+| `strokeStyle`                                  | Outline color and width                         |
+| `textBackgroundStyle`                          | Padding, color, stretch mode, and corner radius |
 
 Use `TextBackgroundType.none` when the background should fit the text rather than stretch. Its serialized value is `fit`.
 
@@ -113,6 +113,18 @@ style: {
 ```
 
 The outline is included in anchoring and tile spacing. Set `strokeStyle` to `null` or omit it to keep the previous fill-only rendering.
+
+### Text opacity
+
+Set `alpha` on a text layer to fade the complete watermark—including its fill, outline, shadow, and background—without rewriting every color. The value is a number from `0` to `1`; the default is `1`.
+
+```ts
+{
+  text: 'CONFIDENTIAL',
+  alpha: 0.55,
+  style: { color: '#FFFFFF', fontSize: 32 },
+}
+```
 
 ### Custom fonts
 

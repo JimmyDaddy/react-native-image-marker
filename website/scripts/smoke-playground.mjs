@@ -93,6 +93,7 @@ try {
   await assertVisibleLogo(playground);
   await assertCustomSelects(playground);
   await assertLayoutControlsAndCode(page, playground);
+  await assertBatchRecipe(page, playground);
 
   const code = await playground.locator('[data-web-code]').textContent();
   assert.match(
@@ -137,7 +138,11 @@ try {
     page: document.documentElement.scrollWidth,
     viewport: window.innerWidth,
   }));
-  assert.equal(mobileWidth.page, mobileWidth.viewport, 'Mobile playground should not overflow.');
+  assert.equal(
+    mobileWidth.page,
+    mobileWidth.viewport,
+    'Mobile playground should not overflow.'
+  );
   assert.deepEqual(
     pageErrors,
     [],
@@ -145,7 +150,7 @@ try {
   );
 
   console.log(
-    'Verified top navigation, custom selectors, first-viewport layout, tiled/single and outline controls, preview-to-code parity, both playground routes, downloads, and the HTML sitemap.'
+    'Verified navigation, responsive layout, watermark controls, preview-to-code parity, batch Blob results, cancellation, both playground routes, downloads, and the HTML sitemap.'
   );
 } finally {
   await browser?.close();
@@ -167,70 +172,180 @@ async function assertPreviewMime(playground, mimeType) {
 }
 
 async function assertVisibleLogo(playground) {
-  const orangePixels = await playground.locator('[data-preview]').evaluate(async (image) => {
-    await image.decode();
-    const canvas = document.createElement('canvas');
-    canvas.width = image.naturalWidth;
-    canvas.height = image.naturalHeight;
-    const context = canvas.getContext('2d');
-    if (!context) return 0;
-    context.drawImage(image, 0, 0);
-    const size = Math.min(240, canvas.width, canvas.height);
-    const pixels = context.getImageData(canvas.width - size, 0, size, size).data;
-    let count = 0;
-    for (let index = 0; index < pixels.length; index += 4) {
-      if (pixels[index] > 220 && pixels[index + 1] < 130 && pixels[index + 2] < 100) {
-        count += 1;
+  const orangePixels = await playground
+    .locator('[data-preview]')
+    .evaluate(async (image) => {
+      await image.decode();
+      const canvas = document.createElement('canvas');
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
+      const context = canvas.getContext('2d');
+      if (!context) return 0;
+      context.drawImage(image, 0, 0);
+      const size = Math.min(240, canvas.width, canvas.height);
+      const pixels = context.getImageData(
+        canvas.width - size,
+        0,
+        size,
+        size
+      ).data;
+      let count = 0;
+      for (let index = 0; index < pixels.length; index += 4) {
+        if (
+          pixels[index] > 220 &&
+          pixels[index + 1] < 130 &&
+          pixels[index + 2] < 100
+        ) {
+          count += 1;
+        }
       }
-    }
-    return count;
-  });
+      return count;
+    });
 
-  assert(orangePixels > 100, 'Default image watermark should be visible over the background.');
+  assert(
+    orangePixels > 100,
+    'Default image watermark should be visible over the background.'
+  );
+}
+
+async function assertBatchRecipe(page, playground) {
+  const batchFiles = playground.locator('[data-batch-files]');
+  const fixtureNames = [
+    'playground-background.jpg',
+    'watermark-coast.jpg',
+    'watermark-after-dark.jpg',
+  ];
+  const fixturePaths = fixtureNames.map((name) =>
+    path.join(websiteRoot, 'public', 'media', name)
+  );
+  await batchFiles.setInputFiles(fixturePaths);
+  await playground.getByText('3 images queued').waitFor();
+  await playground.locator('[data-batch-run]').click();
+  await page.waitForFunction(() =>
+    document
+      .querySelector('[data-batch-status]')
+      ?.textContent?.includes('Batch complete')
+  );
+
+  const results = playground.locator('[data-batch-result]');
+  assert.equal(await results.count(), 3);
+  assert.deepEqual(
+    await results.locator('strong').allTextContents(),
+    fixtureNames
+  );
+  assert.equal(
+    await playground.locator('[data-batch-result="fulfilled"]').count(),
+    3
+  );
+  const sources = await results
+    .locator('img')
+    .evaluateAll((images) => images.map((image) => image.getAttribute('src')));
+  assert(sources.every((source) => source?.startsWith('blob:')));
+
+  const cancelFixtures = [
+    ...fixturePaths,
+    path.join(websiteRoot, 'public', 'media', 'watermark-tiled.jpg'),
+    path.join(websiteRoot, 'public', 'media', 'watermark-waypoint.jpg'),
+  ];
+  await batchFiles.setInputFiles(cancelFixtures);
+  await playground.locator('[data-batch-run]').click();
+  await playground.locator('[data-batch-cancel]').click();
+  await page.waitForFunction(() =>
+    document
+      .querySelector('[data-batch-status]')
+      ?.textContent?.includes('Batch complete')
+  );
+  assert.equal(await results.count(), 5);
+  assert(
+    (await playground.locator('[data-batch-result="aborted"]').count()) > 0,
+    'Cancelling should leave at least one not-yet-dispatched image aborted.'
+  );
 }
 
 async function assertLayoutControlsAndCode(page, playground) {
+  const textTile = playground.locator(
+    '[data-layout-layer="text"][data-layout="tile"]'
+  );
+  const textSingle = playground.locator(
+    '[data-layout-layer="text"][data-layout="single"]'
+  );
+  const imageTile = playground.locator(
+    '[data-layout-layer="image"][data-layout="tile"]'
+  );
+  const imageSingle = playground.locator(
+    '[data-layout-layer="image"][data-layout="single"]'
+  );
+  const preview = playground.locator('[data-preview]');
+
+  assert.equal(await playground.locator('[data-example]').count(), 6);
+  assert.equal(await playground.locator('.capability-index li').count(), 8);
+  assert(
+    await textSingle.isVisible(),
+    'Text layout switch should be visible without opening advanced controls.'
+  );
+  assert(
+    await imageSingle.isVisible(),
+    'Logo layout switch should be visible without opening advanced controls.'
+  );
+  assert.equal(await textSingle.getAttribute('aria-pressed'), 'true');
+  assert.equal(await imageSingle.getAttribute('aria-pressed'), 'true');
+
+  let code = await playground.locator('[data-web-code]').textContent();
+  assert.match(code ?? '', /alpha: 0\.85/);
+  assert.match(
+    code ?? '',
+    /position: \{ position: Position\.bottomLeft, X: 48, Y: 48 \}/
+  );
+  assert.doesNotMatch(code ?? '', /layout:/);
+  assert.match(code ?? '', /strokeStyle: \{ color: '#101828', width: 2 \}/);
+
+  let previousSource = await preview.getAttribute('src');
+  await playground.locator('[data-example="outline"]').click();
+  await waitForPreviewChange(page, playground, previousSource);
+  code = await playground.locator('[data-web-code]').textContent();
+  assert.match(code ?? '', /Marker\.markText/);
+  assert.match(code ?? '', /text: ["']IMAGE MARKER["']/);
+  assert.match(code ?? '', /alpha: 1/);
+  assert.match(code ?? '', /strokeStyle: \{ color: '#101828', width: 4 \}/);
+
+  previousSource = await preview.getAttribute('src');
+  await playground.locator('[data-example="opacity"]').click();
+  await waitForPreviewChange(page, playground, previousSource);
+  code = await playground.locator('[data-web-code]').textContent();
+  assert.match(code ?? '', /text: ["']PRIVATE PREVIEW["']/);
+  assert.match(code ?? '', /alpha: 0\.4/);
+
+  previousSource = await preview.getAttribute('src');
+  await playground.locator('[data-example="mixed"]').click();
+  await waitForPreviewChange(page, playground, previousSource);
+
+  previousSource = await preview.getAttribute('src');
+  await playground.locator('[data-text-opacity]').fill('0.45');
+  await playground.locator('[data-stroke-width]').fill('4');
+  await waitForPreviewChange(page, playground, previousSource);
+
+  code = await playground.locator('[data-web-code]').textContent();
+  assert.match(code ?? '', /alpha: 0\.45/);
+  assert.match(code ?? '', /strokeStyle: \{ color: '#101828', width: 4 \}/);
+
   await playground
     .locator('[data-text-controls] details.advanced-controls summary')
     .click();
   await playground
     .locator('[data-image-controls] details.advanced-controls summary')
     .click();
-  const textTile = playground.locator('[data-layout-layer="text"][data-layout="tile"]');
-  const textSingle = playground.locator('[data-layout-layer="text"][data-layout="single"]');
-  const imageTile = playground.locator('[data-layout-layer="image"][data-layout="tile"]');
-  const imageSingle = playground.locator('[data-layout-layer="image"][data-layout="single"]');
-  const preview = playground.locator('[data-preview]');
-
-  assert.equal(await textTile.getAttribute('aria-pressed'), 'true');
-  assert.equal(await imageSingle.getAttribute('aria-pressed'), 'true');
-
-  let code = await playground.locator('[data-web-code]').textContent();
-  assert.match(code ?? '', /layout: \{\s*type: 'tile'/);
-  assert.match(code ?? '', /gapX: ["']8%["']/);
-  assert.match(code ?? '', /strokeStyle: \{ color: '#101828', width: 2 \}/);
-
-  let previousSource = await preview.getAttribute('src');
-  await playground.locator('[data-text-gap-x]').fill('12%');
-  await playground.locator('[data-stroke-width]').fill('4');
-  await playground.locator('[data-text-stagger]').uncheck();
-  await waitForPreviewChange(page, playground, previousSource);
-
-  code = await playground.locator('[data-web-code]').textContent();
-  assert.match(code ?? '', /gapX: ["']12%["']/);
-  assert.match(code ?? '', /stagger: false/);
-  assert.match(code ?? '', /strokeStyle: \{ color: '#101828', width: 4 \}/);
-
-  previousSource = await preview.getAttribute('src');
-  await textSingle.click();
-  await waitForPreviewChange(page, playground, previousSource);
-  code = await playground.locator('[data-web-code]').textContent();
-  assert.match(code ?? '', /position: \{ position: Position\.bottomLeft, X: 48, Y: 48 \}/);
-  assert.doesNotMatch(code ?? '', /layout:/);
-
   previousSource = await preview.getAttribute('src');
   await textTile.click();
   await waitForPreviewChange(page, playground, previousSource);
+  previousSource = await preview.getAttribute('src');
+  await playground.locator('[data-text-gap-x]').fill('12%');
+  await playground.locator('[data-text-stagger]').uncheck();
+  await waitForPreviewChange(page, playground, previousSource);
+  code = await playground.locator('[data-web-code]').textContent();
+  assert.match(code ?? '', /layout: \{\s*type: 'tile'/);
+  assert.match(code ?? '', /gapX: ["']12%["']/);
+  assert.match(code ?? '', /stagger: false/);
+
   previousSource = await preview.getAttribute('src');
   await imageTile.click();
   await waitForPreviewChange(page, playground, previousSource);
@@ -240,18 +355,18 @@ async function assertLayoutControlsAndCode(page, playground) {
   previousSource = await preview.getAttribute('src');
   await imageSingle.click();
   await waitForPreviewChange(page, playground, previousSource);
+  previousSource = await preview.getAttribute('src');
+  await textSingle.click();
+  await waitForPreviewChange(page, playground, previousSource);
 }
 
 async function waitForPreviewChange(page, playground, previousSource) {
-  await page.waitForFunction(
-    (previous) => {
-      const preview = document.querySelector(
-        '[data-marker-playground] [data-preview]'
-      );
-      return preview instanceof HTMLImageElement && preview.src !== previous;
-    },
-    previousSource
-  );
+  await page.waitForFunction((previous) => {
+    const preview = document.querySelector(
+      '[data-marker-playground] [data-preview]'
+    );
+    return preview instanceof HTMLImageElement && preview.src !== previous;
+  }, previousSource);
   await waitForRendered(playground);
 }
 
@@ -287,16 +402,46 @@ async function assertWorkbenchLayout(page) {
     };
   });
 
-  assert.equal(layout.heroCount, 0, 'Playground should not render a separate hero.');
-  assert.equal(layout.h1Count, 1, 'Playground should have one visible page title.');
-  assert.equal(layout.pageWidth, layout.viewportWidth, 'Playground should not overflow horizontally.');
+  assert.equal(
+    layout.heroCount,
+    0,
+    'Playground should not render a separate hero.'
+  );
+  assert.equal(
+    layout.h1Count,
+    1,
+    'Playground should have one visible page title.'
+  );
+  assert.equal(
+    layout.pageWidth,
+    layout.viewportWidth,
+    'Playground should not overflow horizontally.'
+  );
   assert(layout.marker && layout.controls && layout.preview && layout.textGrid);
-  assert(layout.marker.x >= 20 && layout.marker.x <= 28, 'Workbench should keep a small page margin.');
-  assert(layout.marker.width >= 940, 'Workbench should use the available desktop width.');
-  assert(layout.controls.y < 280, 'Controls should be visible in the first viewport.');
-  assert(Math.abs(layout.controls.y - layout.preview.y) < 1, 'Controls and preview should align.');
-  assert(layout.controls.scrollWidth <= layout.controls.clientWidth, 'Controls should not overflow.');
-  assert(layout.textGrid.scrollWidth <= layout.textGrid.clientWidth, 'Text controls should fit their panel.');
+  assert(
+    layout.marker.x >= 20 && layout.marker.x <= 28,
+    'Workbench should keep a small page margin.'
+  );
+  assert(
+    layout.marker.width >= 940,
+    'Workbench should use the available desktop width.'
+  );
+  assert(
+    layout.controls.y < 280,
+    'Controls should be visible in the first viewport.'
+  );
+  assert(
+    Math.abs(layout.controls.y - layout.preview.y) < 1,
+    'Controls and preview should align.'
+  );
+  assert(
+    layout.controls.scrollWidth <= layout.controls.clientWidth,
+    'Controls should not overflow.'
+  );
+  assert(
+    layout.textGrid.scrollWidth <= layout.textGrid.clientWidth,
+    'Text controls should fit their panel.'
+  );
   assert.equal(layout.tabDisplay, 'flex');
   assert.equal(layout.tabAlign, 'center');
   assert.equal(layout.tabJustify, 'center');
@@ -306,9 +451,12 @@ async function assertWideHomepageLayout(page, origin) {
   await page.setViewportSize({ width: 2048, height: 1100 });
   await page.goto(`${origin}/zh-cn/`, { waitUntil: 'networkidle' });
   const layout = await page.evaluate(() => {
-    const container = document.querySelector(':root[data-has-hero] main > .content-panel > .sl-container');
+    const container = document.querySelector(
+      ':root[data-has-hero] main > .content-panel > .sl-container'
+    );
     const stage = document.querySelector('.product-stage');
-    if (!(container instanceof HTMLElement) || !(stage instanceof HTMLElement)) return null;
+    if (!(container instanceof HTMLElement) || !(stage instanceof HTMLElement))
+      return null;
     const containerRect = container.getBoundingClientRect();
     const stageRect = stage.getBoundingClientRect();
     return {
@@ -323,10 +471,24 @@ async function assertWideHomepageLayout(page, origin) {
   });
 
   assert(layout, 'Wide homepage layout should render.');
-  assert.equal(layout.pageWidth, layout.viewportWidth, 'Wide homepage should not overflow.');
-  assert(Math.abs(layout.containerLeft - layout.containerRight) < 1, 'Homepage should be centered.');
-  assert.equal(Math.round(layout.containerWidth), 1440, 'Homepage should use its own maximum width.');
-  assert(Math.abs(layout.stageLeft - layout.stageRight) < 1, 'Homepage feature stage should stay centered.');
+  assert.equal(
+    layout.pageWidth,
+    layout.viewportWidth,
+    'Wide homepage should not overflow.'
+  );
+  assert(
+    Math.abs(layout.containerLeft - layout.containerRight) < 1,
+    'Homepage should be centered.'
+  );
+  assert.equal(
+    Math.round(layout.containerWidth),
+    1440,
+    'Homepage should use its own maximum width.'
+  );
+  assert(
+    Math.abs(layout.stageLeft - layout.stageRight) < 1,
+    'Homepage feature stage should stay centered.'
+  );
 }
 
 async function assertWideWorkbenchLayout(page, origin) {
@@ -336,7 +498,11 @@ async function assertWideWorkbenchLayout(page, origin) {
     const marker = document.querySelector('.marker-playground');
     const controls = document.querySelector('.controls-panel');
     const preview = document.querySelector('.preview-panel');
-    if (!(marker instanceof HTMLElement) || !(controls instanceof HTMLElement) || !(preview instanceof HTMLElement)) {
+    if (
+      !(marker instanceof HTMLElement) ||
+      !(controls instanceof HTMLElement) ||
+      !(preview instanceof HTMLElement)
+    ) {
       return null;
     }
     const markerRect = marker.getBoundingClientRect();
@@ -354,12 +520,32 @@ async function assertWideWorkbenchLayout(page, origin) {
   });
 
   assert(layout, 'Wide playground layout should render.');
-  assert.equal(layout.pageWidth, layout.viewportWidth, 'Wide playground should not overflow.');
-  assert(Math.abs(layout.markerLeft - layout.markerRight) < 1, 'Workbench should be centered in the viewport.');
-  assert(layout.markerLeft >= 200, 'Wide screens should keep balanced side margins.');
-  assert.equal(Math.round(layout.markerWidth), 1600, 'Workbench should respect its maximum width.');
-  assert(layout.controlsLeft >= layout.markerLeft, 'Controls must stay inside the workbench.');
-  assert(layout.previewLeft > layout.controlsLeft, 'Preview must remain to the right of controls.');
+  assert.equal(
+    layout.pageWidth,
+    layout.viewportWidth,
+    'Wide playground should not overflow.'
+  );
+  assert(
+    Math.abs(layout.markerLeft - layout.markerRight) < 1,
+    'Workbench should be centered in the viewport.'
+  );
+  assert(
+    layout.markerLeft >= 200,
+    'Wide screens should keep balanced side margins.'
+  );
+  assert.equal(
+    Math.round(layout.markerWidth),
+    1600,
+    'Workbench should respect its maximum width.'
+  );
+  assert(
+    layout.controlsLeft >= layout.markerLeft,
+    'Controls must stay inside the workbench.'
+  );
+  assert(
+    layout.previewLeft > layout.controlsLeft,
+    'Preview must remain to the right of controls.'
+  );
 }
 
 async function assertLanguageMenu(page) {
@@ -367,12 +553,20 @@ async function assertLanguageMenu(page) {
   await menu.locator('summary').click();
   const popover = menu.locator('.preference-popover');
   await popover.waitFor();
-  assert.equal(await menu.locator('select').count(), 0, 'Language menu should not use a native select.');
   assert.equal(
-    await popover.getByRole('menuitem', { name: /English/ }).getAttribute('href'),
+    await menu.locator('select').count(),
+    0,
+    'Language menu should not use a native select.'
+  );
+  assert.equal(
+    await popover
+      .getByRole('menuitem', { name: /English/ })
+      .getAttribute('href'),
     '/playground/'
   );
-  const borderRadius = await popover.evaluate((element) => getComputedStyle(element).borderRadius);
+  const borderRadius = await popover.evaluate(
+    (element) => getComputedStyle(element).borderRadius
+  );
   assert.notEqual(borderRadius, '0px');
   await menu.press('Escape');
 }
@@ -382,33 +576,58 @@ async function assertThemeMenu(page) {
   await menu.locator('summary').click();
   const popover = menu.locator('.preference-popover');
   await popover.waitFor();
-  assert.equal(await menu.locator('select').count(), 0, 'Theme menu should not use a native select.');
+  assert.equal(
+    await menu.locator('select').count(),
+    0,
+    'Theme menu should not use a native select.'
+  );
 
   await popover.getByRole('menuitemradio', { name: /深色/ }).click();
   assert.equal(await page.locator('html').getAttribute('data-theme'), 'dark');
-  assert.equal(await page.evaluate(() => localStorage.getItem('starlight-theme')), 'dark');
+  assert.equal(
+    await page.evaluate(() => localStorage.getItem('starlight-theme')),
+    'dark'
+  );
 
   await menu.locator('summary').click();
   await popover.getByRole('menuitemradio', { name: /自动/ }).click();
-  assert.equal(await page.evaluate(() => localStorage.getItem('starlight-theme')), '');
+  assert.equal(
+    await page.evaluate(() => localStorage.getItem('starlight-theme')),
+    ''
+  );
 }
 
 async function assertCustomSelects(playground) {
   const customSelects = playground.locator('[data-custom-select]');
-  assert.equal(await customSelects.count(), 3, 'Playground should render three custom selectors.');
+  assert.equal(
+    await customSelects.count(),
+    3,
+    'Playground should render three custom selectors.'
+  );
   for (const select of await playground.locator('select').all()) {
-    assert.equal(await select.isVisible(), false, 'Native select should only be a hidden form value.');
+    assert.equal(
+      await select.isVisible(),
+      false,
+      'Native select should only be a hidden form value.'
+    );
   }
 }
 
 async function selectCustomOptionWithKeyboard(playground, name, expectedValue) {
-  const customSelect = playground.locator(`[data-custom-select][data-select-name="${name}"]`);
+  const customSelect = playground.locator(
+    `[data-custom-select][data-select-name="${name}"]`
+  );
   const trigger = customSelect.locator('[data-select-trigger]');
   await trigger.focus();
   await trigger.press('Enter');
-  await customSelect.locator('[role="option"][aria-selected="true"]').press('End');
+  await customSelect
+    .locator('[role="option"][aria-selected="true"]')
+    .press('End');
   await customSelect.locator('[role="option"]:focus').press('Enter');
-  assert.equal(await customSelect.locator('select').inputValue(), expectedValue);
+  assert.equal(
+    await customSelect.locator('select').inputValue(),
+    expectedValue
+  );
   assert.equal(await trigger.getAttribute('aria-expanded'), 'false');
 }
 

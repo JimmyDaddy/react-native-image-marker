@@ -843,6 +843,7 @@ function useViewModel(props: ImageMarkerLabProps) {
           {
             type: 'text',
             text: 'Mixed watermark',
+            alpha: 0.85,
             position: {
               position: Position.bottomCenter,
               X: 0,
@@ -924,6 +925,7 @@ function useViewModel(props: ImageMarkerLabProps) {
         watermarkTexts: [
           {
             text: 'CONFIDENTIAL',
+            alpha: 0.55,
             layout: {
               type: 'tile',
               gapX: '8%',
@@ -932,13 +934,13 @@ function useViewModel(props: ImageMarkerLabProps) {
               stagger: true,
             },
             style: {
-              color: '#FFFFFF88',
+              color: '#FFFFFF',
               fontName: exampleFontName,
               fontSize: 30,
               bold: true,
               rotate: -24,
               strokeStyle: {
-                color: '#0F172A88',
+                color: '#0F172A',
                 width: 2,
               },
             },
@@ -1011,6 +1013,96 @@ function useViewModel(props: ImageMarkerLabProps) {
         type: 'error',
         text1: 'tiled logo failed',
         text2: error instanceof Error ? error.message : String(error),
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function runBatchRecipeFeature() {
+    setBackgroundFormat('normal image');
+    setLastRun('Batch 0/3');
+    setUri('');
+    setShow(false);
+    setFileSize('0 B');
+    setResultContract('Preparing three native images with one recipe');
+    setLoading(true);
+
+    try {
+      const recipe = Marker.createRecipe({
+        watermarks: [
+          {
+            type: 'text',
+            text: 'BATCH RECIPE',
+            position: {
+              position: Position.bottomRight,
+              X: 28,
+              Y: 28,
+            },
+            style: {
+              color: '#FFFFFF',
+              fontName: exampleFontName,
+              fontSize: 30,
+              bold: true,
+              strokeStyle: { color: '#0F172ACC', width: 2 },
+            },
+          },
+          {
+            type: 'image',
+            src: assets.icon,
+            position: { position: Position.topRight, X: 28, Y: 28 },
+            scale: 0.38,
+            alpha: 0.9,
+          },
+        ],
+        quality: 92,
+        saveFormat: ImageFormat.jpg,
+        maxSize: 1600,
+      });
+      const batchId = Date.now();
+      const results = await recipe.applyMany(
+        [
+          { backgroundImage: { src: assets.bg } },
+          {
+            backgroundImage: {
+              src: assets.orientationBg ?? assets.bg,
+            },
+          },
+          { backgroundImage: { src: assets.base64Bg } },
+        ].map((input, index) => ({
+          ...input,
+          filename: `batch-${batchId}-${index + 1}`,
+        })),
+        {
+          concurrency: 3,
+          onProgress(progress) {
+            setLastRun(`Batch ${progress.settled}/${progress.total}`);
+            setResultContract(
+              `${progress.succeeded} succeeded · ${progress.failed} failed · ${progress.aborted} aborted`
+            );
+          },
+        }
+      );
+      const outputs = results.flatMap((result) =>
+        result.status === 'fulfilled' ? [result.value] : []
+      );
+      if (outputs.length === 0) {
+        throw new Error('The batch did not produce an image.');
+      }
+
+      setUri(formatResultUri(outputs[0], ImageFormat.jpg));
+      setShow(true);
+      await updateFileSize(outputs[0], ImageFormat.jpg);
+      setResultContract(
+        `Batch complete: ${outputs.length}/${results.length} succeeded · native renderer stayed serial`
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      setResultContract(`Batch failed: ${message}`);
+      Toast.show({
+        type: 'error',
+        text1: 'batch recipe failed',
+        text2: message,
       });
     } finally {
       setLoading(false);
@@ -1685,6 +1777,7 @@ function useViewModel(props: ImageMarkerLabProps) {
       runMixedWatermarkFeature,
       runTiledTextFeature,
       runTiledLogoFeature,
+      runBatchRecipeFeature,
       runSharpScaledWatermarkFeature,
       runRotationOutputPolicyFeature,
       runWatermarkOrientationFeature,
@@ -1812,7 +1905,7 @@ function ImageMarkerLab(props: ImageMarkerLabProps) {
                 <FeatureCard
                   badge="Tile"
                   title="Tiled text + outline"
-                  meta="stagger + percent gaps"
+                  meta="opacity + stagger + percent gaps"
                   tone="orange"
                   testID="feature-tiled-text"
                   onPress={actions.runTiledTextFeature}
@@ -1824,6 +1917,14 @@ function ImageMarkerLab(props: ImageMarkerLabProps) {
                   tone="green"
                   testID="feature-tiled-logo"
                   onPress={actions.runTiledLogoFeature}
+                />
+                <FeatureCard
+                  badge="Batch"
+                  title="Reusable batch recipe"
+                  meta="3 inputs · progress · stable order"
+                  tone="blue"
+                  testID="feature-batch-recipe"
+                  onPress={actions.runBatchRecipeFeature}
                 />
                 <FeatureCard
                   badge="Sharp"

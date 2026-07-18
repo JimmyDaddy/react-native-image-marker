@@ -18,6 +18,17 @@ const strings = isZh
         '选择示例或自己的图片，调整文字和 Logo，然后保存结果。所有处理只在当前浏览器中完成。',
       privacy: '图片不上传',
       steps: ['选择内容', '调整样式', '保存或复制代码'],
+      capabilitiesTitle: '主要功能都可以直接试',
+      capabilities: [
+        '文字水印',
+        'Logo 水印',
+        '文字 + Logo',
+        '单个或平铺',
+        '透明度与描边',
+        '位置与旋转',
+        '批量 Recipe',
+        'PNG、JPEG 与 Web Blob',
+      ],
       webBadge: '实时预览',
       previewTitle: '效果',
       resultLabel: '图片地址',
@@ -38,11 +49,22 @@ const strings = isZh
       textPreset: '只加文字',
       imagePreset: '只加 Logo',
       mixedPreset: '文字 + Logo',
+      examples: '一键示例',
+      examplesHint: '选择后仍可继续调整',
+      examplePresets: [
+        { id: 'mixed', title: '普通文字 + Logo', meta: '两个单点图层', version: '' },
+        { id: 'outline', title: '高对比文字描边', meta: '明暗底图都清楚', version: '' },
+        { id: 'tiled-text', title: '平铺文字', meta: '错行、间距、旋转', version: '' },
+        { id: 'tiled-logo', title: '平铺 Logo', meta: '一次解码，多处绘制', version: '' },
+        { id: 'opacity', title: '半透明文字', meta: '整个文字图层 40%', version: 'v1.8' },
+        { id: 'batch', title: '批量 Recipe', meta: '多图、进度与 Blob', version: 'v1.8' },
+      ],
       textLayer: '文字设置',
       text: '文字内容',
       textPlaceholder: '输入水印文字',
       color: '颜色',
       fontSize: '字号',
+      textOpacity: '文字透明度',
       bold: '粗体',
       stroke: '文字描边',
       strokeColor: '描边颜色',
@@ -62,7 +84,7 @@ const strings = isZh
       defaultLogo: '使用内置 Logo',
       opacity: '透明度',
       scale: '缩放',
-      advanced: '排列、位置与旋转',
+      advanced: '位置、旋转与平铺间距',
       output: '保存设置',
       format: '格式',
       quality: '质量',
@@ -84,6 +106,22 @@ const strings = isZh
       dimensions: '尺寸',
       elapsed: '耗时',
       localNote: '本地图片不会离开你的设备。刷新页面后，选择的文件会被清除。',
+      batchEyebrow: 'v1.8 · 批量 Recipe 与 Web Blob',
+      batchTitle: '一次选择多张图片，统一加水印。',
+      batchDescription:
+        '当前文字、Logo 和导出设置会保存成一个 Recipe。Web 最多同时处理 4 张；结果仍按选择顺序排列。',
+      chooseBatch: '选择多张图片',
+      batchNone: '尚未选择图片',
+      batchSelected: '张图片已加入队列',
+      runBatch: '开始批量处理',
+      cancelBatch: '停止后续任务',
+      batchReady: '选择两张或更多图片开始体验。',
+      batchRunning: '正在处理',
+      batchCancelling: '正在停止；已经开始的图片会处理完成。',
+      batchComplete: '批量处理完成',
+      batchFailed: '批量处理失败',
+      batchResults: '处理结果',
+      downloadResult: '保存',
       differencesTitle: 'Web 与原生输出有什么不同？',
       differences: [
         ['保存结果', 'Web 返回可直接预览和保存的图片地址；iOS 和 Android 返回临时文件路径。'],
@@ -110,6 +148,17 @@ const strings = isZh
         'Use the sample or choose your own image, adjust the text and logo, then save the result. Everything runs in this browser tab.',
       privacy: 'Images are not uploaded',
       steps: ['Choose content', 'Adjust the look', 'Save or copy code'],
+      capabilitiesTitle: 'Try every core workflow',
+      capabilities: [
+        'Text watermark',
+        'Logo watermark',
+        'Text + logo',
+        'Single or tiled',
+        'Opacity and outline',
+        'Position and rotation',
+        'Batch Recipe',
+        'PNG, JPEG, and Web Blob',
+      ],
       webBadge: 'Live preview',
       previewTitle: 'Result',
       resultLabel: 'Image URL',
@@ -130,11 +179,22 @@ const strings = isZh
       textPreset: 'Text only',
       imagePreset: 'Logo only',
       mixedPreset: 'Text + logo',
+      examples: 'One-click examples',
+      examplesHint: 'Keep adjusting after choosing one',
+      examplePresets: [
+        { id: 'mixed', title: 'Text + logo', meta: 'Two single layers', version: '' },
+        { id: 'outline', title: 'High-contrast outline', meta: 'Readable on light or dark', version: '' },
+        { id: 'tiled-text', title: 'Tiled text', meta: 'Stagger, gaps, rotation', version: '' },
+        { id: 'tiled-logo', title: 'Tiled logo', meta: 'Decode once, draw many', version: '' },
+        { id: 'opacity', title: 'Translucent text', meta: 'Whole text layer at 40%', version: 'v1.8' },
+        { id: 'batch', title: 'Batch Recipe', meta: 'Files, progress, and Blob', version: 'v1.8' },
+      ],
       textLayer: 'Text settings',
       text: 'Watermark text',
       textPlaceholder: 'Enter watermark text',
       color: 'Color',
       fontSize: 'Font size',
+      textOpacity: 'Text opacity',
       bold: 'Bold',
       stroke: 'Text outline',
       strokeColor: 'Outline color',
@@ -154,7 +214,7 @@ const strings = isZh
       defaultLogo: 'Use built-in logo',
       opacity: 'Opacity',
       scale: 'Scale',
-      advanced: 'Layout, position, and rotation',
+      advanced: 'Position, rotation, and tile spacing',
       output: 'Save settings',
       format: 'Format',
       quality: 'Quality',
@@ -176,6 +236,22 @@ const strings = isZh
       dimensions: 'Dimensions',
       elapsed: 'Time',
       localNote: 'Local images never leave your device. Selected files are cleared when you refresh.',
+      batchEyebrow: 'v1.8 · Batch Recipe and Web Blob',
+      batchTitle: 'Choose several images. Mark them with one recipe.',
+      batchDescription:
+        'Your current text, logo, and output settings become one reusable Recipe. Web runs up to four jobs at once and keeps results in selection order.',
+      chooseBatch: 'Choose multiple images',
+      batchNone: 'No images selected',
+      batchSelected: 'images queued',
+      runBatch: 'Process batch',
+      cancelBatch: 'Stop new jobs',
+      batchReady: 'Choose two or more images to try batch processing.',
+      batchRunning: 'Processing',
+      batchCancelling: 'Stopping dispatch. Images already running will finish.',
+      batchComplete: 'Batch complete',
+      batchFailed: 'Batch failed',
+      batchResults: 'Batch results',
+      downloadResult: 'Save',
       differencesTitle: 'How does Web output differ from native?',
       differences: [
         ['Saved result', 'Web returns an image URL you can preview or save. iOS and Android return a temporary file path.'],
@@ -224,6 +300,14 @@ const formats = [
   data-copy-failed={strings.copyFailed}
   data-generated-alt={strings.generatedAlt}
   data-filename={strings.filename}
+  data-batch-none={strings.batchNone}
+  data-batch-selected={strings.batchSelected}
+  data-batch-ready={strings.batchReady}
+  data-batch-running={strings.batchRunning}
+  data-batch-cancelling={strings.batchCancelling}
+  data-batch-complete={strings.batchComplete}
+  data-batch-failed={strings.batchFailed}
+  data-batch-download={strings.downloadResult}
 >
   <header class="playground-heading">
     <div>
@@ -319,6 +403,29 @@ const formats = [
         </div>
       </fieldset>
 
+      <fieldset class="control-section example-section">
+        <legend>
+          {strings.examples}
+          <small>{strings.examplesHint}</small>
+        </legend>
+        <div class="example-presets">
+          {strings.examplePresets.map((example, index) => (
+            <button
+              type="button"
+              class:list={{ 'example-button': true, 'is-active': index === 0 }}
+              aria-pressed={index === 0 ? 'true' : 'false'}
+              data-example={example.id}
+            >
+              <span>
+                <strong>{example.title}</strong>
+                {example.version && <em>{example.version}</em>}
+              </span>
+              <small>{example.meta}</small>
+            </button>
+          ))}
+        </div>
+      </fieldset>
+
       <fieldset class="control-section source-section">
         <legend>{strings.background}</legend>
         <div class="file-row">
@@ -344,7 +451,7 @@ const formats = [
           <span>{strings.text}</span>
           <input
             type="text"
-            value="CONFIDENTIAL"
+            value="SHOT ON IMAGE MARKER"
             placeholder={strings.textPlaceholder}
             data-text
           />
@@ -361,6 +468,10 @@ const formats = [
           <label class="field range-field">
             <span>{strings.fontSize} <output data-font-size-output>42 px</output></span>
             <input type="range" min="18" max="120" value="42" step="1" data-font-size />
+          </label>
+          <label class="field range-field">
+            <span>{strings.textOpacity} <output data-text-opacity-output>85%</output></span>
+            <input type="range" min="0" max="1" value="0.85" step="0.05" data-text-opacity />
           </label>
           <label class="check-field">
             <input type="checkbox" checked data-bold />
@@ -386,32 +497,33 @@ const formats = [
           </label>
         </div>
 
+        <div class="layout-choice primary-layout-choice">
+          <span>{strings.layout}</span>
+          <div class="segmented-control layout-control" data-layout-control="text">
+            <button
+              type="button"
+              class="is-active"
+              aria-pressed="true"
+              data-layout-layer="text"
+              data-layout="single"
+            >
+              {strings.singleLayout}
+            </button>
+            <button type="button" data-layout-layer="text" data-layout="tile">
+              {strings.tileLayout}
+            </button>
+          </div>
+        </div>
+
         <details class="advanced-controls">
           <summary>{strings.advanced}</summary>
-          <div class="layout-choice">
-            <span>{strings.layout}</span>
-            <div class="segmented-control layout-control" data-layout-control="text">
-              <button type="button" data-layout-layer="text" data-layout="single">
-                {strings.singleLayout}
-              </button>
-              <button
-                type="button"
-                class="is-active"
-                aria-pressed="true"
-                data-layout-layer="text"
-                data-layout="tile"
-              >
-                {strings.tileLayout}
-              </button>
-            </div>
-          </div>
           <div class="field-grid advanced-grid">
             <label class="field range-field">
-              <span>{strings.rotation} <output data-text-rotation-output>−24°</output></span>
-              <input type="range" min="-45" max="45" value="-24" step="1" data-text-rotation />
+              <span>{strings.rotation} <output data-text-rotation-output>−7°</output></span>
+              <input type="range" min="-45" max="45" value="-7" step="1" data-text-rotation />
             </label>
           </div>
-          <div class="option-grid" data-single-options="text" hidden>
+          <div class="option-grid" data-single-options="text">
             <CustomSelect
               id={`${idPrefix}-text-position`}
               label={strings.position}
@@ -428,7 +540,7 @@ const formats = [
               <input type="number" min="-500" max="500" value="48" step="1" data-text-y />
             </label>
           </div>
-          <div class="option-grid tile-options" data-tile-options="text">
+          <div class="option-grid tile-options" data-tile-options="text" hidden>
             <label class="field compact-field">
               <span>{strings.gapX}</span>
               <input type="text" value="8%" inputmode="decimal" data-text-gap-x />
@@ -472,25 +584,26 @@ const formats = [
           </label>
         </div>
 
+        <div class="layout-choice primary-layout-choice">
+          <span>{strings.layout}</span>
+          <div class="segmented-control layout-control" data-layout-control="image">
+            <button
+              type="button"
+              class="is-active"
+              aria-pressed="true"
+              data-layout-layer="image"
+              data-layout="single"
+            >
+              {strings.singleLayout}
+            </button>
+            <button type="button" data-layout-layer="image" data-layout="tile">
+              {strings.tileLayout}
+            </button>
+          </div>
+        </div>
+
         <details class="advanced-controls">
           <summary>{strings.advanced}</summary>
-          <div class="layout-choice">
-            <span>{strings.layout}</span>
-            <div class="segmented-control layout-control" data-layout-control="image">
-              <button
-                type="button"
-                class="is-active"
-                aria-pressed="true"
-                data-layout-layer="image"
-                data-layout="single"
-              >
-                {strings.singleLayout}
-              </button>
-              <button type="button" data-layout-layer="image" data-layout="tile">
-                {strings.tileLayout}
-              </button>
-            </div>
-          </div>
           <div class="field-grid advanced-grid">
             <label class="field range-field">
               <span>{strings.rotation} <output data-image-rotation-output>0°</output></span>
@@ -558,6 +671,65 @@ const formats = [
       </fieldset>
     </form>
   </div>
+
+  <section class="capability-index" aria-labelledby={`${idPrefix}-capabilities-title`}>
+    <strong id={`${idPrefix}-capabilities-title`}>{strings.capabilitiesTitle}</strong>
+    <ul>
+      {strings.capabilities.map((capability) => <li>{capability}</li>)}
+    </ul>
+  </section>
+
+  <section
+    class="batch-panel"
+    aria-labelledby={`${idPrefix}-batch-title`}
+    data-batch-panel
+    tabindex="-1"
+  >
+    <div class="batch-heading">
+      <div>
+        <p class="panel-kicker">{strings.batchEyebrow}</p>
+        <h3 id={`${idPrefix}-batch-title`}>{strings.batchTitle}</h3>
+        <p>{strings.batchDescription}</p>
+      </div>
+      <div class="batch-picker">
+        <input
+          id={`${idPrefix}-batch-files`}
+          type="file"
+          accept="image/*"
+          multiple
+          data-batch-files
+        />
+        <label class="file-button" for={`${idPrefix}-batch-files`}>{strings.chooseBatch}</label>
+        <span data-batch-selection>{strings.batchNone}</span>
+      </div>
+    </div>
+    <div class="batch-progress-row">
+      <div
+        class="batch-progress"
+        role="progressbar"
+        aria-label={strings.batchRunning}
+        aria-valuemin="0"
+        aria-valuemax="100"
+        aria-valuenow="0"
+      >
+        <span data-batch-progress></span>
+      </div>
+      <span aria-live="polite" data-batch-status>{strings.batchReady}</span>
+      <div class="batch-actions">
+        <button class="primary-button" type="button" data-batch-run disabled>
+          {strings.runBatch}
+        </button>
+        <button class="quiet-button" type="button" data-batch-cancel disabled>
+          {strings.cancelBatch}
+        </button>
+      </div>
+    </div>
+    <div class="batch-results-heading">
+      <h4>{strings.batchResults}</h4>
+      <span data-batch-summary>0 / 0</span>
+    </div>
+    <div class="batch-results" data-batch-results></div>
+  </section>
 
   <section class="code-panel" aria-labelledby={`${idPrefix}-code-title`}>
     <div class="code-heading">
@@ -696,7 +868,7 @@ const formats = [
     const defaultLogo = root.dataset.logoUrl ?? '';
     const state: PlaygroundState = {
       mode: 'mixed',
-      textLayout: 'tile',
+      textLayout: 'single',
       imageLayout: 'single',
       backgroundSrc: defaultBackground,
       logoSrc: defaultLogo,
@@ -722,6 +894,7 @@ const formats = [
     const colorInput = asElement<HTMLInputElement>(root, '[data-color]');
     const colorValue = asElement<HTMLElement>(root, '[data-color-value]');
     const fontSize = asElement<HTMLInputElement>(root, '[data-font-size]');
+    const textOpacity = asElement<HTMLInputElement>(root, '[data-text-opacity]');
     const bold = asElement<HTMLInputElement>(root, '[data-bold]');
     const strokeEnabled = asElement<HTMLInputElement>(root, '[data-stroke-enabled]');
     const strokeColor = asElement<HTMLInputElement>(root, '[data-stroke-color]');
@@ -751,9 +924,19 @@ const formats = [
     const quality = asElement<HTMLInputElement>(root, '[data-quality]');
     const webCode = asElement<HTMLElement>(root, '[data-web-code]');
     const nativeCode = asElement<HTMLElement>(root, '[data-native-code]');
+    const batchFiles = asElement<HTMLInputElement>(root, '[data-batch-files]');
+    const batchSelection = asElement<HTMLElement>(root, '[data-batch-selection]');
+    const batchStatus = asElement<HTMLElement>(root, '[data-batch-status]');
+    const batchSummary = asElement<HTMLElement>(root, '[data-batch-summary]');
+    const batchProgress = asElement<HTMLElement>(root, '[data-batch-progress]');
+    const batchProgressbar = batchProgress.parentElement;
+    const batchRun = asElement<HTMLButtonElement>(root, '[data-batch-run]');
+    const batchCancel = asElement<HTMLButtonElement>(root, '[data-batch-cancel]');
+    const batchResults = asElement<HTMLElement>(root, '[data-batch-results]');
 
     const getTextLayer = (Position: PositionEnum) => ({
       text: textInput.value || 'IMAGE MARKER',
+      alpha: numberValue(textOpacity),
       ...(state.textLayout === 'tile'
         ? {
             layout: {
@@ -851,6 +1034,7 @@ const formats = [
 
     const textLayerCode = () => `{
   text: ${JSON.stringify(textInput.value || 'IMAGE MARKER')},
+  alpha: ${Number(textOpacity.value)},
   ${state.textLayout === 'tile'
     ? `layout: ${tileLayoutCode(textGapX, textGapY, textLayoutX, textLayoutY, textStagger)},`
     : `position: ${positionCode(textPosition.value, textX.value, textY.value)},`}
@@ -923,6 +1107,7 @@ ${layers}
       colorValue.textContent = colorInput.value.toUpperCase();
       strokeColorValue.textContent = strokeColor.value.toUpperCase();
       asElement<HTMLOutputElement>(root, '[data-font-size-output]').value = `${fontSize.value} px`;
+      asElement<HTMLOutputElement>(root, '[data-text-opacity-output]').value = `${Math.round(Number(textOpacity.value) * 100)}%`;
       asElement<HTMLOutputElement>(root, '[data-stroke-width-output]').value = `${strokeWidth.value} px`;
       asElement<HTMLOutputElement>(root, '[data-text-rotation-output]').value = `${Number(textRotation.value) < 0 ? '−' : ''}${Math.abs(Number(textRotation.value))}°`;
       asElement<HTMLOutputElement>(root, '[data-opacity-output]').value = `${Math.round(Number(opacity.value) * 100)}%`;
@@ -982,10 +1167,217 @@ ${layers}
       updateCode();
     };
 
+    const setActiveExample = (example: string | undefined) => {
+      root.querySelectorAll<HTMLButtonElement>('[data-example]').forEach((button) => {
+        const selected = button.dataset.example === example;
+        button.classList.toggle('is-active', selected);
+        button.setAttribute('aria-pressed', String(selected));
+      });
+    };
+
+    const setCustomSelectValue = (select: HTMLSelectElement, value: string) => {
+      select.value = value;
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+
+    const applyExample = (example: string) => {
+      setActiveExample(example);
+      if (example === 'batch') {
+        const batchPanel = asElement<HTMLElement>(root, '[data-batch-panel]');
+        batchPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        batchPanel.focus({ preventScroll: true });
+        return;
+      }
+
+      bold.checked = true;
+      colorInput.value = '#ffffff';
+      strokeColor.value = '#101828';
+      textStagger.checked = true;
+
+      if (example === 'mixed') {
+        updateMode('mixed');
+        updateLayout('text', 'single');
+        updateLayout('image', 'single');
+        textInput.value = 'SHOT ON IMAGE MARKER';
+        textOpacity.value = '0.85';
+        fontSize.value = '42';
+        strokeEnabled.checked = true;
+        strokeWidth.value = '2';
+        textRotation.value = '-7';
+        opacity.value = '1';
+        scale.value = '0.72';
+        imageRotation.value = '0';
+        textX.value = '48';
+        textY.value = '48';
+        imageX.value = '42';
+        imageY.value = '42';
+        setCustomSelectValue(textPosition, 'bottomLeft');
+        setCustomSelectValue(imagePosition, 'topRight');
+      } else if (example === 'outline') {
+        updateMode('text');
+        updateLayout('text', 'single');
+        textInput.value = 'IMAGE MARKER';
+        textOpacity.value = '1';
+        fontSize.value = '48';
+        strokeEnabled.checked = true;
+        strokeWidth.value = '4';
+        textRotation.value = '0';
+        textX.value = '36';
+        textY.value = '36';
+        setCustomSelectValue(textPosition, 'topLeft');
+      } else if (example === 'tiled-text') {
+        updateMode('text');
+        updateLayout('text', 'tile');
+        textInput.value = 'CONFIDENTIAL';
+        textOpacity.value = '0.55';
+        fontSize.value = '30';
+        strokeEnabled.checked = true;
+        strokeWidth.value = '2';
+        textRotation.value = '-24';
+      } else if (example === 'tiled-logo') {
+        updateMode('image');
+        updateLayout('image', 'tile');
+        opacity.value = '0.55';
+        scale.value = '0.22';
+        imageRotation.value = '-12';
+        imageStagger.checked = true;
+      } else if (example === 'opacity') {
+        updateMode('text');
+        updateLayout('text', 'single');
+        textInput.value = 'PRIVATE PREVIEW';
+        textOpacity.value = '0.4';
+        fontSize.value = '48';
+        strokeEnabled.checked = true;
+        strokeWidth.value = '2';
+        textRotation.value = '-7';
+        textX.value = '0';
+        textY.value = '0';
+        setCustomSelectValue(textPosition, 'center');
+      }
+
+      updateStrokeOptions();
+      scheduleRender();
+    };
+
     const sourceAlt = preview.alt;
     let renderInFlight = false;
     let queuedSequence = 0;
     let renderTimer = 0;
+    let batchController: AbortController | undefined;
+    let batchObjectUrls: string[] = [];
+
+    const clearBatchResults = () => {
+      batchObjectUrls.forEach((url) => URL.revokeObjectURL(url));
+      batchObjectUrls = [];
+      batchResults.replaceChildren();
+      batchSummary.textContent = '0 / 0';
+      batchProgress.style.width = '0%';
+      batchProgressbar?.setAttribute('aria-valuenow', '0');
+    };
+
+    const setBatchProgress = (settled: number, total: number) => {
+      const percentage = total === 0 ? 0 : Math.round((settled / total) * 100);
+      batchProgress.style.width = `${percentage}%`;
+      batchProgressbar?.setAttribute('aria-valuenow', String(percentage));
+      batchSummary.textContent = `${settled} / ${total}`;
+    };
+
+    const createBatchResultCard = (
+      file: File,
+      result: Awaited<ReturnType<ReturnType<MarkerSdk['default']['createRecipe']>['applyMany']>>[number]
+    ) => {
+      const card = document.createElement('article');
+      card.className = 'batch-result-card';
+      card.dataset.batchResult = result.status;
+
+      if (result.status === 'fulfilled' && result.value instanceof Blob) {
+        const url = URL.createObjectURL(result.value);
+        batchObjectUrls.push(url);
+        const image = document.createElement('img');
+        image.src = url;
+        image.alt = file.name;
+        card.append(image);
+
+        const downloadLink = document.createElement('a');
+        const extension = result.value.type === 'image/jpeg' ? 'jpg' : 'png';
+        downloadLink.href = url;
+        downloadLink.download = `${file.name.replace(/\.[^.]+$/, '')}-marked.${extension}`;
+        downloadLink.textContent = root.dataset.batchDownload ?? 'Save';
+        downloadLink.className = 'batch-result-download';
+        card.append(downloadLink);
+      } else {
+        const placeholder = document.createElement('div');
+        placeholder.className = 'batch-result-placeholder';
+        placeholder.textContent = result.status === 'aborted' ? '×' : '!';
+        card.append(placeholder);
+      }
+
+      const meta = document.createElement('div');
+      const name = document.createElement('strong');
+      name.textContent = file.name;
+      const statusLabel = document.createElement('span');
+      statusLabel.textContent = result.status;
+      meta.append(name, statusLabel);
+      card.append(meta);
+      return card;
+    };
+
+    const runBatch = async () => {
+      const files = [...(batchFiles.files ?? [])];
+      if (files.length < 2 || batchController) return;
+      clearBatchResults();
+      batchController = new AbortController();
+      batchRun.disabled = true;
+      batchCancel.disabled = false;
+      batchFiles.disabled = true;
+      batchStatus.textContent = `${root.dataset.batchRunning ?? ''} 0 / ${files.length}`;
+
+      try {
+        const sdk = await sdkPromise;
+        const textLayer = { type: 'text' as const, ...getTextLayer(sdk.Position) };
+        const imageLayer = { type: 'image' as const, ...getImageLayer(sdk.Position) };
+        const watermarks = state.mode === 'text'
+          ? [textLayer]
+          : state.mode === 'image'
+            ? [imageLayer]
+            : [imageLayer, textLayer];
+        const recipe = sdk.default.createRecipe(
+          {
+            watermarks,
+            saveFormat: format.value === 'jpg' ? sdk.ImageFormat.jpg : sdk.ImageFormat.png,
+            quality: numberValue(quality),
+          },
+          { resultType: 'blob' }
+        );
+        const results = await recipe.applyMany(
+          files.map((file) => ({ backgroundImage: { src: file } })),
+          {
+            concurrency: 4,
+            signal: batchController.signal,
+            onProgress(progress) {
+              setBatchProgress(progress.settled, progress.total);
+              batchStatus.textContent = `${root.dataset.batchRunning ?? ''} ${progress.settled} / ${progress.total}`;
+            },
+          }
+        );
+        batchResults.replaceChildren(
+          ...results.map((result, index) => createBatchResultCard(files[index]!, result))
+        );
+        const succeeded = results.filter((result) => result.status === 'fulfilled').length;
+        const aborted = results.filter((result) => result.status === 'aborted').length;
+        const failed = results.length - succeeded - aborted;
+        batchStatus.textContent = `${root.dataset.batchComplete ?? ''}: ${succeeded} ✓ · ${failed} ! · ${aborted} ×`;
+        setBatchProgress(results.length, results.length);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        batchStatus.textContent = `${root.dataset.batchFailed ?? ''}: ${message}`;
+      } finally {
+        batchController = undefined;
+        batchRun.disabled = files.length < 2;
+        batchCancel.disabled = true;
+        batchFiles.disabled = false;
+      }
+    };
 
     const clearResult = () => {
       state.result = '';
@@ -1099,6 +1491,7 @@ ${layers}
 
     root.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach((button) => {
       button.addEventListener('click', () => {
+        setActiveExample(undefined);
         updateMode((button.dataset.mode ?? 'mixed') as PlaygroundMode);
         scheduleRender();
       });
@@ -1106,6 +1499,7 @@ ${layers}
 
     root.querySelectorAll<HTMLButtonElement>('[data-layout-layer]').forEach((button) => {
       button.addEventListener('click', () => {
+        setActiveExample(undefined);
         updateLayout(
           (button.dataset.layoutLayer ?? 'text') as 'text' | 'image',
           (button.dataset.layout ?? 'single') as LayoutMode
@@ -1114,10 +1508,15 @@ ${layers}
       });
     });
 
+    root.querySelectorAll<HTMLButtonElement>('[data-example]').forEach((button) => {
+      button.addEventListener('click', () => applyExample(button.dataset.example ?? 'mixed'));
+    });
+
     const liveInputs = [
       textInput,
       colorInput,
       fontSize,
+      textOpacity,
       bold,
       strokeEnabled,
       strokeColor,
@@ -1145,7 +1544,10 @@ ${layers}
       format,
       quality,
     ];
-    liveInputs.forEach((input) => input.addEventListener('input', scheduleRender));
+    liveInputs.forEach((input) => input.addEventListener('input', () => {
+      setActiveExample(undefined);
+      scheduleRender();
+    }));
     strokeEnabled.addEventListener('change', updateStrokeOptions);
     format.addEventListener('change', scheduleRender);
     textPosition.addEventListener('change', scheduleRender);
@@ -1201,6 +1603,32 @@ ${layers}
       state.logoSrc = src;
     });
 
+    batchFiles.addEventListener('change', () => {
+      clearBatchResults();
+      const files = [...(batchFiles.files ?? [])];
+      const invalid = files.find(
+        (file) => file.size > MAX_FILE_BYTES || (file.type && !file.type.startsWith('image/'))
+      );
+      if (invalid) {
+        batchStatus.textContent = root.dataset.fileTooLarge ?? root.dataset.sourceFailed ?? '';
+        batchSelection.textContent = root.dataset.batchNone ?? '';
+        batchRun.disabled = true;
+        return;
+      }
+      batchSelection.textContent = files.length === 0
+        ? root.dataset.batchNone ?? ''
+        : `${files.length} ${root.dataset.batchSelected ?? ''}`;
+      batchStatus.textContent = root.dataset.batchReady ?? '';
+      batchRun.disabled = files.length < 2;
+    });
+    batchRun.addEventListener('click', () => void runBatch());
+    batchCancel.addEventListener('click', () => {
+      batchController?.abort();
+      batchCancel.disabled = true;
+      batchStatus.textContent = root.dataset.batchCancelling ?? '';
+    });
+    window.addEventListener('pagehide', clearBatchResults, { once: true });
+
     asElement<HTMLButtonElement>(root, '[data-default-background]').addEventListener('click', () => {
       state.backgroundSrc = defaultBackground;
       backgroundFile.value = '';
@@ -1219,8 +1647,9 @@ ${layers}
       backgroundFile.value = '';
       logoFile.value = '';
       updateMode('mixed');
-      updateLayout('text', 'tile');
+      updateLayout('text', 'single');
       updateLayout('image', 'single');
+      setActiveExample('mixed');
       updateStrokeOptions();
       scheduleRender();
     });
@@ -1286,7 +1715,7 @@ ${layers}
     });
 
     updateMode('mixed');
-    updateLayout('text', 'tile');
+    updateLayout('text', 'single');
     updateLayout('image', 'single');
     updateStrokeOptions();
     updateOutputs();
@@ -1418,6 +1847,44 @@ ${layers}
     font-size: 0.62rem;
   }
 
+  .capability-index {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    align-items: center;
+    gap: 0.8rem;
+    margin: 0 0 0.75rem;
+    padding: 0.58rem 0.72rem;
+    border: 1px solid var(--playground-line);
+    border-radius: 0.85rem;
+    background: color-mix(in srgb, var(--playground-panel) 88%, var(--marker-blue) 4%);
+  }
+
+  .capability-index > strong {
+    color: var(--marker-ink);
+    font-size: 0.68rem;
+    font-weight: 720;
+  }
+
+  .capability-index ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.38rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .capability-index li {
+    padding: 0.2rem 0.46rem;
+    border: 1px solid var(--playground-line);
+    border-radius: 999px;
+    color: var(--marker-muted);
+    background: var(--playground-panel-raised);
+    font-size: 0.62rem;
+    font-weight: 650;
+    line-height: 1.35;
+  }
+
   .playground-shell {
     display: grid;
     grid-template-areas: 'controls preview';
@@ -1429,6 +1896,7 @@ ${layers}
 
   .preview-panel,
   .controls-panel,
+  .batch-panel,
   .code-panel,
   .differences {
     min-width: 0;
@@ -1763,6 +2231,84 @@ ${layers}
     line-height: 1.25;
   }
 
+  .control-section legend > small {
+    float: right;
+    color: var(--marker-muted);
+    font-size: 0.6rem;
+    font-weight: 560;
+    letter-spacing: 0;
+  }
+
+  .example-presets {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem;
+  }
+
+  .example-button {
+    display: flex;
+    min-width: 0;
+    min-height: 3.45rem;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    gap: 0.18rem;
+    padding: 0.48rem 0.58rem;
+    border: 1px solid var(--playground-line);
+    border-radius: 0.65rem;
+    color: var(--marker-ink);
+    background: var(--playground-panel-raised);
+    text-align: start;
+  }
+
+  .example-button > span {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.35rem;
+  }
+
+  .example-button strong {
+    min-width: 0;
+    overflow: hidden;
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1.25;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .example-button em {
+    flex: none;
+    padding: 0.08rem 0.28rem;
+    border-radius: 999px;
+    color: var(--marker-coral);
+    background: color-mix(in srgb, var(--marker-coral) 12%, transparent);
+    font-size: 0.52rem;
+    font-style: normal;
+    font-weight: 750;
+  }
+
+  .example-button > small {
+    overflow: hidden;
+    color: var(--marker-muted);
+    font-size: 0.57rem;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .example-button:hover,
+  .example-button.is-active {
+    border-color: color-mix(in srgb, var(--marker-blue) 58%, var(--playground-line));
+    background: color-mix(in srgb, var(--playground-panel-raised) 88%, var(--marker-blue));
+  }
+
+  .example-button.is-active {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--marker-blue) 38%, transparent);
+  }
+
   .segmented-control {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -1855,7 +2401,7 @@ ${layers}
   }
 
   .field-grid-3 .check-field {
-    grid-column: 1 / -1;
+    grid-column: auto;
   }
 
   .stroke-grid {
@@ -1899,6 +2445,13 @@ ${layers}
     color: var(--marker-muted);
     font-size: 0.67rem;
     font-weight: 650;
+  }
+
+  .primary-layout-choice {
+    padding: 0.55rem 0.62rem;
+    border: 1px solid var(--playground-line);
+    border-radius: 0.7rem;
+    background: color-mix(in srgb, var(--playground-panel-raised) 92%, var(--marker-blue) 3%);
   }
 
   .layout-control {
@@ -2031,6 +2584,172 @@ ${layers}
     margin-top: 0;
   }
 
+  .batch-panel {
+    margin-top: 1rem;
+    padding: 1rem;
+  }
+
+  .batch-heading {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .batch-heading h3,
+  .batch-results-heading h4 {
+    margin: 0;
+    color: var(--marker-ink);
+    letter-spacing: -0.025em;
+  }
+
+  .batch-heading h3 {
+    font-size: 1.05rem;
+  }
+
+  .batch-heading p:last-child {
+    max-width: 70ch;
+    margin: 0.35rem 0 0;
+    color: var(--marker-muted);
+    font-size: 0.72rem;
+    line-height: 1.55;
+  }
+
+  .batch-picker {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.55rem;
+  }
+
+  .batch-picker > span,
+  .batch-progress-row > span,
+  .batch-results-heading > span {
+    color: var(--marker-muted);
+    font-family: var(--sl-font-mono);
+    font-size: 0.67rem;
+  }
+
+  .batch-progress-row {
+    display: grid;
+    grid-template-columns: minmax(8rem, 1fr) minmax(10rem, auto) auto;
+    align-items: center;
+    gap: 0.8rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--playground-line);
+  }
+
+  .batch-progress {
+    height: 0.5rem;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--playground-panel-raised);
+  }
+
+  .batch-progress > span {
+    display: block;
+    width: 0;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--marker-blue), var(--marker-coral));
+    transition: width 160ms ease;
+  }
+
+  .batch-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .batch-actions .primary-button,
+  .batch-actions .quiet-button {
+    padding-inline: 0.8rem;
+  }
+
+  .batch-results-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 1rem;
+  }
+
+  .batch-results-heading h4 {
+    font-size: 0.78rem;
+  }
+
+  .batch-results {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.65rem;
+    margin-top: 0.65rem;
+  }
+
+  .batch-results:empty {
+    display: none;
+  }
+
+  .batch-results :global(.batch-result-card) {
+    position: relative;
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--playground-line);
+    border-radius: 0.75rem;
+    background: var(--playground-panel-raised);
+  }
+
+  .batch-results :global(.batch-result-card img),
+  .batch-results :global(.batch-result-placeholder) {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    background: #090b11;
+  }
+
+  .batch-results :global(.batch-result-placeholder) {
+    display: grid;
+    place-items: center;
+    color: var(--marker-coral);
+    font-size: 2rem;
+    font-weight: 760;
+  }
+
+  .batch-results :global(.batch-result-card > div:last-child) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.6rem;
+  }
+
+  .batch-results :global(.batch-result-card strong) {
+    overflow: hidden;
+    color: var(--marker-ink);
+    font-size: 0.67rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .batch-results :global(.batch-result-card > div:last-child span) {
+    flex: none;
+    color: var(--marker-muted);
+    font-size: 0.6rem;
+  }
+
+  .batch-results :global(.batch-result-download) {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    padding: 0.3rem 0.5rem;
+    border-radius: 999px;
+    color: #0b1020;
+    background: rgb(255 255 255 / 88%);
+    font-size: 0.62rem;
+    font-weight: 720;
+    text-decoration: none;
+  }
+
   .code-panel {
     margin-top: 1rem;
     overflow: hidden;
@@ -2152,6 +2871,10 @@ ${layers}
       overflow-y: visible;
       scrollbar-gutter: auto;
     }
+
+    .batch-results {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
   }
 
   @media (max-width: 44rem) {
@@ -2194,6 +2917,8 @@ ${layers}
     }
 
     .preview-actions,
+    .batch-heading,
+    .batch-progress-row,
     .field-grid,
     .field-grid-3,
     .stroke-grid,
@@ -2202,6 +2927,19 @@ ${layers}
     .output-grid,
     .differences dl {
       grid-template-columns: 1fr;
+    }
+
+    .capability-index {
+      grid-template-columns: 1fr;
+    }
+
+    .batch-picker {
+      justify-content: flex-start;
+    }
+
+    .batch-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
     }
 
     .playground-steps li {

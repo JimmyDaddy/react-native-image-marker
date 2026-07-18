@@ -17,6 +17,7 @@ import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.common.assets.ReactFontManager
 import com.jimmydaddy.imagemarker.ImageProcess
 import kotlin.math.ceil
+import kotlin.math.roundToInt
 
 @Suppress("DEPRECATION")
 data class TextOptions(val options: ReadableMap) {
@@ -27,11 +28,24 @@ data class TextOptions(val options: ReadableMap) {
   private var positionEnum: PositionEnum?
   private var style: TextStyle
   private var layout: WatermarkLayout?
+  internal var alpha: Double = 1.0
+    private set
 
   init {
     try {
       if (text == null) {
         throw MarkerError(ErrorCode.PARAMS_REQUIRED, "mark text is required")
+      }
+      alpha = if (options.hasKey("alpha") && !options.isNull("alpha")) {
+        options.getDouble("alpha")
+      } else {
+        1.0
+      }
+      if (!alpha.isFinite() || alpha !in 0.0..1.0) {
+        throw MarkerError(
+          ErrorCode.INVALID_PARAMS,
+          "text alpha must be finite and between zero and one"
+        )
       }
       val positionOptions = if (options.hasKey("position") && !options.isNull("position")) {
         options.getMap("position")
@@ -87,7 +101,7 @@ data class TextOptions(val options: ReadableMap) {
         style.shadowLayerStyle!!.radius,
         style.shadowLayerStyle!!.dx,
         style.shadowLayerStyle!!.dy,
-        style.shadowLayerStyle!!.color
+        colorWithLayerAlpha(style.shadowLayerStyle!!.color)
       )
     }
 
@@ -111,7 +125,7 @@ data class TextOptions(val options: ReadableMap) {
     textPaint.isAntiAlias = true
     textPaint.textSize = textSize
     Log.i(Constants.IMAGE_MARKER_TAG, "textSize: " + textSize + " fontSize: " + style.fontSize + " displayMetrics: " + context.resources.displayMetrics)
-    textPaint.color = Color.parseColor(Utils.transRGBColor(style.color))
+    textPaint.color = colorWithLayerAlpha(Color.parseColor(Utils.transRGBColor(style.color)))
     textPaint.isUnderlineText = style.underline
     textPaint.textSkewX = style.skewX
     var typeface = Typeface.create(typefaceFamily, Typeface.NORMAL)
@@ -205,7 +219,7 @@ data class TextOptions(val options: ReadableMap) {
       if (null != style.textBackgroundStyle) {
         val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.LINEAR_TEXT_FLAG)
         paint.style = Paint.Style.FILL
-        paint.color = style.textBackgroundStyle!!.color
+        paint.color = colorWithLayerAlpha(style.textBackgroundStyle!!.color)
         val bgInsets = style.textBackgroundStyle!!.toEdgeInsets(maxWidth, maxHeight)
         var bgRect = RectF(
           drawX - outlineInset - bgInsets.left,
@@ -250,13 +264,15 @@ data class TextOptions(val options: ReadableMap) {
             style.shadowLayerStyle!!.radius,
             style.shadowLayerStyle!!.dx,
             style.shadowLayerStyle!!.dy,
-            style.shadowLayerStyle!!.color
+            colorWithLayerAlpha(style.shadowLayerStyle!!.color)
           )
         }
         textPaint.style = Paint.Style.STROKE
         textPaint.strokeWidth = strokeWidth
         textPaint.strokeJoin = Paint.Join.ROUND
-        textPaint.color = Color.parseColor(Utils.transRGBColor(style.strokeStyle!!.color))
+        textPaint.color = colorWithLayerAlpha(
+          Color.parseColor(Utils.transRGBColor(style.strokeStyle!!.color))
+        )
         textLayout.draw(canvas)
         textPaint.clearShadowLayer()
         textPaint.style = Paint.Style.FILL
@@ -265,6 +281,11 @@ data class TextOptions(val options: ReadableMap) {
       textLayout.draw(canvas)
       canvas.restore()
     }
+  }
+
+  private fun colorWithLayerAlpha(color: Int): Int {
+    val combinedAlpha = (Color.alpha(color) * alpha).roundToInt().coerceIn(0, 255)
+    return Color.argb(combinedAlpha, Color.red(color), Color.green(color), Color.blue(color))
   }
 
   companion object {
