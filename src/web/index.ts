@@ -6,6 +6,8 @@ import type {
   WatermarkImageOptions,
   WatermarkLayer,
 } from '../index';
+import { createWatermarkRecipe } from '../recipe';
+import type { WatermarkRecipe, WatermarkRecipeOptions } from '../recipe';
 import { renderWebComposition } from './renderer';
 import type { WebRenderLayer } from './renderer';
 import {
@@ -62,6 +64,13 @@ function appendCompatibilityLayers(
  * 2D implementation, which only touches DOM globals when a method is called.
  */
 class Marker {
+  /** Save ordered layers and output settings for reuse across one or many images. */
+  static createRecipe(options: WatermarkRecipeOptions): WatermarkRecipe {
+    return createWatermarkRecipe(options, (markOptions) =>
+      Marker.mark(markOptions)
+    );
+  }
+
   /** Render one or more text watermark layers. */
   static async markText(options: TextMarkOptions): Promise<string> {
     if (!options?.backgroundImage?.src) {

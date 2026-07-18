@@ -1,8 +1,10 @@
 import Marker, {
+  ImageFormat,
   type ImageMarkOptions,
   type TextMarkOptions,
   type TextStrokeStyle,
   type WatermarkLayout,
+  type WatermarkRecipe,
 } from '../index';
 
 // The deprecated single-watermark shape remains source-compatible for users
@@ -58,3 +60,11 @@ export const tiledText: TextMarkOptions = {
   backgroundImage: { src: 'file:///tmp/background.png' },
   watermarkTexts: [{ text: 'CONFIDENTIAL', layout: tiledLayout }],
 };
+
+export const reusableRecipe: WatermarkRecipe = Marker.createRecipe({
+  watermarks: [
+    { type: 'text', text: 'Reusable' },
+    { type: 'image', src: 'file:///tmp/logo.png' },
+  ],
+  saveFormat: ImageFormat.jpg,
+});

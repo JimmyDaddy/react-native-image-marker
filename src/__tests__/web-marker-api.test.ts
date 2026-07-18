@@ -38,6 +38,24 @@ describe('WebMarker public API', () => {
     );
   });
 
+  it('creates reusable Web recipes through the public Marker API', async () => {
+    const recipe = WebMarker.createRecipe({
+      watermarks: [{ type: 'text', text: 'Reusable' }],
+      saveFormat: 'png' as ImageMarkOptions['saveFormat'],
+    });
+
+    await expect(
+      recipe.apply({ backgroundImage: { src: '/background.jpg' } })
+    ).resolves.toBe('data:image/png;base64,result');
+    expect(mockRenderWebComposition).toHaveBeenCalledTimes(1);
+    expect(mockRenderWebComposition.mock.calls[0]?.[1]).toEqual([
+      {
+        type: 'text',
+        options: expect.objectContaining({ type: 'text', text: 'Reusable' }),
+      },
+    ]);
+  });
+
   it('keeps image arrays before the legacy image compatibility layer', async () => {
     const options: ImageMarkOptions = {
       backgroundImage: { src: '/background.jpg' },
