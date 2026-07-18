@@ -901,6 +901,122 @@ function useViewModel(props: ImageMarkerLabProps) {
     }
   }
 
+  async function runTiledTextFeature() {
+    setBackgroundFormat('normal image');
+    applyConfig({
+      image: assets.bg,
+      waterMarkType: 'text',
+      text: 'CONFIDENTIAL',
+      saveFormat: ImageFormat.png,
+      bold: true,
+      fontSize: 30,
+      textRotate: -24,
+      backgroundScale: 1,
+      backgroundRotate: 0,
+      backgroundAlpha: 1,
+    });
+    setLastRun('Tiled text + outline');
+    setLoading(true);
+
+    try {
+      const path = await Marker.markText({
+        backgroundImage: { src: assets.bg },
+        watermarkTexts: [
+          {
+            text: 'CONFIDENTIAL',
+            layout: {
+              type: 'tile',
+              gapX: '8%',
+              gapY: '7%',
+              offsetX: '-2%',
+              stagger: true,
+            },
+            style: {
+              color: '#FFFFFF88',
+              fontName: exampleFontName,
+              fontSize: 30,
+              bold: true,
+              rotate: -24,
+              strokeStyle: {
+                color: '#0F172A88',
+                width: 2,
+              },
+            },
+          },
+        ],
+        quality: 100,
+        saveFormat: ImageFormat.png,
+      });
+
+      setUri(formatResultUri(path, ImageFormat.png));
+      setShow(true);
+      await updateFileSize(path, ImageFormat.png);
+    } catch (error) {
+      console.log('tiled text error', error);
+      Toast.show({
+        type: 'error',
+        text1: 'tiled text failed',
+        text2: error instanceof Error ? error.message : String(error),
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function runTiledLogoFeature() {
+    setBackgroundFormat('normal image');
+    applyConfig({
+      image: assets.bg,
+      marker: assets.icon,
+      waterMarkType: 'image',
+      saveFormat: ImageFormat.png,
+      watermarkScale: 0.22,
+      watermarkRotate: -12,
+      watermarkAlpha: 0.55,
+      backgroundScale: 1,
+      backgroundRotate: 0,
+      backgroundAlpha: 1,
+    });
+    setLastRun('Tiled logo grid');
+    setLoading(true);
+
+    try {
+      const path = await Marker.markImage({
+        backgroundImage: { src: assets.bg },
+        watermarkImages: [
+          {
+            src: assets.icon,
+            layout: {
+              type: 'tile',
+              gapX: '8%',
+              gapY: '8%',
+              stagger: true,
+            },
+            scale: 0.22,
+            alpha: 0.55,
+            rotate: -12,
+            trimTransparentPadding: true,
+          },
+        ],
+        quality: 100,
+        saveFormat: ImageFormat.png,
+      });
+
+      setUri(formatResultUri(path, ImageFormat.png));
+      setShow(true);
+      await updateFileSize(path, ImageFormat.png);
+    } catch (error) {
+      console.log('tiled logo error', error);
+      Toast.show({
+        type: 'error',
+        text1: 'tiled logo failed',
+        text2: error instanceof Error ? error.message : String(error),
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function runSharpScaledWatermarkFeature() {
     setBackgroundFormat('normal image');
     applyConfig({
@@ -1567,6 +1683,8 @@ function useViewModel(props: ImageMarkerLabProps) {
       runTextOffsetFeature,
       runImageOffsetFeature,
       runMixedWatermarkFeature,
+      runTiledTextFeature,
+      runTiledLogoFeature,
       runSharpScaledWatermarkFeature,
       runRotationOutputPolicyFeature,
       runWatermarkOrientationFeature,
@@ -1690,6 +1808,22 @@ function ImageMarkerLab(props: ImageMarkerLabProps) {
                   tone="blue"
                   testID="feature-mixed-watermark"
                   onPress={actions.runMixedWatermarkFeature}
+                />
+                <FeatureCard
+                  badge="Tile"
+                  title="Tiled text + outline"
+                  meta="stagger + percent gaps"
+                  tone="orange"
+                  testID="feature-tiled-text"
+                  onPress={actions.runTiledTextFeature}
+                />
+                <FeatureCard
+                  badge="Tile"
+                  title="Tiled logo grid"
+                  meta="one decode, many copies"
+                  tone="green"
+                  testID="feature-tiled-logo"
+                  onPress={actions.runTiledLogoFeature}
                 />
                 <FeatureCard
                   badge="Sharp"

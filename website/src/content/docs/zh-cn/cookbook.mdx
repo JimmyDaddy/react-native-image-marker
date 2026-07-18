@@ -22,6 +22,10 @@ description: 展示文字、图片、多图层、旋转和阴影水印实际效�
     <img src="/media/rotateimageicon.png" alt="背景上放置了一层旋转后的图片水印" loading="lazy" />
     <figcaption>旋转后的图片图层</figcaption>
   </figure>
+  <figure class="cookbook-card">
+    <img src="/media/watermark-tiled.jpg" alt="山间湖泊上错行平铺了带描边的 CONFIDENTIAL 文字" loading="lazy" />
+    <figcaption>带旋转、描边和错行排列的文字平铺</figcaption>
+  </figure>
 </div>
 
 ## 常用配方
@@ -59,6 +63,38 @@ await Marker.markImage({
   saveFormat: ImageFormat.png,
 });
 ```
+
+### 铺满图片的保护水印
+
+结合半透明填充、对比色描边、旋转和错行排列，可以让水印保持清晰，同时尽量保留照片内容。
+
+```ts
+await Marker.markText({
+  backgroundImage: { src: photo },
+  watermarkTexts: [
+    {
+      text: 'CONFIDENTIAL',
+      layout: {
+        type: 'tile',
+        gapX: '8%',
+        gapY: '7%',
+        offsetX: '-2%',
+        stagger: true,
+      },
+      style: {
+        color: '#FFFFFF88',
+        fontSizeRatio: 0.024,
+        rotate: -24,
+        strokeStyle: { color: '#0F172A88', width: 2 },
+      },
+    },
+  ],
+  saveFormat: ImageFormat.jpg,
+  quality: 92,
+});
+```
+
+同一份 `layout` 也可以用于 `watermarkImages` 中的图片，或传给 `Marker.mark` 的图片图层。
 
 ### 位于文字标签下方的 Logo
 

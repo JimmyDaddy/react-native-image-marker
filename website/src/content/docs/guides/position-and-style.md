@@ -40,6 +40,33 @@ position: {
 }
 ```
 
+## Single and tiled layouts
+
+Leave `layout` unset for one positioned watermark. Set `layout.type` to `tile` to repeat a text or image layer across the full output.
+
+```ts
+{
+  type: 'text',
+  text: 'CONFIDENTIAL',
+  layout: {
+    type: 'tile',
+    gapX: '8%',
+    gapY: '7%',
+    offsetX: '-2%',
+    stagger: true,
+  },
+  style: {
+    color: '#FFFFFF88',
+    fontSize: 30,
+    rotate: -24,
+  },
+}
+```
+
+`gapX`, `gapY`, `offsetX`, and `offsetY` accept output pixels or percentages. Gaps are measured from each copy's visible bounds after rotation. A tiled layer cannot also set `position`; the call rejects that conflict instead of guessing which value wins.
+
+Each layer is limited to 4096 copies. Image layers decode the logo once and reuse it for every placement, and one tiled layer finishes before the next layer starts.
+
 ## Responsive text
 
 Use `fontSizeRatio` when text should scale with the background image width.
@@ -65,9 +92,27 @@ These text options work on iOS, Android, and Web:
 | `bold`, `italic`, `underline`, `strikeThrough` | Font decorations |
 | `rotate`, `skewX` | Transform the text |
 | `shadowStyle` | Shadow offset, radius, and color |
+| `strokeStyle` | Outline color and width |
 | `textBackgroundStyle` | Padding, color, stretch mode, and corner radius |
 
 Use `TextBackgroundType.none` when the background should fit the text rather than stretch. Its serialized value is `fit`.
+
+### Text outlines
+
+Use a contrasting outline when text must remain readable over both light and dark parts of a photo.
+
+```ts
+style: {
+  color: '#FFFFFF',
+  fontSize: 32,
+  strokeStyle: {
+    color: '#0F172ACC',
+    width: 2,
+  },
+}
+```
+
+The outline is included in anchoring and tile spacing. Set `strokeStyle` to `null` or omit it to keep the previous fill-only rendering.
 
 ### Custom fonts
 
@@ -82,4 +127,4 @@ Confirm the font in a normal React Native `<Text>` or Web Canvas first, then pas
 
 ## Image layers
 
-Image watermarks support `scale`, `rotate`, `alpha`, `position`, and `trimTransparentPadding`. Transparent outer pixels are trimmed before scaling, rotation, and positioning. Tune `scale` for the intended output image size.
+Image watermarks support `scale`, `rotate`, `alpha`, `position`, `layout`, and `trimTransparentPadding`. Transparent outer pixels are trimmed before scaling, rotation, positioning, or tiling. Tune `scale` for the intended output image size.

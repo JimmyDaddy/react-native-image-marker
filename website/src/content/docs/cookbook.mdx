@@ -22,6 +22,10 @@ These images come from the repository's example cases. Use them to identify the 
     <img src="/media/rotateimageicon.png" alt="A rotated image watermark over a background" loading="lazy" />
     <figcaption>Rotated image layer</figcaption>
   </figure>
+  <figure class="cookbook-card">
+    <img src="/media/watermark-tiled.jpg" alt="A mountain lake covered by staggered outlined CONFIDENTIAL text" loading="lazy" />
+    <figcaption>Tiled text with rotation, outline, and staggered rows</figcaption>
+  </figure>
 </div>
 
 ## Common recipes
@@ -59,6 +63,38 @@ await Marker.markImage({
   saveFormat: ImageFormat.png,
 });
 ```
+
+### A repeated protection mark
+
+Use a translucent fill, contrasting outline, rotation, and staggered rows to keep the mark readable without hiding the photo.
+
+```ts
+await Marker.markText({
+  backgroundImage: { src: photo },
+  watermarkTexts: [
+    {
+      text: 'CONFIDENTIAL',
+      layout: {
+        type: 'tile',
+        gapX: '8%',
+        gapY: '7%',
+        offsetX: '-2%',
+        stagger: true,
+      },
+      style: {
+        color: '#FFFFFF88',
+        fontSizeRatio: 0.024,
+        rotate: -24,
+        strokeStyle: { color: '#0F172A88', width: 2 },
+      },
+    },
+  ],
+  saveFormat: ImageFormat.jpg,
+  quality: 92,
+});
+```
+
+The same `layout` object works on an item in `watermarkImages` or an image layer passed to `Marker.mark`.
 
 ### A logo below a text label
 

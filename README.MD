@@ -3,7 +3,7 @@
     <img src="assets/icon.png" alt="React Native Image Marker" width="128" />
   </a>
   <h1>React Native Image Marker</h1>
-  <p>Text, image, and ordered watermark layers for iOS, Android, and Web.</p>
+  <p>Text, logos, readable outlines, and repeating watermark layouts for iOS, Android, and Web.</p>
 
 [![npm version](https://img.shields.io/npm/v/react-native-image-marker.svg?label=npm)](https://www.npmjs.com/package/react-native-image-marker)
 
@@ -23,12 +23,12 @@ Compose text and image layers, keep their render order under control, and export
       <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/website/public/media/watermark-coast.jpg" alt="A coastal photograph with a title, date, status badge, and logo watermark" width="100%" />
     </td>
     <td width="50%">
-      <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/website/public/media/watermark-waypoint.jpg" alt="A mountain road photograph demonstrating absolute watermark coordinates" width="100%" />
+      <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/website/public/media/watermark-tiled.jpg" alt="A mountain lake covered by staggered outlined CONFIDENTIAL text with a logo in the top right" width="100%" />
     </td>
   </tr>
   <tr>
     <td><strong>Ready to share.</strong><br />Add titles, metadata, badges, and your logo in one export.</td>
-    <td><strong>Placed where you want it.</strong><br />Use anchors, offsets, rotation, or absolute coordinates.</td>
+    <td><strong>Protect the whole image.</strong><br />Repeat outlined text or logos with rotation, spacing, and staggered rows.</td>
   </tr>
 </table>
 
@@ -76,6 +76,38 @@ const result = await Marker.markText({
 ```
 
 On iOS and Android, JPEG and PNG calls resolve with a native cache-file path. On Web, every format resolves with a browser-ready data URL; native `ImageFormat.base64` also returns a PNG data URL.
+
+### Repeat a readable mark across the image
+
+The same `layout` and `strokeStyle` options work on iOS, Android, and Web. Tiled layers can use pixel or percentage gaps and stagger every second row.
+
+```ts
+const result = await Marker.markText({
+  backgroundImage: { src: require('./images/background.jpg') },
+  watermarkTexts: [
+    {
+      text: 'CONFIDENTIAL',
+      layout: {
+        type: 'tile',
+        gapX: '8%',
+        gapY: '7%',
+        offsetX: '-2%',
+        stagger: true,
+      },
+      style: {
+        color: '#FFFFFF88',
+        fontSizeRatio: 0.024,
+        rotate: -24,
+        strokeStyle: { color: '#0F172A88', width: 2 },
+      },
+    },
+  ],
+  saveFormat: ImageFormat.jpg,
+  quality: 92,
+});
+```
+
+Use the same `layout` object on `watermarkImages` to repeat a logo. A tiled layer cannot also set `position`; invalid combinations fail with a clear error.
 
 ## Live Web SDK
 

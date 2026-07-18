@@ -44,6 +44,15 @@ const strings = isZh
       color: '颜色',
       fontSize: '字号',
       bold: '粗体',
+      stroke: '文字描边',
+      strokeColor: '描边颜色',
+      strokeWidth: '描边宽度',
+      layout: '排列方式',
+      singleLayout: '单个',
+      tileLayout: '平铺',
+      gapX: '横向间距',
+      gapY: '纵向间距',
+      stagger: '错行排列',
       rotation: '旋转',
       position: '位置',
       offsetX: 'X 偏移',
@@ -53,7 +62,7 @@ const strings = isZh
       defaultLogo: '使用内置 Logo',
       opacity: '透明度',
       scale: '缩放',
-      advanced: '位置与旋转',
+      advanced: '排列、位置与旋转',
       output: '保存设置',
       format: '格式',
       quality: '质量',
@@ -127,6 +136,15 @@ const strings = isZh
       color: 'Color',
       fontSize: 'Font size',
       bold: 'Bold',
+      stroke: 'Text outline',
+      strokeColor: 'Outline color',
+      strokeWidth: 'Outline width',
+      layout: 'Layout',
+      singleLayout: 'Single',
+      tileLayout: 'Tile',
+      gapX: 'Horizontal gap',
+      gapY: 'Vertical gap',
+      stagger: 'Stagger rows',
       rotation: 'Rotation',
       position: 'Position',
       offsetX: 'X offset',
@@ -136,7 +154,7 @@ const strings = isZh
       defaultLogo: 'Use built-in logo',
       opacity: 'Opacity',
       scale: 'Scale',
-      advanced: 'Position and rotation',
+      advanced: 'Layout, position, and rotation',
       output: 'Save settings',
       format: 'Format',
       quality: 'Quality',
@@ -326,7 +344,7 @@ const formats = [
           <span>{strings.text}</span>
           <input
             type="text"
-            value="SHOT ON IMAGE MARKER"
+            value="CONFIDENTIAL"
             placeholder={strings.textPlaceholder}
             data-text
           />
@@ -341,8 +359,8 @@ const formats = [
             </span>
           </label>
           <label class="field range-field">
-            <span>{strings.fontSize} <output data-font-size-output>56 px</output></span>
-            <input type="range" min="18" max="120" value="56" step="1" data-font-size />
+            <span>{strings.fontSize} <output data-font-size-output>42 px</output></span>
+            <input type="range" min="18" max="120" value="42" step="1" data-font-size />
           </label>
           <label class="check-field">
             <input type="checkbox" checked data-bold />
@@ -350,13 +368,50 @@ const formats = [
           </label>
         </div>
 
+        <div class="field-grid stroke-grid">
+          <label class="check-field">
+            <input type="checkbox" checked data-stroke-enabled />
+            <span>{strings.stroke}</span>
+          </label>
+          <label class="field color-field" data-stroke-option>
+            <span>{strings.strokeColor}</span>
+            <span class="color-input-wrap">
+              <input type="color" value="#101828" data-stroke-color />
+              <code data-stroke-color-value>#101828</code>
+            </span>
+          </label>
+          <label class="field range-field" data-stroke-option>
+            <span>{strings.strokeWidth} <output data-stroke-width-output>2 px</output></span>
+            <input type="range" min="0" max="12" value="2" step="0.5" data-stroke-width />
+          </label>
+        </div>
+
         <details class="advanced-controls">
           <summary>{strings.advanced}</summary>
+          <div class="layout-choice">
+            <span>{strings.layout}</span>
+            <div class="segmented-control layout-control" data-layout-control="text">
+              <button type="button" data-layout-layer="text" data-layout="single">
+                {strings.singleLayout}
+              </button>
+              <button
+                type="button"
+                class="is-active"
+                aria-pressed="true"
+                data-layout-layer="text"
+                data-layout="tile"
+              >
+                {strings.tileLayout}
+              </button>
+            </div>
+          </div>
           <div class="field-grid advanced-grid">
             <label class="field range-field">
-              <span>{strings.rotation} <output data-text-rotation-output>−3°</output></span>
-              <input type="range" min="-45" max="45" value="-3" step="1" data-text-rotation />
+              <span>{strings.rotation} <output data-text-rotation-output>−24°</output></span>
+              <input type="range" min="-45" max="45" value="-24" step="1" data-text-rotation />
             </label>
+          </div>
+          <div class="option-grid" data-single-options="text" hidden>
             <CustomSelect
               id={`${idPrefix}-text-position`}
               label={strings.position}
@@ -371,6 +426,28 @@ const formats = [
             <label class="field compact-field">
               <span>{strings.offsetY}</span>
               <input type="number" min="-500" max="500" value="48" step="1" data-text-y />
+            </label>
+          </div>
+          <div class="option-grid tile-options" data-tile-options="text">
+            <label class="field compact-field">
+              <span>{strings.gapX}</span>
+              <input type="text" value="8%" inputmode="decimal" data-text-gap-x />
+            </label>
+            <label class="field compact-field">
+              <span>{strings.gapY}</span>
+              <input type="text" value="7%" inputmode="decimal" data-text-gap-y />
+            </label>
+            <label class="field compact-field">
+              <span>{strings.offsetX}</span>
+              <input type="text" value="-2%" inputmode="decimal" data-text-layout-x />
+            </label>
+            <label class="field compact-field">
+              <span>{strings.offsetY}</span>
+              <input type="text" value="0" inputmode="decimal" data-text-layout-y />
+            </label>
+            <label class="check-field">
+              <input type="checkbox" checked data-text-stagger />
+              <span>{strings.stagger}</span>
             </label>
           </div>
         </details>
@@ -397,11 +474,30 @@ const formats = [
 
         <details class="advanced-controls">
           <summary>{strings.advanced}</summary>
+          <div class="layout-choice">
+            <span>{strings.layout}</span>
+            <div class="segmented-control layout-control" data-layout-control="image">
+              <button
+                type="button"
+                class="is-active"
+                aria-pressed="true"
+                data-layout-layer="image"
+                data-layout="single"
+              >
+                {strings.singleLayout}
+              </button>
+              <button type="button" data-layout-layer="image" data-layout="tile">
+                {strings.tileLayout}
+              </button>
+            </div>
+          </div>
           <div class="field-grid advanced-grid">
             <label class="field range-field">
               <span>{strings.rotation} <output data-image-rotation-output>0°</output></span>
               <input type="range" min="-180" max="180" value="0" step="1" data-image-rotation />
             </label>
+          </div>
+          <div class="option-grid" data-single-options="image">
             <CustomSelect
               id={`${idPrefix}-image-position`}
               label={strings.position}
@@ -416,6 +512,28 @@ const formats = [
             <label class="field compact-field">
               <span>{strings.offsetY}</span>
               <input type="number" min="-500" max="500" value="42" step="1" data-image-y />
+            </label>
+          </div>
+          <div class="option-grid tile-options" data-tile-options="image" hidden>
+            <label class="field compact-field">
+              <span>{strings.gapX}</span>
+              <input type="text" value="8%" inputmode="decimal" data-image-gap-x />
+            </label>
+            <label class="field compact-field">
+              <span>{strings.gapY}</span>
+              <input type="text" value="8%" inputmode="decimal" data-image-gap-y />
+            </label>
+            <label class="field compact-field">
+              <span>{strings.offsetX}</span>
+              <input type="text" value="0" inputmode="decimal" data-image-layout-x />
+            </label>
+            <label class="field compact-field">
+              <span>{strings.offsetY}</span>
+              <input type="text" value="0" inputmode="decimal" data-image-layout-y />
+            </label>
+            <label class="check-field">
+              <input type="checkbox" data-image-stagger />
+              <span>{strings.stagger}</span>
             </label>
           </div>
         </details>
@@ -509,12 +627,15 @@ const formats = [
 
 <script>
   type PlaygroundMode = 'text' | 'image' | 'mixed';
+  type LayoutMode = 'single' | 'tile';
   type CodeTarget = 'web' | 'native';
   type MarkerSdk = typeof import('../../../src/index');
   type PositionEnum = MarkerSdk['Position'];
 
   interface PlaygroundState {
     mode: PlaygroundMode;
+    textLayout: LayoutMode;
+    imageLayout: LayoutMode;
     backgroundSrc: string;
     logoSrc: string;
     result: string;
@@ -534,6 +655,11 @@ const formats = [
   };
 
   const numberValue = (input: HTMLInputElement) => Number(input.value);
+
+  const layoutValue = (input: HTMLInputElement): number | string => {
+    const value = input.value.trim();
+    return value.endsWith('%') ? value : Number(value);
+  };
 
   const readFileAsDataUrl = (file?: File): Promise<string> =>
     new Promise((resolve, reject) => {
@@ -570,6 +696,8 @@ const formats = [
     const defaultLogo = root.dataset.logoUrl ?? '';
     const state: PlaygroundState = {
       mode: 'mixed',
+      textLayout: 'tile',
+      imageLayout: 'single',
       backgroundSrc: defaultBackground,
       logoSrc: defaultLogo,
       result: '',
@@ -595,16 +723,30 @@ const formats = [
     const colorValue = asElement<HTMLElement>(root, '[data-color-value]');
     const fontSize = asElement<HTMLInputElement>(root, '[data-font-size]');
     const bold = asElement<HTMLInputElement>(root, '[data-bold]');
+    const strokeEnabled = asElement<HTMLInputElement>(root, '[data-stroke-enabled]');
+    const strokeColor = asElement<HTMLInputElement>(root, '[data-stroke-color]');
+    const strokeColorValue = asElement<HTMLElement>(root, '[data-stroke-color-value]');
+    const strokeWidth = asElement<HTMLInputElement>(root, '[data-stroke-width]');
     const textRotation = asElement<HTMLInputElement>(root, '[data-text-rotation]');
     const textPosition = asElement<HTMLSelectElement>(root, '[data-text-position]');
     const textX = asElement<HTMLInputElement>(root, '[data-text-x]');
     const textY = asElement<HTMLInputElement>(root, '[data-text-y]');
+    const textGapX = asElement<HTMLInputElement>(root, '[data-text-gap-x]');
+    const textGapY = asElement<HTMLInputElement>(root, '[data-text-gap-y]');
+    const textLayoutX = asElement<HTMLInputElement>(root, '[data-text-layout-x]');
+    const textLayoutY = asElement<HTMLInputElement>(root, '[data-text-layout-y]');
+    const textStagger = asElement<HTMLInputElement>(root, '[data-text-stagger]');
     const opacity = asElement<HTMLInputElement>(root, '[data-opacity]');
     const scale = asElement<HTMLInputElement>(root, '[data-scale]');
     const imageRotation = asElement<HTMLInputElement>(root, '[data-image-rotation]');
     const imagePosition = asElement<HTMLSelectElement>(root, '[data-image-position]');
     const imageX = asElement<HTMLInputElement>(root, '[data-image-x]');
     const imageY = asElement<HTMLInputElement>(root, '[data-image-y]');
+    const imageGapX = asElement<HTMLInputElement>(root, '[data-image-gap-x]');
+    const imageGapY = asElement<HTMLInputElement>(root, '[data-image-gap-y]');
+    const imageLayoutX = asElement<HTMLInputElement>(root, '[data-image-layout-x]');
+    const imageLayoutY = asElement<HTMLInputElement>(root, '[data-image-layout-y]');
+    const imageStagger = asElement<HTMLInputElement>(root, '[data-image-stagger]');
     const format = asElement<HTMLSelectElement>(root, '[data-format]');
     const quality = asElement<HTMLInputElement>(root, '[data-quality]');
     const webCode = asElement<HTMLElement>(root, '[data-web-code]');
@@ -612,16 +754,37 @@ const formats = [
 
     const getTextLayer = (Position: PositionEnum) => ({
       text: textInput.value || 'IMAGE MARKER',
-      position: {
-        position: Position[textPosition.value as keyof PositionEnum],
-        X: numberValue(textX),
-        Y: numberValue(textY),
-      },
+      ...(state.textLayout === 'tile'
+        ? {
+            layout: {
+              type: 'tile' as const,
+              gapX: layoutValue(textGapX),
+              gapY: layoutValue(textGapY),
+              offsetX: layoutValue(textLayoutX),
+              offsetY: layoutValue(textLayoutY),
+              stagger: textStagger.checked,
+            },
+          }
+        : {
+            position: {
+              position: Position[textPosition.value as keyof PositionEnum],
+              X: numberValue(textX),
+              Y: numberValue(textY),
+            },
+          }),
       style: {
         color: colorInput.value.toUpperCase(),
         fontSize: numberValue(fontSize),
         bold: bold.checked,
         rotate: numberValue(textRotation),
+        ...(strokeEnabled.checked
+          ? {
+              strokeStyle: {
+                color: strokeColor.value.toUpperCase(),
+                width: numberValue(strokeWidth),
+              },
+            }
+          : {}),
         shadowStyle: {
           color: '#07102299',
           dx: 0,
@@ -633,11 +796,24 @@ const formats = [
 
     const getImageLayer = (Position: PositionEnum) => ({
       src: state.logoSrc,
-      position: {
-        position: Position[imagePosition.value as keyof PositionEnum],
-        X: numberValue(imageX),
-        Y: numberValue(imageY),
-      },
+      ...(state.imageLayout === 'tile'
+        ? {
+            layout: {
+              type: 'tile' as const,
+              gapX: layoutValue(imageGapX),
+              gapY: layoutValue(imageGapY),
+              offsetX: layoutValue(imageLayoutX),
+              offsetY: layoutValue(imageLayoutY),
+              stagger: imageStagger.checked,
+            },
+          }
+        : {
+            position: {
+              position: Position[imagePosition.value as keyof PositionEnum],
+              X: numberValue(imageX),
+              Y: numberValue(imageY),
+            },
+          }),
       alpha: numberValue(opacity),
       scale: numberValue(scale),
       rotate: numberValue(imageRotation),
@@ -653,21 +829,48 @@ const formats = [
     const positionCode = (position: string, x: string, y: string) =>
       `{ position: Position.${position}, X: ${Number(x)}, Y: ${Number(y)} }`;
 
+    const layoutValueCode = (input: HTMLInputElement) => {
+      const value = input.value.trim();
+      return value.endsWith('%') ? JSON.stringify(value) : String(Number(value));
+    };
+
+    const tileLayoutCode = (
+      gapX: HTMLInputElement,
+      gapY: HTMLInputElement,
+      offsetX: HTMLInputElement,
+      offsetY: HTMLInputElement,
+      stagger: HTMLInputElement
+    ) => `{
+    type: 'tile',
+    gapX: ${layoutValueCode(gapX)},
+    gapY: ${layoutValueCode(gapY)},
+    offsetX: ${layoutValueCode(offsetX)},
+    offsetY: ${layoutValueCode(offsetY)},
+    stagger: ${stagger.checked},
+  }`;
+
     const textLayerCode = () => `{
   text: ${JSON.stringify(textInput.value || 'IMAGE MARKER')},
-  position: ${positionCode(textPosition.value, textX.value, textY.value)},
+  ${state.textLayout === 'tile'
+    ? `layout: ${tileLayoutCode(textGapX, textGapY, textLayoutX, textLayoutY, textStagger)},`
+    : `position: ${positionCode(textPosition.value, textX.value, textY.value)},`}
   style: {
     color: '${colorInput.value.toUpperCase()}',
     fontSize: ${Number(fontSize.value)},
     bold: ${bold.checked},
     rotate: ${Number(textRotation.value)},
+    ${strokeEnabled.checked
+      ? `strokeStyle: { color: '${strokeColor.value.toUpperCase()}', width: ${Number(strokeWidth.value)} },`
+      : ''}
     shadowStyle: { color: '#07102299', dx: 0, dy: 4, radius: 9 },
   },
 }`;
 
     const imageLayerCode = (target: CodeTarget) => `{
   src: ${target === 'web' ? "'/logo.png'" : "require('./logo.png')"},
-  position: ${positionCode(imagePosition.value, imageX.value, imageY.value)},
+  ${state.imageLayout === 'tile'
+    ? `layout: ${tileLayoutCode(imageGapX, imageGapY, imageLayoutX, imageLayoutY, imageStagger)},`
+    : `position: ${positionCode(imagePosition.value, imageX.value, imageY.value)},`}
   alpha: ${Number(opacity.value)},
   scale: ${Number(scale.value)},
   rotate: ${Number(imageRotation.value)},
@@ -718,7 +921,9 @@ ${layers}
 
     const updateOutputs = () => {
       colorValue.textContent = colorInput.value.toUpperCase();
+      strokeColorValue.textContent = strokeColor.value.toUpperCase();
       asElement<HTMLOutputElement>(root, '[data-font-size-output]').value = `${fontSize.value} px`;
+      asElement<HTMLOutputElement>(root, '[data-stroke-width-output]').value = `${strokeWidth.value} px`;
       asElement<HTMLOutputElement>(root, '[data-text-rotation-output]').value = `${Number(textRotation.value) < 0 ? '−' : ''}${Math.abs(Number(textRotation.value))}°`;
       asElement<HTMLOutputElement>(root, '[data-opacity-output]').value = `${Math.round(Number(opacity.value) * 100)}%`;
       asElement<HTMLOutputElement>(root, '[data-scale-output]').value = `${Math.round(Number(scale.value) * 100)}%`;
@@ -749,6 +954,30 @@ ${layers}
         const selected = button.dataset.mode === mode;
         button.classList.toggle('is-active', selected);
         button.setAttribute('aria-pressed', String(selected));
+      });
+      updateCode();
+    };
+
+    const updateLayout = (layer: 'text' | 'image', layout: LayoutMode) => {
+      if (layer === 'text') state.textLayout = layout;
+      else state.imageLayout = layout;
+
+      root.querySelectorAll<HTMLButtonElement>(`[data-layout-layer="${layer}"]`).forEach((button) => {
+        const selected = button.dataset.layout === layout;
+        button.classList.toggle('is-active', selected);
+        button.setAttribute('aria-pressed', String(selected));
+      });
+      asElement<HTMLElement>(root, `[data-single-options="${layer}"]`).hidden = layout !== 'single';
+      asElement<HTMLElement>(root, `[data-tile-options="${layer}"]`).hidden = layout !== 'tile';
+      updateCode();
+    };
+
+    const updateStrokeOptions = () => {
+      root.querySelectorAll<HTMLElement>('[data-stroke-option]').forEach((option) => {
+        option.classList.toggle('is-disabled-field', !strokeEnabled.checked);
+        option.querySelectorAll<HTMLInputElement>('input').forEach((input) => {
+          input.disabled = !strokeEnabled.checked;
+        });
       });
       updateCode();
     };
@@ -875,25 +1104,49 @@ ${layers}
       });
     });
 
+    root.querySelectorAll<HTMLButtonElement>('[data-layout-layer]').forEach((button) => {
+      button.addEventListener('click', () => {
+        updateLayout(
+          (button.dataset.layoutLayer ?? 'text') as 'text' | 'image',
+          (button.dataset.layout ?? 'single') as LayoutMode
+        );
+        scheduleRender();
+      });
+    });
+
     const liveInputs = [
       textInput,
       colorInput,
       fontSize,
       bold,
+      strokeEnabled,
+      strokeColor,
+      strokeWidth,
       textRotation,
       textPosition,
       textX,
       textY,
+      textGapX,
+      textGapY,
+      textLayoutX,
+      textLayoutY,
+      textStagger,
       opacity,
       scale,
       imageRotation,
       imagePosition,
       imageX,
       imageY,
+      imageGapX,
+      imageGapY,
+      imageLayoutX,
+      imageLayoutY,
+      imageStagger,
       format,
       quality,
     ];
     liveInputs.forEach((input) => input.addEventListener('input', scheduleRender));
+    strokeEnabled.addEventListener('change', updateStrokeOptions);
     format.addEventListener('change', scheduleRender);
     textPosition.addEventListener('change', scheduleRender);
     imagePosition.addEventListener('change', scheduleRender);
@@ -966,6 +1219,9 @@ ${layers}
       backgroundFile.value = '';
       logoFile.value = '';
       updateMode('mixed');
+      updateLayout('text', 'tile');
+      updateLayout('image', 'single');
+      updateStrokeOptions();
       scheduleRender();
     });
 
@@ -1030,6 +1286,9 @@ ${layers}
     });
 
     updateMode('mixed');
+    updateLayout('text', 'tile');
+    updateLayout('image', 'single');
+    updateStrokeOptions();
     updateOutputs();
     requestRender();
   });
@@ -1599,6 +1858,18 @@ ${layers}
     grid-column: 1 / -1;
   }
 
+  .stroke-grid {
+    grid-template-columns: minmax(7rem, 0.7fr) minmax(8rem, 0.9fr) minmax(0, 1.25fr);
+  }
+
+  .stroke-grid .check-field {
+    grid-column: auto;
+  }
+
+  .is-disabled-field {
+    opacity: 0.48;
+  }
+
   .advanced-controls {
     margin-top: 0.8rem;
     padding-top: 0.7rem;
@@ -1614,6 +1885,40 @@ ${layers}
 
   .advanced-controls summary::marker {
     color: var(--marker-muted);
+  }
+
+  .layout-choice {
+    display: grid;
+    grid-template-columns: minmax(5rem, 0.55fr) minmax(0, 1.45fr);
+    align-items: center;
+    gap: 0.65rem;
+    margin-top: 0.8rem;
+  }
+
+  .layout-choice > span {
+    color: var(--marker-muted);
+    font-size: 0.67rem;
+    font-weight: 650;
+  }
+
+  .layout-control {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .option-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: end;
+    gap: 0.65rem;
+    margin-top: 0.75rem;
+  }
+
+  .tile-options .check-field {
+    grid-column: 1 / -1;
+  }
+
+  [hidden] {
+    display: none !important;
   }
 
   .advanced-grid {
@@ -1891,6 +2196,9 @@ ${layers}
     .preview-actions,
     .field-grid,
     .field-grid-3,
+    .stroke-grid,
+    .layout-choice,
+    .option-grid,
     .output-grid,
     .differences dl {
       grid-template-columns: 1fr;

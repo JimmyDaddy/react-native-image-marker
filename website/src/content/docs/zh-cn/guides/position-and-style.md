@@ -40,6 +40,33 @@ position: {
 }
 ```
 
+## 单个与平铺排列
+
+不提供 `layout` 时仍只绘制一个按位置放置的水印。将 `layout.type` 设为 `tile`，可以让文字或图片图层铺满整个输出图片。
+
+```ts
+{
+  type: 'text',
+  text: 'CONFIDENTIAL',
+  layout: {
+    type: 'tile',
+    gapX: '8%',
+    gapY: '7%',
+    offsetX: '-2%',
+    stagger: true,
+  },
+  style: {
+    color: '#FFFFFF88',
+    fontSize: 30,
+    rotate: -24,
+  },
+}
+```
+
+`gapX`、`gapY`、`offsetX` 和 `offsetY` 可以使用输出像素或百分比。间距按照每个副本旋转后的可见边界计算。平铺图层不能同时设置 `position`；出现冲突时会直接报错，不会猜测应采用哪一个参数。
+
+每个图层最多生成 4096 个副本。图片图层只解码一次 Logo 并复用于所有位置；一个图层平铺完成后，才会开始绘制下一个图层。
+
 ## 响应式文本
 
 当文本需要随背景图像宽度缩放时，请使用 `fontSizeRatio`。
@@ -65,9 +92,27 @@ style: {
 | `bold`、`italic`、`underline`、`strikeThrough` | 字体装饰 |
 | `rotate`、`skewX` | 文本变换 |
 | `shadowStyle` | 阴影的偏移量、半径和颜色 |
+| `strokeStyle` | 文字描边的颜色和宽度 |
 | `textBackgroundStyle` | 内边距、颜色、拉伸模式和圆角半径 |
 
 当背景应贴合文本而不是拉伸时，请使用 `TextBackgroundType.none`。其序列化值为 `fit`。
+
+### 文字描边
+
+当文字跨越照片中的明暗区域时，可使用对比色描边保持清晰可读。
+
+```ts
+style: {
+  color: '#FFFFFF',
+  fontSize: 32,
+  strokeStyle: {
+    color: '#0F172ACC',
+    width: 2,
+  },
+}
+```
+
+描边会计入锚点定位和平铺间距。将 `strokeStyle` 设为 `null` 或直接省略，即可保持原来的纯填充文字效果。
 
 ### 自定义字体
 
@@ -82,4 +127,4 @@ style: {
 
 ## 图像图层
 
-图像水印支持 `scale`、`rotate`、`alpha`、`position` 和 `trimTransparentPadding`。缩放、旋转和定位前，会先裁剪外部透明像素。请根据预期的输出图像尺寸调整 `scale`。
+图像水印支持 `scale`、`rotate`、`alpha`、`position`、`layout` 和 `trimTransparentPadding`。缩放、旋转、定位或平铺前，会先裁剪外部透明像素。请根据预期的输出图像尺寸调整 `scale`。

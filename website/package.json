@@ -11,6 +11,7 @@
     "check": "astro check",
     "build": "astro check && astro build && node scripts/postbuild.mjs && node scripts/check-build.mjs",
     "smoke": "node scripts/smoke-playground.mjs",
+    "generate:v1-7-example": "node scripts/generate-v1-7-example.mjs",
     "preview": "astro preview"
   },
   "dependencies": {
