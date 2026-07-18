@@ -17,6 +17,7 @@ class WatermarkImageOptions: NSObject {
     var position: MarkerPositionEnum = .none
     var trimTransparentPadding: Bool = false
     var layout: ImageMarkerWatermarkLayout?
+    var blendMode: CGBlendMode = .normal
 
     init(dicOpts opts: [AnyHashable: Any]) throws {
         self.imageOption = try ImageOptions(dicOpts: opts)
@@ -31,6 +32,7 @@ class WatermarkImageOptions: NSObject {
         if let layoutOpts = opts["layout"] as? [AnyHashable: Any] {
             self.layout = try ImageMarkerWatermarkLayout(dicOpts: layoutOpts)
         }
+        self.blendMode = try ImageMarkerBlendMode.resolve(opts["blendMode"], fieldName: "image blendMode")
         if layout?.isTile == true, positionOpts != nil {
             throw NSError(
                 domain: ErrorDomainEnum.PARAMS_INVALID.rawValue,
@@ -40,7 +42,7 @@ class WatermarkImageOptions: NSObject {
         }
     }
 
-    init(watermarkImage: ImageOptions, X: String?, Y: String?, edgeInset: String?, position: MarkerPositionEnum, trimTransparentPadding: Bool = false, layout: ImageMarkerWatermarkLayout? = nil) {
+    init(watermarkImage: ImageOptions, X: String?, Y: String?, edgeInset: String?, position: MarkerPositionEnum, trimTransparentPadding: Bool = false, layout: ImageMarkerWatermarkLayout? = nil, blendMode: CGBlendMode = .normal) {
         self.imageOption = watermarkImage
         self.X = X
         self.Y = Y
@@ -48,6 +50,7 @@ class WatermarkImageOptions: NSObject {
         self.position = position
         self.trimTransparentPadding = trimTransparentPadding
         self.layout = layout
+        self.blendMode = blendMode
     }
 
     static func checkWatermarkImageParams(_ opts: [AnyHashable: Any], rejecter reject: @escaping RCTPromiseRejectBlock) -> WatermarkImageOptions? {

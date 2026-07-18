@@ -20,7 +20,7 @@ import { installWebSmokeHarness } from './smoke-harness.web';
 
 const backgroundUri = Asset.fromModule(require('./assets/bg.png')).uri;
 const logoUri = Asset.fromModule(require('./assets/icon.jpeg')).uri;
-type LayoutMode = 'single' | 'textTile' | 'logoTile';
+type LayoutMode = 'single' | 'textTile' | 'logoTile' | 'blend';
 
 installWebSmokeHarness({ backgroundUri, logoUri });
 
@@ -70,7 +70,11 @@ function App() {
     const request = ++renderRequest.current;
     const requestedExtension = extension;
     setIsRendering(true);
-    setStatus('Rendering text and image layers with Canvas 2D…');
+    setStatus(
+      layoutMode === 'blend'
+        ? 'Compositing screen text and a multiply logo with Canvas 2D…'
+        : 'Rendering text and image layers with Canvas 2D…'
+    );
 
     try {
       const dataUrl = await Marker.mark({
@@ -81,6 +85,7 @@ function App() {
           {
             type: 'text',
             text: text.trim() || 'SHOT ON IMAGE MARKER',
+            blendMode: layoutMode === 'blend' ? 'screen' : 'normal',
             ...(layoutMode === 'textTile'
               ? {
                   layout: {
@@ -93,13 +98,23 @@ function App() {
                 }
               : {
                   position: {
-                    position,
-                    X: position === Position.bottomCenter ? 0 : 48,
+                    position:
+                      layoutMode === 'blend' ? Position.bottomCenter : position,
+                    X:
+                      layoutMode === 'blend' ||
+                      position === Position.bottomCenter
+                        ? 0
+                        : 48,
                     Y: 48,
                   },
                 }),
             style: {
-              color: layoutMode === 'textTile' ? '#FFFFFF88' : '#FFFFFF',
+              color:
+                layoutMode === 'textTile'
+                  ? '#FFFFFF88'
+                  : layoutMode === 'blend'
+                  ? '#FFE9B8'
+                  : '#FFFFFF',
               strokeStyle: {
                 color: '#101828CC',
                 width: 3,
@@ -125,6 +140,7 @@ function App() {
           {
             type: 'image',
             src: { uri: logoUri },
+            blendMode: layoutMode === 'blend' ? 'multiply' : 'normal',
             ...(layoutMode === 'logoTile'
               ? {
                   layout: {
@@ -136,14 +152,32 @@ function App() {
                 }
               : {
                   position: {
-                    position: Position.topRight,
-                    X: 48,
-                    Y: 48,
+                    position:
+                      layoutMode === 'blend'
+                        ? Position.center
+                        : Position.topRight,
+                    X: layoutMode === 'blend' ? 0 : 48,
+                    Y: layoutMode === 'blend' ? 0 : 48,
                   },
                 }),
-            scale: layoutMode === 'logoTile' ? 0.08 : 0.16,
-            alpha: layoutMode === 'logoTile' ? 0.5 : 0.92,
-            rotate: layoutMode === 'logoTile' ? -12 : -6,
+            scale:
+              layoutMode === 'logoTile'
+                ? 0.08
+                : layoutMode === 'blend'
+                ? 0.72
+                : 0.16,
+            alpha:
+              layoutMode === 'logoTile'
+                ? 0.5
+                : layoutMode === 'blend'
+                ? 0.84
+                : 0.92,
+            rotate:
+              layoutMode === 'logoTile'
+                ? -12
+                : layoutMode === 'blend'
+                ? -8
+                : -6,
             trimTransparentPadding: true,
           },
         ],
@@ -306,6 +340,7 @@ function App() {
                   { label: 'Single', value: 'single' },
                   { label: 'Text tile', value: 'textTile' },
                   { label: 'Logo tile', value: 'logoTile' },
+                  { label: 'Blend', value: 'blend' },
                 ] as const
               ).map((item) => {
                 const selected = layoutMode === item.value;
@@ -402,6 +437,8 @@ function App() {
                   ? 'Layer 1 · staggered outlined text\nLayer 2 · image logo at top right'
                   : layoutMode === 'logoTile'
                   ? 'Layer 1 · text badge\nLayer 2 · repeated image logo grid'
+                  : layoutMode === 'blend'
+                  ? 'Layer 1 · screen text\nLayer 2 · multiply logo at center'
                   : 'Layer 1 · text badge\nLayer 2 · image logo at top right'}
               </Text>
             </View>

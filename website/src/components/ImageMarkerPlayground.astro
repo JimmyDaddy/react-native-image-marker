@@ -25,8 +25,9 @@ const strings = isZh
         '文字 + Logo',
         '单个或平铺',
         '透明度与描边',
+        '图层混合模式',
         '位置与旋转',
-        '批量 Recipe',
+        '变量与条件 Recipe',
         'PNG、JPEG 与 Web Blob',
       ],
       webBadge: '实时预览',
@@ -57,7 +58,8 @@ const strings = isZh
         { id: 'tiled-text', title: '平铺文字', meta: '错行、间距、旋转', version: '' },
         { id: 'tiled-logo', title: '平铺 Logo', meta: '一次解码，多处绘制', version: '' },
         { id: 'opacity', title: '半透明文字', meta: '整个文字图层 40%', version: 'v1.8' },
-        { id: 'batch', title: '批量 Recipe', meta: '多图、进度与 Blob', version: 'v1.8' },
+        { id: 'blend', title: '自然融合', meta: 'Screen 文字 + Multiply Logo', version: 'v1.9' },
+        { id: 'batch', title: '个性化批量 Recipe', meta: '文件名变量、进度与 Blob', version: 'v1.9' },
       ],
       textLayer: '文字设置',
       text: '文字内容',
@@ -65,6 +67,7 @@ const strings = isZh
       color: '颜色',
       fontSize: '字号',
       textOpacity: '文字透明度',
+      blendMode: '混合模式',
       bold: '粗体',
       stroke: '文字描边',
       strokeColor: '描边颜色',
@@ -106,10 +109,10 @@ const strings = isZh
       dimensions: '尺寸',
       elapsed: '耗时',
       localNote: '本地图片不会离开你的设备。刷新页面后，选择的文件会被清除。',
-      batchEyebrow: 'v1.8 · 批量 Recipe 与 Web Blob',
-      batchTitle: '一次选择多张图片，统一加水印。',
+      batchEyebrow: 'v1.9 · 变量 Recipe 与 Web Blob',
+      batchTitle: '一次选择多张图片，自动写入各自文件名。',
       batchDescription:
-        '当前文字、Logo 和导出设置会保存成一个 Recipe。Web 最多同时处理 4 张；结果仍按选择顺序排列。',
+        '当前文字、Logo 和导出设置会保存成一个 Recipe，文字会追加每张源文件的名称。Web 最多同时处理 4 张；结果仍按选择顺序排列。',
       chooseBatch: '选择多张图片',
       batchNone: '尚未选择图片',
       batchSelected: '张图片已加入队列',
@@ -155,8 +158,9 @@ const strings = isZh
         'Text + logo',
         'Single or tiled',
         'Opacity and outline',
+        'Layer blend modes',
         'Position and rotation',
-        'Batch Recipe',
+        'Variable and conditional Recipe',
         'PNG, JPEG, and Web Blob',
       ],
       webBadge: 'Live preview',
@@ -187,7 +191,8 @@ const strings = isZh
         { id: 'tiled-text', title: 'Tiled text', meta: 'Stagger, gaps, rotation', version: '' },
         { id: 'tiled-logo', title: 'Tiled logo', meta: 'Decode once, draw many', version: '' },
         { id: 'opacity', title: 'Translucent text', meta: 'Whole text layer at 40%', version: 'v1.8' },
-        { id: 'batch', title: 'Batch Recipe', meta: 'Files, progress, and Blob', version: 'v1.8' },
+        { id: 'blend', title: 'Natural compositing', meta: 'Screen text + Multiply logo', version: 'v1.9' },
+        { id: 'batch', title: 'Personalized batch Recipe', meta: 'Filename variables, progress, and Blob', version: 'v1.9' },
       ],
       textLayer: 'Text settings',
       text: 'Watermark text',
@@ -195,6 +200,7 @@ const strings = isZh
       color: 'Color',
       fontSize: 'Font size',
       textOpacity: 'Text opacity',
+      blendMode: 'Blend mode',
       bold: 'Bold',
       stroke: 'Text outline',
       strokeColor: 'Outline color',
@@ -236,10 +242,10 @@ const strings = isZh
       dimensions: 'Dimensions',
       elapsed: 'Time',
       localNote: 'Local images never leave your device. Selected files are cleared when you refresh.',
-      batchEyebrow: 'v1.8 · Batch Recipe and Web Blob',
-      batchTitle: 'Choose several images. Mark them with one recipe.',
+      batchEyebrow: 'v1.9 · Variable Recipe and Web Blob',
+      batchTitle: 'Choose several images. Add each filename automatically.',
       batchDescription:
-        'Your current text, logo, and output settings become one reusable Recipe. Web runs up to four jobs at once and keeps results in selection order.',
+        'Your current text, logo, and output settings become one reusable Recipe, and each text mark includes its source filename. Web runs up to four jobs at once and keeps results in selection order.',
       chooseBatch: 'Choose multiple images',
       batchNone: 'No images selected',
       batchSelected: 'images queued',
@@ -276,6 +282,14 @@ const anchors = Object.entries(strings.anchors);
 const formats = [
   { value: 'png', label: 'PNG' },
   { value: 'jpg', label: 'JPEG' },
+];
+const blendModes = [
+  { value: 'normal', label: isZh ? '普通' : 'Normal' },
+  { value: 'multiply', label: isZh ? '正片叠底' : 'Multiply' },
+  { value: 'screen', label: isZh ? '滤色' : 'Screen' },
+  { value: 'overlay', label: isZh ? '叠加' : 'Overlay' },
+  { value: 'darken', label: isZh ? '变暗' : 'Darken' },
+  { value: 'lighten', label: isZh ? '变亮' : 'Lighten' },
 ];
 ---
 
@@ -473,6 +487,13 @@ const formats = [
             <span>{strings.textOpacity} <output data-text-opacity-output>85%</output></span>
             <input type="range" min="0" max="1" value="0.85" step="0.05" data-text-opacity />
           </label>
+          <CustomSelect
+            id={`${idPrefix}-text-blend`}
+            label={strings.blendMode}
+            name="text-blend"
+            options={blendModes}
+            value="normal"
+          />
           <label class="check-field">
             <input type="checkbox" checked data-bold />
             <span>{strings.bold}</span>
@@ -582,6 +603,13 @@ const formats = [
             <span>{strings.scale} <output data-scale-output>72%</output></span>
             <input type="range" min="0.1" max="1" value="0.72" step="0.02" data-scale />
           </label>
+          <CustomSelect
+            id={`${idPrefix}-image-blend`}
+            label={strings.blendMode}
+            name="image-blend"
+            options={blendModes}
+            value="normal"
+          />
         </div>
 
         <div class="layout-choice primary-layout-choice">
@@ -895,6 +923,7 @@ const formats = [
     const colorValue = asElement<HTMLElement>(root, '[data-color-value]');
     const fontSize = asElement<HTMLInputElement>(root, '[data-font-size]');
     const textOpacity = asElement<HTMLInputElement>(root, '[data-text-opacity]');
+    const textBlend = asElement<HTMLSelectElement>(root, '[data-text-blend]');
     const bold = asElement<HTMLInputElement>(root, '[data-bold]');
     const strokeEnabled = asElement<HTMLInputElement>(root, '[data-stroke-enabled]');
     const strokeColor = asElement<HTMLInputElement>(root, '[data-stroke-color]');
@@ -911,6 +940,7 @@ const formats = [
     const textStagger = asElement<HTMLInputElement>(root, '[data-text-stagger]');
     const opacity = asElement<HTMLInputElement>(root, '[data-opacity]');
     const scale = asElement<HTMLInputElement>(root, '[data-scale]');
+    const imageBlend = asElement<HTMLSelectElement>(root, '[data-image-blend]');
     const imageRotation = asElement<HTMLInputElement>(root, '[data-image-rotation]');
     const imagePosition = asElement<HTMLSelectElement>(root, '[data-image-position]');
     const imageX = asElement<HTMLInputElement>(root, '[data-image-x]');
@@ -937,6 +967,7 @@ const formats = [
     const getTextLayer = (Position: PositionEnum) => ({
       text: textInput.value || 'IMAGE MARKER',
       alpha: numberValue(textOpacity),
+      blendMode: textBlend.value as 'normal' | 'multiply' | 'screen' | 'overlay' | 'darken' | 'lighten',
       ...(state.textLayout === 'tile'
         ? {
             layout: {
@@ -998,6 +1029,7 @@ const formats = [
             },
           }),
       alpha: numberValue(opacity),
+      blendMode: imageBlend.value as 'normal' | 'multiply' | 'screen' | 'overlay' | 'darken' | 'lighten',
       scale: numberValue(scale),
       rotate: numberValue(imageRotation),
       trimTransparentPadding: true,
@@ -1035,6 +1067,7 @@ const formats = [
     const textLayerCode = () => `{
   text: ${JSON.stringify(textInput.value || 'IMAGE MARKER')},
   alpha: ${Number(textOpacity.value)},
+  blendMode: '${textBlend.value}',
   ${state.textLayout === 'tile'
     ? `layout: ${tileLayoutCode(textGapX, textGapY, textLayoutX, textLayoutY, textStagger)},`
     : `position: ${positionCode(textPosition.value, textX.value, textY.value)},`}
@@ -1056,6 +1089,7 @@ const formats = [
     ? `layout: ${tileLayoutCode(imageGapX, imageGapY, imageLayoutX, imageLayoutY, imageStagger)},`
     : `position: ${positionCode(imagePosition.value, imageX.value, imageY.value)},`}
   alpha: ${Number(opacity.value)},
+  blendMode: '${imageBlend.value}',
   scale: ${Number(scale.value)},
   rotate: ${Number(imageRotation.value)},
   trimTransparentPadding: true,
@@ -1193,6 +1227,8 @@ ${layers}
       colorInput.value = '#ffffff';
       strokeColor.value = '#101828';
       textStagger.checked = true;
+      setCustomSelectValue(textBlend, 'normal');
+      setCustomSelectValue(imageBlend, 'normal');
 
       if (example === 'mixed') {
         updateMode('mixed');
@@ -1253,6 +1289,26 @@ ${layers}
         textX.value = '0';
         textY.value = '0';
         setCustomSelectValue(textPosition, 'center');
+      } else if (example === 'blend') {
+        updateMode('mixed');
+        updateLayout('text', 'single');
+        updateLayout('image', 'single');
+        textInput.value = 'SCREEN + MULTIPLY';
+        textOpacity.value = '0.9';
+        fontSize.value = '48';
+        strokeEnabled.checked = false;
+        textRotation.value = '0';
+        opacity.value = '0.9';
+        scale.value = '0.82';
+        imageRotation.value = '-8';
+        textX.value = '0';
+        textY.value = '48';
+        imageX.value = '0';
+        imageY.value = '0';
+        setCustomSelectValue(textPosition, 'bottomCenter');
+        setCustomSelectValue(imagePosition, 'center');
+        setCustomSelectValue(textBlend, 'screen');
+        setCustomSelectValue(imageBlend, 'multiply');
       }
 
       updateStrokeOptions();
@@ -1334,7 +1390,11 @@ ${layers}
 
       try {
         const sdk = await sdkPromise;
-        const textLayer = { type: 'text' as const, ...getTextLayer(sdk.Position) };
+        const textLayer = {
+          type: 'text' as const,
+          ...getTextLayer(sdk.Position),
+          text: `${textInput.value || 'IMAGE MARKER'} · {{sourceName}}`,
+        };
         const imageLayer = { type: 'image' as const, ...getImageLayer(sdk.Position) };
         const watermarks = state.mode === 'text'
           ? [textLayer]
@@ -1350,7 +1410,10 @@ ${layers}
           { resultType: 'blob' }
         );
         const results = await recipe.applyMany(
-          files.map((file) => ({ backgroundImage: { src: file } })),
+          files.map((file) => ({
+            backgroundImage: { src: file },
+            variables: { sourceName: file.name },
+          })),
           {
             concurrency: 4,
             signal: batchController.signal,
@@ -1517,6 +1580,7 @@ ${layers}
       colorInput,
       fontSize,
       textOpacity,
+      textBlend,
       bold,
       strokeEnabled,
       strokeColor,
@@ -1532,6 +1596,7 @@ ${layers}
       textStagger,
       opacity,
       scale,
+      imageBlend,
       imageRotation,
       imagePosition,
       imageX,

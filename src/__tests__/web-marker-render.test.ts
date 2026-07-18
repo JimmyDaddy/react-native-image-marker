@@ -33,6 +33,7 @@ class FakeImage {
 
 function createFakeCanvas() {
   const globalAlphaHistory = [1];
+  const blendModeHistory = ['source-over'];
   const canvas = {
     width: 0,
     height: 0,
@@ -46,6 +47,7 @@ function createFakeCanvas() {
   const context = {
     canvas,
     globalAlpha: 1,
+    globalCompositeOperation: 'source-over',
     fillStyle: '#000000',
     font: '',
     textAlign: 'left',
@@ -95,8 +97,17 @@ function createFakeCanvas() {
       globalAlphaHistory.push(value);
     },
   });
+  let globalCompositeOperation = 'source-over';
+  Object.defineProperty(context, 'globalCompositeOperation', {
+    configurable: true,
+    get: () => globalCompositeOperation,
+    set: (value: string) => {
+      globalCompositeOperation = value;
+      blendModeHistory.push(value);
+    },
+  });
   canvas.getContext.mockReturnValue(context);
-  return { canvas, context, globalAlphaHistory };
+  return { canvas, context, globalAlphaHistory, blendModeHistory };
 }
 
 function installFakeBrowserRuntime() {
@@ -328,6 +339,36 @@ describe('WebMarker browser render integration', () => {
       expect.any(Number)
     );
     expect(context.fill).toHaveBeenCalled();
+  });
+
+  it('maps text and image blend modes and restores compositing state', async () => {
+    const canvases = installFakeBrowserRuntime();
+
+    await WebMarker.mark({
+      backgroundImage: { src: '/background.jpg' },
+      watermarks: [
+        { type: 'image', src: '/logo.png', blendMode: 'multiply' },
+        { type: 'text', text: 'Screen', blendMode: 'screen' },
+        { type: 'text', text: 'Overlay', blendMode: 'overlay' },
+        { type: 'text', text: 'Darken', blendMode: 'darken' },
+        { type: 'text', text: 'Lighten', blendMode: 'lighten' },
+        { type: 'text', text: 'Normal', blendMode: 'normal' },
+      ],
+      saveFormat: ImageFormat.png,
+    });
+
+    const { context, blendModeHistory } = canvases[0]!;
+    expect(blendModeHistory).toEqual(
+      expect.arrayContaining([
+        'source-over',
+        'multiply',
+        'screen',
+        'overlay',
+        'darken',
+        'lighten',
+      ])
+    );
+    expect(context.globalCompositeOperation).toBe('source-over');
   });
 
   it('tiles outlined text using percentage gaps and staggered rows', async () => {

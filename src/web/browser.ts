@@ -14,6 +14,7 @@ export interface WebCanvasContext {
   [key: string]: unknown;
   canvas: WebCanvas;
   globalAlpha: number;
+  globalCompositeOperation: string;
   fillStyle: unknown;
   font: string;
   textAlign: string;

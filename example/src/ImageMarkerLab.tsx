@@ -902,6 +902,78 @@ function useViewModel(props: ImageMarkerLabProps) {
     }
   }
 
+  async function runBlendModeFeature() {
+    setBackgroundFormat('normal image');
+    applyConfig({
+      image: assets.bg,
+      marker: assets.icon,
+      waterMarkType: 'mixed',
+      text: 'SCREEN LIGHT',
+      saveFormat: ImageFormat.png,
+      bold: true,
+      fontSize: 38,
+      watermarkScale: 0.78,
+      watermarkRotate: -8,
+      watermarkAlpha: 0.88,
+      backgroundScale: 1,
+      backgroundRotate: 0,
+      backgroundAlpha: 1,
+    });
+    setLastRun('Screen + multiply blend');
+    setLoading(true);
+
+    try {
+      const path = await Marker.mark({
+        backgroundImage: { src: assets.bg },
+        watermarks: [
+          {
+            type: 'image',
+            src: assets.icon,
+            blendMode: 'multiply',
+            position: { position: Position.center, X: 0, Y: 0 },
+            scale: 0.78,
+            alpha: 0.88,
+            rotate: -8,
+          },
+          {
+            type: 'text',
+            text: 'SCREEN LIGHT',
+            blendMode: 'screen',
+            alpha: 0.92,
+            position: { position: Position.bottomCenter, X: 0, Y: 36 },
+            style: {
+              color: '#FFE9B8',
+              fontName: exampleFontName,
+              fontSize: 38,
+              bold: true,
+              shadowStyle: {
+                dx: 0,
+                dy: 3,
+                radius: 8,
+                color: '#0F172A99',
+              },
+            },
+          },
+        ],
+        quality: 100,
+        saveFormat: ImageFormat.png,
+      });
+
+      setUri(formatResultUri(path, ImageFormat.png));
+      setShow(true);
+      await updateFileSize(path, ImageFormat.png);
+    } catch (error) {
+      console.log('blend mode error', error);
+      Toast.show({
+        type: 'error',
+        text1: 'blend mode failed',
+        text2: error instanceof Error ? error.message : String(error),
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function runTiledTextFeature() {
     setBackgroundFormat('normal image');
     applyConfig({
@@ -1030,10 +1102,11 @@ function useViewModel(props: ImageMarkerLabProps) {
 
     try {
       const recipe = Marker.createRecipe({
+        schemaVersion: 1,
         watermarks: [
           {
             type: 'text',
-            text: 'BATCH RECIPE',
+            text: 'BATCH {{label}} · #{{index}}',
             position: {
               position: Position.bottomRight,
               X: 28,
@@ -1050,6 +1123,7 @@ function useViewModel(props: ImageMarkerLabProps) {
           {
             type: 'image',
             src: assets.icon,
+            visibleWhen: { variable: 'includeLogo', equals: true },
             position: { position: Position.topRight, X: 28, Y: 28 },
             scale: 0.38,
             alpha: 0.9,
@@ -1062,16 +1136,21 @@ function useViewModel(props: ImageMarkerLabProps) {
       const batchId = Date.now();
       const results = await recipe.applyMany(
         [
-          { backgroundImage: { src: assets.bg } },
+          { backgroundImage: { src: assets.bg }, label: 'PRIMARY' },
           {
             backgroundImage: {
               src: assets.orientationBg ?? assets.bg,
             },
+            label: 'ORIENTED',
           },
-          { backgroundImage: { src: assets.base64Bg } },
+          { backgroundImage: { src: assets.base64Bg }, label: 'BASE64' },
         ].map((input, index) => ({
-          ...input,
+          backgroundImage: input.backgroundImage,
           filename: `batch-${batchId}-${index + 1}`,
+          variables: {
+            label: input.label,
+            includeLogo: index !== 1,
+          },
         })),
         {
           concurrency: 3,
@@ -1775,6 +1854,7 @@ function useViewModel(props: ImageMarkerLabProps) {
       runTextOffsetFeature,
       runImageOffsetFeature,
       runMixedWatermarkFeature,
+      runBlendModeFeature,
       runTiledTextFeature,
       runTiledLogoFeature,
       runBatchRecipeFeature,
@@ -1903,6 +1983,14 @@ function ImageMarkerLab(props: ImageMarkerLabProps) {
                   onPress={actions.runMixedWatermarkFeature}
                 />
                 <FeatureCard
+                  badge="Blend"
+                  title="Screen + multiply"
+                  meta="natural layer compositing"
+                  tone="orange"
+                  testID="feature-blend-modes"
+                  onPress={actions.runBlendModeFeature}
+                />
+                <FeatureCard
                   badge="Tile"
                   title="Tiled text + outline"
                   meta="opacity + stagger + percent gaps"
@@ -1919,9 +2007,9 @@ function ImageMarkerLab(props: ImageMarkerLabProps) {
                   onPress={actions.runTiledLogoFeature}
                 />
                 <FeatureCard
-                  badge="Batch"
-                  title="Reusable batch recipe"
-                  meta="3 inputs · progress · stable order"
+                  badge="v1.9"
+                  title="Dynamic batch recipe"
+                  meta="variables + conditions + stable order"
                   tone="blue"
                   testID="feature-batch-recipe"
                   onPress={actions.runBatchRecipeFeature}

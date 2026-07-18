@@ -126,6 +126,35 @@ style: {
 }
 ```
 
+## 混合模式
+
+当水印需要与下方照片的颜色自然融合时，可以在文字或图片图层上设置 `blendMode`。默认值是 `normal`；跨平台支持的其他模式包括 `multiply`、`screen`、`overlay`、`darken` 和 `lighten`。
+
+```ts
+await Marker.mark({
+  backgroundImage: { src: photo },
+  watermarks: [
+    {
+      type: 'image',
+      src: logo,
+      blendMode: 'multiply',
+      alpha: 0.85,
+      position: { position: Position.center },
+    },
+    {
+      type: 'text',
+      text: 'SCREEN LIGHT',
+      blendMode: 'screen',
+      position: { position: Position.bottomCenter, Y: 32 },
+      style: { color: '#FFE9B8', fontSize: 36, bold: true },
+    },
+  ],
+  saveFormat: ImageFormat.png,
+});
+```
+
+`alpha` 会与混合模式一起生效。需要严格保留品牌色时请继续使用 `normal`；更重视照片融合感或印刷效果时，再选择其他模式。背景图片参数不接受 `blendMode`。
+
 ### 自定义字体
 
 该软件包不内置字体。
@@ -139,4 +168,4 @@ style: {
 
 ## 图像图层
 
-图像水印支持 `scale`、`rotate`、`alpha`、`position`、`layout` 和 `trimTransparentPadding`。缩放、旋转、定位或平铺前，会先裁剪外部透明像素。请根据预期的输出图像尺寸调整 `scale`。
+图像水印支持 `scale`、`rotate`、`alpha`、`blendMode`、`position`、`layout` 和 `trimTransparentPadding`。缩放、旋转、定位或平铺前，会先裁剪外部透明像素。请根据预期的输出图像尺寸调整 `scale`。

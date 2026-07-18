@@ -46,12 +46,13 @@ class ImageOptions(val options: ReadableMap) {
     alpha = (normalizedAlpha * DEFAULT_ALPHA).toInt()
   }
 
-  fun applyStyle(): Paint {
+  fun applyStyle(blendMode: WatermarkBlendMode = WatermarkBlendMode.NORMAL): Paint {
     val paint = Paint()
     paint.alpha = alpha
     //获取更清晰的图像采样
     paint.isDither = true
     paint.colorFilter = PorterDuffColorFilter(Color.TRANSPARENT, PorterDuff.Mode.OVERLAY)
+    blendMode.applyTo(paint)
     return paint
   }
 

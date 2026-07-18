@@ -1,4 +1,5 @@
 import type {
+  BlendMode,
   CornerRadius,
   ImageOptions,
   MarkOptions,
@@ -91,6 +92,19 @@ function resolveAlpha(value: number | undefined, label: string): number {
     throw new Error(`${label} must be a finite number between 0 and 1.`);
   }
   return alpha;
+}
+
+const WEB_BLEND_MODES: Record<BlendMode, string> = {
+  normal: 'source-over',
+  multiply: 'multiply',
+  screen: 'screen',
+  overlay: 'overlay',
+  darken: 'darken',
+  lighten: 'lighten',
+};
+
+function resolveBlendMode(value: BlendMode | undefined): string {
+  return WEB_BLEND_MODES[value ?? 'normal'];
 }
 
 function resolveRotation(value: number | undefined, label: string): number {
@@ -614,13 +628,16 @@ function drawTextLayer(
   canvas: Size
 ) {
   const previousAlpha = context.globalAlpha;
+  const previousBlendMode = context.globalCompositeOperation;
   const alpha = resolveAlpha(options.alpha, 'watermark text alpha');
   context.save();
   try {
     context.globalAlpha = previousAlpha * alpha;
+    context.globalCompositeOperation = resolveBlendMode(options.blendMode);
     drawTextLayerContent(context, options, canvas);
   } finally {
     context.globalAlpha = previousAlpha;
+    context.globalCompositeOperation = previousBlendMode;
     context.restore();
   }
 }
@@ -705,9 +722,12 @@ async function drawImageLayer(
         : [resolveAnchoredPosition(options.position, canvas, rotatedBounds, 0)];
 
     positions.forEach((position) => {
+      const previousAlpha = context.globalAlpha;
+      const previousBlendMode = context.globalCompositeOperation;
       context.save();
       try {
-        context.globalAlpha = alpha;
+        context.globalAlpha = previousAlpha * alpha;
+        context.globalCompositeOperation = resolveBlendMode(options.blendMode);
         context.imageSmoothingEnabled = false;
         context.translate(
           position.x - rotatedBounds.left,
@@ -727,6 +747,8 @@ async function drawImageLayer(
           sourceBounds.height
         );
       } finally {
+        context.globalAlpha = previousAlpha;
+        context.globalCompositeOperation = previousBlendMode;
         context.restore();
       }
     });

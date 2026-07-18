@@ -91,9 +91,11 @@ The three public methods share the same output options. Choose by layer type:
 
 ## When to create a Recipe
 
-Use `createRecipe` when the watermark configuration stays the same while the background changes. A Recipe accepts only the modern ordered `watermarks` array; pass `backgroundImage` and `filename` to `apply()` or `applyMany()` for each input.
+Use `createRecipe` when the watermark structure stays the same while the background or displayed values change. A Recipe accepts only the modern ordered `watermarks` array; pass `backgroundImage`, `filename`, and optional `variables` to `apply()` or `applyMany()` for each input. Text templates can read `{{variableName}}`, `{{index}}`, and `{{filename}}`; `visibleWhen` conditionally includes a layer.
 
 `applyMany()` reports every item independently and preserves input order. Its default concurrency is 1. Web accepts up to 4 active jobs; iOS and Android stay at 1 to limit native memory pressure. An `AbortSignal` stops new work from being dispatched without claiming to interrupt a render already in progress.
+
+Set `schemaVersion: 1` when a Recipe will be serialized, and persist `recipe.toJSON()` rather than internal runtime state.
 
 ## Layer order
 

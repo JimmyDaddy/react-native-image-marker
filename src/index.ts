@@ -9,11 +9,18 @@ export type {
   WatermarkBatchResult,
   WatermarkRecipe,
   WatermarkBlobRecipeResultOptions,
+  WatermarkRecipeCondition,
+  WatermarkRecipeDefinition,
   WatermarkRecipeInput,
+  WatermarkRecipeLayer,
   WatermarkRecipeOptions,
   WatermarkRecipeResultOptions,
+  WatermarkRecipeSchemaVersion,
+  WatermarkRecipeVariable,
   WatermarkStringRecipeResultOptions,
 } from './recipe';
+
+export { WATERMARK_RECIPE_SCHEMA_VERSION } from './recipe';
 
 /**
  * Position enum for text watermark and image watermark
@@ -61,6 +68,15 @@ export enum RotationCanvasMode {
   expand = 'expand',
   crop = 'crop',
 }
+
+/** Cross-platform compositing modes supported by text and image watermarks. */
+export type BlendMode =
+  | 'normal'
+  | 'multiply'
+  | 'screen'
+  | 'overlay'
+  | 'darken'
+  | 'lighten';
 
 /**
  * Padding style for text background
@@ -522,6 +538,11 @@ export interface TextOptions {
    */
   alpha?: number;
   /**
+   * How this text layer is composited with the pixels already on the canvas.
+   * @defaultValue 'normal'
+   */
+  blendMode?: BlendMode;
+  /**
    * @deprecated since 1.2.4 use position instead
    * text position options
    * @example
@@ -788,6 +809,12 @@ export interface ImageOptions {
  * }
  **/
 export interface WatermarkImageOptions extends ImageOptions {
+  /**
+   * How this watermark image is composited with the pixels already on the canvas.
+   * Background images intentionally do not expose this option.
+   * @defaultValue 'normal'
+   */
+  blendMode?: BlendMode;
   position?: PositionOptions;
   /**
    * Render this watermark once or repeat it across the image. Tiled layouts

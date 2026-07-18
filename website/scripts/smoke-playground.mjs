@@ -277,8 +277,8 @@ async function assertLayoutControlsAndCode(page, playground) {
   );
   const preview = playground.locator('[data-preview]');
 
-  assert.equal(await playground.locator('[data-example]').count(), 6);
-  assert.equal(await playground.locator('.capability-index li').count(), 8);
+  assert.equal(await playground.locator('[data-example]').count(), 7);
+  assert.equal(await playground.locator('.capability-index li').count(), 9);
   assert(
     await textSingle.isVisible(),
     'Text layout switch should be visible without opening advanced controls.'
@@ -314,6 +314,13 @@ async function assertLayoutControlsAndCode(page, playground) {
   code = await playground.locator('[data-web-code]').textContent();
   assert.match(code ?? '', /text: ["']PRIVATE PREVIEW["']/);
   assert.match(code ?? '', /alpha: 0\.4/);
+
+  previousSource = await preview.getAttribute('src');
+  await playground.locator('[data-example="blend"]').click();
+  await waitForPreviewChange(page, playground, previousSource);
+  code = await playground.locator('[data-web-code]').textContent();
+  assert.match(code ?? '', /blendMode: 'screen'/);
+  assert.match(code ?? '', /blendMode: 'multiply'/);
 
   previousSource = await preview.getAttribute('src');
   await playground.locator('[data-example="mixed"]').click();
@@ -601,8 +608,8 @@ async function assertCustomSelects(playground) {
   const customSelects = playground.locator('[data-custom-select]');
   assert.equal(
     await customSelects.count(),
-    3,
-    'Playground should render three custom selectors.'
+    5,
+    'Playground should render five custom selectors.'
   );
   for (const select of await playground.locator('select').all()) {
     assert.equal(
