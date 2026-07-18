@@ -5,8 +5,32 @@
   <h1>React Native Image Marker</h1>
   <p>Text, image, and ordered watermark layers for iOS, Android, and Web.</p>
 
-  [![npm version](https://img.shields.io/npm/v/react-native-image-marker.svg?label=npm)](https://www.npmjs.com/package/react-native-image-marker)
+[![npm version](https://img.shields.io/npm/v/react-native-image-marker.svg?label=npm)](https://www.npmjs.com/package/react-native-image-marker)
+
 </div>
+
+## See what you can make
+
+Compose text and image layers, keep their render order under control, and export the finished image on iOS, Android, or Web.
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/website/public/media/watermark-after-dark.jpg" alt="A night street photograph with layered title, metadata, vertical text, and an Image Marker logo" width="100%" />
+</p>
+
+<table>
+  <tr>
+    <td width="50%">
+      <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/website/public/media/watermark-coast.jpg" alt="A coastal photograph with a title, date, status badge, and logo watermark" width="100%" />
+    </td>
+    <td width="50%">
+      <img src="https://raw.githubusercontent.com/JimmyDaddy/react-native-image-marker/master/website/public/media/watermark-waypoint.jpg" alt="A mountain road photograph demonstrating absolute watermark coordinates" width="100%" />
+    </td>
+  </tr>
+  <tr>
+    <td><strong>Ready to share.</strong><br />Add titles, metadata, badges, and your logo in one export.</td>
+    <td><strong>Placed where you want it.</strong><br />Use anchors, offsets, rotation, or absolute coordinates.</td>
+  </tr>
+</table>
 
 ## Install
 
@@ -70,11 +94,11 @@ Browser Canvas and native graphics stacks share the API and positioning model bu
 
 ## Choose an API
 
-| Method | Use it for |
-| --- | --- |
-| `Marker.markText` | One or many text layers |
-| `Marker.markImage` | One or many logo, icon, or image layers |
-| `Marker.mark` | Ordered text and image layers in one render pass |
+| Method             | Use it for                                       |
+| ------------------ | ------------------------------------------------ |
+| `Marker.markText`  | One or many text layers                          |
+| `Marker.markImage` | One or many logo, icon, or image layers          |
+| `Marker.mark`      | Ordered text and image layers in one render pass |
 
 Layers render in array order, so later layers draw over earlier layers. `markText` and `markImage` remain supported; use `mark` when mixed layer order matters.
 
