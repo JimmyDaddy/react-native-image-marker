@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.8.0](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.7.0...v1.8.0) (2026-07-18)
+
+### Features
+
+* add reusable watermark recipes ([#327](https://github.com/JimmyDaddy/react-native-image-marker/issues/327)) ([ef62443](https://github.com/JimmyDaddy/react-native-image-marker/commit/ef62443a1c3cdcd47e35b442554670311d28645b))
+* add controlled watermark batches ([#328](https://github.com/JimmyDaddy/react-native-image-marker/issues/328)) ([3b2e941](https://github.com/JimmyDaddy/react-native-image-marker/commit/3b2e9418004ec730bd1155585ea607c920979322))
+* **web:** add Blob recipe output ([#329](https://github.com/JimmyDaddy/react-native-image-marker/issues/329)) ([bb3113b](https://github.com/JimmyDaddy/react-native-image-marker/commit/bb3113b1bfe8c70d9ceaa1fd8fdde803e060a351))
+* complete v1.8 examples and text opacity ([#330](https://github.com/JimmyDaddy/react-native-image-marker/issues/330)) ([266a3c8](https://github.com/JimmyDaddy/react-native-image-marker/commit/266a3c8c3bab2cbd45b495f03caec60ac782e4f8))
+
+### Bug Fixes
+
+* **ios:** honor maxSize while decoding images ([#326](https://github.com/JimmyDaddy/react-native-image-marker/issues/326)) ([0da1b9d](https://github.com/JimmyDaddy/react-native-image-marker/commit/0da1b9d27ce4ef9db86a9674d58a0a0c6e928fec))
+
 ## [1.7.0](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.6.0...v1.7.0) (2026-07-18)
 
 ### Features
