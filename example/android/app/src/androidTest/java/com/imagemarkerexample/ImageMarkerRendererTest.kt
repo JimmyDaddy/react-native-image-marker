@@ -446,6 +446,56 @@ class ImageMarkerRendererTest {
   }
 
   @Test
+  fun tiledImageRepeatsAcrossTheCanvas() {
+    val output = ImageMarkerRenderer.renderImageWatermarks(
+      solidBitmap(12, 8, Color.RED),
+      listOf(solidBitmap(2, 2, Color.BLUE)),
+      imageOptions(
+        watermarkPosition = null,
+        layout = JavaOnlyMap.of(
+          "type", "tile",
+          "gapX", 2,
+          "gapY", 2
+        )
+      )
+    )
+
+    var bluePixels = 0
+    for (y in 0 until output.height) {
+      for (x in 0 until output.width) {
+        if (output.getPixel(x, y) == Color.BLUE) bluePixels += 1
+      }
+    }
+    assertEquals(24, bluePixels)
+  }
+
+  @Test
+  fun tiledTextProducesMoreVisiblePixelsThanOneCopy() {
+    val background = solidBitmap(180, 100, Color.WHITE)
+    val single = ImageMarkerRenderer.renderTextWatermarks(
+      background,
+      textOptions(x = 0, y = 0),
+      reactContext()
+    )
+    val tiled = ImageMarkerRenderer.renderTextWatermarks(
+      background,
+      textOptions(
+        x = null,
+        y = null,
+        layout = JavaOnlyMap.of(
+          "type", "tile",
+          "gapX", 30,
+          "gapY", 20,
+          "stagger", true
+        )
+      ),
+      reactContext()
+    )
+
+    assertTrue(countNonWhitePixels(tiled) > countNonWhitePixels(single) * 2)
+  }
+
+  @Test
   fun rotatedTextAtNonZeroCoordinatesKeepsItsLocalCenter() {
     val style = JavaOnlyMap.of(
       "color", "#00000000",
@@ -492,8 +542,25 @@ class ImageMarkerRendererTest {
     saveFormat: String = "png",
     matteColor: String = "#FFFFFF",
     trimTransparentPadding: Boolean = false,
-    watermarkPosition: JavaOnlyMap
+    watermarkPosition: JavaOnlyMap?,
+    layout: JavaOnlyMap? = null
   ): MarkImageOptions {
+    val watermark = JavaOnlyMap.of(
+      "src",
+      imageSource("watermark"),
+      "scale",
+      watermarkScale,
+      "trimTransparentPadding",
+      trimTransparentPadding,
+      "alpha",
+      1
+    )
+    if (watermarkPosition != null) {
+      watermark.putMap("position", watermarkPosition)
+    }
+    if (layout != null) {
+      watermark.putMap("layout", layout)
+    }
     return MarkImageOptions(
       JavaOnlyMap.of(
         "backgroundImage",
@@ -507,21 +574,7 @@ class ImageMarkerRendererTest {
           "alpha",
           1
         ),
-        "watermarkImages",
-        JavaOnlyArray.of(
-          JavaOnlyMap.of(
-            "src",
-            imageSource("watermark"),
-            "scale",
-            watermarkScale,
-            "position",
-            watermarkPosition,
-            "trimTransparentPadding",
-            trimTransparentPadding,
-            "alpha",
-            1
-          )
-        ),
+        "watermarkImages", JavaOnlyArray.of(watermark),
         "saveFormat",
         saveFormat,
         "matteColor",
@@ -533,16 +586,23 @@ class ImageMarkerRendererTest {
   }
 
   private fun textOptions(
-    x: Int,
-    y: Int,
-    style: JavaOnlyMap? = null
+    x: Int?,
+    y: Int?,
+    style: JavaOnlyMap? = null,
+    layout: JavaOnlyMap? = null
   ): MarkTextOptions {
-    val watermark = JavaOnlyMap.of(
-      "text", "Marker",
-      "position", JavaOnlyMap.of("X", x, "Y", y)
-    )
+    val watermark = JavaOnlyMap.of("text", "Marker")
+    if (x != null || y != null) {
+      val position = JavaOnlyMap()
+      if (x != null) position.putInt("X", x)
+      if (y != null) position.putInt("Y", y)
+      watermark.putMap("position", position)
+    }
     if (style != null) {
       watermark.putMap("style", style)
+    }
+    if (layout != null) {
+      watermark.putMap("layout", layout)
     }
     return MarkTextOptions(
       JavaOnlyMap.of(
@@ -607,5 +667,18 @@ class ImageMarkerRendererTest {
 
   private fun isBlue(pixel: Int): Boolean {
     return Color.blue(pixel) > 200 && Color.red(pixel) < 80 && Color.green(pixel) < 80
+  }
+
+  private fun countNonWhitePixels(bitmap: Bitmap): Int {
+    var count = 0
+    for (y in 0 until bitmap.height) {
+      for (x in 0 until bitmap.width) {
+        val pixel = bitmap.getPixel(x, y)
+        if (Color.red(pixel) < 245 || Color.green(pixel) < 245 || Color.blue(pixel) < 245) {
+          count += 1
+        }
+      }
+    }
+    return count
   }
 }

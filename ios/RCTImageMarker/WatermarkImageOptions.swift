@@ -16,6 +16,7 @@ class WatermarkImageOptions: NSObject {
     var edgeInset: String?
     var position: MarkerPositionEnum = .none
     var trimTransparentPadding: Bool = false
+    var layout: ImageMarkerWatermarkLayout?
 
     init(dicOpts opts: [AnyHashable: Any]) throws {
         self.imageOption = try ImageOptions(dicOpts: opts)
@@ -27,15 +28,26 @@ class WatermarkImageOptions: NSObject {
             self.edgeInset = Utils.isNULL(positionOpts["edgeInset"]) ? nil : Utils.handleDynamicToString(v: positionOpts["edgeInset"])
             self.position = positionOpts["position"] != nil ? RCTConvert.MarkerPosition(positionOpts["position"]) : .none
         }
+        if let layoutOpts = opts["layout"] as? [AnyHashable: Any] {
+            self.layout = try ImageMarkerWatermarkLayout(dicOpts: layoutOpts)
+        }
+        if layout?.isTile == true, positionOpts != nil {
+            throw NSError(
+                domain: ErrorDomainEnum.PARAMS_INVALID.rawValue,
+                code: 0,
+                userInfo: [NSLocalizedDescriptionKey: "layout cannot be combined with position"]
+            )
+        }
     }
 
-    init(watermarkImage: ImageOptions, X: String?, Y: String?, edgeInset: String?, position: MarkerPositionEnum, trimTransparentPadding: Bool = false) {
+    init(watermarkImage: ImageOptions, X: String?, Y: String?, edgeInset: String?, position: MarkerPositionEnum, trimTransparentPadding: Bool = false, layout: ImageMarkerWatermarkLayout? = nil) {
         self.imageOption = watermarkImage
         self.X = X
         self.Y = Y
         self.edgeInset = edgeInset
         self.position = position
         self.trimTransparentPadding = trimTransparentPadding
+        self.layout = layout
     }
 
     static func checkWatermarkImageParams(_ opts: [AnyHashable: Any], rejecter reject: @escaping RCTPromiseRejectBlock) -> WatermarkImageOptions? {

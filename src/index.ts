@@ -523,6 +523,13 @@ export interface TextOptions {
   position?: PositionOptions;
 
   /**
+   * Render this watermark once or repeat it across the image. Tiled layouts
+   * cannot be combined with `position` or the deprecated `positionOptions`.
+   * @defaultValue `{ type: 'single' }`
+   */
+  layout?: WatermarkLayout;
+
+  /**
    * text style
    * @example
    * style: {
@@ -759,12 +766,35 @@ export interface ImageOptions {
 export interface WatermarkImageOptions extends ImageOptions {
   position?: PositionOptions;
   /**
+   * Render this watermark once or repeat it across the image. Tiled layouts
+   * cannot be combined with `position`.
+   * @defaultValue `{ type: 'single' }`
+   */
+  layout?: WatermarkLayout;
+  /**
    * Remove fully transparent outer rows and columns before scaling, rotating,
    * and positioning the watermark.
    * @defaultValue false
    */
   trimTransparentPadding?: boolean;
 }
+
+/** Controls whether a watermark layer is drawn once or tiled over the image. */
+export type WatermarkLayout =
+  | { type?: 'single' }
+  | {
+      type: 'tile';
+      /** Horizontal space between rotated watermark bounds. */
+      gapX?: number | string;
+      /** Vertical space between rotated watermark bounds. */
+      gapY?: number | string;
+      /** Horizontal grid offset in pixels or as a percentage of canvas width. */
+      offsetX?: number | string;
+      /** Vertical grid offset in pixels or as a percentage of canvas height. */
+      offsetY?: number | string;
+      /** Shift every other row by half of its horizontal step. */
+      stagger?: boolean;
+    };
 
 /**
  * Options for rendering image-only watermark layers.

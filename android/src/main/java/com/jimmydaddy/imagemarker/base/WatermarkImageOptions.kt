@@ -9,6 +9,7 @@ data class WatermarkImageOptions(val options: ReadableMap?) {
   var edgeInset: String? = null
   var positionEnum: PositionEnum? = null
   var trimTransparentPadding: Boolean = false
+  var layout: WatermarkLayout? = null
 
   init {
     if (options != null) {
@@ -25,6 +26,14 @@ data class WatermarkImageOptions(val options: ReadableMap?) {
         ?.let(PositionEnum::getPosition)
       trimTransparentPadding =
         options.hasKey("trimTransparentPadding") && options.getBoolean("trimTransparentPadding")
+      layout = if (options.hasKey("layout") && !options.isNull("layout")) {
+        options.getMap("layout")?.let(::WatermarkLayout)
+      } else {
+        null
+      }
+      if (layout?.isTile == true && positionOptions != null) {
+        throw IllegalArgumentException("layout cannot be combined with position")
+      }
     }
   }
 
@@ -34,7 +43,8 @@ data class WatermarkImageOptions(val options: ReadableMap?) {
     y: String?,
     edgeInset: String?,
     position: PositionEnum?,
-    trimTransparentPadding: Boolean = false
+    trimTransparentPadding: Boolean = false,
+    layout: WatermarkLayout? = null
   ) : this(null) {
     imageOption = watermarkImage
     this.x = x
@@ -42,6 +52,10 @@ data class WatermarkImageOptions(val options: ReadableMap?) {
     this.edgeInset = edgeInset
     this.positionEnum = position
     this.trimTransparentPadding = trimTransparentPadding
+    this.layout = layout
+    if (layout?.isTile == true && (x != null || y != null || edgeInset != null || position != null)) {
+      throw IllegalArgumentException("layout cannot be combined with position")
+    }
   }
 
   companion object {

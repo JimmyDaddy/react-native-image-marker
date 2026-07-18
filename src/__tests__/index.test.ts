@@ -421,6 +421,125 @@ describe('Marker JS wrapper', () => {
     ).resolves.toBe('/tmp/boundary-watermarks.png');
   });
 
+  it('preserves tiled layouts without mutating caller input', async () => {
+    nativeModule.markWithWatermarks.mockResolvedValue('/tmp/tiled.png');
+    const options = {
+      backgroundImage: { src: 'file:///tmp/background.png' },
+      watermarks: [
+        {
+          type: 'text' as const,
+          text: 'CONFIDENTIAL',
+          layout: {
+            type: 'tile' as const,
+            gapX: '8%',
+            gapY: 24,
+            stagger: true,
+          },
+        },
+      ],
+    };
+    deepFreeze(options);
+
+    await expect(Marker.mark(options)).resolves.toBe('/tmp/tiled.png');
+
+    const nativeLayout =
+      nativeModule.markWithWatermarks.mock.calls[0][0].watermarks[0].layout;
+    expect(nativeLayout).toEqual(options.watermarks[0].layout);
+    expect(nativeLayout).not.toBe(options.watermarks[0].layout);
+    expect(
+      nativeModule.markWithWatermarks.mock.calls[0][0].watermarks[0]
+    ).not.toHaveProperty('position');
+
+    nativeModule.markWithText.mockResolvedValue('/tmp/tiled-text.png');
+    await Marker.markText({
+      backgroundImage: { src: 'file:///tmp/background.png' },
+      watermarkTexts: [
+        { text: 'Tiled text', layout: { type: 'tile', gapX: 12 } },
+      ],
+    });
+    expect(
+      nativeModule.markWithText.mock.calls[0][0].watermarkTexts[0]
+    ).not.toHaveProperty('position');
+  });
+
+  it('rejects tiled layouts combined with position or invalid spacing', () => {
+    expect(() =>
+      Marker.markText({
+        backgroundImage: { src: 'file:///tmp/background.png' },
+        watermarkTexts: [
+          {
+            text: 'Conflict',
+            position: { position: Position.center },
+            layout: { type: 'tile' },
+          },
+        ],
+      })
+    ).toThrow('watermarkTexts[0].layout cannot be combined with position.');
+
+    expect(() =>
+      Marker.markImage({
+        backgroundImage: { src: 'file:///tmp/background.png' },
+        watermarkImages: [
+          {
+            src: 'file:///tmp/logo.png',
+            layout: { type: 'tile', gapX: '-1%' },
+          },
+        ],
+      })
+    ).toThrow('watermarkImages[0].layout.gapX must be non-negative.');
+
+    expect(() =>
+      Marker.markImage({
+        backgroundImage: { src: 'file:///tmp/background.png' },
+        watermarkImage: {
+          src: 'file:///tmp/logo.png',
+          layout: { type: 'tile' },
+        },
+        watermarkPositions: { position: Position.center },
+      })
+    ).toThrow('watermarkImage.layout cannot be combined with position.');
+
+    expect(() =>
+      Marker.mark({
+        backgroundImage: { src: 'file:///tmp/background.png' },
+        watermarks: [
+          {
+            type: 'image',
+            src: 'file:///tmp/logo.png',
+            layout: { type: 'tile', offsetY: 'not-a-number' },
+          },
+        ],
+      })
+    ).toThrow(
+      'watermarks[0].layout.offsetY must be a finite number or percentage.'
+    );
+
+    expect(() =>
+      Marker.markText({
+        backgroundImage: { src: 'file:///tmp/background.png' },
+        watermarkTexts: [
+          {
+            text: 'Single',
+            layout: { type: 'single', gapX: 'not-a-number' } as any,
+          },
+        ],
+      })
+    ).toThrow(
+      'watermarkTexts[0].layout.gapX must be a finite number or percentage.'
+    );
+
+    expect(() =>
+      Marker.markText({
+        backgroundImage: { src: 'file:///tmp/background.png' },
+        watermarkTexts: [{ text: 'Array', layout: [] as any }],
+      })
+    ).toThrow('watermarkTexts[0].layout must be an object.');
+
+    expect(nativeModule.markWithText).not.toHaveBeenCalled();
+    expect(nativeModule.markWithImage).not.toHaveBeenCalled();
+    expect(nativeModule.markWithWatermarks).not.toHaveBeenCalled();
+  });
+
   it('rejects invalid alpha values at every nested image location', () => {
     const invalidCases = [
       {

@@ -39,13 +39,22 @@ class MarkImageOptions(options: ReadableMap) : Options(options) {
         ?.let(PositionEnum::getPosition)
       val trimTransparentPadding =
         markerImageOpts.hasKey("trimTransparentPadding") && markerImageOpts.getBoolean("trimTransparentPadding")
+      val layout = if (markerImageOpts.hasKey("layout") && !markerImageOpts.isNull("layout")) {
+        markerImageOpts.getMap("layout")?.let(::WatermarkLayout)
+      } else {
+        null
+      }
+      if (layout?.isTile == true && positionOptions != null) {
+        throw MarkerError(ErrorCode.INVALID_PARAMS, "layout cannot be combined with position")
+      }
       val markerOpts = WatermarkImageOptions(
         marker,
         x,
         y,
         edgeInset,
         positionEnum,
-        trimTransparentPadding
+        trimTransparentPadding,
+        layout
       )
       myMarkerList.add(markerOpts)
     }
@@ -60,9 +69,12 @@ class MarkImageOptions(options: ReadableMap) : Options(options) {
 
       return ArrayList<WatermarkImageOptions>(watermarkImages.size()).apply {
         for (index in 0 until watermarkImages.size()) {
-          val markerMap = watermarkImages.getMap(index)
-            ?: throw MarkerError(ErrorCode.NULL_MAP, "watermarkImages[$index] is null")
-          add(WatermarkImageOptions(markerMap))
+          val markerMap: ReadableMap? = watermarkImages.getMap(index)
+          add(
+            WatermarkImageOptions(
+              markerMap ?: throw MarkerError(ErrorCode.NULL_MAP, "watermarkImages[$index] is null")
+            )
+          )
         }
       }
     }

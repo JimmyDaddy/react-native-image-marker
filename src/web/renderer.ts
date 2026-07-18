@@ -30,6 +30,7 @@ import {
   resolveSpreadValue,
 } from './helpers';
 import type { Point, Size } from './helpers';
+import { resolveTilePlacements } from '../layout';
 
 export type WebRenderLayer =
   | { type: 'text'; options: TextOptions }
@@ -458,30 +459,25 @@ function drawTextDecorations(
   stroke.stroke();
 }
 
-function drawTextLayer(
+function drawTextAtPosition(
   context: WebCanvasContext,
   options: TextOptions,
-  canvas: Size
+  canvas: Size,
+  layout: TextLayout,
+  visualPosition: Point,
+  rotation: number
 ) {
   const style = options.style;
-  const layout = measureTextLayout(context, options.text, style, canvas.width);
   const strokeWidth = style?.strokeStyle?.width ?? 0;
   const outlineInset = strokeWidth / 2;
   const visualSize = {
     width: layout.width + outlineInset * 2,
     height: layout.height + outlineInset * 2,
   };
-  const visualPosition = resolveAnchoredPosition(
-    options.position ?? options.positionOptions,
-    canvas,
-    visualSize,
-    20
-  );
   const position = {
     x: visualPosition.x + outlineInset,
     y: visualPosition.y + outlineInset,
   };
-  const rotation = resolveRotation(style?.rotate, 'text rotation');
 
   context.save();
   try {
@@ -553,6 +549,62 @@ function drawTextLayer(
   } finally {
     context.restore();
   }
+}
+
+function drawTextLayer(
+  context: WebCanvasContext,
+  options: TextOptions,
+  canvas: Size
+) {
+  const style = options.style;
+  const textLayout = measureTextLayout(
+    context,
+    options.text,
+    style,
+    canvas.width
+  );
+  const rotation = resolveRotation(style?.rotate, 'text rotation');
+  const strokeWidth = style?.strokeStyle?.width ?? 0;
+  const outlineInset = strokeWidth / 2;
+  const visualSize = {
+    width: textLayout.width + outlineInset * 2,
+    height: textLayout.height + outlineInset * 2,
+  };
+
+  if (options.layout?.type === 'tile') {
+    const rotatedSize = getRotatedBounds(visualSize, rotation);
+    const placements = resolveTilePlacements(
+      options.layout,
+      canvas,
+      rotatedSize
+    );
+    const originInset = {
+      x: (rotatedSize.width - visualSize.width) / 2,
+      y: (rotatedSize.height - visualSize.height) / 2,
+    };
+    placements.forEach((placement) => {
+      drawTextAtPosition(
+        context,
+        options,
+        canvas,
+        textLayout,
+        {
+          x: placement.x + originInset.x,
+          y: placement.y + originInset.y,
+        },
+        rotation
+      );
+    });
+    return;
+  }
+
+  const position = resolveAnchoredPosition(
+    options.position ?? options.positionOptions,
+    canvas,
+    visualSize,
+    20
+  );
+  drawTextAtPosition(context, options, canvas, textLayout, position, rotation);
 }
 
 function fullSourceBounds(image: LoadedWebImage): SourceBounds {
@@ -629,37 +681,37 @@ async function drawImageLayer(
       height: sourceBounds.height * scale,
     };
     const rotatedBounds = getRotatedBounds(scaledSize, rotation);
-    const position = resolveAnchoredPosition(
-      options.position,
-      canvas,
-      rotatedBounds,
-      0
-    );
+    const positions =
+      options.layout?.type === 'tile'
+        ? resolveTilePlacements(options.layout, canvas, rotatedBounds)
+        : [resolveAnchoredPosition(options.position, canvas, rotatedBounds, 0)];
 
-    context.save();
-    try {
-      context.globalAlpha = alpha;
-      context.imageSmoothingEnabled = false;
-      context.translate(
-        position.x - rotatedBounds.left,
-        position.y - rotatedBounds.top
-      );
-      context.rotate(degreesToRadians(rotation));
-      context.scale(scale, scale);
-      context.drawImage(
-        image.image,
-        sourceBounds.x,
-        sourceBounds.y,
-        sourceBounds.width,
-        sourceBounds.height,
-        0,
-        0,
-        sourceBounds.width,
-        sourceBounds.height
-      );
-    } finally {
-      context.restore();
-    }
+    positions.forEach((position) => {
+      context.save();
+      try {
+        context.globalAlpha = alpha;
+        context.imageSmoothingEnabled = false;
+        context.translate(
+          position.x - rotatedBounds.left,
+          position.y - rotatedBounds.top
+        );
+        context.rotate(degreesToRadians(rotation));
+        context.scale(scale, scale);
+        context.drawImage(
+          image.image,
+          sourceBounds.x,
+          sourceBounds.y,
+          sourceBounds.width,
+          sourceBounds.height,
+          0,
+          0,
+          sourceBounds.width,
+          sourceBounds.height
+        );
+      } finally {
+        context.restore();
+      }
+    });
   } finally {
     image.cleanup();
   }

@@ -39,34 +39,46 @@ object ImageMarkerRenderer {
         scaledHeight,
         markOpts.imageOption.rotate
       )
-      val position = Position.getImageRectFromPosition(
-        markOpts.positionEnum,
-        markOpts.x,
-        markOpts.y,
-        rotatedBounds.width,
-        rotatedBounds.height,
-        canvasWidth,
-        canvasHeight,
-        markOpts.edgeInset
-      )
-
-      canvas.save()
-      // Translate the transformed content bounds to the resolved anchor. Scaling and rotation
-      // happen directly on the destination Canvas, avoiding temporary watermark bitmaps.
-      canvas.translate(
-        position.x - rotatedBounds.left,
-        position.y - rotatedBounds.top
-      )
-      canvas.rotate(markOpts.imageOption.rotate)
-      canvas.scale(scale, scale)
-      canvas.translate(-sourceBounds.left.toFloat(), -sourceBounds.top.toFloat())
-      canvas.clipRect(sourceBounds)
+      val positions = if (markOpts.layout?.isTile == true) {
+        markOpts.layout!!.placements(
+          canvasWidth,
+          canvasHeight,
+          rotatedBounds.width,
+          rotatedBounds.height
+        )
+      } else {
+        listOf(
+          Position.getImageRectFromPosition(
+            markOpts.positionEnum,
+            markOpts.x,
+            markOpts.y,
+            rotatedBounds.width,
+            rotatedBounds.height,
+            canvasWidth,
+            canvasHeight,
+            markOpts.edgeInset
+          )
+        )
+      }
       val paint = markOpts.imageOption.applyStyle().apply {
         // Preserve hard edges for QR codes, barcodes and pixel-art watermarks.
         isFilterBitmap = false
       }
-      canvas.drawBitmap(sourceMarker, 0f, 0f, paint)
-      canvas.restore()
+      for (position in positions) {
+        canvas.save()
+        // Translate the transformed content bounds to the resolved anchor. Scaling and rotation
+        // happen directly on the destination Canvas, avoiding temporary watermark bitmaps.
+        canvas.translate(
+          position.x - rotatedBounds.left,
+          position.y - rotatedBounds.top
+        )
+        canvas.rotate(markOpts.imageOption.rotate)
+        canvas.scale(scale, scale)
+        canvas.translate(-sourceBounds.left.toFloat(), -sourceBounds.top.toFloat())
+        canvas.clipRect(sourceBounds)
+        canvas.drawBitmap(sourceMarker, 0f, 0f, paint)
+        canvas.restore()
+      }
     } finally {
       if (recycleSource && !sourceMarker.isRecycled) {
         sourceMarker.recycle()

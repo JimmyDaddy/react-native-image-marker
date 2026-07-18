@@ -15,6 +15,7 @@ import android.util.TypedValue
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.common.assets.ReactFontManager
+import com.jimmydaddy.imagemarker.ImageProcess
 import kotlin.math.ceil
 
 @Suppress("DEPRECATION")
@@ -25,6 +26,7 @@ data class TextOptions(val options: ReadableMap) {
   private var edgeInset: String?
   private var positionEnum: PositionEnum?
   private var style: TextStyle
+  private var layout: WatermarkLayout?
 
   init {
     try {
@@ -48,6 +50,15 @@ data class TextOptions(val options: ReadableMap) {
         null
       }
       positionEnum = positionName?.let(PositionEnum::getPosition)
+      val layoutOptions = if (options.hasKey("layout") && !options.isNull("layout")) {
+        options.getMap("layout")
+      } else {
+        null
+      }
+      layout = layoutOptions?.let(::WatermarkLayout)
+      if (layout?.isTile == true && positionOptions != null) {
+        throw MarkerError(ErrorCode.INVALID_PARAMS, "layout cannot be combined with position")
+      }
       val styleOptions = if (options.hasKey("style") && !options.isNull("style")) {
         options.getMap("style")
       } else {
@@ -147,85 +158,113 @@ data class TextOptions(val options: ReadableMap) {
     val outlineInset = strokeWidth / 2f
     val visualTextWidth = ceil(textWidth + strokeWidth.toDouble()).toInt()
     val visualTextHeight = ceil(textHeight + strokeWidth.toDouble()).toInt()
-    val position = Position.getTextPosition(
-      positionEnum,
-      x,
-      y,
-      maxWidth,
-      maxHeight,
-      visualTextWidth,
-      visualTextHeight,
-      edgeInset
-    )
-    val visualX = position.x
-    val visualY = position.y
-    val x = visualX + outlineInset
-    val y = visualY + outlineInset
-
-    canvas.save()
-    val rotationPivot = rotationPivot(
-      visualX,
-      visualY,
-      visualTextWidth.toFloat(),
-      visualTextHeight.toFloat()
-    )
-    canvas.rotate(style.rotate.toFloat(), rotationPivot.first, rotationPivot.second)
-
-    // Draw text background
-    if (null != style.textBackgroundStyle) {
-      val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.LINEAR_TEXT_FLAG)
-      paint.style = Paint.Style.FILL
-      paint.color = style.textBackgroundStyle!!.color
-      val bgInsets = style.textBackgroundStyle!!.toEdgeInsets(maxWidth, maxHeight)
-      var bgRect = RectF(
-        x - outlineInset - bgInsets.left,
-        y - outlineInset - bgInsets.top,
-        x + textWidth + outlineInset + bgInsets.right,
-        y + textHeight + outlineInset + bgInsets.bottom
+    val positions = if (layout?.isTile == true) {
+      val rotatedBounds = ImageProcess.rotatedBounds(
+        visualTextWidth.toFloat(),
+        visualTextHeight.toFloat(),
+        style.rotate
       )
-      when (style.textBackgroundStyle!!.type) {
-        "stretchX" -> {
-          bgRect = RectF(0f, y - outlineInset - bgInsets.top, maxWidth.toFloat(),
-            y + textHeight + outlineInset + bgInsets.bottom
+      val originInsetX = (rotatedBounds.width - visualTextWidth) / 2f
+      val originInsetY = (rotatedBounds.height - visualTextHeight) / 2f
+      layout!!.placements(
+        maxWidth,
+        maxHeight,
+        rotatedBounds.width,
+        rotatedBounds.height
+      ).map { Position(it.x + originInsetX, it.y + originInsetY) }
+    } else {
+      listOf(
+        Position.getTextPosition(
+          positionEnum,
+          x,
+          y,
+          maxWidth,
+          maxHeight,
+          visualTextWidth,
+          visualTextHeight,
+          edgeInset
+        )
+      )
+    }
+
+    for (position in positions) {
+      val visualX = position.x
+      val visualY = position.y
+      val drawX = visualX + outlineInset
+      val drawY = visualY + outlineInset
+      canvas.save()
+      val rotationPivot = rotationPivot(
+        visualX,
+        visualY,
+        visualTextWidth.toFloat(),
+        visualTextHeight.toFloat()
+      )
+      canvas.rotate(style.rotate.toFloat(), rotationPivot.first, rotationPivot.second)
+
+      // Draw text background
+      if (null != style.textBackgroundStyle) {
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.LINEAR_TEXT_FLAG)
+        paint.style = Paint.Style.FILL
+        paint.color = style.textBackgroundStyle!!.color
+        val bgInsets = style.textBackgroundStyle!!.toEdgeInsets(maxWidth, maxHeight)
+        var bgRect = RectF(
+          drawX - outlineInset - bgInsets.left,
+          drawY - outlineInset - bgInsets.top,
+          drawX + textWidth + outlineInset + bgInsets.right,
+          drawY + textHeight + outlineInset + bgInsets.bottom
+        )
+        when (style.textBackgroundStyle!!.type) {
+          "stretchX" -> {
+            bgRect = RectF(0f, drawY - outlineInset - bgInsets.top, maxWidth.toFloat(),
+              drawY + textHeight + outlineInset + bgInsets.bottom
+            )
+          }
+
+          "stretchY" -> {
+            bgRect = RectF(drawX - outlineInset - bgInsets.left, 0f,
+              drawX + textWidth + outlineInset + bgInsets.right, maxHeight.toFloat())
+          }
+        }
+
+        if (style.textBackgroundStyle!!.cornerRadius != null) {
+          val path = Path()
+
+          path.addRoundRect(bgRect, style.textBackgroundStyle!!.cornerRadius!!.radii(bgRect), Path.Direction.CW)
+
+          canvas.drawPath(path, paint)
+        } else {
+          canvas.drawRect(bgRect, paint)
+        }
+      }
+      val textX = when(textPaint.textAlign) {
+        Paint.Align.RIGHT -> drawX + textWidth
+        Paint.Align.CENTER -> drawX + textWidth / 2
+        Paint.Align.LEFT -> drawX
+        else -> drawX
+      }
+      canvas.translate(textX, drawY)
+      val fillColor = textPaint.color
+      if (strokeWidth > 0f) {
+        if (style.shadowLayerStyle != null) {
+          textPaint.setShadowLayer(
+            style.shadowLayerStyle!!.radius,
+            style.shadowLayerStyle!!.dx,
+            style.shadowLayerStyle!!.dy,
+            style.shadowLayerStyle!!.color
           )
         }
-
-        "stretchY" -> {
-          bgRect = RectF(x - outlineInset - bgInsets.left, 0f,
-            x + textWidth + outlineInset + bgInsets.right, maxHeight.toFloat())
-        }
+        textPaint.style = Paint.Style.STROKE
+        textPaint.strokeWidth = strokeWidth
+        textPaint.strokeJoin = Paint.Join.ROUND
+        textPaint.color = Color.parseColor(Utils.transRGBColor(style.strokeStyle!!.color))
+        textLayout.draw(canvas)
+        textPaint.clearShadowLayer()
+        textPaint.style = Paint.Style.FILL
+        textPaint.color = fillColor
       }
-
-      if (style.textBackgroundStyle!!.cornerRadius != null) {
-        val path = Path()
-
-        path.addRoundRect(bgRect, style.textBackgroundStyle!!.cornerRadius!!.radii(bgRect), Path.Direction.CW)
-
-        canvas.drawPath(path, paint)
-      } else {
-        canvas.drawRect(bgRect, paint)
-      }
-    }
-    val textX = when(textPaint.textAlign) {
-      Paint.Align.RIGHT -> x + textWidth
-      Paint.Align.CENTER -> x + textWidth / 2
-      Paint.Align.LEFT -> x
-      else -> x
-    }
-    canvas.translate(textX, y)
-    val fillColor = textPaint.color
-    if (strokeWidth > 0f) {
-      textPaint.style = Paint.Style.STROKE
-      textPaint.strokeWidth = strokeWidth
-      textPaint.strokeJoin = Paint.Join.ROUND
-      textPaint.color = Color.parseColor(Utils.transRGBColor(style.strokeStyle!!.color))
       textLayout.draw(canvas)
-      textPaint.clearShadowLayer()
-      textPaint.style = Paint.Style.FILL
-      textPaint.color = fillColor
+      canvas.restore()
     }
-    textLayout.draw(canvas)
-    canvas.restore()
   }
 
   companion object {

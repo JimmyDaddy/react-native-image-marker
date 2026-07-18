@@ -5,6 +5,7 @@
 //  Created by Jimmydaddy on 2023/7/13.
 //
 
+import CoreFoundation
 import UIKit
 
 enum ImageMarkerRotationCanvasMode: String {
@@ -23,6 +24,143 @@ enum ImageMarkerRenderPosition: String {
     case none
 }
 
+struct ImageMarkerWatermarkLayout {
+    static let maximumCopies = 4096
+
+    let type: String
+    private let gapX: String?
+    private let gapY: String?
+    private let offsetX: String?
+    private let offsetY: String?
+    private let stagger: Bool
+
+    var isTile: Bool { type == "tile" }
+
+    init(dicOpts opts: [AnyHashable: Any]) throws {
+        if let value = opts["type"], !(value is NSNull) {
+            guard let type = value as? String else {
+                throw Self.invalid("layout.type must be single or tile")
+            }
+            self.type = type
+        } else {
+            self.type = "single"
+        }
+        guard type == "single" || type == "tile" else {
+            throw Self.invalid("layout.type must be single or tile")
+        }
+        self.gapX = try Self.spreadValue(opts["gapX"], label: "layout.gapX")
+        self.gapY = try Self.spreadValue(opts["gapY"], label: "layout.gapY")
+        self.offsetX = try Self.spreadValue(opts["offsetX"], label: "layout.offsetX")
+        self.offsetY = try Self.spreadValue(opts["offsetY"], label: "layout.offsetY")
+        if let value = opts["stagger"], !(value is NSNull) {
+            guard let stagger = value as? Bool else {
+                throw Self.invalid("layout.stagger must be a boolean")
+            }
+            self.stagger = stagger
+        } else {
+            self.stagger = false
+        }
+    }
+
+    func placements(canvasSize: CGSize, itemSize: CGSize) throws -> [CGPoint] {
+        guard isTile else {
+            throw Self.invalid("placements are only available for tile layouts")
+        }
+        guard canvasSize.width.isFinite, canvasSize.height.isFinite,
+              itemSize.width.isFinite, itemSize.height.isFinite,
+              canvasSize.width > 0, canvasSize.height > 0,
+              itemSize.width > 0, itemSize.height > 0 else {
+            throw Self.invalid("canvas and watermark dimensions must be finite and greater than zero")
+        }
+
+        let resolvedGapX = try Self.resolve(gapX, relativeTo: canvasSize.width, label: "layout.gapX")
+        let resolvedGapY = try Self.resolve(gapY, relativeTo: canvasSize.height, label: "layout.gapY")
+        guard resolvedGapX >= 0, resolvedGapY >= 0 else {
+            throw Self.invalid("layout gaps must be non-negative")
+        }
+        let stepX = itemSize.width + resolvedGapX
+        let stepY = itemSize.height + resolvedGapY
+        guard stepX.isFinite, stepY.isFinite, stepX > 0, stepY > 0 else {
+            throw Self.invalid("tile layout step must be finite and greater than zero")
+        }
+
+        let phaseX = Self.normalizedOffset(
+            try Self.resolve(offsetX, relativeTo: canvasSize.width, label: "layout.offsetX"),
+            step: stepX
+        )
+        let phaseY = Self.normalizedOffset(
+            try Self.resolve(offsetY, relativeTo: canvasSize.height, label: "layout.offsetY"),
+            step: stepY
+        )
+        var result: [CGPoint] = []
+        var row = -1
+        var y = phaseY - stepY
+        while y < canvasSize.height {
+            if y + itemSize.height > 0 {
+                let staggerOffset = stagger && row % 2 != 0 ? stepX / 2 : 0
+                let rowPhaseX = Self.normalizedOffset(phaseX + staggerOffset, step: stepX)
+                var x = rowPhaseX - stepX
+                while x < canvasSize.width {
+                    if x + itemSize.width > 0 {
+                        result.append(CGPoint(x: x, y: y))
+                        if result.count > Self.maximumCopies {
+                            throw Self.invalid(
+                                "tile layout exceeds the maximum of \(Self.maximumCopies) copies per layer"
+                            )
+                        }
+                    }
+                    x += stepX
+                }
+            }
+            row += 1
+            y += stepY
+        }
+        return result
+    }
+
+    private static func spreadValue(_ value: Any?, label: String) throws -> String? {
+        guard let value, !(value is NSNull) else { return nil }
+        let normalized: String
+        if let string = value as? String {
+            normalized = string.trimmingCharacters(in: .whitespacesAndNewlines)
+        } else if let number = value as? NSNumber,
+                  CFGetTypeID(number) != CFBooleanGetTypeID() {
+            normalized = number.stringValue
+        } else {
+            throw invalid("\(label) must be a finite number or percentage")
+        }
+        guard normalized.range(
+            of: #"^[+-]?(?:\d+(?:\.\d+)?|\.\d+)%?$"#,
+            options: .regularExpression
+        ) != nil else {
+            throw invalid("\(label) must be a finite number or percentage")
+        }
+        return normalized
+    }
+
+    private static func resolve(_ value: String?, relativeTo length: CGFloat, label: String) throws -> CGFloat {
+        guard let value else { return 0 }
+        let number = value.hasSuffix("%") ? String(value.dropLast()) : value
+        guard let parsed = Double(number), parsed.isFinite else {
+            throw invalid("\(label) must be a finite number or percentage")
+        }
+        return value.hasSuffix("%") ? length * CGFloat(parsed) / 100 : CGFloat(parsed)
+    }
+
+    private static func normalizedOffset(_ value: CGFloat, step: CGFloat) -> CGFloat {
+        return ((value.truncatingRemainder(dividingBy: step)) + step)
+            .truncatingRemainder(dividingBy: step)
+    }
+
+    private static func invalid(_ message: String) -> NSError {
+        return NSError(
+            domain: ErrorDomainEnum.PARAMS_INVALID.rawValue,
+            code: 0,
+            userInfo: [NSLocalizedDescriptionKey: message]
+        )
+    }
+}
+
 struct ImageMarkerImageWatermark {
     let image: UIImage
     let position: ImageMarkerRenderPosition
@@ -33,6 +171,7 @@ struct ImageMarkerImageWatermark {
     let alpha: CGFloat
     let edgeInset: String?
     let trimTransparentPadding: Bool
+    let layout: ImageMarkerWatermarkLayout?
 
     init(
         image: UIImage,
@@ -43,7 +182,8 @@ struct ImageMarkerImageWatermark {
         rotate: CGFloat,
         alpha: CGFloat,
         edgeInset: String? = nil,
-        trimTransparentPadding: Bool = false
+        trimTransparentPadding: Bool = false,
+        layout: ImageMarkerWatermarkLayout? = nil
     ) {
         self.image = image
         self.position = position
@@ -54,6 +194,7 @@ struct ImageMarkerImageWatermark {
         self.alpha = alpha
         self.edgeInset = edgeInset
         self.trimTransparentPadding = trimTransparentPadding
+        self.layout = layout
     }
 }
 
@@ -200,8 +341,8 @@ enum ImageMarkerRenderer {
         backgroundRotate: CGFloat,
         backgroundAlpha: CGFloat,
         rotationCanvasMode: ImageMarkerRotationCanvasMode,
-        drawLayers: (CGContext, CGSize) -> Void
-    ) -> UIImage? {
+        drawLayers: (CGContext, CGSize) throws -> Void
+    ) rethrows -> UIImage? {
         // Background scale changes the actual composition canvas, matching Android's
         // logical bitmap size. UIImage.scale describes pixel density, so both @1x and Retina
         // sources must use image.size here. Layer coordinates, font sizes and watermark sizes
@@ -223,6 +364,9 @@ enum ImageMarkerRenderer {
         }
 
         context.saveGState()
+        defer {
+            context.restoreGState()
+        }
         let radians = normalizedRotation(backgroundRotate)
         if radians != 0 {
             context.translateBy(x: renderedSize.width / 2, y: renderedSize.height / 2)
@@ -236,8 +380,7 @@ enum ImageMarkerRenderer {
             rect: CGRect(origin: .zero, size: canvasSize),
             alpha: backgroundAlpha
         )
-        drawLayers(context, canvasSize)
-        context.restoreGState()
+        try drawLayers(context, canvasSize)
 
         return UIGraphicsGetImageFromCurrentImageContext()
     }
@@ -249,8 +392,8 @@ enum ImageMarkerRenderer {
         backgroundRotate: CGFloat,
         backgroundAlpha: CGFloat,
         rotationCanvasMode: ImageMarkerRotationCanvasMode = .expand
-    ) -> UIImage? {
-        return renderCanvas(
+    ) throws -> UIImage? {
+        return try renderCanvas(
             background: image,
             backgroundScale: backgroundScale,
             backgroundRotate: backgroundRotate,
@@ -258,7 +401,7 @@ enum ImageMarkerRenderer {
             rotationCanvasMode: rotationCanvasMode
         ) { context, canvasSize in
             for watermark in watermarks {
-                drawImageWatermark(context: context, canvasSize: canvasSize, watermark: watermark)
+                try drawImageWatermark(context: context, canvasSize: canvasSize, watermark: watermark)
             }
         }
     }
@@ -291,7 +434,7 @@ enum ImageMarkerRenderer {
         context: CGContext,
         canvasSize: CGSize,
         watermark: ImageMarkerImageWatermark
-    ) {
+    ) throws {
         let sourceImage = watermark.trimTransparentPadding
             ? watermark.image.trimmingTransparentPadding()
             : watermark.image
@@ -299,59 +442,67 @@ enum ImageMarkerRenderer {
             return
         }
 
-        context.saveGState()
-        context.interpolationQuality = .none
         let scale = watermark.scale > 0 ? watermark.scale : 1
         let markerSize = CGSize(
             width: sourceImage.size.width * scale,
             height: sourceImage.size.height * scale
         )
         let rotatedSize = rotatedBoundingSize(markerSize, rotation: watermark.rotate)
-        let rotatedOrigin = markerOrigin(
-            position: watermark.position,
-            offsetX: watermark.offsetX,
-            offsetY: watermark.offsetY,
-            canvasSize: canvasSize,
-            itemSize: rotatedSize,
-            edgeInset: watermark.edgeInset
-        )
-        let markerCenter = CGPoint(
-            x: rotatedOrigin.x + rotatedSize.width / 2,
-            y: rotatedOrigin.y + rotatedSize.height / 2
-        )
-        let drawMarker = {
-            context.saveGState()
-            context.translateBy(x: markerCenter.x, y: markerCenter.y)
-            if watermark.rotate != 0 {
-                context.rotate(by: watermark.rotate * .pi / 180)
-            }
-            // UIGraphics contexts use a top-left origin while CGContext.draw(_:in:)
-            // interprets CGImage pixels in Quartz coordinates. Flip only the image's
-            // local coordinate system so its orientation is preserved after scaling
-            // and rotation without allocating an intermediate UIImage.
-            context.scaleBy(x: 1, y: -1)
-            context.draw(
-                watermarkImage,
-                in: CGRect(
-                    x: -markerSize.width / 2,
-                    y: -markerSize.height / 2,
-                    width: markerSize.width,
-                    height: markerSize.height
-                )
-            )
-            context.restoreGState()
+        let positions: [CGPoint]
+        if let layout = watermark.layout, layout.isTile {
+            positions = try layout.placements(canvasSize: canvasSize, itemSize: rotatedSize)
+        } else {
+            positions = [markerOrigin(
+                position: watermark.position,
+                offsetX: watermark.offsetX,
+                offsetY: watermark.offsetY,
+                canvasSize: canvasSize,
+                itemSize: rotatedSize,
+                edgeInset: watermark.edgeInset
+            )]
         }
 
-        if watermark.alpha != 1.0 {
-            context.beginTransparencyLayer(auxiliaryInfo: nil)
-            context.setAlpha(watermark.alpha)
-            context.setBlendMode(.multiply)
-            drawMarker()
-            context.endTransparencyLayer()
-        } else {
-            drawMarker()
+        for rotatedOrigin in positions {
+            context.saveGState()
+            context.interpolationQuality = .none
+            let markerCenter = CGPoint(
+                x: rotatedOrigin.x + rotatedSize.width / 2,
+                y: rotatedOrigin.y + rotatedSize.height / 2
+            )
+            let drawMarker = {
+                context.saveGState()
+                context.translateBy(x: markerCenter.x, y: markerCenter.y)
+                if watermark.rotate != 0 {
+                    context.rotate(by: watermark.rotate * .pi / 180)
+                }
+                // UIGraphics contexts use a top-left origin while CGContext.draw(_:in:)
+                // interprets CGImage pixels in Quartz coordinates. Flip only the image's
+                // local coordinate system so its orientation is preserved after scaling
+                // and rotation without allocating an intermediate UIImage.
+                context.scaleBy(x: 1, y: -1)
+                context.draw(
+                    watermarkImage,
+                    in: CGRect(
+                        x: -markerSize.width / 2,
+                        y: -markerSize.height / 2,
+                        width: markerSize.width,
+                        height: markerSize.height
+                    )
+                )
+                context.restoreGState()
+            }
+
+            if watermark.alpha != 1.0 {
+                context.beginTransparencyLayer(auxiliaryInfo: nil)
+                context.setAlpha(watermark.alpha)
+                context.setBlendMode(.multiply)
+                drawMarker()
+                context.endTransparencyLayer()
+            } else {
+                drawMarker()
+            }
+            context.restoreGState()
         }
-        context.restoreGState()
     }
 
     static func encodedData(

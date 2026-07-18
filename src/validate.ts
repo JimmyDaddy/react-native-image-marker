@@ -4,6 +4,8 @@ import type {
   MarkOptions,
   TextOptions,
   TextMarkOptions,
+  WatermarkImageOptions,
+  WatermarkLayout,
 } from './index';
 
 type MarkRequestOptions = TextMarkOptions | ImageMarkOptions | MarkOptions;
@@ -53,23 +55,97 @@ function validateCommonOptions(options: MarkRequestOptions): void {
   validateAlpha(options.backgroundImage, 'backgroundImage');
 }
 
-function validateTextOptions(textOptions: TextOptions, path: string): void {
-  const strokeStyle = textOptions.style?.strokeStyle;
-  if (!strokeStyle) {
+function validateLayoutValue(
+  value: number | string | undefined,
+  path: string,
+  nonNegative: boolean
+): void {
+  if (value === undefined) {
     return;
   }
-  if (!Number.isFinite(strokeStyle.width) || strokeStyle.width < 0) {
-    throw new Error(
-      `${path}.style.strokeStyle.width must be a non-negative finite number.`
-    );
+  const normalized = typeof value === 'string' ? value.trim() : value;
+  const valid =
+    typeof normalized === 'number'
+      ? Number.isFinite(normalized)
+      : /^([+-]?(?:\d+(?:\.\d+)?|\.\d+))(%)?$/.test(normalized);
+  if (!valid) {
+    throw new Error(`${path} must be a finite number or percentage.`);
   }
-  if (typeof strokeStyle.color !== 'string' || !strokeStyle.color.trim()) {
-    throw new Error(
-      `${path}.style.strokeStyle.color must be a non-empty string.`
-    );
+  if (nonNegative && Number.parseFloat(String(normalized)) < 0) {
+    throw new Error(`${path} must be non-negative.`);
   }
 }
 
+function validateWatermarkLayout(
+  layout: WatermarkLayout | undefined,
+  hasPosition: boolean,
+  path: string
+): void {
+  if (!layout) {
+    return;
+  }
+  if (typeof layout !== 'object' || Array.isArray(layout)) {
+    throw new Error(`${path} must be an object.`);
+  }
+  const type = layout.type ?? 'single';
+  if (type !== 'single' && type !== 'tile') {
+    throw new Error(`${path}.type must be "single" or "tile".`);
+  }
+  if (type === 'tile' && hasPosition) {
+    throw new Error(`${path} cannot be combined with position.`);
+  }
+  const runtimeLayout = layout as {
+    gapX?: number | string;
+    gapY?: number | string;
+    offsetX?: number | string;
+    offsetY?: number | string;
+    stagger?: boolean;
+  };
+  validateLayoutValue(runtimeLayout.gapX, `${path}.gapX`, true);
+  validateLayoutValue(runtimeLayout.gapY, `${path}.gapY`, true);
+  validateLayoutValue(runtimeLayout.offsetX, `${path}.offsetX`, false);
+  validateLayoutValue(runtimeLayout.offsetY, `${path}.offsetY`, false);
+  if (
+    runtimeLayout.stagger !== undefined &&
+    typeof runtimeLayout.stagger !== 'boolean'
+  ) {
+    throw new Error(`${path}.stagger must be a boolean.`);
+  }
+}
+
+function validateTextOptions(options: TextOptions, path: string): void {
+  const strokeStyle = options.style?.strokeStyle;
+  if (strokeStyle) {
+    if (!Number.isFinite(strokeStyle.width) || strokeStyle.width < 0) {
+      throw new Error(
+        `${path}.style.strokeStyle.width must be a non-negative finite number.`
+      );
+    }
+    if (typeof strokeStyle.color !== 'string' || !strokeStyle.color.trim()) {
+      throw new Error(
+        `${path}.style.strokeStyle.color must be a non-empty string.`
+      );
+    }
+  }
+  validateWatermarkLayout(
+    options.layout,
+    options.position !== undefined || options.positionOptions !== undefined,
+    `${path}.layout`
+  );
+}
+
+function validateImageOptions(
+  options: WatermarkImageOptions,
+  path: string,
+  hasExternalPosition = false
+): void {
+  validateAlpha(options, path);
+  validateWatermarkLayout(
+    options.layout,
+    options.position !== undefined || hasExternalPosition,
+    `${path}.layout`
+  );
+}
 export function validateTextMarkOptions(options: TextMarkOptions): void {
   validateCommonOptions(options);
   options.watermarkTexts.forEach((textOptions, index) => {
@@ -79,21 +155,33 @@ export function validateTextMarkOptions(options: TextMarkOptions): void {
 
 export function validateImageMarkOptions(options: ImageMarkOptions): void {
   validateCommonOptions(options);
-  validateAlpha(options.watermarkImage, 'watermarkImage');
+  if (options.watermarkImage) {
+    validateImageOptions(
+      options.watermarkImage,
+      'watermarkImage',
+      options.watermarkPositions !== undefined
+    );
+  }
   options.watermarkImages?.forEach((imageOptions, index) => {
-    validateAlpha(imageOptions, `watermarkImages[${index}]`);
+    validateImageOptions(imageOptions, `watermarkImages[${index}]`);
   });
 }
 
 export function validateMarkOptions(options: MarkOptions): void {
   validateCommonOptions(options);
-  validateAlpha(options.watermarkImage, 'watermarkImage');
+  if (options.watermarkImage) {
+    validateImageOptions(
+      options.watermarkImage,
+      'watermarkImage',
+      options.watermarkPositions !== undefined
+    );
+  }
   options.watermarkImages?.forEach((imageOptions, index) => {
-    validateAlpha(imageOptions, `watermarkImages[${index}]`);
+    validateImageOptions(imageOptions, `watermarkImages[${index}]`);
   });
   options.watermarks?.forEach((layer, index) => {
     if (layer.type === 'image') {
-      validateAlpha(layer, `watermarks[${index}]`);
+      validateImageOptions(layer, `watermarks[${index}]`);
     } else {
       validateTextOptions(layer, `watermarks[${index}]`);
     }

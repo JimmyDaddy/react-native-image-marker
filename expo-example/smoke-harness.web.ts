@@ -18,6 +18,7 @@ interface ImageResult {
 interface WebSmokeHarness {
   renderBlobAndFile(): Promise<ImageResult>;
   renderLargeCropped(): Promise<ImageResult>;
+  renderTiledLayers(): Promise<ImageResult>;
   renderCrossOrigin(url: string): Promise<string>;
 }
 
@@ -127,6 +128,48 @@ function createHarness(assets: SmokeHarnessAssets): WebSmokeHarness {
         ],
         maxSize: 1024,
         rotationCanvasMode: RotationCanvasMode.crop,
+        saveFormat: ImageFormat.png,
+      });
+      return getDimensions(dataUrl);
+    },
+
+    async renderTiledLayers() {
+      const dataUrl = await Marker.mark({
+        backgroundImage: { src: assets.backgroundUri },
+        watermarks: [
+          {
+            type: 'text',
+            text: 'IMAGE MARKER',
+            layout: {
+              type: 'tile',
+              gapX: '8%',
+              gapY: '10%',
+              offsetX: '-3%',
+              stagger: true,
+            },
+            style: {
+              color: '#FFFFFF88',
+              fontSize: 28,
+              bold: true,
+              rotate: -24,
+            },
+          },
+          {
+            type: 'image',
+            src: assets.logoUri,
+            layout: {
+              type: 'tile',
+              gapX: '28%',
+              gapY: '24%',
+              offsetY: '7%',
+              stagger: true,
+            },
+            scale: 0.08,
+            rotate: 18,
+            alpha: 0.75,
+            trimTransparentPadding: true,
+          },
+        ],
         saveFormat: ImageFormat.png,
       });
       return getDimensions(dataUrl);

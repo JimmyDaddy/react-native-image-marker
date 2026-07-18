@@ -12,6 +12,7 @@ import type {
   TextStyle,
   TextWatermarkLayer,
   WatermarkImageOptions,
+  WatermarkLayout,
   WatermarkLayer,
 } from './index';
 
@@ -35,6 +36,12 @@ function clonePositionOptions(
   position?: PositionOptions
 ): PositionOptions | undefined {
   return position ? { ...position } : position;
+}
+
+function cloneWatermarkLayout(
+  layout?: WatermarkLayout
+): WatermarkLayout | undefined {
+  return layout ? { ...layout } : layout;
 }
 
 function cloneCornerRadius(
@@ -88,12 +95,20 @@ function cloneTextStyle(style?: TextStyle): TextStyle | undefined {
 }
 
 function cloneTextWatermarks(watermarkTexts: TextOptions[]): TextOptions[] {
-  return watermarkTexts.map((textOptions) => ({
-    ...textOptions,
-    position: clonePositionOptions(textOptions.position),
-    positionOptions: clonePositionOptions(textOptions.positionOptions),
-    style: cloneTextStyle(textOptions.style),
-  }));
+  return watermarkTexts.map((textOptions) => {
+    const cloned: TextOptions = {
+      ...textOptions,
+      layout: cloneWatermarkLayout(textOptions.layout),
+      style: cloneTextStyle(textOptions.style),
+    };
+    const position = clonePositionOptions(textOptions.position);
+    const positionOptions = clonePositionOptions(textOptions.positionOptions);
+    if (position) cloned.position = position;
+    else delete cloned.position;
+    if (positionOptions) cloned.positionOptions = positionOptions;
+    else delete cloned.positionOptions;
+    return cloned;
+  });
 }
 
 function cloneImageOptions<T extends ImageOptions | undefined>(
@@ -105,10 +120,16 @@ function cloneImageOptions<T extends ImageOptions | undefined>(
 function cloneImageWatermarks(
   watermarkImages: WatermarkImageOptions[]
 ): WatermarkImageOptions[] {
-  return watermarkImages.map((imageOptions) => ({
-    ...imageOptions,
-    position: clonePositionOptions(imageOptions.position),
-  }));
+  return watermarkImages.map((imageOptions) => {
+    const cloned: WatermarkImageOptions = {
+      ...imageOptions,
+      layout: cloneWatermarkLayout(imageOptions.layout),
+    };
+    const position = clonePositionOptions(imageOptions.position);
+    if (position) cloned.position = position;
+    else delete cloned.position;
+    return cloned;
+  });
 }
 
 function getOutputOptions(options: MarkOptions): OutputOptions {
@@ -156,27 +177,41 @@ function resolveImageOptions<T extends ImageOptions>(
 }
 
 function createTextLayer(textOptions: TextOptions): TextWatermarkLayer {
-  return {
+  const layer: TextWatermarkLayer = {
     ...textOptions,
     type: 'text',
-    position:
-      clonePositionOptions(
-        textOptions.position || textOptions.positionOptions
-      ) || {},
+    layout: cloneWatermarkLayout(textOptions.layout),
     style: cloneTextStyle(textOptions.style),
   };
+  const position = clonePositionOptions(
+    textOptions.position || textOptions.positionOptions
+  );
+  if (position) {
+    layer.position = position;
+  } else {
+    delete layer.position;
+  }
+  delete layer.positionOptions;
+  return layer;
 }
 
 function createImageLayer(
   imageOptions: WatermarkImageOptions,
   assetResolver: AssetResolver
 ): ImageWatermarkLayer {
-  return {
+  const layer: ImageWatermarkLayer = {
     ...imageOptions,
     type: 'image',
     src: resolveImageSource(imageOptions.src, assetResolver),
-    position: clonePositionOptions(imageOptions.position) || {},
+    layout: cloneWatermarkLayout(imageOptions.layout),
   };
+  const position = clonePositionOptions(imageOptions.position);
+  if (position) {
+    layer.position = position;
+  } else {
+    delete layer.position;
+  }
+  return layer;
 }
 
 function createWatermarkLayers(
@@ -227,11 +262,11 @@ export function normalizeTextMarkOptions(
     watermarkTexts: cloneTextWatermarks(options.watermarkTexts).map(
       (textOptions) => {
         const nativeTextOptions = { ...textOptions };
+        const position = textOptions.position || textOptions.positionOptions;
         delete nativeTextOptions.positionOptions;
-        return {
-          ...nativeTextOptions,
-          position: textOptions.position || textOptions.positionOptions,
-        };
+        if (position) nativeTextOptions.position = position;
+        else delete nativeTextOptions.position;
+        return nativeTextOptions;
       }
     ),
     maxSize: options.maxSize ?? DEFAULT_MAX_SIZE,
