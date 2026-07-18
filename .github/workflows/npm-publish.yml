@@ -21,4 +21,19 @@ jobs:
       - run: npm install -g npm@latest
       - run: npm ci
       - run: npm run prepack
-      - run: npm publish
+      - name: Publish with provenance
+        run: npm publish --provenance --access public
+
+      - name: Verify registry provenance metadata
+        run: |
+          package_version="$(node -p "require('./package.json').version")"
+          for _ in $(seq 1 12); do
+            predicate_type="$(npm view "react-native-image-marker@$package_version" dist.attestations.provenance.predicateType 2>/dev/null || true)"
+            if [ "$predicate_type" = "https://slsa.dev/provenance/v1" ]; then
+              echo "Verified provenance for react-native-image-marker@$package_version"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Published package did not expose provenance metadata in time."
+          exit 1

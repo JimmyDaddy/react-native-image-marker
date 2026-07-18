@@ -1,0 +1,74 @@
+name: Bug report
+description: Report a reproducible problem on iOS, Android, Expo, or Web.
+title: '[Bug]: '
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please include a minimal reproduction. Image rendering bugs are difficult to diagnose from screenshots alone.
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Android
+        - iOS
+        - Web / React Native Web
+        - Expo development build
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: Include react-native-image-marker, React Native, Expo (if used), and browser versions.
+      placeholder: react-native-image-marker 1.5.0; React Native 0.86.0; Expo 57.0.7
+    validations:
+      required: true
+  - type: dropdown
+    id: architecture
+    attributes:
+      label: React Native architecture
+      options:
+        - New Architecture
+        - Legacy Architecture
+        - Web / not applicable
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Link a repository or paste the smallest Marker call that reproduces the problem.
+      render: typescript
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened?
+      description: Include the full error and relevant native, Metro, or browser console logs.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+    validations:
+      required: true
+  - type: textarea
+    id: image_details
+    attributes:
+      label: Image details
+      description: Source type, dimensions, format, orientation, transparency, and whether the URL permits CORS.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I rebuilt the native app after installing or upgrading the package.
+          required: true
+        - label: I have removed private images, credentials, and personal information from the reproduction.
+          required: true

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://image-marker.corerobin.com/getting-started/
+    about: Check installation, compatibility, and troubleshooting first.
+  - name: Live Web playground
+    url: https://image-marker.corerobin.com/playground/
+    about: Reproduce Web rendering behavior without creating a project.
