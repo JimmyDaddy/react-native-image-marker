@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.10.1](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.10.0...v1.10.1) (2026-07-19)
+
+### Bug Fixes
+
+* harden v1.10 release quality gates ([95d7d2b](https://github.com/JimmyDaddy/react-native-image-marker/commit/95d7d2b59dc3b2662bebff1b559cef55e1174b0a))
+
 ## [1.10.0](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.9.0...v1.10.0) (2026-07-19)
 
 ### Features
