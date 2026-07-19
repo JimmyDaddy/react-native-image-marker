@@ -26,8 +26,21 @@ import type {
   EmbedInvisibleWatermarkOptions,
   InvisibleWatermarkDetectionResult,
 } from './invisible-watermark';
+import { runWatermarkBatch } from './batch';
+import type { WatermarkBatchOptions, WatermarkBatchResult } from './batch';
+import {
+  embedInvisibleWithCredentials,
+  verifyContentCredentials,
+} from './content-credentials';
+import type {
+  ContentCredentialsVerificationResult,
+  EmbedInvisibleWithCredentialsOptions,
+  EmbedInvisibleWithCredentialsResult,
+  VerifyContentCredentialsOptions,
+} from './content-credentials';
 import {
   INVISIBLE_WATERMARK_ALGORITHM,
+  INVISIBLE_WATERMARK_RESIZE_SCALES,
   validateDetectInvisibleOptions,
   validateEmbedInvisibleOptions,
 } from './invisible-watermark';
@@ -53,6 +66,57 @@ function getImageMarker(): Spec {
 
 /** Native iOS and Android implementation of the public Marker API. */
 class Marker {
+  /** Embed a locator first, then ask the supplied adapter to sign the result. */
+  static embedInvisibleWithCredentials(
+    options: EmbedInvisibleWithCredentialsOptions
+  ): Promise<EmbedInvisibleWithCredentialsResult> {
+    return embedInvisibleWithCredentials(
+      (watermark) => Marker.embedInvisible(watermark),
+      options
+    );
+  }
+
+  /** Verify Content Credentials through an application-supplied adapter. */
+  static verifyContentCredentials(
+    options: VerifyContentCredentialsOptions
+  ): Promise<ContentCredentialsVerificationResult> {
+    return verifyContentCredentials(options);
+  }
+
+  /** Embed authenticated locators into many images while preserving input order. */
+  static embedInvisibleMany(
+    inputs: readonly EmbedInvisibleWatermarkOptions[],
+    options?: WatermarkBatchOptions<string>
+  ): Promise<Array<WatermarkBatchResult<string>>> {
+    const snapshots = Array.isArray(inputs)
+      ? inputs.map((input) => ({ ...input, image: { ...input?.image } }))
+      : inputs;
+    return runWatermarkBatch(
+      snapshots,
+      (input) => Marker.embedInvisible(input),
+      options,
+      1,
+      'embedInvisibleMany'
+    );
+  }
+
+  /** Detect authenticated locators in many images while preserving input order. */
+  static detectInvisibleMany(
+    inputs: readonly DetectInvisibleWatermarkOptions[],
+    options?: WatermarkBatchOptions<InvisibleWatermarkDetectionResult>
+  ): Promise<Array<WatermarkBatchResult<InvisibleWatermarkDetectionResult>>> {
+    const snapshots = Array.isArray(inputs)
+      ? inputs.map((input) => ({ ...input, image: { ...input?.image } }))
+      : inputs;
+    return runWatermarkBatch(
+      snapshots,
+      (input) => Marker.detectInvisible(input),
+      options,
+      1,
+      'detectInvisibleMany'
+    );
+  }
+
   /**
    * Embed a short, authenticated locator into the final image pixels.
    *
@@ -84,19 +148,40 @@ class Marker {
         'Native invisible watermark detector returned invalid JSON.'
       );
     }
+    const detection = result as {
+      detected?: unknown;
+      payload?: unknown;
+      confidence?: unknown;
+      bitErrorRate?: unknown;
+      algorithm?: unknown;
+      scale?: unknown;
+    };
     if (
       !result ||
       typeof result !== 'object' ||
-      typeof (result as { detected?: unknown }).detected !== 'boolean' ||
-      typeof (result as { confidence?: unknown }).confidence !== 'number' ||
-      (result as { algorithm?: unknown }).algorithm !==
-        INVISIBLE_WATERMARK_ALGORITHM
+      typeof detection.detected !== 'boolean' ||
+      typeof detection.confidence !== 'number' ||
+      !Number.isFinite(detection.confidence) ||
+      detection.confidence < 0 ||
+      detection.confidence > 1 ||
+      detection.algorithm !== INVISIBLE_WATERMARK_ALGORITHM ||
+      (detection.detected && typeof detection.payload !== 'string') ||
+      (detection.bitErrorRate !== undefined &&
+        (typeof detection.bitErrorRate !== 'number' ||
+          !Number.isFinite(detection.bitErrorRate) ||
+          detection.bitErrorRate < 0 ||
+          detection.bitErrorRate > 1)) ||
+      (detection.scale !== undefined &&
+        (typeof detection.scale !== 'number' ||
+          !INVISIBLE_WATERMARK_RESIZE_SCALES.includes(
+            detection.scale as (typeof INVISIBLE_WATERMARK_RESIZE_SCALES)[number]
+          )))
     ) {
       throw new Error(
         'Native invisible watermark detector returned invalid data.'
       );
     }
-    return result as InvisibleWatermarkDetectionResult;
+    return detection as InvisibleWatermarkDetectionResult;
   }
 
   /** Save ordered layers and output settings for reuse across one or many images. */

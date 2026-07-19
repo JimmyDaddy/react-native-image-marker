@@ -40,6 +40,15 @@ interface WebSmokeHarness {
     unmarkedFalsePositives: number;
     minimumPsnr: number;
     minimumSsim: number;
+    resizeDetectedCount: number;
+    resizeScaleMatchCount: number;
+    resizeDetectedByScale: Record<string, number>;
+    resizeScaleMatchesByScale: Record<string, number>;
+    resizeFailedSourceIndexes: number[];
+    jpeg75ResizeDetectedCount: number;
+    batchProgressCount: number;
+    heartbeatCount: number;
+    resizeDurationMs: number;
   }>;
   renderCrossOrigin(url: string): Promise<string>;
 }
@@ -94,6 +103,22 @@ async function transformDataUrl(
     }
     context.putImageData(pixels, 0, 0);
   }
+  return canvas.toDataURL(type, quality);
+}
+
+async function resizeDataUrl(
+  dataUrl: string,
+  scale: number,
+  type: 'image/jpeg' | 'image/png' = 'image/png',
+  quality?: number
+): Promise<string> {
+  const image = await decodeImage(dataUrl);
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(image.naturalWidth * scale);
+  canvas.height = Math.round(image.naturalHeight * scale);
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('Canvas 2D is unavailable.');
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
   return canvas.toDataURL(type, quality);
 }
 
@@ -402,6 +427,16 @@ function createHarness(assets: SmokeHarnessAssets): WebSmokeHarness {
       let unmarkedFalsePositives = 0;
       let minimumPsnr = Number.POSITIVE_INFINITY;
       let minimumSsim = Number.POSITIVE_INFINITY;
+      let resizeDetectedCount = 0;
+      let resizeScaleMatchCount = 0;
+      const resizeDetectedByScale: Record<string, number> = {};
+      const resizeScaleMatchesByScale: Record<string, number> = {};
+      const resizeFailedSourceIndexes: number[] = [];
+      let jpeg75ResizeDetectedCount = 0;
+      let batchProgressCount = 0;
+      let heartbeatCount = 0;
+      let resizeDurationMs = 0;
+      const resizeScales = [0.9, 0.95, 1.05, 1.1] as const;
       for (let index = 0; index < sources.length; index += 1) {
         const source = sources[index]!;
         const unmarked = await Marker.detectInvisible({
@@ -435,6 +470,82 @@ function createHarness(assets: SmokeHarnessAssets): WebSmokeHarness {
         const quality = await compareImageQuality(source, marked);
         minimumPsnr = Math.min(minimumPsnr, quality.psnr);
         minimumSsim = Math.min(minimumSsim, quality.ssim);
+
+        const resizePayload = `resize-${index}`;
+        const resizeMarked = await Marker.embedInvisible({
+          image: { src: source },
+          payload: resizePayload,
+          key,
+          strength: 'robust',
+          saveFormat: ImageFormat.png,
+          maxSize: 512,
+        });
+        const jpeg75 = await transformDataUrl(resizeMarked, 'image/jpeg', 0.75);
+        const resized = await Promise.all([
+          ...resizeScales.map((scale) => resizeDataUrl(resizeMarked, scale)),
+          resizeDataUrl(jpeg75, 1.05),
+        ]);
+        let heartbeat = 0;
+        const heartbeatTimer = window.setInterval(() => {
+          heartbeat += 1;
+        }, 0);
+        const startedAt = performance.now();
+        let resizeResults;
+        try {
+          resizeResults = await Marker.detectInvisibleMany(
+            resized.map((image) => ({
+              image: { src: image },
+              key,
+              strength: 'robust' as const,
+              search: 'robust' as const,
+            })),
+            {
+              concurrency: 4,
+              onProgress() {
+                batchProgressCount += 1;
+              },
+            }
+          );
+        } finally {
+          window.clearInterval(heartbeatTimer);
+          resizeDurationMs += performance.now() - startedAt;
+          heartbeatCount += heartbeat;
+        }
+        resizeScales.forEach((scale, scaleIndex) => {
+          const result = resizeResults[scaleIndex];
+          if (
+            result?.status === 'fulfilled' &&
+            result.value.detected &&
+            result.value.payload === resizePayload
+          ) {
+            resizeDetectedCount += 1;
+            resizeDetectedByScale[String(scale)] =
+              (resizeDetectedByScale[String(scale)] ?? 0) + 1;
+            if (result.value.scale === scale) {
+              resizeScaleMatchCount += 1;
+              resizeScaleMatchesByScale[String(scale)] =
+                (resizeScaleMatchesByScale[String(scale)] ?? 0) + 1;
+            }
+          }
+        });
+        if (
+          resizeResults
+            .slice(0, resizeScales.length)
+            .some(
+              (result) =>
+                result.status !== 'fulfilled' || !result.value.detected
+            )
+        ) {
+          resizeFailedSourceIndexes.push(index);
+        }
+        const jpegResult = resizeResults[resizeScales.length];
+        if (
+          jpegResult?.status === 'fulfilled' &&
+          jpegResult.value.detected &&
+          jpegResult.value.payload === resizePayload
+        ) {
+          jpeg75ResizeDetectedCount += 1;
+        }
       }
       return {
         fixtureCount: sources.length,
@@ -442,6 +553,15 @@ function createHarness(assets: SmokeHarnessAssets): WebSmokeHarness {
         unmarkedFalsePositives,
         minimumPsnr,
         minimumSsim,
+        resizeDetectedCount,
+        resizeScaleMatchCount,
+        resizeDetectedByScale,
+        resizeScaleMatchesByScale,
+        resizeFailedSourceIndexes,
+        jpeg75ResizeDetectedCount,
+        batchProgressCount,
+        heartbeatCount,
+        resizeDurationMs,
       };
     },
 

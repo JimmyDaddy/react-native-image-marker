@@ -37,7 +37,19 @@ export {
   INVISIBLE_WATERMARK_MIN_HEIGHT,
   INVISIBLE_WATERMARK_MIN_KEY_BYTES,
   INVISIBLE_WATERMARK_MIN_WIDTH,
+  INVISIBLE_WATERMARK_RESIZE_SCALES,
 } from './invisible-watermark';
+
+export type {
+  ContentCredentialsAdapter,
+  ContentCredentialsClaim,
+  ContentCredentialsSignRequest,
+  ContentCredentialsSignResult,
+  ContentCredentialsVerificationResult,
+  EmbedInvisibleWithCredentialsOptions,
+  EmbedInvisibleWithCredentialsResult,
+  VerifyContentCredentialsOptions,
+} from './content-credentials';
 
 /**
  * Position enum for text watermark and image watermark

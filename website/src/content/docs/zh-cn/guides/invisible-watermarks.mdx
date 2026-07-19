@@ -31,7 +31,7 @@ const result = await Marker.detectInvisible({
   image: { src: { uri: output } },
   key,
   strength: 'robust',
-  search: 'fast',
+  search: 'robust',
 });
 
 if (result.detected) {
@@ -40,6 +40,42 @@ if (result.detected) {
 ```
 
 原生端嵌入后返回缓存文件路径，Web 返回 data URL；检测不会创建新文件。
+
+当 `robust` 从缩放图片中恢复水印时，`result.scale` 会返回命中的
+0.9、0.95、1.05 或 1.1 假设。它是检测器采用的比例，不是精密测量结果。
+
+## 批量生成不同接收方的副本
+
+每一项都可以使用不同的 locator、密钥、图片和输出格式。结果始终与输入同序；
+单项失败不会让整个批次 reject。Web 最多并发 4 项，原生端保持串行以控制峰值内存。
+
+```ts
+const controller = new AbortController();
+const outputs = await Marker.embedInvisibleMany(
+  recipients.map((recipient) => ({
+    image: { src: source },
+    payload: recipient.locator,
+    key,
+    strength: 'robust',
+    saveFormat: ImageFormat.png,
+  })),
+  {
+    concurrency: 4,
+    signal: controller.signal,
+    onProgress: ({ settled, total }) => console.log(`${settled}/${total}`),
+  }
+);
+
+const verified = await Marker.detectInvisibleMany(
+  outputs.flatMap((output) =>
+    output.status === 'fulfilled'
+      ? [{ image: { src: output.value }, key, search: 'robust' }]
+      : []
+  )
+);
+```
+
+调用 `abort()` 只会阻止尚未开始的项目。已经交给 Canvas 或原生解码器的任务会正常完成并报告结果。
 
 ## Payload 与密钥规则
 
@@ -58,15 +94,43 @@ if (result.detected) {
 | `balanced`         | 普通照片与直接输出      | 默认的视觉与抗性平衡 |
 | `robust`           | 图片还会被压缩          | 像素改动最强         |
 | `search: 'fast'`   | 尺寸和 8×8 网格没有变化 | 检测开销低           |
-| `search: 'robust'` | 有限裁剪可能移动了网格  | CPU 开销明显更高     |
+| `search: 'robust'` | 可能有有限裁剪或 0.9×–1.1× 缩放 | CPU 与临时内存开销更高 |
 
-嵌入和检测必须使用相同 `strength`。`robust` 搜索可以恢复部分裁剪，但 v1.10 暂时不能补偿缩放。
+嵌入和检测必须使用相同 `strength`。Web 检测会在采集像素块和搜索候选时主动让出事件循环；总 CPU 工作量仍然存在，但页面不会被一个持续很久的同步任务完全卡住。
 
 ## 能承受哪些变化
 
-项目测试矩阵覆盖直接 PNG、JPEG 质量 90/75/60 重新编码、轻微亮度与对比度变化、错误密钥拒绝和有限裁剪恢复。图片内容与编码器会影响结果，因此正式使用前仍要用自己的分发链路做验证。
+项目测试矩阵覆盖直接 PNG、JPEG 质量 90/75/60 重新编码、轻微亮度与对比度变化、错误密钥拒绝、有限裁剪，以及六张照片在 Chromium、Firefox、WebKit 中的 0.9/0.95/1.05/1.1 缩放恢复；先经 JPEG 75 重编码再轻度缩放的链路也在门禁内。图片内容与编码器会影响结果，因此正式使用前仍要用自己的分发链路做验证。
 
-强模糊、明显缩放、大面积裁剪、涂抹、生成式修改、截图以及打印后拍照，不属于 v1.10 的稳定承诺。没有找到可验证水印时，检测器返回 `detected: false`，不会把它当作异常。
+强模糊、超出测试范围的缩放、大面积裁剪、涂抹、生成式修改、截图以及打印后拍照，不属于稳定承诺。没有找到可验证水印时，检测器返回 `detected: false`，不会把它当作异常。
+
+## 再加一份签名 Content Credential
+
+基础包只定义轻量的 `ContentCredentialsAdapter`，不会把 C2PA 运行时或签名私钥塞进 React Native 包。组合顺序固定为：先写入 locator，再对最终像素签名。
+
+```ts
+const signed = await Marker.embedInvisibleWithCredentials({
+  watermark: {
+    image: { src: source },
+    payload: 'asset-42',
+    key,
+    strength: 'robust',
+    saveFormat: ImageFormat.png,
+  },
+  claim: { title: 'asset-42.png', format: 'image/png' },
+  adapter,
+});
+
+const credentials = await Marker.verifyContentCredentials({
+  image: signed.signedImage,
+  adapter,
+});
+```
+
+独立的 [Node.js C2PA 服务示例](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/examples/c2pa-service)
+使用官方 `@contentauth/c2pa-node`，证书与私钥只能从运行环境注入。`dct-qim-v1`
+尚未进入 C2PA Soft Binding Algorithm List，因此示例使用普通 hard binding，并在私有
+assertion 中只保存算法名与 `SHA-256(locator)`；不会声明 `c2pa.watermarked`，也不会冒充标准 soft binding。
 
 ## 推荐的服务端流程
 
@@ -76,4 +140,4 @@ if (result.detected) {
 4. 保留原图和水印输出，以便调查漏检。
 5. 检测时应用自己的置信度策略，并到服务端确认 locator 记录。
 
-帧格式与威胁模型见 GitHub 中的 [RFC 0003](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/docs/rfcs/0003-v1.10-invisible-trace-watermarks.md)。
+帧格式与威胁模型见 [RFC 0003](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/docs/rfcs/0003-v1.10-invisible-trace-watermarks.md)。批量处理、缩放恢复、Web 响应性与 Content Credentials 集成见 [RFC 0004](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/docs/rfcs/0004-v1.11-durable-provenance-workflows.md)。

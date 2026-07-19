@@ -227,6 +227,13 @@ async function assertInvisibleTrace(page, playground) {
       .querySelector('[data-invisible-status]')
       ?.textContent?.includes('Verified: asset-42')
   );
+  await playground
+    .getByText('Compose signed Content Credentials', { exact: true })
+    .click();
+  assert.match(
+    (await playground.locator('.invisible-code').last().textContent()) ?? '',
+    /embedInvisibleWithCredentials/
+  );
 }
 
 async function assertBatchRecipe(page, playground) {
@@ -299,7 +306,7 @@ async function assertLayoutControlsAndCode(page, playground) {
   const preview = playground.locator('[data-preview]');
 
   assert.equal(await playground.locator('[data-example]').count(), 8);
-  assert.equal(await playground.locator('.capability-index li').count(), 10);
+  assert.equal(await playground.locator('.capability-index li').count(), 11);
   assert(
     await textSingle.isVisible(),
     'Text layout switch should be visible without opening advanced controls.'
@@ -629,8 +636,8 @@ async function assertCustomSelects(playground) {
   const customSelects = playground.locator('[data-custom-select]');
   assert.equal(
     await customSelects.count(),
-    6,
-    'Playground should render six custom selectors.'
+    7,
+    'Playground should render seven custom selectors.'
   );
   for (const select of await playground.locator('select').all()) {
     assert.equal(

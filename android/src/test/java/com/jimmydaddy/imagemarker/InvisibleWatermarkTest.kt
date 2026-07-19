@@ -49,6 +49,30 @@ class InvisibleWatermarkTest {
     )
   }
 
+  @Test
+  fun recoversLightImageResizingInRobustMode() {
+    val width = 256
+    val height = 176
+    val pixels = fixture(width, height)
+    InvisibleWatermark.embedPixels(pixels, width, height, "asset-42", key, "robust")
+
+    for (scale in listOf(0.9, 0.95, 1.05, 1.1)) {
+      val resized = InvisibleWatermark.resizePixelsForTesting(pixels, width, height, scale)
+      val result = InvisibleWatermark.detectPixels(
+        resized.pixels,
+        resized.width,
+        resized.height,
+        key,
+        strength = "robust",
+        search = "robust"
+      )
+
+      assertTrue("Expected scale $scale to be recovered", result.detected)
+      assertEquals("asset-42", result.payload)
+      assertEquals(scale, result.scale!!, 0.0001)
+    }
+  }
+
   private fun fixture(width: Int, height: Int): IntArray =
     IntArray(width * height) { index ->
       val red = 80 + (index % 96)

@@ -10,6 +10,17 @@ import type {
   WatermarkLayout,
 } from './index';
 import { validateMarkOptions } from './validate';
+import { runWatermarkBatch } from './batch';
+import type { WatermarkBatchOptions, WatermarkBatchResult } from './batch';
+
+export type {
+  WatermarkBatchAbortedResult,
+  WatermarkBatchFulfilledResult,
+  WatermarkBatchOptions,
+  WatermarkBatchProgress,
+  WatermarkBatchRejectedResult,
+  WatermarkBatchResult,
+} from './batch';
 
 export const WATERMARK_RECIPE_SCHEMA_VERSION = 1 as const;
 
@@ -77,46 +88,6 @@ export interface WatermarkRecipeInput {
   filename?: string;
   /** Values substituted into text templates and used by layer conditions. */
   variables?: Readonly<Record<string, WatermarkRecipeVariable>>;
-}
-
-export interface WatermarkBatchFulfilledResult<Result> {
-  status: 'fulfilled';
-  value: Result;
-}
-
-export interface WatermarkBatchRejectedResult {
-  status: 'rejected';
-  reason: unknown;
-}
-
-export interface WatermarkBatchAbortedResult {
-  status: 'aborted';
-  reason: Error;
-}
-
-export type WatermarkBatchResult<Result> =
-  | WatermarkBatchFulfilledResult<Result>
-  | WatermarkBatchRejectedResult
-  | WatermarkBatchAbortedResult;
-
-export interface WatermarkBatchProgress<Result> {
-  total: number;
-  settled: number;
-  succeeded: number;
-  failed: number;
-  aborted: number;
-  /** Index of the item that produced this progress update. */
-  index: number;
-  result: WatermarkBatchResult<Result>;
-}
-
-export interface WatermarkBatchOptions<Result> {
-  /** Requested worker count. Web is capped at 4 and native targets at 1. */
-  concurrency?: number;
-  /** Stops new items from starting. Already-running items are allowed to finish. */
-  signal?: AbortSignal;
-  /** Called once when each item is fulfilled, rejected, or skipped after abort. */
-  onProgress?: (progress: WatermarkBatchProgress<Result>) => void;
 }
 
 export interface WatermarkRecipe<Result = string> {
@@ -514,14 +485,6 @@ function validateUniqueFilenames(
   });
 }
 
-function abortResult<Result>(): WatermarkBatchResult<Result> {
-  const reason = new Error(
-    'Batch item was not started because the operation was aborted.'
-  );
-  reason.name = 'AbortError';
-  return { status: 'aborted', reason };
-}
-
 export function createWatermarkRecipe<Result>(
   options: WatermarkRecipeOptions,
   renderer: RecipeRenderer<Result>,
@@ -561,93 +524,15 @@ export function createWatermarkRecipe<Result>(
       if (!Array.isArray(inputs)) {
         throw new Error('applyMany inputs must be an array.');
       }
-      const requestedConcurrency = batchOptions.concurrency ?? 1;
-      if (
-        !Number.isFinite(requestedConcurrency) ||
-        !Number.isInteger(requestedConcurrency) ||
-        requestedConcurrency <= 0
-      ) {
-        throw new Error('concurrency must be a positive finite integer.');
-      }
-
       const queuedInputs = inputs.map(snapshotInput);
       validateUniqueFilenames(queuedInputs, recipe.saveFormat);
-      if (queuedInputs.length === 0) {
-        return [];
-      }
-
-      const concurrency = Math.min(
-        requestedConcurrency,
+      return runWatermarkBatch(
+        queuedInputs,
+        applySnapshot,
+        batchOptions,
         maximumConcurrency,
-        queuedInputs.length
+        'applyMany'
       );
-      const results: Array<WatermarkBatchResult<Result> | undefined> =
-        new Array(queuedInputs.length);
-      let cursor = 0;
-      let settled = 0;
-      let succeeded = 0;
-      let failed = 0;
-      let aborted = 0;
-
-      const report = (
-        index: number,
-        result: WatermarkBatchResult<Result>
-      ): void => {
-        settled += 1;
-        if (result.status === 'fulfilled') succeeded += 1;
-        else if (result.status === 'rejected') failed += 1;
-        else aborted += 1;
-        try {
-          batchOptions.onProgress?.({
-            total: queuedInputs.length,
-            settled,
-            succeeded,
-            failed,
-            aborted,
-            index,
-            result,
-          });
-        } catch {
-          // Progress observers must not interrupt the batch or change results.
-        }
-      };
-
-      const worker = async (): Promise<void> => {
-        while (!batchOptions.signal?.aborted) {
-          const index = cursor;
-          cursor += 1;
-          if (index >= queuedInputs.length) {
-            return;
-          }
-          const input = queuedInputs[index];
-          if (!input) {
-            return;
-          }
-          let result: WatermarkBatchResult<Result>;
-          try {
-            result = {
-              status: 'fulfilled',
-              value: await applySnapshot(input, index),
-            };
-          } catch (reason) {
-            result = { status: 'rejected', reason };
-          }
-          results[index] = result;
-          report(index, result);
-        }
-      };
-
-      await Promise.all(Array.from({ length: concurrency }, worker));
-
-      for (let index = 0; index < queuedInputs.length; index += 1) {
-        if (!results[index]) {
-          const result = abortResult<Result>();
-          results[index] = result;
-          report(index, result);
-        }
-      }
-
-      return results as Array<WatermarkBatchResult<Result>>;
     },
   };
 }

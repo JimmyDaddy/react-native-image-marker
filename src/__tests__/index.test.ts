@@ -70,6 +70,7 @@ describe('Marker JS wrapper', () => {
         payload: 'asset-42',
         confidence: 0.94,
         bitErrorRate: 0.03,
+        scale: 0.95,
         algorithm: 'dct-qim-v1',
       })
     );
@@ -101,7 +102,11 @@ describe('Marker JS wrapper', () => {
         search: 'robust',
       })
     ).resolves.toEqual(
-      expect.objectContaining({ detected: true, payload: 'asset-42' })
+      expect.objectContaining({
+        detected: true,
+        payload: 'asset-42',
+        scale: 0.95,
+      })
     );
     expect(nativeModule.detectInvisible).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -124,6 +129,22 @@ describe('Marker JS wrapper', () => {
         key: '0123456789abcdef',
       })
     ).rejects.toThrow('invalid JSON');
+
+    nativeModule.detectInvisible.mockResolvedValue(
+      JSON.stringify({
+        detected: true,
+        payload: 'asset-42',
+        confidence: 0.9,
+        algorithm: 'dct-qim-v1',
+        scale: 2,
+      })
+    );
+    await expect(
+      Marker.detectInvisible({
+        image: { src: 'file:///tmp/invisible.png' },
+        key: '0123456789abcdef',
+      })
+    ).rejects.toThrow('invalid data');
   });
 
   it('creates reusable native recipes through the public Marker API', async () => {
@@ -185,6 +206,41 @@ describe('Marker JS wrapper', () => {
         (result: { status: string }) => result.status === 'fulfilled'
       )
     ).toBe(true);
+  });
+
+  it('keeps native invisible batches serial and isolates item failures', async () => {
+    let active = 0;
+    let maximumActive = 0;
+    nativeModule.embedInvisible.mockImplementation(async (options) => {
+      active += 1;
+      maximumActive = Math.max(maximumActive, active);
+      await new Promise((resolve) => setTimeout(resolve, 2));
+      active -= 1;
+      if (options.payload === 'recipient-2') throw new Error('write failed');
+      return `/tmp/${options.payload}.png`;
+    });
+
+    const results = await Marker.embedInvisibleMany(
+      [1, 2, 3].map((src, index) => ({
+        image: { src },
+        payload: `recipient-${index + 1}`,
+        key: `0123456789abcde${index}`,
+      })),
+      { concurrency: 3 }
+    );
+
+    expect(maximumActive).toBe(1);
+    expect(results).toEqual([
+      { status: 'fulfilled', value: '/tmp/recipient-1.png' },
+      {
+        status: 'rejected',
+        reason: expect.objectContaining({ message: 'write failed' }),
+      },
+      { status: 'fulfilled', value: '/tmp/recipient-3.png' },
+    ]);
+    expect(
+      nativeModule.embedInvisible.mock.calls.map(([value]) => value.payload)
+    ).toEqual(['recipient-1', 'recipient-2', 'recipient-3']);
   });
 
   it('normalizes markText options before calling the native module', async () => {

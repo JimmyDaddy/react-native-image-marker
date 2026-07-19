@@ -20,7 +20,7 @@ Image Marker supports **iOS 13 or newer**, **Android API 24 or newer**, and mode
 
 ## Web behavior
 
-On Web, you can call `Marker.markText`, `Marker.markImage`, `Marker.mark`, `Marker.embedInvisible`, and `Marker.detectInvisible` with the same options used in React Native. The package selects its browser code automatically and does not load `NativeModules`.
+On Web, visible marking, recipes, invisible trace batches, robust detection, and Content Credentials adapters use the same public API as React Native. The package selects its browser code automatically and does not load `NativeModules`.
 
 Web calls resolve with a `data:image/...` URL for every output format. Sources may be a URL string, `{ uri }`, data URL, `Blob`, `File`, or an already-loaded browser image. Numeric React Native asset IDs must first be converted to a URL—for example with `Asset.fromModule(asset).uri` from `expo-asset` in an Expo Web app.
 
@@ -48,7 +48,7 @@ CI keeps three explicit lines instead of treating one example build as proof for
 | React Native 0.73                            | The checked-in bare example builds with the legacy bridge and New Architecture on Android; iOS verifies the legacy bridge.                                                                               |
 | React Native 0.86                            | A clean New Architecture Android app installs the packed library and compiles its generated TurboModule binding.                                                                                         |
 | Expo SDK 57 / React Native 0.86 / React 19.2 | The Expo example type-checks, exports native and Web bundles, generates a development-build project, and compiles on Android.                                                                            |
-| Chromium, Firefox, and WebKit                | The Web example verifies JPG/PNG, `Blob`/`File`, CORS errors, rotation crop, alpha, large-image limits, tolerant pixel differences, invisible-watermark recompression, and a six-image detection corpus. |
+| Chromium, Firefox, and WebKit                | The Web example verifies JPG/PNG, `Blob`/`File`, CORS errors, rotation crop, alpha, large-image limits, tolerant pixel differences, invisible-watermark recompression, responsive batch detection, and 0.9×–1.1× recovery across a six-image corpus. |
 
 ## Verify the architecture path
 

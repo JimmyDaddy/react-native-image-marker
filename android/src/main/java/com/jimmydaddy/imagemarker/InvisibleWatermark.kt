@@ -12,19 +12,22 @@ import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
 internal data class InvisibleWatermarkDetection(
   val detected: Boolean,
   val payload: String? = null,
   val confidence: Double,
-  val bitErrorRate: Double? = null
+  val bitErrorRate: Double? = null,
+  val scale: Double? = null
 ) {
   fun toJson(): String = JSONObject().apply {
     put("detected", detected)
     payload?.let { put("payload", it) }
     put("confidence", confidence)
     bitErrorRate?.let { put("bitErrorRate", it) }
+    scale?.let { put("scale", it) }
     put("algorithm", InvisibleWatermark.ALGORITHM)
   }.toString()
 }
@@ -68,6 +71,15 @@ internal object InvisibleWatermark {
     val confidence: Double,
     val bitErrorRate: Double
   )
+
+  internal data class PixelBuffer(
+    val pixels: IntArray,
+    val width: Int,
+    val height: Int
+  )
+
+  private val resizeScales = doubleArrayOf(0.95, 1.05, 0.9, 1.1)
+  private val channelShifts = intArrayOf(24, 16, 8, 0)
 
   fun embed(
     bitmap: Bitmap,
@@ -147,9 +159,66 @@ internal object InvisibleWatermark {
     require(search == "fast" || search == "robust") { "Unsupported invisible watermark search mode: $search." }
     val permutation = permutation(key)
     val seed = seedForKey(keyBytes)
-    val offsets = if (search == "robust") BLOCK_SIZE else 1
-    val phaseXs = if (search == "robust") TILE_WIDTH else 1
-    val phaseYs = if (search == "robust") TILE_HEIGHT else 1
+    val scales = if (search == "robust") doubleArrayOf(1.0, *resizeScales) else doubleArrayOf(1.0)
+
+    for (scale in scales) {
+      val candidateBuffer = if (scale == 1.0) {
+        PixelBuffer(pixels, width, height)
+      } else {
+        val targetWidth = (width / scale).roundToInt()
+        val targetHeight = (height / scale).roundToInt()
+        if (targetWidth < MIN_WIDTH || targetHeight < MIN_HEIGHT) continue
+        if (scale < 1) {
+          resizePixelsNearest(pixels, width, height, targetWidth, targetHeight)
+        } else {
+          resizePixelsBilinear(pixels, width, height, targetWidth, targetHeight)
+        }
+      }
+      val deltaFactors = if (scale == 1.0) doubleArrayOf(1.0) else doubleArrayOf(1.0, 0.9)
+      for (factor in deltaFactors) {
+        val candidate = detectAtScale(
+          candidateBuffer.pixels,
+          candidateBuffer.width,
+          candidateBuffer.height,
+          keyBytes,
+          permutation,
+          seed,
+          delta * factor,
+          robust = false
+        )
+        if (candidate != null) return candidate.toDetection(scale)
+      }
+    }
+
+    if (search == "robust") {
+      val candidate = detectAtScale(
+        pixels,
+        width,
+        height,
+        keyBytes,
+        permutation,
+        seed,
+        delta,
+        robust = true
+      )
+      if (candidate != null) return candidate.toDetection()
+    }
+    return InvisibleWatermarkDetection(false, confidence = 0.0)
+  }
+
+  private fun detectAtScale(
+    pixels: IntArray,
+    width: Int,
+    height: Int,
+    keyBytes: ByteArray,
+    permutation: IntArray,
+    seed: Int,
+    delta: Double,
+    robust: Boolean
+  ): Candidate? {
+    val offsets = if (robust) BLOCK_SIZE else 1
+    val phaseXs = if (robust) TILE_WIDTH else 1
+    val phaseYs = if (robust) TILE_HEIGHT else 1
     var best: Candidate? = null
 
     for (offsetY in 0 until offsets) {
@@ -166,29 +235,100 @@ internal object InvisibleWatermark {
               phaseX,
               phaseY
             ) ?: continue
-            if (best == null || candidate.confidence > best!!.confidence) {
+            if (candidate.confidence > (best?.confidence ?: -1.0)) {
               best = candidate
-              if (search == "fast" || candidate.confidence >= 0.98) {
-                return candidate.toDetection()
+              if (!robust || candidate.confidence >= 0.98) {
+                return candidate
               }
             }
           }
         }
       }
     }
-    return best?.toDetection() ?: InvisibleWatermarkDetection(false, confidence = 0.0)
+    return best
   }
 
   internal fun frameForTesting(payload: String, key: String): ByteArray = buildFrame(payload, key)
 
   internal fun permutationForTesting(key: String): IntArray = permutation(key)
 
-  private fun Candidate.toDetection() = InvisibleWatermarkDetection(
+  internal fun resizePixelsForTesting(
+    pixels: IntArray,
+    width: Int,
+    height: Int,
+    scale: Double
+  ): PixelBuffer = resizePixelsBilinear(
+    pixels,
+    width,
+    height,
+    (width * scale).roundToInt(),
+    (height * scale).roundToInt()
+  )
+
+  private fun Candidate.toDetection(scale: Double = 1.0) = InvisibleWatermarkDetection(
     detected = true,
     payload = payload,
     confidence = confidence,
-    bitErrorRate = bitErrorRate
+    bitErrorRate = bitErrorRate,
+    scale = scale.takeUnless { it == 1.0 }
   )
+
+  private fun resizePixelsNearest(
+    pixels: IntArray,
+    width: Int,
+    height: Int,
+    targetWidth: Int,
+    targetHeight: Int
+  ): PixelBuffer {
+    val output = IntArray(targetWidth * targetHeight)
+    for (targetY in 0 until targetHeight) {
+      val sourceY = min(height - 1, floor((targetY + 0.5) * height / targetHeight).toInt())
+      for (targetX in 0 until targetWidth) {
+        val sourceX = min(width - 1, floor((targetX + 0.5) * width / targetWidth).toInt())
+        output[targetY * targetWidth + targetX] = pixels[sourceY * width + sourceX]
+      }
+    }
+    return PixelBuffer(output, targetWidth, targetHeight)
+  }
+
+  private fun resizePixelsBilinear(
+    pixels: IntArray,
+    width: Int,
+    height: Int,
+    targetWidth: Int,
+    targetHeight: Int
+  ): PixelBuffer {
+    require(targetWidth > 0 && targetHeight > 0) { "Resize dimensions must be positive." }
+    val output = IntArray(targetWidth * targetHeight)
+    val scaleX = width.toDouble() / targetWidth
+    val scaleY = height.toDouble() / targetHeight
+    for (targetY in 0 until targetHeight) {
+      val sourceY = (targetY + 0.5) * scaleY - 0.5
+      val top = max(0, min(height - 1, floor(sourceY).toInt()))
+      val bottom = min(height - 1, top + 1)
+      val weightY = max(0.0, min(1.0, sourceY - top))
+      for (targetX in 0 until targetWidth) {
+        val sourceX = (targetX + 0.5) * scaleX - 0.5
+        val left = max(0, min(width - 1, floor(sourceX).toInt()))
+        val right = min(width - 1, left + 1)
+        val weightX = max(0.0, min(1.0, sourceX - left))
+        val topLeft = pixels[top * width + left]
+        val topRight = pixels[top * width + right]
+        val bottomLeft = pixels[bottom * width + left]
+        val bottomRight = pixels[bottom * width + right]
+        var pixel = 0
+        for (shift in channelShifts) {
+          val topValue = channel(topLeft, shift) * (1 - weightX) + channel(topRight, shift) * weightX
+          val bottomValue = channel(bottomLeft, shift) * (1 - weightX) + channel(bottomRight, shift) * weightX
+          pixel = pixel or ((topValue * (1 - weightY) + bottomValue * weightY).roundToInt().coerceIn(0, 255) shl shift)
+        }
+        output[targetY * targetWidth + targetX] = pixel
+      }
+    }
+    return PixelBuffer(output, targetWidth, targetHeight)
+  }
+
+  private fun channel(pixel: Int, shift: Int): Int = (pixel ushr shift) and 0xff
 
   private fun validatePixels(pixels: IntArray, width: Int, height: Int) {
     require(width >= MIN_WIDTH && height >= MIN_HEIGHT) {

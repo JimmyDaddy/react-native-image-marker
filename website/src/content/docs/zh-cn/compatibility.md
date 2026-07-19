@@ -20,7 +20,7 @@ Image Marker 支持 **iOS 13 或更高版本**、**Android API 24 或更高版�
 
 ## Web 端行为
 
-在浏览器中可以调用 `Marker.markText`、`Marker.markImage`、`Marker.mark`、`Marker.embedInvisible` 和 `Marker.detectInvisible`，参数与 React Native 相同。软件包会自动选择浏览器代码，不会加载 `NativeModules`。
+在浏览器中，可见水印、Recipe、隐形追踪批次、robust 检测与 Content Credentials 适配器都使用和 React Native 相同的公共 API。软件包会自动选择浏览器代码，不会加载 `NativeModules`。
 
 Web 上的所有输出格式都会返回 `data:image/...` URL。图片来源可以是 URL 字符串、`{ uri }`、data URL、`Blob`、`File` 或已加载的浏览器图片。React Native 的数字资源 ID 需要先转换成 URL；例如 Expo Web 应用可使用 `expo-asset` 的 `Asset.fromModule(asset).uri`。
 
@@ -48,7 +48,7 @@ CI 保留三条明确的测试线，不用单个示例构建笼统代表所有�
 | React Native 0.73                            | 仓库内的裸 React Native 示例在 Android 分别构建旧架构与新架构，iOS 验证旧架构。                                              |
 | React Native 0.86                            | 新建一个启用新架构的 Android 应用，安装打包后的库，并编译生成的 TurboModule 绑定。                                           |
 | Expo SDK 57 / React Native 0.86 / React 19.2 | Expo 示例执行类型检查、导出原生与 Web bundle、生成开发构建工程，并完成 Android 编译。                                        |
-| Chromium、Firefox、WebKit                    | Web 示例验证 JPG/PNG、`Blob`/`File`、CORS 错误、旋转裁剪、透明度、大图限制、带容差的像素差异、隐形水印重编码和六图检测语料。 |
+| Chromium、Firefox、WebKit                    | Web 示例验证 JPG/PNG、`Blob`/`File`、CORS 错误、旋转裁剪、透明度、大图限制、带容差的像素差异、隐形水印重编码、响应式批量检测，以及六图语料的 0.9×–1.1× 恢复。 |
 
 ## 验证架构路径
 

@@ -27,8 +27,20 @@ import type {
   EmbedInvisibleWatermarkOptions,
   InvisibleWatermarkDetectionResult,
 } from '../invisible-watermark';
+import { runWatermarkBatch } from '../batch';
+import type { WatermarkBatchOptions, WatermarkBatchResult } from '../batch';
 import {
-  detectInvisibleWatermarkPixels,
+  embedInvisibleWithCredentials,
+  verifyContentCredentials,
+} from '../content-credentials';
+import type {
+  ContentCredentialsVerificationResult,
+  EmbedInvisibleWithCredentialsOptions,
+  EmbedInvisibleWithCredentialsResult,
+  VerifyContentCredentialsOptions,
+} from '../content-credentials';
+import {
+  detectInvisibleWatermarkPixelsAsync,
   embedInvisibleWatermarkPixels,
   validateDetectInvisibleOptions,
   validateEmbedInvisibleOptions,
@@ -138,6 +150,57 @@ function createMarkLayers(options: MarkOptions): WebRenderLayer[] {
  * 2D implementation, which only touches DOM globals when a method is called.
  */
 class Marker {
+  /** Embed a locator first, then ask the supplied adapter to sign the result. */
+  static embedInvisibleWithCredentials(
+    options: EmbedInvisibleWithCredentialsOptions
+  ): Promise<EmbedInvisibleWithCredentialsResult> {
+    return embedInvisibleWithCredentials(
+      (watermark) => Marker.embedInvisible(watermark),
+      options
+    );
+  }
+
+  /** Verify Content Credentials through an application-supplied adapter. */
+  static verifyContentCredentials(
+    options: VerifyContentCredentialsOptions
+  ): Promise<ContentCredentialsVerificationResult> {
+    return verifyContentCredentials(options);
+  }
+
+  /** Embed authenticated locators into many images while preserving input order. */
+  static embedInvisibleMany(
+    inputs: readonly EmbedInvisibleWatermarkOptions[],
+    options?: WatermarkBatchOptions<string>
+  ): Promise<Array<WatermarkBatchResult<string>>> {
+    const snapshots = Array.isArray(inputs)
+      ? inputs.map((input) => ({ ...input, image: { ...input?.image } }))
+      : inputs;
+    return runWatermarkBatch(
+      snapshots,
+      (input) => Marker.embedInvisible(input),
+      options,
+      4,
+      'embedInvisibleMany'
+    );
+  }
+
+  /** Detect authenticated locators in many images while preserving input order. */
+  static detectInvisibleMany(
+    inputs: readonly DetectInvisibleWatermarkOptions[],
+    options?: WatermarkBatchOptions<InvisibleWatermarkDetectionResult>
+  ): Promise<Array<WatermarkBatchResult<InvisibleWatermarkDetectionResult>>> {
+    const snapshots = Array.isArray(inputs)
+      ? inputs.map((input) => ({ ...input, image: { ...input?.image } }))
+      : inputs;
+    return runWatermarkBatch(
+      snapshots,
+      (input) => Marker.detectInvisible(input),
+      options,
+      4,
+      'detectInvisibleMany'
+    );
+  }
+
   /**
    * Embed a short, authenticated locator into the final image pixels.
    *
@@ -173,7 +236,7 @@ class Marker {
       maxSize: options.maxSize,
     });
     const imageData = readImageData(canvas);
-    return detectInvisibleWatermarkPixels(
+    return detectInvisibleWatermarkPixelsAsync(
       { data: imageData.data, width: canvas.width, height: canvas.height },
       options
     );

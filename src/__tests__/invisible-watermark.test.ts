@@ -1,10 +1,12 @@
 import {
   buildInvisibleWatermarkFrame,
   createInvisibleWatermarkPermutation,
+  detectInvisibleWatermarkPixelsAsync,
   detectInvisibleWatermarkPixels,
   embedInvisibleWatermarkPixels,
   encodeUtf8,
   hmacSha256,
+  resizeInvisibleWatermarkPixels,
   sha256,
 } from '../invisible-watermark';
 
@@ -161,6 +163,62 @@ describe('invisible watermark core', () => {
       })
     ).toEqual(expect.objectContaining({ detected: true, payload: 'crop-7' }));
   }, 20_000);
+
+  it.each([0.9, 0.95, 1.05, 1.1])(
+    'recovers a locator after %sx resizing',
+    (scale) => {
+      const width = 256;
+      const height = 176;
+      const data = createPixels(width, height);
+      embedInvisibleWatermarkPixels(
+        { data, width, height },
+        { payload: 'scale-7', key: KEY, strength: 'robust' }
+      );
+      const resized = resizeInvisibleWatermarkPixels(
+        { data, width, height },
+        Math.round(width * scale),
+        Math.round(height * scale)
+      );
+
+      expect(
+        detectInvisibleWatermarkPixels(resized, {
+          key: KEY,
+          strength: 'robust',
+          search: 'robust',
+        })
+      ).toEqual(
+        expect.objectContaining({
+          detected: true,
+          payload: 'scale-7',
+          scale,
+        })
+      );
+    },
+    20_000
+  );
+
+  it('yields the event loop during asynchronous Web detection', async () => {
+    const width = 256;
+    const height = 176;
+    const data = createPixels(width, height);
+    embedInvisibleWatermarkPixels(
+      { data, width, height },
+      { payload: 'async-7', key: KEY }
+    );
+    let heartbeat = false;
+    const detection = detectInvisibleWatermarkPixelsAsync(
+      { data, width, height },
+      { key: KEY, search: 'fast' }
+    );
+    setTimeout(() => {
+      heartbeat = true;
+    }, 0);
+
+    await expect(detection).resolves.toEqual(
+      expect.objectContaining({ detected: true, payload: 'async-7' })
+    );
+    expect(heartbeat).toBe(true);
+  });
 
   it('does not authenticate an unmarked image or the wrong key', () => {
     const width = 256;

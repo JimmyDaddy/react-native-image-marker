@@ -157,6 +157,34 @@ final class ImageMarkerExampleUITests: XCTestCase {
     XCTAssertGreaterThan(result.confidence, 0.8)
   }
 
+  func testInvisibleWatermarkRecoversLightImageResizing() throws {
+    let image = makeSolidImage(
+      size: CGSize(width: 256, height: 176),
+      color: UIColor(red: 0.35, green: 0.48, blue: 0.62, alpha: 1)
+    )
+    let key = "0123456789abcdef"
+    let marked = try InvisibleWatermark.embed(
+      image: image,
+      payload: "asset-42",
+      key: key,
+      strength: "robust"
+    )
+
+    for scale in [0.9, 0.95, 1.05, 1.1] {
+      let resized = try InvisibleWatermark.resizeForTesting(image: marked, scale: scale)
+      let result = try InvisibleWatermark.detect(
+        image: resized,
+        key: key,
+        strength: "robust",
+        search: "robust"
+      )
+
+      XCTAssertTrue(result.detected, "Expected scale \(scale) to be recovered")
+      XCTAssertEqual(result.payload, "asset-42")
+      XCTAssertEqual(result.scale ?? 0, scale, accuracy: 0.0001)
+    }
+  }
+
   func testApp() throws {
     let app = XCUIApplication()
     app.launch()
@@ -228,7 +256,7 @@ final class ImageMarkerExampleUITests: XCTestCase {
 
     XCTAssertTrue(app.otherElements["result-preview-ready"].waitForExistence(timeout: 30))
     let verified = app.staticTexts.matching(
-      NSPredicate(format: "label BEGINSWITH %@", "Invisible trace verified: asset-42")
+      NSPredicate(format: "label BEGINSWITH %@", "Invisible batch verified · 2 outputs")
     ).firstMatch
     XCTAssertTrue(verified.waitForExistence(timeout: 10))
   }

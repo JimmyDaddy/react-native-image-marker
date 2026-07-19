@@ -13,6 +13,8 @@ The API reference is generated from the public TypeScript declarations on every 
 - [`Marker.createRecipe`](/api/classes/marker/#createrecipe) creates reusable batch workflows.
 - [`Marker.embedInvisible`](/api/classes/marker/#embedinvisible) writes an authenticated short trace ID into image pixels.
 - [`Marker.detectInvisible`](/api/classes/marker/#detectinvisible) recovers and verifies an invisible trace ID.
+- `Marker.embedInvisibleMany` and `Marker.detectInvisibleMany` run ordered, independently reported trace batches.
+- `Marker.embedInvisibleWithCredentials` and `Marker.verifyContentCredentials` compose the pixel locator with an application-supplied signing adapter.
 
 ## Start with the main option types
 

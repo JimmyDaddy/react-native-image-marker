@@ -1,5 +1,6 @@
 import Marker, {
   type BlendMode,
+  type ContentCredentialsAdapter,
   ImageFormat,
   type ImageMarkOptions,
   type TextMarkOptions,
@@ -22,6 +23,47 @@ export const invisibleDetection = Marker.detectInvisible({
   image: { src: 'file:///tmp/marked.png' },
   key: '0123456789abcdef',
   search: 'robust',
+});
+
+export const invisibleBatch = Marker.embedInvisibleMany(
+  [
+    {
+      image: { src: 'file:///tmp/background.png' },
+      payload: 'asset-42',
+      key: '0123456789abcdef',
+    },
+  ],
+  {
+    concurrency: 2,
+    onProgress(progress) {
+      const completed: number = progress.settled;
+      completed.toFixed(0);
+    },
+  }
+);
+
+const contentCredentialsAdapter: ContentCredentialsAdapter = {
+  async sign(request) {
+    return { image: request.image, manifestId: request.locator };
+  },
+  async verify() {
+    return { valid: true };
+  },
+};
+
+export const signedInvisibleOutput = Marker.embedInvisibleWithCredentials({
+  watermark: {
+    image: { src: 'file:///tmp/background.png' },
+    payload: 'asset-42',
+    key: '0123456789abcdef',
+  },
+  claim: { title: 'Example', format: 'image/png' },
+  adapter: contentCredentialsAdapter,
+});
+
+export const credentialsVerification = Marker.verifyContentCredentials({
+  image: 'file:///tmp/signed.png',
+  adapter: contentCredentialsAdapter,
 });
 
 // The deprecated single-watermark shape remains source-compatible for users

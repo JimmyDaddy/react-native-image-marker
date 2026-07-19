@@ -23,7 +23,7 @@ const corpusFixtures = new Map(
     'watermark-coast.jpg',
     'watermark-after-dark.jpg',
     'watermark-waypoint.jpg',
-    'example-lab-compose.jpg',
+    'watermark-image-layer.jpg',
     'sample1.png',
   ].map((name) => [`corpus/${name}`, name])
 );
@@ -255,6 +255,32 @@ async function verifyBrowser(browserName, browserType) {
       corpusFixtures.size
     );
     assert.equal(harnessResults.invisibleCorpus.unmarkedFalsePositives, 0);
+    assert.equal(
+      harnessResults.invisibleCorpus.resizeDetectedCount,
+      corpusFixtures.size * 4,
+      JSON.stringify({
+        byScale: harnessResults.invisibleCorpus.resizeDetectedByScale,
+        failedSources:
+          harnessResults.invisibleCorpus.resizeFailedSourceIndexes,
+      })
+    );
+    assert.equal(
+      harnessResults.invisibleCorpus.resizeScaleMatchCount,
+      corpusFixtures.size * 4,
+      JSON.stringify(harnessResults.invisibleCorpus.resizeScaleMatchesByScale)
+    );
+    assert.equal(
+      harnessResults.invisibleCorpus.jpeg75ResizeDetectedCount,
+      corpusFixtures.size
+    );
+    assert.equal(
+      harnessResults.invisibleCorpus.batchProgressCount,
+      corpusFixtures.size * 5
+    );
+    assert(
+      harnessResults.invisibleCorpus.heartbeatCount > 0,
+      'Robust detection never yielded to the browser event loop.'
+    );
     assert(
       harnessResults.invisibleCorpus.minimumPsnr >= 40,
       `Invisible watermark corpus PSNR fell below 40 dB: ${harnessResults.invisibleCorpus.minimumPsnr.toFixed(
@@ -275,7 +301,9 @@ async function verifyBrowser(browserName, browserType) {
     );
 
     console.log(
-      `Verified ${browserName}: Canvas pixels, tiled text/logo layers, invisible watermark PNG/JPEG robustness and six-image quality corpus (PSNR ${harnessResults.invisibleCorpus.minimumPsnr.toFixed(
+      `Verified ${browserName}: Canvas pixels, tiled text/logo layers, invisible watermark PNG/JPEG and 0.9x-1.1x resize recovery across six images in ${harnessResults.invisibleCorpus.resizeDurationMs.toFixed(
+        0
+      )} ms, responsive batch detection, and quality corpus (PSNR ${harnessResults.invisibleCorpus.minimumPsnr.toFixed(
         2
       )} dB, SSIM ${harnessResults.invisibleCorpus.minimumSsim.toFixed(
         5
