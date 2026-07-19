@@ -57,6 +57,7 @@ yarn-error.log
 package-lock.json
 !/package-lock.json
 !website/package-lock.json
+!examples/c2pa-service/package-lock.json
 yarn.lock
 
 # BUCK

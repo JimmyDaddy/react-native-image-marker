@@ -7,6 +7,10 @@ export const INVISIBLE_WATERMARK_MAX_PAYLOAD_BYTES = 12;
 export const INVISIBLE_WATERMARK_MIN_KEY_BYTES = 16;
 export const INVISIBLE_WATERMARK_MIN_WIDTH = 128;
 export const INVISIBLE_WATERMARK_MIN_HEIGHT = 88;
+export const INVISIBLE_WATERMARK_RESIZE_SCALES = [
+  0.95, 1.05, 0.9, 1.1,
+] as const;
+const INVISIBLE_WATERMARK_RESIZE_DELTA_FACTORS = [1, 0.9];
 
 const BLOCK_SIZE = 8;
 const TILE_WIDTH = 16;
@@ -57,7 +61,7 @@ const STRENGTH_DELTAS: Record<InvisibleWatermarkStrength, number> = {
 /** Pixel-change strength used by the DCT-QIM invisible watermark. */
 export type InvisibleWatermarkStrength = 'subtle' | 'balanced' | 'robust';
 
-/** Detection search cost. Robust search also checks shifted block grids and tile phases. */
+/** Detection search cost. Robust search also checks light resizing, shifted block grids, and tile phases. */
 export type InvisibleWatermarkSearch = 'fast' | 'robust';
 
 /** Source image accepted by the invisible watermark APIs. */
@@ -94,7 +98,7 @@ export interface DetectInvisibleWatermarkOptions {
   key: string;
   /** The same pixel-change strength used during embedding. @defaultValue `balanced` */
   strength?: InvisibleWatermarkStrength;
-  /** Use `robust` for limited crop recovery at a substantially higher CPU cost. @defaultValue `fast` */
+  /** Use `robust` for 0.9×–1.1× resize and limited crop recovery at a higher CPU cost. @defaultValue `fast` */
   search?: InvisibleWatermarkSearch;
   /** Maximum decoded width or height. Keep this consistent with embedding. @defaultValue 2048 */
   maxSize?: number;
@@ -112,6 +116,8 @@ export interface InvisibleWatermarkDetectionResult {
   bitErrorRate?: number;
   /** Versioned pixel algorithm identifier. */
   algorithm: typeof INVISIBLE_WATERMARK_ALGORITHM;
+  /** Estimated input scale when robust resize recovery was required. */
+  scale?: number;
 }
 
 export interface InvisibleWatermarkPixelBuffer {
@@ -135,6 +141,9 @@ function toPublicDetectionResult(
   if (candidate.payload !== undefined) result.payload = candidate.payload;
   if (candidate.bitErrorRate !== undefined) {
     result.bitErrorRate = candidate.bitErrorRate;
+  }
+  if (candidate.scale !== undefined && candidate.scale !== 1) {
+    result.scale = candidate.scale;
   }
   return result;
 }
@@ -729,6 +738,48 @@ function observeGrid(
   return observations;
 }
 
+async function yieldToEventLoop(): Promise<void> {
+  const scheduler = (
+    globalThis as typeof globalThis & {
+      scheduler?: { yield?: () => Promise<void> };
+    }
+  ).scheduler;
+  if (typeof scheduler?.yield === 'function') {
+    await scheduler.yield();
+    return;
+  }
+  await new Promise<void>((resolve) => setTimeout(resolve, 0));
+}
+
+async function observeGridAsync(
+  buffer: InvisibleWatermarkPixelBuffer,
+  offsetX: number,
+  offsetY: number
+): Promise<BlockObservation[]> {
+  const blocksX = Math.floor((buffer.width - offsetX) / BLOCK_SIZE);
+  const blocksY = Math.floor((buffer.height - offsetY) / BLOCK_SIZE);
+  const observations: BlockObservation[] = [];
+  for (let blockY = 0; blockY < blocksY; blockY += 1) {
+    for (let blockX = 0; blockX < blocksX; blockX += 1) {
+      const block = readLuminanceBlock(
+        buffer,
+        offsetX + blockX * BLOCK_SIZE,
+        offsetY + blockY * BLOCK_SIZE
+      );
+      if (!block.usable) continue;
+      const differences = new Float64Array(COEFFICIENT_PAIRS.length);
+      COEFFICIENT_PAIRS.forEach((pair, index) => {
+        differences[index] = coefficientDifference(block.luminance, pair);
+      });
+      observations.push({ differences, blockX, blockY });
+    }
+    if ((blockY + 1) % 8 === 0) {
+      await yieldToEventLoop();
+    }
+  }
+  return observations;
+}
+
 function decodeCandidate(
   observations: BlockObservation[],
   keyBytes: Uint8Array,
@@ -796,26 +847,45 @@ function decodeCandidate(
   };
 }
 
-export function detectInvisibleWatermarkPixels(
-  buffer: InvisibleWatermarkPixelBuffer,
-  options: Pick<DetectInvisibleWatermarkOptions, 'key' | 'strength' | 'search'>
-): InvisibleWatermarkDetectionResult {
-  validateImageDimensions(buffer.width, buffer.height);
-  if (buffer.data.length < buffer.width * buffer.height * 4) {
-    throw new Error(
-      'RGBA pixel buffer is smaller than its declared dimensions.'
-    );
-  }
+interface DetectionContext {
+  keyBytes: Uint8Array;
+  permutation: Uint16Array;
+  seed: number;
+  delta: number;
+}
+
+function createDetectionContext(
+  options: Pick<DetectInvisibleWatermarkOptions, 'key' | 'strength'>
+): DetectionContext {
   const keyBytes = encodeUtf8(options.key ?? '');
   if (keyBytes.length < INVISIBLE_WATERMARK_MIN_KEY_BYTES) {
     throw new Error(
       `key must contain at least ${INVISIBLE_WATERMARK_MIN_KEY_BYTES} UTF-8 bytes.`
     );
   }
-  const delta = STRENGTH_DELTAS[validateStrength(options.strength)];
-  const search = validateSearch(options.search);
-  const permutation = createInvisibleWatermarkPermutation(options.key);
-  const seed = seedForKey(keyBytes);
+  return {
+    keyBytes,
+    delta: STRENGTH_DELTAS[validateStrength(options.strength)],
+    permutation: createInvisibleWatermarkPermutation(options.key),
+    seed: seedForKey(keyBytes),
+  };
+}
+
+function validatePixelBuffer(buffer: InvisibleWatermarkPixelBuffer): void {
+  validateImageDimensions(buffer.width, buffer.height);
+  if (buffer.data.length < buffer.width * buffer.height * 4) {
+    throw new Error(
+      'RGBA pixel buffer is smaller than its declared dimensions.'
+    );
+  }
+}
+
+function detectAtScale(
+  buffer: InvisibleWatermarkPixelBuffer,
+  context: DetectionContext,
+  search: InvisibleWatermarkSearch,
+  scale = 1
+): DetectionCandidate | null {
   const offsets = search === 'robust' ? BLOCK_SIZE : 1;
   const phaseXs = search === 'robust' ? TILE_WIDTH : 1;
   const phaseYs = search === 'robust' ? TILE_HEIGHT : 1;
@@ -828,29 +898,355 @@ export function detectInvisibleWatermarkPixels(
         for (let phaseX = 0; phaseX < phaseXs; phaseX += 1) {
           const candidate = decodeCandidate(
             observations,
-            keyBytes,
-            permutation,
-            seed,
-            delta,
+            context.keyBytes,
+            context.permutation,
+            context.seed,
+            context.delta,
             phaseX,
             phaseY
           );
           if (candidate && (!best || candidate.confidence > best.confidence)) {
+            candidate.scale = scale;
             best = candidate;
             if (search === 'fast' || candidate.confidence >= 0.98) {
-              return toPublicDetectionResult(candidate);
+              return candidate;
             }
           }
         }
       }
     }
   }
-  if (best) {
-    return toPublicDetectionResult(best);
+  return best;
+}
+
+async function detectAtScaleAsync(
+  buffer: InvisibleWatermarkPixelBuffer,
+  context: DetectionContext,
+  search: InvisibleWatermarkSearch,
+  scale = 1
+): Promise<DetectionCandidate | null> {
+  const offsets = search === 'robust' ? BLOCK_SIZE : 1;
+  const phaseXs = search === 'robust' ? TILE_WIDTH : 1;
+  const phaseYs = search === 'robust' ? TILE_HEIGHT : 1;
+  let best: DetectionCandidate | null = null;
+  let candidatesSinceYield = 0;
+  for (let offsetY = 0; offsetY < offsets; offsetY += 1) {
+    for (let offsetX = 0; offsetX < offsets; offsetX += 1) {
+      const observations = await observeGridAsync(buffer, offsetX, offsetY);
+      for (let phaseY = 0; phaseY < phaseYs; phaseY += 1) {
+        for (let phaseX = 0; phaseX < phaseXs; phaseX += 1) {
+          const candidate = decodeCandidate(
+            observations,
+            context.keyBytes,
+            context.permutation,
+            context.seed,
+            context.delta,
+            phaseX,
+            phaseY
+          );
+          if (candidate && (!best || candidate.confidence > best.confidence)) {
+            candidate.scale = scale;
+            best = candidate;
+            if (search === 'fast' || candidate.confidence >= 0.98) {
+              return candidate;
+            }
+          }
+          candidatesSinceYield += 1;
+          if (candidatesSinceYield >= 16) {
+            candidatesSinceYield = 0;
+            await yieldToEventLoop();
+          }
+        }
+      }
+    }
   }
+  return best;
+}
+
+function detectResizedCandidate(
+  buffer: InvisibleWatermarkPixelBuffer,
+  context: DetectionContext,
+  scale: number
+): DetectionCandidate | null {
+  const observations = observeGrid(buffer, 0, 0);
+  for (const factor of INVISIBLE_WATERMARK_RESIZE_DELTA_FACTORS) {
+    const candidate = decodeCandidate(
+      observations,
+      context.keyBytes,
+      context.permutation,
+      context.seed,
+      context.delta * factor,
+      0,
+      0
+    );
+    if (candidate) {
+      candidate.scale = scale;
+      return candidate;
+    }
+  }
+  return null;
+}
+
+async function detectResizedCandidateAsync(
+  buffer: InvisibleWatermarkPixelBuffer,
+  context: DetectionContext,
+  scale: number
+): Promise<DetectionCandidate | null> {
+  const observations = await observeGridAsync(buffer, 0, 0);
+  for (const factor of INVISIBLE_WATERMARK_RESIZE_DELTA_FACTORS) {
+    const candidate = decodeCandidate(
+      observations,
+      context.keyBytes,
+      context.permutation,
+      context.seed,
+      context.delta * factor,
+      0,
+      0
+    );
+    if (candidate) {
+      candidate.scale = scale;
+      return candidate;
+    }
+  }
+  return null;
+}
+
+function resizeTarget(
+  buffer: InvisibleWatermarkPixelBuffer,
+  scale: number
+): { width: number; height: number } | null {
+  const width = Math.max(1, Math.round(buffer.width / scale));
+  const height = Math.max(1, Math.round(buffer.height / scale));
+  return width >= INVISIBLE_WATERMARK_MIN_WIDTH &&
+    height >= INVISIBLE_WATERMARK_MIN_HEIGHT
+    ? { width, height }
+    : null;
+}
+
+export function resizeInvisibleWatermarkPixels(
+  buffer: InvisibleWatermarkPixelBuffer,
+  width: number,
+  height: number
+): InvisibleWatermarkPixelBuffer {
+  if (
+    !Number.isInteger(width) ||
+    !Number.isInteger(height) ||
+    width <= 0 ||
+    height <= 0
+  ) {
+    throw new Error(
+      'Invisible watermark resize dimensions must be positive integers.'
+    );
+  }
+  const output = new Uint8ClampedArray(width * height * 4);
+  const scaleX = buffer.width / width;
+  const scaleY = buffer.height / height;
+  for (let targetY = 0; targetY < height; targetY += 1) {
+    const sourceY = (targetY + 0.5) * scaleY - 0.5;
+    const top = Math.max(0, Math.min(buffer.height - 1, Math.floor(sourceY)));
+    const bottom = Math.min(buffer.height - 1, top + 1);
+    const weightY = Math.max(0, Math.min(1, sourceY - top));
+    for (let targetX = 0; targetX < width; targetX += 1) {
+      const sourceX = (targetX + 0.5) * scaleX - 0.5;
+      const left = Math.max(0, Math.min(buffer.width - 1, Math.floor(sourceX)));
+      const right = Math.min(buffer.width - 1, left + 1);
+      const weightX = Math.max(0, Math.min(1, sourceX - left));
+      const topLeft = (top * buffer.width + left) * 4;
+      const topRight = (top * buffer.width + right) * 4;
+      const bottomLeft = (bottom * buffer.width + left) * 4;
+      const bottomRight = (bottom * buffer.width + right) * 4;
+      const target = (targetY * width + targetX) * 4;
+      for (let channel = 0; channel < 4; channel += 1) {
+        const topValue =
+          buffer.data[topLeft + channel]! * (1 - weightX) +
+          buffer.data[topRight + channel]! * weightX;
+        const bottomValue =
+          buffer.data[bottomLeft + channel]! * (1 - weightX) +
+          buffer.data[bottomRight + channel]! * weightX;
+        output[target + channel] =
+          topValue * (1 - weightY) + bottomValue * weightY;
+      }
+    }
+  }
+  return { data: output, width, height };
+}
+
+function resizeInvisibleWatermarkPixelsNearest(
+  buffer: InvisibleWatermarkPixelBuffer,
+  width: number,
+  height: number
+): InvisibleWatermarkPixelBuffer {
+  const output = new Uint8ClampedArray(width * height * 4);
+  for (let targetY = 0; targetY < height; targetY += 1) {
+    const sourceY = Math.min(
+      buffer.height - 1,
+      Math.floor(((targetY + 0.5) * buffer.height) / height)
+    );
+    for (let targetX = 0; targetX < width; targetX += 1) {
+      const sourceX = Math.min(
+        buffer.width - 1,
+        Math.floor(((targetX + 0.5) * buffer.width) / width)
+      );
+      const source = (sourceY * buffer.width + sourceX) * 4;
+      const target = (targetY * width + targetX) * 4;
+      output[target] = buffer.data[source]!;
+      output[target + 1] = buffer.data[source + 1]!;
+      output[target + 2] = buffer.data[source + 2]!;
+      output[target + 3] = buffer.data[source + 3]!;
+    }
+  }
+  return { data: output, width, height };
+}
+
+async function resizeInvisibleWatermarkPixelsAsync(
+  buffer: InvisibleWatermarkPixelBuffer,
+  width: number,
+  height: number
+): Promise<InvisibleWatermarkPixelBuffer> {
+  const output = new Uint8ClampedArray(width * height * 4);
+  const scaleX = buffer.width / width;
+  const scaleY = buffer.height / height;
+  for (let targetY = 0; targetY < height; targetY += 1) {
+    const sourceY = (targetY + 0.5) * scaleY - 0.5;
+    const top = Math.max(0, Math.min(buffer.height - 1, Math.floor(sourceY)));
+    const bottom = Math.min(buffer.height - 1, top + 1);
+    const weightY = Math.max(0, Math.min(1, sourceY - top));
+    for (let targetX = 0; targetX < width; targetX += 1) {
+      const sourceX = (targetX + 0.5) * scaleX - 0.5;
+      const left = Math.max(0, Math.min(buffer.width - 1, Math.floor(sourceX)));
+      const right = Math.min(buffer.width - 1, left + 1);
+      const weightX = Math.max(0, Math.min(1, sourceX - left));
+      const topLeft = (top * buffer.width + left) * 4;
+      const topRight = (top * buffer.width + right) * 4;
+      const bottomLeft = (bottom * buffer.width + left) * 4;
+      const bottomRight = (bottom * buffer.width + right) * 4;
+      const target = (targetY * width + targetX) * 4;
+      for (let channel = 0; channel < 4; channel += 1) {
+        const topValue =
+          buffer.data[topLeft + channel]! * (1 - weightX) +
+          buffer.data[topRight + channel]! * weightX;
+        const bottomValue =
+          buffer.data[bottomLeft + channel]! * (1 - weightX) +
+          buffer.data[bottomRight + channel]! * weightX;
+        output[target + channel] =
+          topValue * (1 - weightY) + bottomValue * weightY;
+      }
+    }
+    if ((targetY + 1) % 16 === 0) {
+      await yieldToEventLoop();
+    }
+  }
+  return { data: output, width, height };
+}
+
+async function resizeInvisibleWatermarkPixelsNearestAsync(
+  buffer: InvisibleWatermarkPixelBuffer,
+  width: number,
+  height: number
+): Promise<InvisibleWatermarkPixelBuffer> {
+  const output = new Uint8ClampedArray(width * height * 4);
+  for (let targetY = 0; targetY < height; targetY += 1) {
+    const sourceY = Math.min(
+      buffer.height - 1,
+      Math.floor(((targetY + 0.5) * buffer.height) / height)
+    );
+    for (let targetX = 0; targetX < width; targetX += 1) {
+      const sourceX = Math.min(
+        buffer.width - 1,
+        Math.floor(((targetX + 0.5) * buffer.width) / width)
+      );
+      const source = (sourceY * buffer.width + sourceX) * 4;
+      const target = (targetY * width + targetX) * 4;
+      output[target] = buffer.data[source]!;
+      output[target + 1] = buffer.data[source + 1]!;
+      output[target + 2] = buffer.data[source + 2]!;
+      output[target + 3] = buffer.data[source + 3]!;
+    }
+    if ((targetY + 1) % 32 === 0) {
+      await yieldToEventLoop();
+    }
+  }
+  return { data: output, width, height };
+}
+
+function emptyDetectionResult(): InvisibleWatermarkDetectionResult {
   return {
     detected: false,
     confidence: 0,
     algorithm: INVISIBLE_WATERMARK_ALGORITHM,
   };
+}
+
+export function detectInvisibleWatermarkPixels(
+  buffer: InvisibleWatermarkPixelBuffer,
+  options: Pick<DetectInvisibleWatermarkOptions, 'key' | 'strength' | 'search'>
+): InvisibleWatermarkDetectionResult {
+  validatePixelBuffer(buffer);
+  const context = createDetectionContext(options);
+  const search = validateSearch(options.search);
+  const scales =
+    search === 'robust'
+      ? ([1, ...INVISIBLE_WATERMARK_RESIZE_SCALES] as const)
+      : ([1] as const);
+  for (const scale of scales) {
+    const target = scale === 1 ? null : resizeTarget(buffer, scale);
+    if (scale !== 1 && !target) continue;
+    const candidateBuffer = target
+      ? scale < 1
+        ? resizeInvisibleWatermarkPixelsNearest(
+            buffer,
+            target.width,
+            target.height
+          )
+        : resizeInvisibleWatermarkPixels(buffer, target.width, target.height)
+      : buffer;
+    const candidate = target
+      ? detectResizedCandidate(candidateBuffer, context, scale)
+      : detectAtScale(candidateBuffer, context, 'fast', scale);
+    if (candidate) return toPublicDetectionResult(candidate);
+  }
+  if (search === 'robust') {
+    const candidate = detectAtScale(buffer, context, 'robust');
+    if (candidate) return toPublicDetectionResult(candidate);
+  }
+  return emptyDetectionResult();
+}
+
+export async function detectInvisibleWatermarkPixelsAsync(
+  buffer: InvisibleWatermarkPixelBuffer,
+  options: Pick<DetectInvisibleWatermarkOptions, 'key' | 'strength' | 'search'>
+): Promise<InvisibleWatermarkDetectionResult> {
+  validatePixelBuffer(buffer);
+  const context = createDetectionContext(options);
+  const search = validateSearch(options.search);
+  const scales =
+    search === 'robust'
+      ? ([1, ...INVISIBLE_WATERMARK_RESIZE_SCALES] as const)
+      : ([1] as const);
+  for (const scale of scales) {
+    const target = scale === 1 ? null : resizeTarget(buffer, scale);
+    if (scale !== 1 && !target) continue;
+    const candidateBuffer = target
+      ? scale < 1
+        ? await resizeInvisibleWatermarkPixelsNearestAsync(
+            buffer,
+            target.width,
+            target.height
+          )
+        : await resizeInvisibleWatermarkPixelsAsync(
+            buffer,
+            target.width,
+            target.height
+          )
+      : buffer;
+    const candidate = target
+      ? await detectResizedCandidateAsync(candidateBuffer, context, scale)
+      : await detectAtScaleAsync(candidateBuffer, context, 'fast', scale);
+    if (candidate) return toPublicDetectionResult(candidate);
+  }
+  if (search === 'robust') {
+    const candidate = await detectAtScaleAsync(buffer, context, 'robust');
+    if (candidate) return toPublicDetectionResult(candidate);
+  }
+  return emptyDetectionResult();
 }

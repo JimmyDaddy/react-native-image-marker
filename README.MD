@@ -195,7 +195,7 @@ Blob mode is Web-only and does not create object URLs. The caller controls `URL.
 
 ### Embed an invisible trace ID
 
-`embedInvisible` writes a short authenticated locator into the final pixels without adding a visible layer. `detectInvisible` recovers it later with the same key. Use random asset or distribution IDs—not names, email addresses, or other personal data.
+`embedInvisible` writes a short authenticated locator into the final pixels without adding a visible layer. `detectInvisible` recovers it later with the same key. The `*Many` methods create and verify recipient-specific copies while preserving input order. Use random asset or distribution IDs—not names, email addresses, or other personal data.
 
 ```ts
 const key = await loadWatermarkKeyFromTrustedStorage();
@@ -211,7 +211,7 @@ const detection = await Marker.detectInvisible({
   image: { src: { uri: marked } },
   key,
   strength: 'robust',
-  search: 'fast',
+  search: 'robust',
 });
 
 if (detection.detected) {
@@ -219,7 +219,11 @@ if (detection.detected) {
 }
 ```
 
-This Beta feature is designed for distribution tracing, not DRM or proof that an image was never edited. JPEG recompression and mild pixel adjustments are covered by the browser test matrix; aggressive crops, resizing, blur, redrawing, and deliberate removal can destroy the mark. Browser code cannot keep a long-lived secret, so production Web workflows should embed on a trusted server or use tightly scoped keys. See the [invisible watermark guide](https://image-marker.corerobin.com/guides/invisible-watermarks/).
+For distribution batches, call `Marker.embedInvisibleMany(inputs, { concurrency, signal, onProgress })` and `Marker.detectInvisibleMany(inputs)`. Robust detection covers limited crops and tested 0.9×–1.1× resize hypotheses; a successful resized detection reports `scale`.
+
+This Beta feature is designed for distribution tracing, not DRM or proof that an image was never edited. JPEG recompression, mild pixel adjustments, and light resizing are covered by the browser test matrix; aggressive crops, resizing outside the tested range, blur, redrawing, and deliberate removal can destroy the mark. Browser code cannot keep a long-lived secret, so production Web workflows should embed on a trusted server or use tightly scoped keys.
+
+For signed provenance, `Marker.embedInvisibleWithCredentials()` composes the locator with an application-supplied Content Credentials adapter. The optional [Node.js C2PA service example](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/examples/c2pa-service) keeps the official C2PA runtime and signing material outside the core package. See the [invisible watermark guide](https://image-marker.corerobin.com/guides/invisible-watermarks/) for the security and C2PA boundaries.
 
 ## Live Web SDK
 
@@ -246,6 +250,8 @@ Browser Canvas and native graphics stacks share the API and positioning model bu
 | `Marker.createRecipe`    | Reusable, personalized batch workflows           |
 | `Marker.embedInvisible`  | Write an authenticated short trace ID            |
 | `Marker.detectInvisible` | Recover and verify an invisible trace ID         |
+| `Marker.embedInvisibleMany` / `detectInvisibleMany` | Process ordered trace batches       |
+| `Marker.embedInvisibleWithCredentials` | Add a signed provenance adapter workflow    |
 
 Layers render in array order, so later layers draw over earlier layers. `markText` and `markImage` remain supported; use `mark` when mixed layer order matters.
 
@@ -276,6 +282,7 @@ See the full [compatibility guide](https://image-marker.corerobin.com/compatibil
 
 - [React Native example](example) — full Image Marker Lab and architecture status
 - [Expo example](expo-example) — native development-build workflow plus a dedicated React Native Web entry
+- [C2PA service example](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/examples/c2pa-service) — optional Node.js signing and verification adapter
 
 ## Contributing
 

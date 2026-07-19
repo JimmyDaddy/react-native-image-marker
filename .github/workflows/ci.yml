@@ -18,6 +18,7 @@ jobs:
       js: ${{ steps.filter.outputs.js }}
       web: ${{ steps.filter.outputs.web }}
       docs: ${{ steps.filter.outputs.docs }}
+      c2pa: ${{ steps.filter.outputs.c2pa }}
       native: ${{ steps.filter.outputs.native }}
       security: ${{ steps.filter.outputs.security }}
     steps:
@@ -161,6 +162,12 @@ jobs:
                   ".github/workflows/docs-site.yml",
               ]
           )
+          c2pa = any_changed(
+              [
+                  "examples/c2pa-service/**",
+                  ".github/workflows/ci.yml",
+              ]
+          )
           security = any_changed(
               [
                   "package.json",
@@ -171,6 +178,8 @@ jobs:
                   "example/package-lock.json",
                   "expo-example/package.json",
                   "expo-example/package-lock.json",
+                  "examples/c2pa-service/package.json",
+                  "examples/c2pa-service/package-lock.json",
                   "react-native-image-marker.podspec",
                   "android/build.gradle",
                   "android/gradle.properties",
@@ -189,6 +198,7 @@ jobs:
               "js": js,
               "web": web,
               "docs": docs,
+              "c2pa": c2pa,
               "native": android or ios,
               "security": security,
           }
@@ -272,6 +282,38 @@ jobs:
 
       - name: Build package
         run: npm run prepack
+
+  c2pa-service:
+    runs-on: ubuntu-latest
+    name: C2PA Service Example
+    needs: changes
+    if: needs.changes.outputs.c2pa == 'true'
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v7
+
+      - name: Setup node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.22.0'
+          cache: npm
+          cache-dependency-path: examples/c2pa-service/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --prefix examples/c2pa-service
+
+      - name: Typecheck and test
+        run: |
+          npm --prefix examples/c2pa-service run typecheck
+          npm --prefix examples/c2pa-service test
+
+      - name: Audit production dependencies
+        run: npm audit --prefix examples/c2pa-service --omit=dev --audit-level=moderate
+
+      - name: Load official C2PA Node module
+        working-directory: examples/c2pa-service
+        run: |
+          node -e "import('@contentauth/c2pa-node').then(({ Builder, Reader, LocalSigner }) => { if (!Builder || !Reader || !LocalSigner) process.exit(1) })"
 
   docs-site:
     runs-on: ubuntu-latest
@@ -859,6 +901,7 @@ jobs:
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testInvisibleWatermarkFeatureEmbedsAndDetects \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testInvisibleWatermarkMatchesCrossPlatformVectors \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testInvisibleWatermarkEmbedsAndAuthenticatesPixels \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testInvisibleWatermarkRecoversLightImageResizing \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testSharpScaledWatermarkFeatureProducesPreview \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testRotationOutputPolicyFeatureProducesPreview \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testWatermarkOrientationMatchesUprightPixelReference \
@@ -917,6 +960,7 @@ jobs:
         changes,
         security,
         js-check,
+        c2pa-service,
         docs-site,
         web-example,
         expo-current,

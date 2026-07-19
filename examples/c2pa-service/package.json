@@ -1,0 +1,25 @@
+{
+  "name": "react-native-image-marker-c2pa-service-example",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "exports": {
+    "./client-adapter": "./src/client-adapter.mjs"
+  },
+  "scripts": {
+    "start": "node src/server.mjs",
+    "test": "node --test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@contentauth/c2pa-node": "0.6.3",
+    "@contentauth/c2pa-types": "0.7.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.9.3"
+  }
+}

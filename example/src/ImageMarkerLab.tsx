@@ -1093,12 +1093,12 @@ function useViewModel(props: ImageMarkerLabProps) {
 
   async function runInvisibleWatermarkFeature() {
     const key = 'example-only-key-2026';
-    const payload = 'asset-42';
+    const payloads = ['asset-41', 'asset-42'];
     setBackgroundFormat('normal image');
     applyConfig({
       image: assets.bg,
       waterMarkType: 'text',
-      text: payload,
+      text: payloads[0],
       saveFormat: ImageFormat.png,
       backgroundScale: 1,
       backgroundRotate: 0,
@@ -1109,31 +1109,59 @@ function useViewModel(props: ImageMarkerLabProps) {
     setLoading(true);
 
     try {
-      const path = await Marker.embedInvisible({
-        image: { src: assets.bg },
-        payload,
-        key,
-        strength: 'robust',
-        saveFormat: ImageFormat.png,
-        filename: 'invisible-watermark-demo',
+      const embedded = await Marker.embedInvisibleMany(
+        payloads.map((payload) => ({
+          image: { src: assets.bg },
+          payload,
+          key,
+          strength: 'robust',
+          saveFormat: ImageFormat.png,
+          filename: `invisible-watermark-${payload}`,
+        })),
+        { concurrency: 2 }
+      );
+      const paths = embedded.map((result) => {
+        if (result.status !== 'fulfilled') {
+          throw result.status === 'rejected'
+            ? result.reason
+            : new Error('Invisible batch was aborted.');
+        }
+        return result.value;
       });
-      const detection = await Marker.detectInvisible({
-        image: { src: { uri: path } },
-        key,
-        strength: 'robust',
-        search: 'fast',
+      const detected = await Marker.detectInvisibleMany(
+        paths.map((path) => ({
+          image: { src: { uri: path } },
+          key,
+          strength: 'robust',
+          search: 'fast',
+        })),
+        { concurrency: 2 }
+      );
+      const detections = detected.map((result) => {
+        if (result.status !== 'fulfilled') {
+          throw result.status === 'rejected'
+            ? result.reason
+            : new Error('Detection batch was aborted.');
+        }
+        return result.value;
       });
-      if (!detection.detected || detection.payload !== payload) {
-        throw new Error('The embedded payload could not be authenticated.');
+      if (
+        detections.some(
+          (detection, index) =>
+            !detection.detected || detection.payload !== payloads[index]
+        )
+      ) {
+        throw new Error('A batched payload could not be authenticated.');
       }
 
+      const path = paths[0]!;
       setUri(formatResultUri(path, ImageFormat.png));
       setShow(true);
-      setLastRun(`Invisible trace verified · ${payload}`);
+      setLastRun(`Invisible batch verified · ${payloads.length} outputs`);
       setResultContract(
-        `Invisible trace verified: ${detection.payload} · ${Math.round(
-          detection.confidence * 100
-        )}% confidence`
+        `Recipient-specific traces verified in input order: ${detections
+          .map((detection) => detection.payload)
+          .join(', ')}`
       );
       await updateFileSize(path, ImageFormat.png);
     } catch (error) {

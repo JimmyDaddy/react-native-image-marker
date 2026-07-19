@@ -9,6 +9,7 @@ struct InvisibleWatermarkDetection {
     let payload: String?
     let confidence: Double
     let bitErrorRate: Double?
+    let scale: Double?
 
     func json() throws -> String {
         var value: [String: Any] = [
@@ -18,6 +19,7 @@ struct InvisibleWatermarkDetection {
         ]
         if let payload { value["payload"] = payload }
         if let bitErrorRate { value["bitErrorRate"] = bitErrorRate }
+        if let scale { value["scale"] = scale }
         let data = try JSONSerialization.data(withJSONObject: value)
         guard let output = String(data: data, encoding: .utf8) else {
             throw NSError(domain: ErrorDomainEnum.BASE.rawValue, code: 1)
@@ -49,6 +51,7 @@ enum InvisibleWatermark {
         [1, 3, 3, 1],
         [2, 4, 4, 2],
     ]
+    private static let resizeScales = [0.95, 1.05, 0.9, 1.1]
     private static let basisCache: [[[Double]]] = (0...4).map { u in
         (0...4).map { v in createBasis(u: u, v: v) }
     }
@@ -107,6 +110,13 @@ enum InvisibleWatermark {
                     userInfo: [NSLocalizedDescriptionKey: "Failed to create image pixel context"]
                 )
             }
+        }
+
+        init(bytes: [UInt8], width: Int, height: Int, scale: CGFloat) {
+            self.bytes = bytes
+            self.width = width
+            self.height = height
+            self.scale = scale
         }
 
         func image() throws -> UIImage {
@@ -184,6 +194,23 @@ enum InvisibleWatermark {
         try permutation(key: key)
     }
 
+    static func resizeForTesting(image: UIImage, scale: Double) throws -> UIImage {
+        let source = try PixelImage(image: image)
+        let resized = resizePixelsBilinear(
+            source.bytes,
+            width: source.width,
+            height: source.height,
+            targetWidth: Int((Double(source.width) * scale).rounded()),
+            targetHeight: Int((Double(source.height) * scale).rounded())
+        )
+        return try PixelImage(
+            bytes: resized.bytes,
+            width: resized.width,
+            height: resized.height,
+            scale: source.scale
+        ).image()
+    }
+
     private static func validatePixels(_ bytes: [UInt8], width: Int, height: Int) throws {
         guard width >= minimumWidth, height >= minimumHeight else {
             throw NSError(
@@ -251,9 +278,83 @@ enum InvisibleWatermark {
         }
         let order = try permutation(key: key)
         let seed = hmacSeed(keyBytes)
-        let offsets = search == "robust" ? blockSize : 1
-        let phaseXs = search == "robust" ? tileWidth : 1
-        let phaseYs = search == "robust" ? tileHeight : 1
+        let scales = search == "robust" ? [1.0] + resizeScales : [1.0]
+
+        for scale in scales {
+            let candidateImage: PixelImage
+            if scale == 1 {
+                candidateImage = PixelImage(bytes: bytes, width: width, height: height, scale: 1)
+            } else {
+                let targetWidth = Int((Double(width) / scale).rounded())
+                let targetHeight = Int((Double(height) / scale).rounded())
+                if targetWidth < minimumWidth || targetHeight < minimumHeight { continue }
+                candidateImage = scale < 1
+                    ? resizePixelsNearest(
+                        bytes,
+                        width: width,
+                        height: height,
+                        targetWidth: targetWidth,
+                        targetHeight: targetHeight
+                    )
+                    : resizePixelsBilinear(
+                        bytes,
+                        width: width,
+                        height: height,
+                        targetWidth: targetWidth,
+                        targetHeight: targetHeight
+                    )
+            }
+            let deltaFactors = scale == 1 ? [1.0] : [1.0, 0.9]
+            for factor in deltaFactors {
+                if let candidate = detectAtScale(
+                    candidateImage.bytes,
+                    width: candidateImage.width,
+                    height: candidateImage.height,
+                    keyBytes: keyBytes,
+                    permutation: order,
+                    seed: seed,
+                    delta: delta * factor,
+                    robust: false
+                ) {
+                    return detection(candidate, scale: scale)
+                }
+            }
+        }
+
+        if search == "robust", let candidate = detectAtScale(
+            bytes,
+            width: width,
+            height: height,
+            keyBytes: keyBytes,
+            permutation: order,
+            seed: seed,
+            delta: delta,
+            robust: true
+        ) {
+            return detection(candidate)
+        }
+        return InvisibleWatermarkDetection(
+            detected: false,
+            payload: nil,
+            confidence: 0,
+            bitErrorRate: nil,
+            scale: nil
+        )
+    }
+
+    private static func detectAtScale(
+        _ bytes: [UInt8],
+        width: Int,
+        height: Int,
+        keyBytes: [UInt8],
+        permutation: [Int],
+        seed: UInt32,
+        delta: Double,
+        robust: Bool
+    ) -> Candidate? {
+        let offsets = robust ? blockSize : 1
+        let phaseXs = robust ? tileWidth : 1
+        let phaseYs = robust ? tileHeight : 1
         var best: Candidate?
 
         for offsetY in 0..<offsets {
@@ -270,7 +371,7 @@ enum InvisibleWatermark {
                         guard let candidate = decodeCandidate(
                             observations,
                             keyBytes: keyBytes,
-                            permutation: order,
+                            permutation: permutation,
                             seed: seed,
                             delta: delta,
                             phaseX: phaseX,
@@ -278,29 +379,88 @@ enum InvisibleWatermark {
                         ) else { continue }
                         if best == nil || candidate.confidence > best!.confidence {
                             best = candidate
-                            if search == "fast" || candidate.confidence >= 0.98 {
-                                return detection(candidate)
+                            if !robust || candidate.confidence >= 0.98 {
+                                return candidate
                             }
                         }
                     }
                 }
             }
         }
-        return best.map(detection) ?? InvisibleWatermarkDetection(
-            detected: false,
-            payload: nil,
-            confidence: 0,
-            bitErrorRate: nil
-        )
+        return best
     }
 
-    private static func detection(_ candidate: Candidate) -> InvisibleWatermarkDetection {
+    private static func detection(
+        _ candidate: Candidate,
+        scale: Double = 1
+    ) -> InvisibleWatermarkDetection {
         InvisibleWatermarkDetection(
             detected: true,
             payload: candidate.payload,
             confidence: candidate.confidence,
-            bitErrorRate: candidate.bitErrorRate
+            bitErrorRate: candidate.bitErrorRate,
+            scale: scale == 1 ? nil : scale
         )
+    }
+
+    private static func resizePixelsNearest(
+        _ bytes: [UInt8],
+        width: Int,
+        height: Int,
+        targetWidth: Int,
+        targetHeight: Int
+    ) -> PixelImage {
+        var output = [UInt8](repeating: 0, count: targetWidth * targetHeight * 4)
+        for targetY in 0..<targetHeight {
+            let sourceY = min(height - 1, Int(floor((Double(targetY) + 0.5) * Double(height) / Double(targetHeight))))
+            for targetX in 0..<targetWidth {
+                let sourceX = min(width - 1, Int(floor((Double(targetX) + 0.5) * Double(width) / Double(targetWidth))))
+                let source = (sourceY * width + sourceX) * 4
+                let target = (targetY * targetWidth + targetX) * 4
+                output[target..<(target + 4)] = bytes[source..<(source + 4)]
+            }
+        }
+        return PixelImage(bytes: output, width: targetWidth, height: targetHeight, scale: 1)
+    }
+
+    private static func resizePixelsBilinear(
+        _ bytes: [UInt8],
+        width: Int,
+        height: Int,
+        targetWidth: Int,
+        targetHeight: Int
+    ) -> PixelImage {
+        precondition(targetWidth > 0 && targetHeight > 0)
+        var output = [UInt8](repeating: 0, count: targetWidth * targetHeight * 4)
+        let scaleX = Double(width) / Double(targetWidth)
+        let scaleY = Double(height) / Double(targetHeight)
+        for targetY in 0..<targetHeight {
+            let sourceY = (Double(targetY) + 0.5) * scaleY - 0.5
+            let top = max(0, min(height - 1, Int(floor(sourceY))))
+            let bottom = min(height - 1, top + 1)
+            let weightY = max(0, min(1, sourceY - Double(top)))
+            for targetX in 0..<targetWidth {
+                let sourceX = (Double(targetX) + 0.5) * scaleX - 0.5
+                let left = max(0, min(width - 1, Int(floor(sourceX))))
+                let right = min(width - 1, left + 1)
+                let weightX = max(0, min(1, sourceX - Double(left)))
+                let topLeft = (top * width + left) * 4
+                let topRight = (top * width + right) * 4
+                let bottomLeft = (bottom * width + left) * 4
+                let bottomRight = (bottom * width + right) * 4
+                let target = (targetY * targetWidth + targetX) * 4
+                for channel in 0..<4 {
+                    let topValue = Double(bytes[topLeft + channel]) * (1 - weightX)
+                        + Double(bytes[topRight + channel]) * weightX
+                    let bottomValue = Double(bytes[bottomLeft + channel]) * (1 - weightX)
+                        + Double(bytes[bottomRight + channel]) * weightX
+                    output[target + channel] = UInt8(
+                        max(0, min(255, (topValue * (1 - weightY) + bottomValue * weightY).rounded()))
+                    )
+                }
+            }
+        }
+        return PixelImage(bytes: output, width: targetWidth, height: targetHeight, scale: 1)
     }
 
     private static func buildFrame(payload: String, key: String) throws -> [UInt8] {

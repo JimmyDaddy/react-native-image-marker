@@ -147,32 +147,57 @@ function App() {
 
   const runInvisibleTrace = useCallback(async () => {
     const key = 'example-only-key-2026';
-    const payload = 'asset-42';
+    const payloads = ['asset-41', 'asset-42'];
     setIsRendering(true);
     setMessage('Embedding and authenticating an invisible trace…');
     try {
-      const output = await Marker.embedInvisible({
-        image: { src: background },
-        payload,
-        key,
-        strength: 'robust',
-        saveFormat: ImageFormat.png,
-        filename: `image-marker-trace-${Date.now()}`,
+      const embedded = await Marker.embedInvisibleMany(
+        payloads.map((payload) => ({
+          image: { src: background },
+          payload,
+          key,
+          strength: 'robust',
+          saveFormat: ImageFormat.png,
+          filename: `image-marker-trace-${payload}-${Date.now()}`,
+        })),
+        { concurrency: 2 }
+      );
+      const outputs = embedded.map((batchResult) => {
+        if (batchResult.status !== 'fulfilled') {
+          throw batchResult.status === 'rejected'
+            ? batchResult.reason
+            : new Error('Trace batch was aborted.');
+        }
+        return batchResult.value;
       });
-      const detection = await Marker.detectInvisible({
-        image: { src: { uri: output } },
-        key,
-        strength: 'robust',
-        search: 'fast',
+      const detected = await Marker.detectInvisibleMany(
+        outputs.map((output) => ({
+          image: { src: { uri: output } },
+          key,
+          strength: 'robust',
+          search: 'fast',
+        })),
+        { concurrency: 2 }
+      );
+      const detections = detected.map((batchResult) => {
+        if (batchResult.status !== 'fulfilled') {
+          throw batchResult.status === 'rejected'
+            ? batchResult.reason
+            : new Error('Detection batch was aborted.');
+        }
+        return batchResult.value;
       });
-      if (!detection.detected || detection.payload !== payload) {
-        throw new Error('The embedded trace could not be authenticated.');
+      if (
+        detections.some(
+          (detection, index) =>
+            !detection.detected || detection.payload !== payloads[index]
+        )
+      ) {
+        throw new Error('A batched trace could not be authenticated.');
       }
-      setResult(output);
+      setResult(outputs[0]);
       setMessage(
-        `Invisible trace verified: ${detection.payload} · ${Math.round(
-          detection.confidence * 100
-        )}% confidence.`
+        `Verified ${detections.length} recipient-specific invisible traces in input order.`
       );
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Trace failed.');
@@ -261,12 +286,11 @@ function App() {
         </View>
 
         <View style={styles.note}>
-          <Text style={styles.noteTitle}>
-            Invisible trace watermark · v1.10
-          </Text>
+          <Text style={styles.noteTitle}>Invisible trace batch · v1.11</Text>
           <Text style={styles.noteText}>
-            Embed a short locator in the pixels, then authenticate it with the
-            same key. The demo key is public and must not be used in production.
+            Create recipient-specific locators in one ordered batch, then
+            authenticate every result. The public demo key is not for
+            production.
           </Text>
           <Pressable
             disabled={isRendering}

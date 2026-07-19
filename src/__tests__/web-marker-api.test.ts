@@ -196,6 +196,45 @@ describe('WebMarker public API', () => {
     expect(maximumActive).toBe(4);
   });
 
+  it('caps public Web invisible batches at four active renders', async () => {
+    let active = 0;
+    let maximumActive = 0;
+    mockRenderWebCompositionToCanvas.mockImplementation(async () => {
+      active += 1;
+      maximumActive = Math.max(maximumActive, active);
+      await new Promise((resolve) => setTimeout(resolve, 2));
+      active -= 1;
+      const itemPixels = pixels.slice();
+      const context = {
+        getImageData: jest.fn(() => ({
+          data: itemPixels,
+          width: 256,
+          height: 176,
+        })),
+        putImageData: jest.fn(),
+      };
+      return {
+        width: 256,
+        height: 176,
+        getContext: jest.fn(() => context),
+        toDataURL: jest.fn(() => 'data:image/png;base64,invisible'),
+        toBlob: jest.fn(),
+      };
+    });
+
+    const results = await WebMarker.embedInvisibleMany(
+      Array.from({ length: 8 }, (_, index) => ({
+        image: { src: `/background-${index}.jpg` },
+        payload: `asset-${index}`,
+        key: `0123456789abcde${index}`,
+      })),
+      { concurrency: 8 }
+    );
+
+    expect(maximumActive).toBe(4);
+    expect(results.every((result) => result.status === 'fulfilled')).toBe(true);
+  });
+
   it('keeps image arrays before the legacy image compatibility layer', async () => {
     const options: ImageMarkOptions = {
       backgroundImage: { src: '/background.jpg' },

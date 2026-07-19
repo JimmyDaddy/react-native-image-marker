@@ -29,6 +29,7 @@ const strings = isZh
         '位置与旋转',
         '变量与条件 Recipe',
         '隐形追踪水印',
+        'Content Credentials 适配器',
         'PNG、JPEG 与 Web Blob',
       ],
       webBadge: '实时预览',
@@ -61,7 +62,7 @@ const strings = isZh
         { id: 'opacity', title: '半透明文字', meta: '整个文字图层 40%', version: 'v1.8' },
         { id: 'blend', title: '自然融合', meta: 'Screen 文字 + Multiply Logo', version: 'v1.9' },
         { id: 'batch', title: '个性化批量 Recipe', meta: '文件名变量、进度与 Blob', version: 'v1.9' },
-        { id: 'invisible', title: '隐形追踪', meta: '嵌入短 ID 并验证', version: 'v1.10' },
+        { id: 'invisible', title: '隐形追踪', meta: '批量写入，并验证轻度缩放', version: 'v1.11' },
       ],
       textLayer: '文字设置',
       text: '文字内容',
@@ -127,7 +128,7 @@ const strings = isZh
       batchFailed: '批量处理失败',
       batchResults: '处理结果',
       downloadResult: '保存',
-      invisibleEyebrow: 'v1.10 · 隐形追踪水印 Beta',
+      invisibleEyebrow: 'v1.11 · 批量隐形追踪',
       invisibleTitle: '画面看不出变化，也能找回短 ID。',
       invisibleDescription:
         '把短 locator 写入图片像素，再用相同密钥验证。适合素材分发追踪；它不是 DRM，也不能证明图片从未被修改。',
@@ -135,6 +136,8 @@ const strings = isZh
       invisibleKey: '演示密钥',
       invisibleStrength: '强度',
       invisibleStrengths: ['轻微', '均衡', '耐压缩'],
+      invisibleTransform: '验证哪种图片？',
+      invisibleTransforms: ['原始结果', '缩小到 0.9×', '放大到 1.1×'],
       invisibleEmbed: '嵌入并预览',
       invisibleDetect: '验证当前结果',
       invisibleReady: '等待嵌入',
@@ -145,6 +148,11 @@ const strings = isZh
       invisibleNotDetected: '未找到可验证的追踪 ID',
       invisibleWarning:
         '页面中的密钥公开可见，只能用于演示。生产环境请使用随机 locator，并在可信服务端或受控客户端中管理密钥。',
+      invisibleBatchCode: '批量分发代码',
+      invisibleCredentialsCode: '组合签名内容凭证',
+      invisibleCredentialsNote:
+        '此处只展示工作流，不会把图片发送到本站服务。签名必须交给你自己的可信服务端。',
+      invisibleCredentialsLink: '查看 C2PA 服务示例',
       differencesTitle: 'Web 与原生输出有什么不同？',
       differences: [
         ['保存结果', 'Web 返回可直接预览和保存的图片地址；iOS 和 Android 返回临时文件路径。'],
@@ -182,6 +190,7 @@ const strings = isZh
         'Position and rotation',
         'Variable and conditional Recipe',
         'Invisible trace watermark',
+        'Content Credentials adapter',
         'PNG, JPEG, and Web Blob',
       ],
       webBadge: 'Live preview',
@@ -214,7 +223,7 @@ const strings = isZh
         { id: 'opacity', title: 'Translucent text', meta: 'Whole text layer at 40%', version: 'v1.8' },
         { id: 'blend', title: 'Natural compositing', meta: 'Screen text + Multiply logo', version: 'v1.9' },
         { id: 'batch', title: 'Personalized batch Recipe', meta: 'Filename variables, progress, and Blob', version: 'v1.9' },
-        { id: 'invisible', title: 'Invisible trace', meta: 'Embed and verify a short ID', version: 'v1.10' },
+        { id: 'invisible', title: 'Invisible trace', meta: 'Batch locators and verify light resizing', version: 'v1.11' },
       ],
       textLayer: 'Text settings',
       text: 'Watermark text',
@@ -280,7 +289,7 @@ const strings = isZh
       batchFailed: 'Batch failed',
       batchResults: 'Batch results',
       downloadResult: 'Save',
-      invisibleEyebrow: 'v1.10 · Invisible trace watermark Beta',
+      invisibleEyebrow: 'v1.11 · Batched invisible traces',
       invisibleTitle: 'Keep the image clean. Recover a short ID later.',
       invisibleDescription:
         'Write a short locator into the pixels, then authenticate it with the same key. Use it for distribution tracing—not as DRM or proof that an image was never edited.',
@@ -288,6 +297,8 @@ const strings = isZh
       invisibleKey: 'Demo key',
       invisibleStrength: 'Strength',
       invisibleStrengths: ['Subtle', 'Balanced', 'Compression resistant'],
+      invisibleTransform: 'Which image should be verified?',
+      invisibleTransforms: ['Original result', 'Resize to 0.9×', 'Resize to 1.1×'],
       invisibleEmbed: 'Embed and preview',
       invisibleDetect: 'Verify current result',
       invisibleReady: 'Waiting to embed',
@@ -298,6 +309,11 @@ const strings = isZh
       invisibleNotDetected: 'No authenticated trace ID found',
       invisibleWarning:
         'This page exposes its demo key, so do not copy it into production. Use random locators and manage keys on a trusted server or controlled client.',
+      invisibleBatchCode: 'Batch distribution code',
+      invisibleCredentialsCode: 'Compose signed Content Credentials',
+      invisibleCredentialsNote:
+        'This is a workflow example only. The playground never sends images to a signing service; use your own trusted server.',
+      invisibleCredentialsLink: 'Open the C2PA service example',
       differencesTitle: 'How does Web output differ from native?',
       differences: [
         ['Saved result', 'Web returns an image URL you can preview or save. iOS and Android return a temporary file path.'],
@@ -334,6 +350,10 @@ const blendModes = [
 const invisibleStrengths = ['subtle', 'balanced', 'robust'].map((value, index) => ({
   value,
   label: strings.invisibleStrengths[index]!,
+}));
+const invisibleTransforms = ['1', '0.9', '1.1'].map((value, index) => ({
+  value,
+  label: strings.invisibleTransforms[index]!,
 }));
 ---
 
@@ -787,6 +807,13 @@ const invisibleStrengths = ['subtle', 'balanced', 'robust'].map((value, index) =
         options={invisibleStrengths}
         value="robust"
       />
+      <CustomSelect
+        id={`${idPrefix}-invisible-transform`}
+        label={strings.invisibleTransform}
+        name="invisible-transform"
+        options={invisibleTransforms}
+        value="1"
+      />
     </div>
     <div class="invisible-actions">
       <button class="primary-button" type="button" data-invisible-embed>
@@ -797,6 +824,43 @@ const invisibleStrengths = ['subtle', 'balanced', 'robust'].map((value, index) =
       </button>
     </div>
     <p class="invisible-warning">{strings.invisibleWarning}</p>
+    <details class="invisible-code">
+      <summary>{strings.invisibleBatchCode}</summary>
+      <pre><code>{`const embedded = await Marker.embedInvisibleMany(
+  recipients.map((recipient) => ({
+    image: { src: source },
+    payload: recipient.locator,
+    key,
+    strength: 'robust',
+  })),
+  { concurrency: 4, signal, onProgress }
+);
+
+const verified = await Marker.detectInvisibleMany(
+  embedded.flatMap((result) =>
+    result.status === 'fulfilled'
+      ? [{ image: { src: result.value }, key, search: 'robust' }]
+      : []
+  )
+);`}</code></pre>
+    </details>
+    <details class="invisible-code">
+      <summary>{strings.invisibleCredentialsCode}</summary>
+      <p>{strings.invisibleCredentialsNote}</p>
+      <pre><code>{`const signed = await Marker.embedInvisibleWithCredentials({
+  watermark: { image: { src: source }, payload: locator, key },
+  claim: { title: 'distribution-copy.png', format: 'image/png' },
+  adapter: yourServerAdapter,
+});
+
+const credentials = await Marker.verifyContentCredentials({
+  image: signed.signedImage,
+  adapter: yourServerAdapter,
+});`}</code></pre>
+      <a href="https://github.com/JimmyDaddy/react-native-image-marker/tree/master/examples/c2pa-service">
+        {strings.invisibleCredentialsLink}
+      </a>
+    </details>
   </section>
 
   <section
@@ -1059,6 +1123,7 @@ const invisibleStrengths = ['subtle', 'balanced', 'robust'].map((value, index) =
     const invisiblePayload = asElement<HTMLInputElement>(root, '[data-invisible-payload]');
     const invisibleKey = asElement<HTMLInputElement>(root, '[data-invisible-key]');
     const invisibleStrength = asElement<HTMLSelectElement>(root, '[data-invisible-strength]');
+    const invisibleTransform = asElement<HTMLSelectElement>(root, '[data-invisible-transform]');
     const invisibleStatus = asElement<HTMLElement>(root, '[data-invisible-status]');
     const invisibleEmbed = asElement<HTMLButtonElement>(root, '[data-invisible-embed]');
     const invisibleDetect = asElement<HTMLButtonElement>(root, '[data-invisible-detect]');
@@ -1566,6 +1631,20 @@ ${layers}
       download.removeAttribute('aria-disabled');
     };
 
+    const resizeInvisibleResult = async (result: string, scale: number) => {
+      if (scale === 1) return result;
+      const image = new Image();
+      image.src = result;
+      await image.decode();
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(image.naturalWidth * scale);
+      canvas.height = Math.round(image.naturalHeight * scale);
+      const context = canvas.getContext('2d');
+      if (!context) throw new Error('Canvas 2D is unavailable.');
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      return canvas.toDataURL('image/png');
+    };
+
     const runInvisibleEmbed = async () => {
       setInvisibleBusy(true);
       invisibleStatus.textContent = root.dataset.invisibleEmbedding ?? '';
@@ -1601,14 +1680,19 @@ ${layers}
       invisibleStatus.textContent = root.dataset.invisibleDetecting ?? '';
       try {
         const sdk = await sdkPromise;
+        const inspected = await resizeInvisibleResult(
+          invisibleResult,
+          Number(invisibleTransform.value)
+        );
+        await showInvisibleResult(inspected);
         const detection = await sdk.default.detectInvisible({
-          image: { src: invisibleResult },
+          image: { src: inspected },
           key: invisibleKey.value,
           strength: invisibleStrength.value as 'subtle' | 'balanced' | 'robust',
-          search: 'fast',
+          search: 'robust',
         });
         invisibleStatus.textContent = detection.detected
-          ? `${root.dataset.invisibleDetected ?? ''}: ${detection.payload ?? '—'} · ${Math.round(detection.confidence * 100)}%`
+          ? `${root.dataset.invisibleDetected ?? ''}: ${detection.payload ?? '—'} · ${Math.round(detection.confidence * 100)}%${detection.scale ? ` · ${detection.scale}×` : ''}`
           : root.dataset.invisibleNotDetected ?? '';
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
@@ -1873,7 +1957,7 @@ ${layers}
     window.addEventListener('pagehide', clearBatchResults, { once: true });
     invisibleEmbed.addEventListener('click', () => void runInvisibleEmbed());
     invisibleDetect.addEventListener('click', () => void runInvisibleDetect());
-    [invisiblePayload, invisibleKey, invisibleStrength].forEach((input) => {
+    [invisiblePayload, invisibleKey, invisibleStrength, invisibleTransform].forEach((input) => {
       input.addEventListener('input', () => {
         invisibleStatus.textContent = root.dataset.invisibleReady ?? '';
       });
@@ -1903,6 +1987,7 @@ ${layers}
       invisiblePayload.value = 'asset-42';
       invisibleKey.value = 'example-only-key-2026';
       setCustomSelectValue(invisibleStrength, 'robust');
+      setCustomSelectValue(invisibleTransform, '1');
       invisibleStatus.textContent = root.dataset.invisibleReady ?? '';
       updateStrokeOptions();
       scheduleRender();
@@ -2886,7 +2971,7 @@ ${layers}
 
   .invisible-controls {
     display: grid;
-    grid-template-columns: minmax(10rem, 1fr) minmax(12rem, 1.2fr) minmax(9rem, 0.72fr);
+    grid-template-columns: minmax(10rem, 1fr) minmax(12rem, 1.2fr) repeat(2, minmax(9rem, 0.72fr));
     align-items: end;
     gap: 0.75rem;
     margin-top: 1rem;
@@ -2910,6 +2995,44 @@ ${layers}
     color: var(--marker-muted);
     font-size: 0.66rem;
     line-height: 1.5;
+  }
+
+  .invisible-code {
+    margin-top: 0.75rem;
+    color: var(--marker-muted);
+    font-size: 0.68rem;
+  }
+
+  .invisible-code summary {
+    width: fit-content;
+    cursor: pointer;
+    color: var(--marker-blue);
+    font-weight: 700;
+  }
+
+  .invisible-code pre {
+    overflow-x: auto;
+    margin: 0.6rem 0 0;
+    padding: 0.85rem;
+    border: 1px solid var(--playground-line);
+    border-radius: 0.7rem;
+    background: var(--playground-panel-raised);
+    color: var(--marker-ink);
+    font-size: 0.66rem;
+    line-height: 1.55;
+  }
+
+  .invisible-code p {
+    margin: 0.7rem 0;
+    color: var(--marker-muted);
+    font-weight: 500;
+    line-height: 1.55;
+  }
+
+  .invisible-code a {
+    display: inline-flex;
+    margin-top: 0.65rem;
+    color: var(--marker-blue);
   }
 
   .batch-panel {
@@ -3179,6 +3302,12 @@ ${layers}
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
     border: 0;
+  }
+
+  @media (max-width: 72rem) {
+    .invisible-controls {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
   }
 
   @media (max-width: 52rem) {

@@ -32,7 +32,7 @@ const result = await Marker.detectInvisible({
   image: { src: { uri: output } },
   key,
   strength: 'robust',
-  search: 'fast',
+  search: 'robust',
 });
 
 if (result.detected) {
@@ -41,6 +41,46 @@ if (result.detected) {
 ```
 
 Native embedding returns a cache-file path; Web returns a data URL. Detection does not create a file.
+
+When `robust` recovers a resized image, `result.scale` reports the successful
+0.9, 0.95, 1.05, or 1.1 hypothesis. It is a detector estimate, not a precise
+measurement.
+
+## Distribute recipient-specific copies in a batch
+
+Each item can use a different locator, key, image, and output format. Results
+stay in input order; one failure does not reject the whole batch. Web runs at
+most four items concurrently, while native platforms stay serial to limit peak
+memory.
+
+```ts
+const controller = new AbortController();
+const outputs = await Marker.embedInvisibleMany(
+  recipients.map((recipient) => ({
+    image: { src: source },
+    payload: recipient.locator,
+    key,
+    strength: 'robust',
+    saveFormat: ImageFormat.png,
+  })),
+  {
+    concurrency: 4,
+    signal: controller.signal,
+    onProgress: ({ settled, total }) => console.log(`${settled}/${total}`),
+  }
+);
+
+const verified = await Marker.detectInvisibleMany(
+  outputs.flatMap((output) =>
+    output.status === 'fulfilled'
+      ? [{ image: { src: output.value }, key, search: 'robust' }]
+      : []
+  )
+);
+```
+
+Calling `abort()` stops new items from starting. Work already handed to Canvas
+or a native decoder finishes normally and still reports its result.
 
 ## Payload and key rules
 
@@ -59,15 +99,58 @@ Browser scripts and extensions can read any key available to page JavaScript. Fo
 | `balanced`         | General photos and direct output                 | Default visual/robustness balance |
 | `robust`           | The image will be recompressed                   | Strongest pixel change            |
 | `search: 'fast'`   | Original dimensions and block grid are preserved | Low detection cost                |
-| `search: 'robust'` | A limited crop may have shifted the grid         | Much more CPU work                |
+| `search: 'robust'` | Limited crop or 0.9×–1.1× resizing is expected   | More CPU and temporary memory     |
 
-Use the same `strength` for embedding and detection. `robust` search can recover some crops, but it does not currently compensate for resizing.
+Use the same `strength` for embedding and detection. On Web, detection yields
+to the event loop while collecting blocks and searching candidates, so the page
+can keep responding even though the total CPU work remains substantial.
 
 ## What survives
 
-The project test matrix covers direct PNG output, JPEG re-encoding at quality 90/75/60, mild brightness and contrast changes, wrong-key rejection, and limited crop recovery. Real images and encoders vary, so validate your own delivery pipeline before relying on a threshold.
+The project test matrix covers direct PNG output, JPEG re-encoding at quality
+90/75/60, mild brightness and contrast changes, wrong-key rejection, limited
+crop recovery, and 0.9/0.95/1.05/1.1 resizing across six photographs in
+Chromium, Firefox, and WebKit. JPEG 75 re-encoding followed by light resizing
+is covered too.
+Real images and encoders vary, so validate your own delivery pipeline before
+relying on a threshold.
 
-Heavy blur, aggressive resizing, large crops, painting over the image, generative edits, screenshots, and print-camera workflows are not stable guarantees in v1.10. Detection returns `detected: false` instead of throwing when no authenticated frame is found.
+Heavy blur, resizing outside the tested range, large crops, painting over the
+image, generative edits, screenshots, and print-camera workflows are not stable
+guarantees. Detection returns `detected: false` instead of throwing when no
+authenticated frame is found.
+
+## Add a signed Content Credential
+
+The core package defines a small `ContentCredentialsAdapter` rather than
+shipping a C2PA runtime or signing key. The composition order is fixed: embed
+the locator first, then sign the resulting pixels.
+
+```ts
+const signed = await Marker.embedInvisibleWithCredentials({
+  watermark: {
+    image: { src: source },
+    payload: 'asset-42',
+    key,
+    strength: 'robust',
+    saveFormat: ImageFormat.png,
+  },
+  claim: { title: 'asset-42.png', format: 'image/png' },
+  adapter,
+});
+
+const credentials = await Marker.verifyContentCredentials({
+  image: signed.signedImage,
+  adapter,
+});
+```
+
+The independent [Node.js C2PA service example](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/examples/c2pa-service)
+uses the official `@contentauth/c2pa-node` package and injects its certificate
+and private key from the environment. `dct-qim-v1` is not registered in the
+C2PA Soft Binding Algorithm List, so the example uses a normal hard binding and
+a private assertion containing only the algorithm and `SHA-256(locator)`. It
+does not claim `c2pa.watermarked` or standard soft-binding compatibility.
 
 ## Recommended server workflow
 
@@ -77,4 +160,6 @@ Heavy blur, aggressive resizing, large crops, painting over the image, generativ
 4. Keep the original and marked output long enough to investigate false negatives.
 5. When detecting, apply your own confidence policy and confirm the locator against the server record.
 
-The frame format and threat model are specified in [RFC 0003 on GitHub](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/docs/rfcs/0003-v1.10-invisible-trace-watermarks.md).
+The frame format and threat model are specified in [RFC 0003](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/docs/rfcs/0003-v1.10-invisible-trace-watermarks.md).
+Batching, resize recovery, responsive Web detection, and Content Credentials
+integration are specified in [RFC 0004](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/docs/rfcs/0004-v1.11-durable-provenance-workflows.md).
