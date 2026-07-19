@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.11.0](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.10.1...v1.11.0) (2026-07-19)
+
+### Features
+
+* **watermark:** add durable provenance workflows ([7887786](https://github.com/JimmyDaddy/react-native-image-marker/commit/7887786f21d131f685b8a2053028e30b6235b746))
+
 ## [1.10.1](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.10.0...v1.10.1) (2026-07-19)
 
 ### Bug Fixes
