@@ -264,6 +264,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Verify release notes generation
+        run: npm run check:release-notes
+
       - name: Test
         run: npm test -- --coverage --runInBand
 
