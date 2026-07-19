@@ -117,6 +117,46 @@ final class ImageMarkerExampleUITests: XCTestCase {
     // Put teardown code here. This method is called after the invocation of each test method in the class.
   }
 
+  func testInvisibleWatermarkMatchesCrossPlatformVectors() throws {
+    let key = "0123456789abcdef"
+    let frame = try InvisibleWatermark.frameForTesting(
+      payload: "asset-42",
+      key: key
+    )
+    XCTAssertEqual(
+      frame.map { String(format: "%02x", $0) }.joined(),
+      "494d010861737365742d343200000000df3d807417f6"
+    )
+    XCTAssertEqual(
+      Array(try InvisibleWatermark.permutationForTesting(key: key).prefix(8)),
+      [114, 47, 36, 153, 1, 60, 116, 140]
+    )
+  }
+
+  func testInvisibleWatermarkEmbedsAndAuthenticatesPixels() throws {
+    let image = makeSolidImage(
+      size: CGSize(width: 256, height: 176),
+      color: UIColor(red: 0.35, green: 0.48, blue: 0.62, alpha: 1)
+    )
+    let key = "0123456789abcdef"
+    let marked = try InvisibleWatermark.embed(
+      image: image,
+      payload: "asset-42",
+      key: key,
+      strength: "balanced"
+    )
+    let result = try InvisibleWatermark.detect(
+      image: marked,
+      key: key,
+      strength: "balanced",
+      search: "fast"
+    )
+
+    XCTAssertTrue(result.detected, "Expected a valid detection, got confidence \(result.confidence)")
+    XCTAssertEqual(result.payload, "asset-42")
+    XCTAssertGreaterThan(result.confidence, 0.8)
+  }
+
   func testApp() throws {
     let app = XCUIApplication()
     app.launch()
@@ -127,6 +167,7 @@ final class ImageMarkerExampleUITests: XCTestCase {
     XCTAssertTrue(featureButton(in: app, identifier: "feature-mixed-watermark", label: "Text + image watermark").exists)
     XCTAssertTrue(featureButton(in: app, identifier: "feature-tiled-text", label: "Tiled text + outline").exists)
     XCTAssertTrue(featureButton(in: app, identifier: "feature-tiled-logo", label: "Tiled logo grid").exists)
+    XCTAssertTrue(featureButton(in: app, identifier: "feature-invisible-watermark", label: "Invisible trace").exists)
     XCTAssertTrue(featureButton(in: app, identifier: "feature-sharp-scaled-watermark", label: "Sharp scaled watermark").exists)
     XCTAssertTrue(featureButton(in: app, identifier: "feature-orientation-normalization", label: "Orientation normalization").exists)
     XCTAssertTrue(featureButton(in: app, identifier: "feature-rotation-output-policy", label: "Rotation output policy").exists)
@@ -170,6 +211,26 @@ final class ImageMarkerExampleUITests: XCTestCase {
 
     XCTAssertTrue(app.staticTexts["Tiled text + outline"].waitForExistence(timeout: 5))
     XCTAssertTrue(app.otherElements["result-preview-ready"].waitForExistence(timeout: 15))
+  }
+
+  func testInvisibleWatermarkFeatureEmbedsAndDetects() throws {
+    let app = XCUIApplication()
+    app.launch()
+
+    XCTAssertTrue(app.staticTexts["Image Marker Lab"].waitForExistence(timeout: 45))
+    let featureCard = featureButton(
+      in: app,
+      identifier: "feature-invisible-watermark",
+      label: "Invisible trace"
+    )
+    XCTAssertTrue(featureCard.exists)
+    featureCard.tap()
+
+    XCTAssertTrue(app.otherElements["result-preview-ready"].waitForExistence(timeout: 30))
+    let verified = app.staticTexts.matching(
+      NSPredicate(format: "label BEGINSWITH %@", "Invisible trace verified: asset-42")
+    ).firstMatch
+    XCTAssertTrue(verified.waitForExistence(timeout: 10))
   }
 
   func testSharpScaledWatermarkFeatureProducesPreview() throws {

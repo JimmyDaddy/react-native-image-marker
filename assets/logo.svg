@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">React Native Image Marker logo</title>
+  <desc id="desc">A blue image frame with a coral registration target at its lower-right corner.</desc>
+  <defs>
+    <mask id="frame-window">
+      <rect width="512" height="512" fill="white"/>
+      <rect x="112" y="112" width="288" height="256" rx="28" fill="black"/>
+    </mask>
+    <mask id="target-gap">
+      <rect width="512" height="512" fill="white"/>
+      <circle cx="386" cy="386" r="94" fill="black"/>
+    </mask>
+    <mask id="target-rings">
+      <rect width="512" height="512" fill="black"/>
+      <circle cx="386" cy="386" r="76" fill="white"/>
+      <circle cx="386" cy="386" r="42" fill="black"/>
+      <circle cx="386" cy="386" r="21" fill="white"/>
+    </mask>
+  </defs>
+
+  <g fill="#3156d9" mask="url(#target-gap)">
+    <rect x="64" y="64" width="384" height="384" rx="64" mask="url(#frame-window)"/>
+    <circle cx="166" cy="184" r="31"/>
+    <path d="M88 376 181 281a14 14 0 0 1 20 0l43 44 76-82a14 14 0 0 1 21 0l83 88v93H88Z"/>
+  </g>
+
+  <rect width="512" height="512" fill="#e95e70" mask="url(#target-rings)"/>
+</svg>

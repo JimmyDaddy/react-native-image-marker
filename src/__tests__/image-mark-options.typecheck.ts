@@ -10,6 +10,20 @@ import Marker, {
 
 export const photographicBlendMode: BlendMode = 'overlay';
 
+export const invisibleOutput: Promise<string> = Marker.embedInvisible({
+  image: { src: 'file:///tmp/background.png' },
+  payload: 'asset-42',
+  key: '0123456789abcdef',
+  strength: 'balanced',
+  saveFormat: ImageFormat.png,
+});
+
+export const invisibleDetection = Marker.detectInvisible({
+  image: { src: 'file:///tmp/marked.png' },
+  key: '0123456789abcdef',
+  search: 'robust',
+});
+
 // The deprecated single-watermark shape remains source-compatible for users
 // that have not migrated to watermarkImages yet.
 export const legacyWatermarkOnly: ImageMarkOptions = {

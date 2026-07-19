@@ -207,6 +207,44 @@ function App() {
     }
   }, [extension, fontSize, format, layoutMode, position, text]);
 
+  const runInvisibleTrace = useCallback(async () => {
+    const request = ++renderRequest.current;
+    const key = 'example-only-key-2026';
+    const payload = 'asset-42';
+    setIsRendering(true);
+    setStatus('Embedding and authenticating an invisible trace in Canvas…');
+    try {
+      const dataUrl = await Marker.embedInvisible({
+        image: { src: backgroundUri },
+        payload,
+        key,
+        strength: 'robust',
+        saveFormat: ImageFormat.png,
+      });
+      const detection = await Marker.detectInvisible({
+        image: { src: dataUrl },
+        key,
+        strength: 'robust',
+        search: 'fast',
+      });
+      if (!detection.detected || detection.payload !== payload) {
+        throw new Error('The embedded trace could not be authenticated.');
+      }
+      if (request !== renderRequest.current) return;
+      setResult({ dataUrl, extension: 'png' });
+      setStatus(
+        `Invisible trace verified: ${detection.payload} · ${Math.round(
+          detection.confidence * 100
+        )}% confidence. Demo key only.`
+      );
+    } catch (error) {
+      if (request !== renderRequest.current) return;
+      setStatus(error instanceof Error ? error.message : 'Trace failed.');
+    } finally {
+      if (request === renderRequest.current) setIsRendering(false);
+    }
+  }, []);
+
   return (
     <SafeAreaView style={styles.page}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -460,6 +498,20 @@ function App() {
                   Render with Marker.mark()
                 </Text>
               )}
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              disabled={isRendering}
+              onPress={runInvisibleTrace}
+              style={({ pressed }) => [
+                styles.traceButton,
+                isRendering && styles.disabledButton,
+                pressed && !isRendering && styles.pressedButton,
+              ]}
+            >
+              <Text style={styles.traceButtonText}>
+                Embed + verify invisible trace
+              </Text>
             </Pressable>
             <Text accessibilityLiveRegion="polite" style={styles.statusText}>
               {status}
@@ -756,6 +808,22 @@ const styles = StyleSheet.create({
     backgroundColor: '#566BEA',
     marginTop: 22,
     paddingHorizontal: 18,
+  },
+  traceButton: {
+    minHeight: 46,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: '#3A4C8D',
+    borderRadius: 12,
+    backgroundColor: '#18234D',
+  },
+  traceButtonText: {
+    color: '#C8D0FF',
+    fontSize: 14,
+    fontWeight: '700',
   },
   primaryButtonText: {
     color: '#FFFFFF',

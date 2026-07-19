@@ -1,9 +1,9 @@
 <div align="center">
   <a href="https://image-marker.corerobin.com">
-    <img src="assets/icon.png" alt="React Native Image Marker" width="128" />
+    <img src="assets/logo.svg" alt="React Native Image Marker" width="128" />
   </a>
   <h1>React Native Image Marker</h1>
-  <p>Text, logos, repeating layouts, natural blend modes, and personalized batches for iOS, Android, and Web.</p>
+  <p>Visible watermarks, repeating layouts, natural blend modes, personalized batches, and invisible trace IDs for iOS, Android, and Web.</p>
 
 [![npm version](https://img.shields.io/npm/v/react-native-image-marker.svg?label=npm)](https://www.npmjs.com/package/react-native-image-marker)
 
@@ -193,9 +193,37 @@ const blob = await blobRecipe.apply({ backgroundImage: { src: file } });
 
 Blob mode is Web-only and does not create object URLs. The caller controls `URL.createObjectURL()` and `URL.revokeObjectURL()` when a preview is needed.
 
+### Embed an invisible trace ID
+
+`embedInvisible` writes a short authenticated locator into the final pixels without adding a visible layer. `detectInvisible` recovers it later with the same key. Use random asset or distribution IDs—not names, email addresses, or other personal data.
+
+```ts
+const key = await loadWatermarkKeyFromTrustedStorage();
+const marked = await Marker.embedInvisible({
+  image: { src: require('./images/background.jpg') },
+  payload: 'asset-42', // 1–12 UTF-8 bytes
+  key, // at least 16 UTF-8 bytes
+  strength: 'robust',
+  saveFormat: ImageFormat.png,
+});
+
+const detection = await Marker.detectInvisible({
+  image: { src: { uri: marked } },
+  key,
+  strength: 'robust',
+  search: 'fast',
+});
+
+if (detection.detected) {
+  console.log(detection.payload, detection.confidence);
+}
+```
+
+This Beta feature is designed for distribution tracing, not DRM or proof that an image was never edited. JPEG recompression and mild pixel adjustments are covered by the browser test matrix; aggressive crops, resizing, blur, redrawing, and deliberate removal can destroy the mark. Browser code cannot keep a long-lived secret, so production Web workflows should embed on a trusted server or use tightly scoped keys. See the [invisible watermark guide](https://image-marker.corerobin.com/guides/invisible-watermarks/).
+
 ## Live Web SDK
 
-[Try the live playground](https://image-marker.corerobin.com/playground/) to run the same `Marker.markText`, `Marker.markImage`, and `Marker.mark` API entirely in your browser. Images stay local.
+[Try the live playground](https://image-marker.corerobin.com/playground/) to compose visible layers or embed and verify an invisible trace ID entirely in your browser. Images stay local.
 
 The Web renderer accepts URL strings, `{ uri }`, data URLs, `Blob`, `File`, and loaded browser images. In Expo Web, resolve a numeric bundled asset first:
 
@@ -210,11 +238,14 @@ Browser Canvas and native graphics stacks share the API and positioning model bu
 
 ## Choose an API
 
-| Method             | Use it for                                       |
-| ------------------ | ------------------------------------------------ |
-| `Marker.markText`  | One or many text layers                          |
-| `Marker.markImage` | One or many logo, icon, or image layers          |
-| `Marker.mark`      | Ordered text and image layers in one render pass |
+| Method                   | Use it for                                       |
+| ------------------------ | ------------------------------------------------ |
+| `Marker.markText`        | One or many text layers                          |
+| `Marker.markImage`       | One or many logo, icon, or image layers          |
+| `Marker.mark`            | Ordered text and image layers in one render pass |
+| `Marker.createRecipe`    | Reusable, personalized batch workflows           |
+| `Marker.embedInvisible`  | Write an authenticated short trace ID            |
+| `Marker.detectInvisible` | Recover and verify an invisible trace ID         |
 
 Layers render in array order, so later layers draw over earlier layers. `markText` and `markImage` remain supported; use `mark` when mixed layer order matters.
 
@@ -237,6 +268,7 @@ See the full [compatibility guide](https://image-marker.corerobin.com/compatibil
 - [Live playground](https://image-marker.corerobin.com/playground/)
 - [Guides](https://image-marker.corerobin.com/guides/choose-an-api/)
 - [Visual cookbook](https://image-marker.corerobin.com/cookbook/)
+- [Invisible trace watermarks](https://image-marker.corerobin.com/guides/invisible-watermarks/)
 - [Troubleshooting](https://image-marker.corerobin.com/troubleshooting/)
 - [API reference](https://image-marker.corerobin.com/api/)
 

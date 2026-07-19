@@ -5,6 +5,7 @@ const mockRenderWebCompositionToCanvas = jest.fn<
   Promise<{
     width: number;
     height: number;
+    getContext: jest.Mock;
     toDataURL: jest.Mock;
     toBlob: jest.Mock;
   }>,
@@ -21,18 +22,84 @@ jest.mock('../web/renderer', () => ({
 const WebMarker = require('../web').default as typeof import('../web').default;
 
 describe('WebMarker public API', () => {
+  let pixels: Uint8ClampedArray;
+  let pixelContext: {
+    getImageData: jest.Mock;
+    putImageData: jest.Mock;
+  };
+
   beforeEach(() => {
     mockRenderWebComposition.mockReset();
     mockRenderWebComposition.mockResolvedValue('data:image/png;base64,result');
     mockRenderWebCompositionToCanvas.mockReset();
+    pixels = new Uint8ClampedArray(256 * 176 * 4);
+    for (let index = 0; index < 256 * 176; index += 1) {
+      const value = 80 + (index % 96);
+      pixels[index * 4] = value;
+      pixels[index * 4 + 1] = value + 20;
+      pixels[index * 4 + 2] = value + 40;
+      pixels[index * 4 + 3] = 255;
+    }
+    pixelContext = {
+      getImageData: jest.fn(() => ({ data: pixels, width: 256, height: 176 })),
+      putImageData: jest.fn(),
+    };
     mockRenderWebCompositionToCanvas.mockResolvedValue({
-      width: 100,
-      height: 50,
-      toDataURL: jest.fn(),
+      width: 256,
+      height: 176,
+      getContext: jest.fn(() => pixelContext),
+      toDataURL: jest.fn(() => 'data:image/png;base64,invisible'),
       toBlob: jest.fn((callback, type = 'image/png') =>
         callback(new Blob(['blob-result'], { type }))
       ),
     });
+  });
+
+  it('embeds and detects an authenticated invisible locator in browser pixels', async () => {
+    const options = {
+      image: { src: '/background.jpg' },
+      payload: 'asset-42',
+      key: '0123456789abcdef',
+      saveFormat: 'png' as const,
+    };
+
+    await expect(WebMarker.embedInvisible(options)).resolves.toBe(
+      'data:image/png;base64,invisible'
+    );
+    expect(pixelContext.putImageData).toHaveBeenCalledTimes(1);
+    expect(mockRenderWebCompositionToCanvas).toHaveBeenCalledWith(
+      options.image,
+      [],
+      expect.objectContaining({ saveFormat: 'png' })
+    );
+
+    await expect(
+      WebMarker.detectInvisible({
+        image: options.image,
+        key: options.key,
+      })
+    ).resolves.toEqual(
+      expect.objectContaining({
+        detected: true,
+        payload: 'asset-42',
+        algorithm: 'dct-qim-v1',
+      })
+    );
+  });
+
+  it('explains CORS failures before pixel detection', async () => {
+    const securityError = new Error('tainted');
+    securityError.name = 'SecurityError';
+    pixelContext.getImageData.mockImplementation(() => {
+      throw securityError;
+    });
+
+    await expect(
+      WebMarker.detectInvisible({
+        image: { src: 'https://cdn.example/photo.jpg' },
+        key: '0123456789abcdef',
+      })
+    ).rejects.toThrow('Configure CORS');
   });
 
   it('maps markText options to ordered web text layers', async () => {

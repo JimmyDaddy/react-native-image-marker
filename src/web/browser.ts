@@ -53,12 +53,14 @@ export interface WebCanvasContext {
   fillText(text: string, x: number, y: number): void;
   strokeText(text: string, x: number, y: number): void;
   measureText(text: string): WebTextMetrics;
-  getImageData(
-    sx: number,
-    sy: number,
-    sw: number,
-    sh: number
-  ): { data: ArrayLike<number> };
+  getImageData(sx: number, sy: number, sw: number, sh: number): WebImageData;
+  putImageData(imageData: WebImageData, dx: number, dy: number): void;
+}
+
+export interface WebImageData {
+  data: Uint8Array | Uint8ClampedArray;
+  width?: number;
+  height?: number;
 }
 
 export interface WebTextMetrics {

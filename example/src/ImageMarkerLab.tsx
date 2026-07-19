@@ -1091,6 +1091,63 @@ function useViewModel(props: ImageMarkerLabProps) {
     }
   }
 
+  async function runInvisibleWatermarkFeature() {
+    const key = 'example-only-key-2026';
+    const payload = 'asset-42';
+    setBackgroundFormat('normal image');
+    applyConfig({
+      image: assets.bg,
+      waterMarkType: 'text',
+      text: payload,
+      saveFormat: ImageFormat.png,
+      backgroundScale: 1,
+      backgroundRotate: 0,
+      backgroundAlpha: 1,
+    });
+    setLastRun('Embedding invisible trace…');
+    setResultContract('');
+    setLoading(true);
+
+    try {
+      const path = await Marker.embedInvisible({
+        image: { src: assets.bg },
+        payload,
+        key,
+        strength: 'robust',
+        saveFormat: ImageFormat.png,
+        filename: 'invisible-watermark-demo',
+      });
+      const detection = await Marker.detectInvisible({
+        image: { src: { uri: path } },
+        key,
+        strength: 'robust',
+        search: 'fast',
+      });
+      if (!detection.detected || detection.payload !== payload) {
+        throw new Error('The embedded payload could not be authenticated.');
+      }
+
+      setUri(formatResultUri(path, ImageFormat.png));
+      setShow(true);
+      setLastRun(`Invisible trace verified · ${payload}`);
+      setResultContract(
+        `Invisible trace verified: ${detection.payload} · ${Math.round(
+          detection.confidence * 100
+        )}% confidence`
+      );
+      await updateFileSize(path, ImageFormat.png);
+    } catch (error) {
+      console.log('invisible watermark error', error);
+      Toast.show({
+        type: 'error',
+        text1: 'invisible watermark failed',
+        text2: error instanceof Error ? error.message : String(error),
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function runBatchRecipeFeature() {
     setBackgroundFormat('normal image');
     setLastRun('Batch 0/3');
@@ -1857,6 +1914,7 @@ function useViewModel(props: ImageMarkerLabProps) {
       runBlendModeFeature,
       runTiledTextFeature,
       runTiledLogoFeature,
+      runInvisibleWatermarkFeature,
       runBatchRecipeFeature,
       runSharpScaledWatermarkFeature,
       runRotationOutputPolicyFeature,
@@ -2005,6 +2063,14 @@ function ImageMarkerLab(props: ImageMarkerLabProps) {
                   tone="green"
                   testID="feature-tiled-logo"
                   onPress={actions.runTiledLogoFeature}
+                />
+                <FeatureCard
+                  badge="v1.10"
+                  title="Invisible trace"
+                  meta="embed + authenticated detect"
+                  tone="green"
+                  testID="feature-invisible-watermark"
+                  onPress={actions.runInvisibleWatermarkFeature}
                 />
                 <FeatureCard
                   badge="v1.9"

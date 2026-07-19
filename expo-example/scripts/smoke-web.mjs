@@ -10,6 +10,23 @@ const exampleRoot = path.resolve(
   '..'
 );
 const exportRoot = path.join(exampleRoot, 'dist', 'web');
+const corpusRoot = path.resolve(
+  exampleRoot,
+  '..',
+  'website',
+  'public',
+  'media'
+);
+const corpusFixtures = new Map(
+  [
+    'playground-background.jpg',
+    'watermark-coast.jpg',
+    'watermark-after-dark.jpg',
+    'watermark-waypoint.jpg',
+    'example-lab-compose.jpg',
+    'sample1.png',
+  ].map((name) => [`corpus/${name}`, name])
+);
 const contentTypes = new Map([
   ['.html', 'text/html; charset=utf-8'],
   ['.js', 'text/javascript; charset=utf-8'],
@@ -29,8 +46,12 @@ const server = createServer(async (request, response) => {
       new URL(request.url ?? '/', 'http://127.0.0.1').pathname
     ).replace(/^\/+/, '');
     const relativePath = requestPath || 'index.html';
-    const filePath = path.resolve(exportRoot, relativePath);
+    const corpusName = corpusFixtures.get(relativePath);
+    const filePath = corpusName
+      ? path.join(corpusRoot, corpusName)
+      : path.resolve(exportRoot, relativePath);
     if (
+      !corpusName &&
       filePath !== exportRoot &&
       !filePath.startsWith(`${exportRoot}${path.sep}`)
     ) {
@@ -144,25 +165,45 @@ async function verifyBrowser(browserName, browserType) {
     const download = await downloadPromise;
     assert.equal(download.suggestedFilename(), 'image-marker-web-demo.png');
 
-    const harnessResults = await page.evaluate(async (crossOriginUrl) => {
-      const harness = window.__IMAGE_MARKER_SMOKE__;
-      if (!harness) throw new Error('Web smoke harness was not installed.');
-      const [blobAndFile, recipeBlobs, largeCropped, tiledLayers] =
-        await Promise.all([
+    const corpusUrls = Array.from(
+      corpusFixtures.keys(),
+      (fixture) => `http://127.0.0.1:${address.port}/${fixture}`
+    );
+    const harnessResults = await page.evaluate(
+      async (urls) => {
+        const harness = window.__IMAGE_MARKER_SMOKE__;
+        if (!harness) throw new Error('Web smoke harness was not installed.');
+        const [
+          blobAndFile,
+          recipeBlobs,
+          largeCropped,
+          tiledLayers,
+          invisibleWatermark,
+          invisibleCorpus,
+        ] = await Promise.all([
           harness.renderBlobAndFile(),
           harness.renderRecipeBlobs(),
           harness.renderLargeCropped(),
           harness.renderTiledLayers(),
+          harness.verifyInvisibleWatermark(),
+          harness.verifyInvisibleCorpus(urls.corpus),
         ]);
-      const corsMessage = await harness.renderCrossOrigin(crossOriginUrl);
-      return {
-        blobAndFile,
-        recipeBlobs,
-        largeCropped,
-        tiledLayers,
-        corsMessage,
-      };
-    }, `http://127.0.0.1:${crossOriginAddress.port}/fixture.jpeg`);
+        const corsMessage = await harness.renderCrossOrigin(urls.crossOrigin);
+        return {
+          blobAndFile,
+          recipeBlobs,
+          largeCropped,
+          tiledLayers,
+          invisibleWatermark,
+          invisibleCorpus,
+          corsMessage,
+        };
+      },
+      {
+        crossOrigin: `http://127.0.0.1:${crossOriginAddress.port}/fixture.jpeg`,
+        corpus: corpusUrls,
+      }
+    );
 
     assert.match(
       harnessResults.blobAndFile.dataUrl,
@@ -196,6 +237,20 @@ async function verifyBrowser(browserName, browserType) {
       baselineSource,
       harnessResults.tiledLayers.dataUrl
     );
+    assert.deepEqual(harnessResults.invisibleWatermark, {
+      payload: 'asset-42',
+      pngDetected: true,
+      jpeg90Detected: true,
+      jpeg75Detected: true,
+      jpeg60Detected: true,
+      adjustedDetected: true,
+      wrongKeyDetected: false,
+    });
+    assert.deepEqual(harnessResults.invisibleCorpus, {
+      fixtureCount: corpusFixtures.size,
+      detectedCount: corpusFixtures.size,
+      unmarkedFalsePositives: 0,
+    });
     assert.match(harnessResults.corsMessage, /Access-Control-Allow-Origin/i);
     assert.deepEqual(
       pageErrors,
@@ -204,7 +259,7 @@ async function verifyBrowser(browserName, browserType) {
     );
 
     console.log(
-      `Verified ${browserName}: Canvas pixels, tiled text/logo layers, JPG/PNG, Blob/File, Blob recipe output, CORS, rotation crop, alpha, and 4096px max-size rendering.`
+      `Verified ${browserName}: Canvas pixels, tiled text/logo layers, invisible watermark PNG/JPEG robustness and six-image corpus, Blob/File, Blob recipe output, CORS, rotation crop, alpha, and 4096px max-size rendering.`
     );
   } finally {
     await browser.close();

@@ -15,6 +15,10 @@ import type {
   WatermarkLayout,
   WatermarkLayer,
 } from './index';
+import type {
+  DetectInvisibleWatermarkOptions,
+  EmbedInvisibleWatermarkOptions,
+} from './invisible-watermark';
 
 export const DEFAULT_MAX_SIZE = 2048;
 
@@ -320,5 +324,33 @@ export function createNativeMarkOptions(
     ),
     watermarks: createWatermarkLayers(options, assetResolver),
     ...getOutputOptions(options),
+  };
+}
+
+export function createNativeEmbedInvisibleOptions(
+  options: EmbedInvisibleWatermarkOptions,
+  assetResolver: AssetResolver = defaultAssetResolver
+): Omit<EmbedInvisibleWatermarkOptions, 'image'> & {
+  backgroundImage: ImageOptions;
+} {
+  const { image, ...rest } = options;
+  return {
+    ...rest,
+    backgroundImage: resolveImageOptions(image, assetResolver),
+    maxSize: options.maxSize ?? DEFAULT_MAX_SIZE,
+  };
+}
+
+export function createNativeDetectInvisibleOptions(
+  options: DetectInvisibleWatermarkOptions,
+  assetResolver: AssetResolver = defaultAssetResolver
+): Omit<DetectInvisibleWatermarkOptions, 'image'> & {
+  backgroundImage: ImageOptions;
+} {
+  const { image, ...rest } = options;
+  return {
+    ...rest,
+    backgroundImage: resolveImageOptions(image, assetResolver),
+    maxSize: options.maxSize ?? DEFAULT_MAX_SIZE,
   };
 }

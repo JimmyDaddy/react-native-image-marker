@@ -2,6 +2,8 @@ import { NativeModules, Platform } from 'react-native';
 import type { Spec } from './NativeImageMarker';
 import NativeImageMarker from './NativeImageMarker';
 import {
+  createNativeDetectInvisibleOptions,
+  createNativeEmbedInvisibleOptions,
   createNativeMarkOptions,
   normalizeImageMarkOptions,
   normalizeTextMarkOptions,
@@ -19,6 +21,16 @@ import {
   validateMarkOptions,
   validateTextMarkOptions,
 } from './validate';
+import type {
+  DetectInvisibleWatermarkOptions,
+  EmbedInvisibleWatermarkOptions,
+  InvisibleWatermarkDetectionResult,
+} from './invisible-watermark';
+import {
+  INVISIBLE_WATERMARK_ALGORITHM,
+  validateDetectInvisibleOptions,
+  validateEmbedInvisibleOptions,
+} from './invisible-watermark';
 
 const LINKING_ERROR =
   `The package 'react-native-image-marker' doesn't seem to be linked. Make sure: \n\n` +
@@ -41,6 +53,52 @@ function getImageMarker(): Spec {
 
 /** Native iOS and Android implementation of the public Marker API. */
 class Marker {
+  /**
+   * Embed a short, authenticated locator into the final image pixels.
+   *
+   * This Beta API supports distribution tracing. It is not DRM, encryption,
+   * or proof that the image was never edited.
+   */
+  static embedInvisible(
+    options: EmbedInvisibleWatermarkOptions
+  ): Promise<string> {
+    validateEmbedInvisibleOptions(options);
+    return getImageMarker().embedInvisible(
+      createNativeEmbedInvisibleOptions(options)
+    );
+  }
+
+  /** Detect and authenticate an invisible locator in an image without writing a file. */
+  static async detectInvisible(
+    options: DetectInvisibleWatermarkOptions
+  ): Promise<InvisibleWatermarkDetectionResult> {
+    validateDetectInvisibleOptions(options);
+    const serialized = await getImageMarker().detectInvisible(
+      createNativeDetectInvisibleOptions(options)
+    );
+    let result: unknown;
+    try {
+      result = JSON.parse(serialized);
+    } catch {
+      throw new Error(
+        'Native invisible watermark detector returned invalid JSON.'
+      );
+    }
+    if (
+      !result ||
+      typeof result !== 'object' ||
+      typeof (result as { detected?: unknown }).detected !== 'boolean' ||
+      typeof (result as { confidence?: unknown }).confidence !== 'number' ||
+      (result as { algorithm?: unknown }).algorithm !==
+        INVISIBLE_WATERMARK_ALGORITHM
+    ) {
+      throw new Error(
+        'Native invisible watermark detector returned invalid data.'
+      );
+    }
+    return result as InvisibleWatermarkDetectionResult;
+  }
+
   /** Save ordered layers and output settings for reuse across one or many images. */
   static createRecipe<
     ResultOptions extends WatermarkRecipeResultOptions | undefined = undefined

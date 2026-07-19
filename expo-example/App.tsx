@@ -145,6 +145,42 @@ function App() {
     }
   }, [background, layout]);
 
+  const runInvisibleTrace = useCallback(async () => {
+    const key = 'example-only-key-2026';
+    const payload = 'asset-42';
+    setIsRendering(true);
+    setMessage('Embedding and authenticating an invisible trace…');
+    try {
+      const output = await Marker.embedInvisible({
+        image: { src: background },
+        payload,
+        key,
+        strength: 'robust',
+        saveFormat: ImageFormat.png,
+        filename: `image-marker-trace-${Date.now()}`,
+      });
+      const detection = await Marker.detectInvisible({
+        image: { src: { uri: output } },
+        key,
+        strength: 'robust',
+        search: 'fast',
+      });
+      if (!detection.detected || detection.payload !== payload) {
+        throw new Error('The embedded trace could not be authenticated.');
+      }
+      setResult(output);
+      setMessage(
+        `Invisible trace verified: ${detection.payload} · ${Math.round(
+          detection.confidence * 100
+        )}% confidence.`
+      );
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Trace failed.');
+    } finally {
+      setIsRendering(false);
+    }
+  }, [background]);
+
   return (
     <SafeAreaView style={styles.page}>
       <StatusBar style="light" />
@@ -222,6 +258,23 @@ function App() {
           <Text accessibilityLiveRegion="polite" style={styles.message}>
             {message}
           </Text>
+        </View>
+
+        <View style={styles.note}>
+          <Text style={styles.noteTitle}>
+            Invisible trace watermark · v1.10
+          </Text>
+          <Text style={styles.noteText}>
+            Embed a short locator in the pixels, then authenticate it with the
+            same key. The demo key is public and must not be used in production.
+          </Text>
+          <Pressable
+            disabled={isRendering}
+            onPress={runInvisibleTrace}
+            style={[styles.traceButton, isRendering && styles.disabledButton]}
+          >
+            <Text style={styles.primaryButtonText}>Embed and verify trace</Text>
+          </Pressable>
         </View>
 
         <View style={styles.note}>
@@ -322,6 +375,15 @@ const styles = StyleSheet.create({
   },
   noteTitle: { color: '#F0F3F8', fontSize: 15, fontWeight: '700' },
   noteText: { color: '#98A4B8', fontSize: 14, lineHeight: 22, marginTop: 8 },
+  traceButton: {
+    minHeight: 46,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
+    backgroundColor: '#6574F7',
+    marginTop: 14,
+    paddingHorizontal: 16,
+  },
 });
 
 export default App;

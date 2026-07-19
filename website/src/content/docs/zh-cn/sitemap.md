@@ -17,6 +17,7 @@ description: 浏览 React Native Image Marker 网站中的全部指南、示例�
 - [选择 API](/zh-cn/guides/choose-an-api/) — 在 `markText`、`markImage` 和 `mark` 之间选择。
 - [定位与样式](/zh-cn/guides/position-and-style/) — 放置文字和 Logo，并调整外观。
 - [输出与图像质量](/zh-cn/guides/output-and-quality/) — 选择格式、质量和背景色。
+- [隐形追踪水印](/zh-cn/guides/invisible-watermarks/) — 嵌入并验证短分发 locator。
 - [可视化示例](/zh-cn/cookbook/) — 从完整示例开始使用。
 
 ## 参考与帮助

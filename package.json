@@ -2,7 +2,7 @@
   "name": "react-native-image-marker",
   "version": "1.9.0",
   "packageManager": "npm@10.9.4",
-  "description": "Add text and image watermarks in React Native and React Native Web",
+  "description": "Add visible and invisible image watermarks in React Native and React Native Web",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
   "types": "lib/typescript/index.d.ts",
@@ -58,6 +58,8 @@
     "marker",
     "text",
     "watermark",
+    "invisible-watermark",
+    "image-tracing",
     "icon"
   ],
   "repository": {

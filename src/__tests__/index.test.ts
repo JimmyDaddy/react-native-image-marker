@@ -17,6 +17,8 @@ describe('Marker JS wrapper', () => {
     markWithText: jest.Mock;
     markWithImage: jest.Mock;
     markWithWatermarks: jest.Mock;
+    embedInvisible: jest.Mock;
+    detectInvisible: jest.Mock;
   };
   let resolveAssetSource: jest.Mock;
 
@@ -28,6 +30,8 @@ describe('Marker JS wrapper', () => {
       markWithText: jest.fn(),
       markWithImage: jest.fn(),
       markWithWatermarks: jest.fn(),
+      embedInvisible: jest.fn(),
+      detectInvisible: jest.fn(),
     };
     reactNative.NativeModules.ImageMarker = nativeModule;
     reactNative.Image.resolveAssetSource = jest.fn();
@@ -56,6 +60,70 @@ describe('Marker JS wrapper', () => {
       expand: 'expand',
       crop: 'crop',
     });
+  });
+
+  it('normalizes native invisible watermark input and parses detection data', async () => {
+    nativeModule.embedInvisible.mockResolvedValue('/tmp/invisible.png');
+    nativeModule.detectInvisible.mockResolvedValue(
+      JSON.stringify({
+        detected: true,
+        payload: 'asset-42',
+        confidence: 0.94,
+        bitErrorRate: 0.03,
+        algorithm: 'dct-qim-v1',
+      })
+    );
+
+    await expect(
+      Marker.embedInvisible({
+        image: { src: 10 },
+        payload: 'asset-42',
+        key: '0123456789abcdef',
+        strength: 'robust',
+      })
+    ).resolves.toBe('/tmp/invisible.png');
+    expect(nativeModule.embedInvisible).toHaveBeenCalledWith(
+      expect.objectContaining({
+        backgroundImage: expect.objectContaining({
+          src: expect.objectContaining({ uri: 'asset://10' }),
+        }),
+        payload: 'asset-42',
+        key: '0123456789abcdef',
+        strength: 'robust',
+        maxSize: 2048,
+      })
+    );
+
+    await expect(
+      Marker.detectInvisible({
+        image: { src: 'file:///tmp/invisible.png' },
+        key: '0123456789abcdef',
+        search: 'robust',
+      })
+    ).resolves.toEqual(
+      expect.objectContaining({ detected: true, payload: 'asset-42' })
+    );
+    expect(nativeModule.detectInvisible).toHaveBeenCalledWith(
+      expect.objectContaining({
+        search: 'robust',
+        maxSize: 2048,
+        backgroundImage: expect.objectContaining({
+          src: expect.objectContaining({
+            uri: 'file:///tmp/invisible.png',
+          }),
+        }),
+      })
+    );
+  });
+
+  it('rejects malformed native invisible watermark results', async () => {
+    nativeModule.detectInvisible.mockResolvedValue('{invalid');
+    await expect(
+      Marker.detectInvisible({
+        image: { src: 'file:///tmp/invisible.png' },
+        key: '0123456789abcdef',
+      })
+    ).rejects.toThrow('invalid JSON');
   });
 
   it('creates reusable native recipes through the public Marker API', async () => {

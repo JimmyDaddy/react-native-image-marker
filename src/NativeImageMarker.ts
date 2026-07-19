@@ -8,6 +8,9 @@ export interface Spec extends TurboModule {
   markWithText(options: Object): Promise<string>;
   markWithImage(options: Object): Promise<string>;
   markWithWatermarks(options: Object): Promise<string>;
+  embedInvisible(options: Object): Promise<string>;
+  // JSON keeps the return shape compatible with RN 0.73 codegen.
+  detectInvisible(options: Object): Promise<string>;
 }
 
 export default TurboModuleRegistry.get<Spec>('ImageMarker');

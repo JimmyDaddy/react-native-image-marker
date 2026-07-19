@@ -16,11 +16,57 @@ import type {
 import { renderWebComposition, renderWebCompositionToCanvas } from './renderer';
 import type { WebRenderLayer } from './renderer';
 import { encodeCanvasToBlob } from './helpers';
+import { encodeCanvas } from './helpers';
 import {
   validateImageMarkOptions,
   validateMarkOptions,
   validateTextMarkOptions,
 } from '../validate';
+import type {
+  DetectInvisibleWatermarkOptions,
+  EmbedInvisibleWatermarkOptions,
+  InvisibleWatermarkDetectionResult,
+} from '../invisible-watermark';
+import {
+  detectInvisibleWatermarkPixels,
+  embedInvisibleWatermarkPixels,
+  validateDetectInvisibleOptions,
+  validateEmbedInvisibleOptions,
+} from '../invisible-watermark';
+
+function getPixelContext(
+  canvas: Awaited<ReturnType<typeof renderWebCompositionToCanvas>>
+) {
+  const context = canvas.getContext('2d');
+  if (!context) {
+    throw new Error('The browser did not provide a 2D canvas context.');
+  }
+  return context;
+}
+
+function readImageData(
+  canvas: Awaited<ReturnType<typeof renderWebCompositionToCanvas>>
+) {
+  try {
+    return getPixelContext(canvas).getImageData(
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+  } catch (error) {
+    const errorName =
+      error && typeof error === 'object' && 'name' in error
+        ? String((error as { name?: unknown }).name)
+        : '';
+    if (errorName === 'SecurityError') {
+      throw new Error(
+        'Unable to read image pixels because a remote image tainted the canvas. Configure CORS (Access-Control-Allow-Origin) or use a local file/data URL.'
+      );
+    }
+    throw error;
+  }
+}
 
 function createTextLayer(options: TextOptions): WebRenderLayer {
   return { type: 'text', options };
@@ -92,6 +138,47 @@ function createMarkLayers(options: MarkOptions): WebRenderLayer[] {
  * 2D implementation, which only touches DOM globals when a method is called.
  */
 class Marker {
+  /**
+   * Embed a short, authenticated locator into the final image pixels.
+   *
+   * This Beta API supports distribution tracing. It is not DRM, encryption,
+   * or proof that the image was never edited.
+   */
+  static async embedInvisible(
+    options: EmbedInvisibleWatermarkOptions
+  ): Promise<string> {
+    validateEmbedInvisibleOptions(options);
+    const canvas = await renderWebCompositionToCanvas(options.image, [], {
+      quality: options.quality,
+      saveFormat: options.saveFormat,
+      maxSize: options.maxSize,
+    });
+    const context = getPixelContext(canvas);
+    const imageData = readImageData(canvas);
+    embedInvisibleWatermarkPixels(
+      { data: imageData.data, width: canvas.width, height: canvas.height },
+      options
+    );
+    context.putImageData(imageData, 0, 0);
+    return encodeCanvas(canvas, options.saveFormat, options.quality);
+  }
+
+  /** Detect and authenticate an invisible locator in an image without writing a file. */
+  static async detectInvisible(
+    options: DetectInvisibleWatermarkOptions
+  ): Promise<InvisibleWatermarkDetectionResult> {
+    validateDetectInvisibleOptions(options);
+    const canvas = await renderWebCompositionToCanvas(options.image, [], {
+      saveFormat: undefined,
+      maxSize: options.maxSize,
+    });
+    const imageData = readImageData(canvas);
+    return detectInvisibleWatermarkPixels(
+      { data: imageData.data, width: canvas.width, height: canvas.height },
+      options
+    );
+  }
+
   /** Save ordered layers and output settings for reuse across one or many images. */
   static createRecipe<
     ResultOptions extends WatermarkRecipeResultOptions | undefined = undefined
