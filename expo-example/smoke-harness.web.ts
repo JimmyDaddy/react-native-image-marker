@@ -38,6 +38,8 @@ interface WebSmokeHarness {
     fixtureCount: number;
     detectedCount: number;
     unmarkedFalsePositives: number;
+    minimumPsnr: number;
+    minimumSsim: number;
   }>;
   renderCrossOrigin(url: string): Promise<string>;
 }
@@ -93,6 +95,99 @@ async function transformDataUrl(
     context.putImageData(pixels, 0, 0);
   }
   return canvas.toDataURL(type, quality);
+}
+
+async function decodeImage(source: string): Promise<HTMLImageElement> {
+  const image = new Image();
+  image.src = source;
+  await image.decode();
+  return image;
+}
+
+async function compareImageQuality(
+  referenceSource: string,
+  candidateSource: string
+): Promise<{ psnr: number; ssim: number }> {
+  const [reference, candidate] = await Promise.all([
+    decodeImage(referenceSource),
+    decodeImage(candidateSource),
+  ]);
+  const width = candidate.naturalWidth;
+  const height = candidate.naturalHeight;
+  const referenceCanvas = document.createElement('canvas');
+  const candidateCanvas = document.createElement('canvas');
+  referenceCanvas.width = candidateCanvas.width = width;
+  referenceCanvas.height = candidateCanvas.height = height;
+  const referenceContext = referenceCanvas.getContext('2d');
+  const candidateContext = candidateCanvas.getContext('2d');
+  if (!referenceContext || !candidateContext) {
+    throw new Error('Canvas 2D is unavailable.');
+  }
+  referenceContext.drawImage(reference, 0, 0, width, height);
+  candidateContext.drawImage(candidate, 0, 0, width, height);
+  const referencePixels = referenceContext.getImageData(
+    0,
+    0,
+    width,
+    height
+  ).data;
+  const candidatePixels = candidateContext.getImageData(
+    0,
+    0,
+    width,
+    height
+  ).data;
+
+  let squaredError = 0;
+  let referenceLumaSum = 0;
+  let candidateLumaSum = 0;
+  let referenceLumaSquaredSum = 0;
+  let candidateLumaSquaredSum = 0;
+  let lumaProductSum = 0;
+  const pixelCount = width * height;
+  for (let index = 0; index < referencePixels.length; index += 4) {
+    const referenceRed = referencePixels[index]!;
+    const referenceGreen = referencePixels[index + 1]!;
+    const referenceBlue = referencePixels[index + 2]!;
+    const candidateRed = candidatePixels[index]!;
+    const candidateGreen = candidatePixels[index + 1]!;
+    const candidateBlue = candidatePixels[index + 2]!;
+    squaredError +=
+      (referenceRed - candidateRed) ** 2 +
+      (referenceGreen - candidateGreen) ** 2 +
+      (referenceBlue - candidateBlue) ** 2;
+
+    const referenceLuma =
+      referenceRed * 0.2126 + referenceGreen * 0.7152 + referenceBlue * 0.0722;
+    const candidateLuma =
+      candidateRed * 0.2126 + candidateGreen * 0.7152 + candidateBlue * 0.0722;
+    referenceLumaSum += referenceLuma;
+    candidateLumaSum += candidateLuma;
+    referenceLumaSquaredSum += referenceLuma ** 2;
+    candidateLumaSquaredSum += candidateLuma ** 2;
+    lumaProductSum += referenceLuma * candidateLuma;
+  }
+
+  const meanSquaredError = squaredError / (pixelCount * 3);
+  const psnr =
+    meanSquaredError === 0
+      ? Number.POSITIVE_INFINITY
+      : 10 * Math.log10(255 ** 2 / meanSquaredError);
+  const referenceMean = referenceLumaSum / pixelCount;
+  const candidateMean = candidateLumaSum / pixelCount;
+  const referenceVariance =
+    referenceLumaSquaredSum / pixelCount - referenceMean ** 2;
+  const candidateVariance =
+    candidateLumaSquaredSum / pixelCount - candidateMean ** 2;
+  const covariance =
+    lumaProductSum / pixelCount - referenceMean * candidateMean;
+  const c1 = (0.01 * 255) ** 2;
+  const c2 = (0.03 * 255) ** 2;
+  const ssim =
+    ((2 * referenceMean * candidateMean + c1) * (2 * covariance + c2)) /
+    ((referenceMean ** 2 + candidateMean ** 2 + c1) *
+      (referenceVariance + candidateVariance + c2));
+  return { psnr, ssim };
 }
 
 async function createLargeImage(): Promise<File> {
@@ -305,6 +400,8 @@ function createHarness(assets: SmokeHarnessAssets): WebSmokeHarness {
       const key = 'corpus-test-key-2026';
       let detectedCount = 0;
       let unmarkedFalsePositives = 0;
+      let minimumPsnr = Number.POSITIVE_INFINITY;
+      let minimumSsim = Number.POSITIVE_INFINITY;
       for (let index = 0; index < sources.length; index += 1) {
         const source = sources[index]!;
         const unmarked = await Marker.detectInvisible({
@@ -335,11 +432,16 @@ function createHarness(assets: SmokeHarnessAssets): WebSmokeHarness {
         if (detected.detected && detected.payload === payload) {
           detectedCount += 1;
         }
+        const quality = await compareImageQuality(source, marked);
+        minimumPsnr = Math.min(minimumPsnr, quality.psnr);
+        minimumSsim = Math.min(minimumSsim, quality.ssim);
       }
       return {
         fixtureCount: sources.length,
         detectedCount,
         unmarkedFalsePositives,
+        minimumPsnr,
+        minimumSsim,
       };
     },
 

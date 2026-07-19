@@ -246,11 +246,27 @@ async function verifyBrowser(browserName, browserType) {
       adjustedDetected: true,
       wrongKeyDetected: false,
     });
-    assert.deepEqual(harnessResults.invisibleCorpus, {
-      fixtureCount: corpusFixtures.size,
-      detectedCount: corpusFixtures.size,
-      unmarkedFalsePositives: 0,
-    });
+    assert.equal(
+      harnessResults.invisibleCorpus.fixtureCount,
+      corpusFixtures.size
+    );
+    assert.equal(
+      harnessResults.invisibleCorpus.detectedCount,
+      corpusFixtures.size
+    );
+    assert.equal(harnessResults.invisibleCorpus.unmarkedFalsePositives, 0);
+    assert(
+      harnessResults.invisibleCorpus.minimumPsnr >= 40,
+      `Invisible watermark corpus PSNR fell below 40 dB: ${harnessResults.invisibleCorpus.minimumPsnr.toFixed(
+        2
+      )} dB.`
+    );
+    assert(
+      harnessResults.invisibleCorpus.minimumSsim >= 0.99,
+      `Invisible watermark corpus SSIM fell below 0.99: ${harnessResults.invisibleCorpus.minimumSsim.toFixed(
+        5
+      )}.`
+    );
     assert.match(harnessResults.corsMessage, /Access-Control-Allow-Origin/i);
     assert.deepEqual(
       pageErrors,
@@ -259,7 +275,11 @@ async function verifyBrowser(browserName, browserType) {
     );
 
     console.log(
-      `Verified ${browserName}: Canvas pixels, tiled text/logo layers, invisible watermark PNG/JPEG robustness and six-image corpus, Blob/File, Blob recipe output, CORS, rotation crop, alpha, and 4096px max-size rendering.`
+      `Verified ${browserName}: Canvas pixels, tiled text/logo layers, invisible watermark PNG/JPEG robustness and six-image quality corpus (PSNR ${harnessResults.invisibleCorpus.minimumPsnr.toFixed(
+        2
+      )} dB, SSIM ${harnessResults.invisibleCorpus.minimumSsim.toFixed(
+        5
+      )}), Blob/File, Blob recipe output, CORS, rotation crop, alpha, and 4096px max-size rendering.`
     );
   } finally {
     await browser.close();

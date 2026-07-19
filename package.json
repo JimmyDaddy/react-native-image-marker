@@ -37,6 +37,7 @@
     "typecheck:expo-example": "npm --prefix expo-example run typecheck",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "prepack": "bob build",
+    "check:release-notes": "node scripts/check-release-notes.mjs",
     "release": "release-it",
     "example": "yarn --cwd example",
     "expo-example": "yarn --cwd expo-example",
@@ -85,7 +86,7 @@
     "@types/react": "~18.2.45",
     "@types/react-native": "0.70.0",
     "commitlint": "^21.2.1",
-    "conventional-changelog-conventionalcommits": "10.2.1",
+    "conventional-changelog-conventionalcommits": "9.3.1",
     "del-cli": "^5.0.0",
     "eslint": "^8.4.1",
     "eslint-config-prettier": "^8.5.0",
@@ -138,8 +139,7 @@
   "release-it": {
     "git": {
       "commitMessage": "chore: release ${version}",
-      "tagName": "v${version}",
-      "changelog": "grep '^## ' CHANGELOG.md | head -n 1"
+      "tagName": "v${version}"
     },
     "npm": {
       "publish": false
