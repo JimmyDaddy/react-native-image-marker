@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.10.0](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.9.0...v1.10.0) (2026-07-19)
+
+### Features
+
+* **watermark:** add invisible trace watermarking ([#334](https://github.com/JimmyDaddy/react-native-image-marker/pull/334)) ([b0d5f06](https://github.com/JimmyDaddy/react-native-image-marker/commit/b0d5f06710b09a61ee09f31ca3e769b67794b321))
+
 ## [1.9.0](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.8.0...v1.9.0) (2026-07-18)
 
 ### Features
