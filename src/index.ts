@@ -22,6 +22,23 @@ export type {
 
 export { WATERMARK_RECIPE_SCHEMA_VERSION } from './recipe';
 
+export type {
+  DetectInvisibleWatermarkOptions,
+  EmbedInvisibleWatermarkOptions,
+  InvisibleWatermarkDetectionResult,
+  InvisibleWatermarkImage,
+  InvisibleWatermarkSearch,
+  InvisibleWatermarkStrength,
+} from './invisible-watermark';
+
+export {
+  INVISIBLE_WATERMARK_ALGORITHM,
+  INVISIBLE_WATERMARK_MAX_PAYLOAD_BYTES,
+  INVISIBLE_WATERMARK_MIN_HEIGHT,
+  INVISIBLE_WATERMARK_MIN_KEY_BYTES,
+  INVISIBLE_WATERMARK_MIN_WIDTH,
+} from './invisible-watermark';
+
 /**
  * Position enum for text watermark and image watermark
  * @enum

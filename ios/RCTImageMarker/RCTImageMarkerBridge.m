@@ -18,5 +18,11 @@ RCT_EXTERN_METHOD(markWithText: (nonnull NSDictionary *) opts
 RCT_EXTERN_METHOD(markWithWatermarks: (nonnull NSDictionary *) opts
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject)
+RCT_EXTERN_METHOD(embedInvisible: (nonnull NSDictionary *) opts
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+RCT_EXTERN_METHOD(detectInvisible: (nonnull NSDictionary *) opts
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
 
 @end

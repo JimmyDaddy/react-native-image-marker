@@ -93,6 +93,7 @@ try {
   await assertVisibleLogo(playground);
   await assertCustomSelects(playground);
   await assertLayoutControlsAndCode(page, playground);
+  await assertInvisibleTrace(page, playground);
   await assertBatchRecipe(page, playground);
 
   const code = await playground.locator('[data-web-code]').textContent();
@@ -150,7 +151,7 @@ try {
   );
 
   console.log(
-    'Verified navigation, responsive layout, watermark controls, preview-to-code parity, batch Blob results, cancellation, both playground routes, downloads, and the HTML sitemap.'
+    'Verified navigation, responsive layout, watermark controls, invisible trace embed/detect, preview-to-code parity, batch Blob results, cancellation, both playground routes, downloads, and the HTML sitemap.'
   );
 } finally {
   await browser?.close();
@@ -205,6 +206,26 @@ async function assertVisibleLogo(playground) {
   assert(
     orangePixels > 100,
     'Default image watermark should be visible over the background.'
+  );
+}
+
+async function assertInvisibleTrace(page, playground) {
+  await playground.locator('[data-invisible-embed]').click();
+  await page.waitForFunction(() =>
+    document
+      .querySelector('[data-invisible-status]')
+      ?.textContent?.includes('Embedded')
+  );
+  await assertPreviewMime(playground, 'image/png');
+  assert.equal(
+    await playground.locator('[data-invisible-detect]').isEnabled(),
+    true
+  );
+  await playground.locator('[data-invisible-detect]').click();
+  await page.waitForFunction(() =>
+    document
+      .querySelector('[data-invisible-status]')
+      ?.textContent?.includes('Verified: asset-42')
   );
 }
 
@@ -277,8 +298,8 @@ async function assertLayoutControlsAndCode(page, playground) {
   );
   const preview = playground.locator('[data-preview]');
 
-  assert.equal(await playground.locator('[data-example]').count(), 7);
-  assert.equal(await playground.locator('.capability-index li').count(), 9);
+  assert.equal(await playground.locator('[data-example]').count(), 8);
+  assert.equal(await playground.locator('.capability-index li').count(), 10);
   assert(
     await textSingle.isVisible(),
     'Text layout switch should be visible without opening advanced controls.'
@@ -608,8 +629,8 @@ async function assertCustomSelects(playground) {
   const customSelects = playground.locator('[data-custom-select]');
   assert.equal(
     await customSelects.count(),
-    5,
-    'Playground should render five custom selectors.'
+    6,
+    'Playground should render six custom selectors.'
   );
   for (const select of await playground.locator('select').all()) {
     assert.equal(

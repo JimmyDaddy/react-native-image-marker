@@ -52,6 +52,10 @@ export default defineConfig({
       title: 'React Native Image Marker',
       description:
         'Add text and image watermarks on iOS, Android, and the web.',
+      logo: {
+        src: '../assets/logo.svg',
+        alt: 'React Native Image Marker logo',
+      },
       defaultLocale: 'root',
       locales: {
         'root': {
@@ -63,7 +67,7 @@ export default defineConfig({
           lang: 'zh-CN',
         },
       },
-      favicon: '/favicon.png',
+      favicon: '/favicon.svg',
       customCss: [
         './src/styles/custom.css',
         './src/styles/preference-menu.css',
@@ -94,24 +98,26 @@ export default defineConfig({
           tag: 'meta',
           attrs: {
             property: 'og:image',
-            content:
-              'https://image-marker.corerobin.com/media/watermark-after-dark.jpg',
+            content: 'https://image-marker.corerobin.com/social-preview.png',
           },
         },
         {
           tag: 'meta',
-          attrs: { property: 'og:image:width', content: '1586' },
+          attrs: { property: 'og:image:width', content: '1200' },
         },
         {
           tag: 'meta',
-          attrs: { property: 'og:image:height', content: '992' },
+          attrs: { property: 'og:image:height', content: '630' },
+        },
+        {
+          tag: 'meta',
+          attrs: { property: 'og:image:type', content: 'image/png' },
         },
         {
           tag: 'meta',
           attrs: {
             property: 'og:image:alt',
-            content:
-              'A multi-layer watermark composition made with React Native Image Marker',
+            content: 'React Native Image Marker logo and product summary',
           },
         },
         {
@@ -122,8 +128,14 @@ export default defineConfig({
           tag: 'meta',
           attrs: {
             name: 'twitter:image',
-            content:
-              'https://image-marker.corerobin.com/media/watermark-after-dark.jpg',
+            content: 'https://image-marker.corerobin.com/social-preview.png',
+          },
+        },
+        {
+          tag: 'meta',
+          attrs: {
+            name: 'twitter:image:alt',
+            content: 'React Native Image Marker logo and product summary',
           },
         },
         {
@@ -199,6 +211,11 @@ export default defineConfig({
               label: 'Output and image quality',
               translations: { 'zh-CN': '输出与图像质量' },
               slug: 'guides/output-and-quality',
+            },
+            {
+              label: 'Invisible trace watermarks',
+              translations: { 'zh-CN': '隐形追踪水印' },
+              slug: 'guides/invisible-watermarks',
             },
             {
               label: 'Visual cookbook',

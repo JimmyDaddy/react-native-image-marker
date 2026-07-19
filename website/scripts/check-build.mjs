@@ -8,6 +8,7 @@ const requiredFiles = [
   'getting-started/index.html',
   'playground/index.html',
   'compatibility/index.html',
+  'guides/invisible-watermarks/index.html',
   'cookbook/index.html',
   'troubleshooting/index.html',
   'sitemap/index.html',
@@ -19,6 +20,7 @@ const requiredFiles = [
   'zh-cn/guides/choose-an-api/index.html',
   'zh-cn/guides/position-and-style/index.html',
   'zh-cn/guides/output-and-quality/index.html',
+  'zh-cn/guides/invisible-watermarks/index.html',
   'zh-cn/cookbook/index.html',
   'zh-cn/troubleshooting/index.html',
   'zh-cn/sitemap/index.html',
@@ -32,6 +34,9 @@ const requiredFiles = [
   'react-native-image-marker/classes/Marker.html',
   'react-native-image-marker/index.html',
   'CNAME',
+  'favicon.svg',
+  'social-preview.png',
+  'social-preview.svg',
   'media/watermark-after-dark.jpg',
   'media/watermark-tiled.jpg',
   'media/marker-compass.png',
@@ -123,6 +128,20 @@ const chineseHome = await readFile(
   join(outputRoot, 'zh-cn/index.html'),
   'utf8'
 );
+
+for (const fragment of [
+  'alt="React Native Image Marker logo"',
+  'https://image-marker.corerobin.com/social-preview.png',
+  'content="1200"',
+  'content="630"',
+]) {
+  if (!chineseHome.includes(fragment)) {
+    throw new Error(
+      `Homepage is missing expected branding metadata: ${fragment}`
+    );
+  }
+}
+
 const requiredChineseHomeFragments = [
   '<html lang="zh-CN"',
   'hreflang="en"',
@@ -189,7 +208,11 @@ for (const fragment of [
 }
 
 const robots = await readFile(join(outputRoot, 'robots.txt'), 'utf8');
-if (!robots.includes('Sitemap: https://image-marker.corerobin.com/sitemap-index.xml')) {
+if (
+  !robots.includes(
+    'Sitemap: https://image-marker.corerobin.com/sitemap-index.xml'
+  )
+) {
   throw new Error('robots.txt does not point to the production sitemap index.');
 }
 

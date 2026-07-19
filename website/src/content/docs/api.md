@@ -10,6 +10,9 @@ The API reference is generated from the public TypeScript declarations on every 
 - [`Marker.markText`](/api/classes/marker/#marktext) renders text-only layers.
 - [`Marker.markImage`](/api/classes/marker/#markimage) renders image-only layers.
 - [`Marker.mark`](/api/classes/marker/#mark) renders ordered mixed layers.
+- [`Marker.createRecipe`](/api/classes/marker/#createrecipe) creates reusable batch workflows.
+- [`Marker.embedInvisible`](/api/classes/marker/#embedinvisible) writes an authenticated short trace ID into image pixels.
+- [`Marker.detectInvisible`](/api/classes/marker/#detectinvisible) recovers and verifies an invisible trace ID.
 
 ## Start with the main option types
 
@@ -17,5 +20,8 @@ The API reference is generated from the public TypeScript declarations on every 
 - [`ImageMarkOptions`](/api/interfaces/imagemarkoptions/)
 - [`MarkOptions`](/api/interfaces/markoptions/)
 - [`PositionOptions`](/api/interfaces/positionoptions/)
+- [`EmbedInvisibleWatermarkOptions`](/api/interfaces/embedinvisiblewatermarkoptions/)
+- [`DetectInvisibleWatermarkOptions`](/api/interfaces/detectinvisiblewatermarkoptions/)
+- [`InvisibleWatermarkDetectionResult`](/api/interfaces/invisiblewatermarkdetectionresult/)
 
 Use the generated **API reference** group in the sidebar to browse all enums, interfaces, and type aliases.

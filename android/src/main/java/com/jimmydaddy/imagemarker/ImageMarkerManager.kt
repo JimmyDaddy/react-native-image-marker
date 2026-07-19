@@ -13,6 +13,7 @@ import com.facebook.react.bridge.ReadableMap
 import com.jimmydaddy.imagemarker.base.Constants.BASE64
 import com.jimmydaddy.imagemarker.base.Constants.IMAGE_MARKER_TAG
 import com.jimmydaddy.imagemarker.base.ErrorCode
+import com.jimmydaddy.imagemarker.base.InvisibleWatermarkOptions
 import com.jimmydaddy.imagemarker.base.MarkImageOptions
 import com.jimmydaddy.imagemarker.base.MarkTextOptions
 import com.jimmydaddy.imagemarker.base.MarkWatermarkOptions
@@ -151,6 +152,29 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : NativeI
     }
   }
 
+  private suspend fun embedInvisibleWatermark(
+    bg: Bitmap,
+    dest: String,
+    opts: InvisibleWatermarkOptions
+  ): String {
+    return withContext(Dispatchers.Default) {
+      OwnedResourcePipeline.run(
+        inputs = listOf(bg),
+        releaseInput = ::recycleBitmap,
+        render = {
+          InvisibleWatermark.embed(
+            bg,
+            opts.requirePayload(),
+            opts.key,
+            opts.strength
+          )
+        },
+        encode = { output -> writeResult(output, dest, opts) },
+        releaseOutput = ::recycleBitmap
+      )
+    }
+  }
+
   private suspend fun writeResult(
     icon: Bitmap,
     dest: String,
@@ -214,6 +238,52 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : NativeI
    * @param opts
    * @param promise
    */
+  @RequiresApi(Build.VERSION_CODES.N)
+  @ReactMethod
+  override fun embedInvisible(
+    options: ReadableMap,
+    promise: Promise
+  ) {
+    val opts = InvisibleWatermarkOptions.checkEmbed(options, promise) ?: return
+    launchMarkerJob(promise) {
+      val bitmaps = MarkerImageLoader(context, opts.maxSize).loadImages(
+        listOf(opts.backgroundImage)
+      )
+      try {
+        val dest = generateCacheFilePathForMarker(opts.filename, opts.saveFormat)
+        embedInvisibleWatermark(bitmaps[0], dest, opts)
+      } finally {
+        recycleBitmaps(bitmaps)
+      }
+    }
+  }
+
+  @RequiresApi(Build.VERSION_CODES.N)
+  @ReactMethod
+  override fun detectInvisible(
+    options: ReadableMap,
+    promise: Promise
+  ) {
+    val opts = InvisibleWatermarkOptions.checkDetect(options, promise) ?: return
+    launchMarkerJob(promise) {
+      val bitmaps = MarkerImageLoader(context, opts.maxSize).loadImages(
+        listOf(opts.backgroundImage)
+      )
+      try {
+        withContext(Dispatchers.Default) {
+          InvisibleWatermark.detect(
+            bitmaps[0],
+            opts.key,
+            opts.strength,
+            opts.search
+          ).toJson()
+        }
+      } finally {
+        recycleBitmaps(bitmaps)
+      }
+    }
+  }
+
   @RequiresApi(Build.VERSION_CODES.N)
   @ReactMethod
   override fun markWithText(

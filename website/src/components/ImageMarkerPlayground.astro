@@ -28,6 +28,7 @@ const strings = isZh
         '图层混合模式',
         '位置与旋转',
         '变量与条件 Recipe',
+        '隐形追踪水印',
         'PNG、JPEG 与 Web Blob',
       ],
       webBadge: '实时预览',
@@ -60,6 +61,7 @@ const strings = isZh
         { id: 'opacity', title: '半透明文字', meta: '整个文字图层 40%', version: 'v1.8' },
         { id: 'blend', title: '自然融合', meta: 'Screen 文字 + Multiply Logo', version: 'v1.9' },
         { id: 'batch', title: '个性化批量 Recipe', meta: '文件名变量、进度与 Blob', version: 'v1.9' },
+        { id: 'invisible', title: '隐形追踪', meta: '嵌入短 ID 并验证', version: 'v1.10' },
       ],
       textLayer: '文字设置',
       text: '文字内容',
@@ -125,6 +127,24 @@ const strings = isZh
       batchFailed: '批量处理失败',
       batchResults: '处理结果',
       downloadResult: '保存',
+      invisibleEyebrow: 'v1.10 · 隐形追踪水印 Beta',
+      invisibleTitle: '画面看不出变化，也能找回短 ID。',
+      invisibleDescription:
+        '把短 locator 写入图片像素，再用相同密钥验证。适合素材分发追踪；它不是 DRM，也不能证明图片从未被修改。',
+      invisiblePayload: '短 ID（最多 12 个 UTF-8 字节）',
+      invisibleKey: '演示密钥',
+      invisibleStrength: '强度',
+      invisibleStrengths: ['轻微', '均衡', '耐压缩'],
+      invisibleEmbed: '嵌入并预览',
+      invisibleDetect: '验证当前结果',
+      invisibleReady: '等待嵌入',
+      invisibleEmbedding: '正在写入像素…',
+      invisibleEmbedded: '已嵌入；肉眼预览应基本不变',
+      invisibleDetecting: '正在验证…',
+      invisibleDetected: '验证成功',
+      invisibleNotDetected: '未找到可验证的追踪 ID',
+      invisibleWarning:
+        '页面中的密钥公开可见，只能用于演示。生产环境请使用随机 locator，并在可信服务端或受控客户端中管理密钥。',
       differencesTitle: 'Web 与原生输出有什么不同？',
       differences: [
         ['保存结果', 'Web 返回可直接预览和保存的图片地址；iOS 和 Android 返回临时文件路径。'],
@@ -161,6 +181,7 @@ const strings = isZh
         'Layer blend modes',
         'Position and rotation',
         'Variable and conditional Recipe',
+        'Invisible trace watermark',
         'PNG, JPEG, and Web Blob',
       ],
       webBadge: 'Live preview',
@@ -193,6 +214,7 @@ const strings = isZh
         { id: 'opacity', title: 'Translucent text', meta: 'Whole text layer at 40%', version: 'v1.8' },
         { id: 'blend', title: 'Natural compositing', meta: 'Screen text + Multiply logo', version: 'v1.9' },
         { id: 'batch', title: 'Personalized batch Recipe', meta: 'Filename variables, progress, and Blob', version: 'v1.9' },
+        { id: 'invisible', title: 'Invisible trace', meta: 'Embed and verify a short ID', version: 'v1.10' },
       ],
       textLayer: 'Text settings',
       text: 'Watermark text',
@@ -258,6 +280,24 @@ const strings = isZh
       batchFailed: 'Batch failed',
       batchResults: 'Batch results',
       downloadResult: 'Save',
+      invisibleEyebrow: 'v1.10 · Invisible trace watermark Beta',
+      invisibleTitle: 'Keep the image clean. Recover a short ID later.',
+      invisibleDescription:
+        'Write a short locator into the pixels, then authenticate it with the same key. Use it for distribution tracing—not as DRM or proof that an image was never edited.',
+      invisiblePayload: 'Short ID (up to 12 UTF-8 bytes)',
+      invisibleKey: 'Demo key',
+      invisibleStrength: 'Strength',
+      invisibleStrengths: ['Subtle', 'Balanced', 'Compression resistant'],
+      invisibleEmbed: 'Embed and preview',
+      invisibleDetect: 'Verify current result',
+      invisibleReady: 'Waiting to embed',
+      invisibleEmbedding: 'Writing into pixels…',
+      invisibleEmbedded: 'Embedded. The preview should look nearly unchanged.',
+      invisibleDetecting: 'Verifying…',
+      invisibleDetected: 'Verified',
+      invisibleNotDetected: 'No authenticated trace ID found',
+      invisibleWarning:
+        'This page exposes its demo key, so do not copy it into production. Use random locators and manage keys on a trusted server or controlled client.',
       differencesTitle: 'How does Web output differ from native?',
       differences: [
         ['Saved result', 'Web returns an image URL you can preview or save. iOS and Android return a temporary file path.'],
@@ -291,6 +331,10 @@ const blendModes = [
   { value: 'darken', label: isZh ? '变暗' : 'Darken' },
   { value: 'lighten', label: isZh ? '变亮' : 'Lighten' },
 ];
+const invisibleStrengths = ['subtle', 'balanced', 'robust'].map((value, index) => ({
+  value,
+  label: strings.invisibleStrengths[index]!,
+}));
 ---
 
 <section
@@ -322,6 +366,12 @@ const blendModes = [
   data-batch-complete={strings.batchComplete}
   data-batch-failed={strings.batchFailed}
   data-batch-download={strings.downloadResult}
+  data-invisible-ready={strings.invisibleReady}
+  data-invisible-embedding={strings.invisibleEmbedding}
+  data-invisible-embedded={strings.invisibleEmbedded}
+  data-invisible-detecting={strings.invisibleDetecting}
+  data-invisible-detected={strings.invisibleDetected}
+  data-invisible-not-detected={strings.invisibleNotDetected}
 >
   <header class="playground-heading">
     <div>
@@ -708,6 +758,48 @@ const blendModes = [
   </section>
 
   <section
+    class="invisible-panel"
+    aria-labelledby={`${idPrefix}-invisible-title`}
+    data-invisible-panel
+    tabindex="-1"
+  >
+    <div class="invisible-heading">
+      <div>
+        <p class="panel-kicker">{strings.invisibleEyebrow}</p>
+        <h3 id={`${idPrefix}-invisible-title`}>{strings.invisibleTitle}</h3>
+        <p>{strings.invisibleDescription}</p>
+      </div>
+      <span class="invisible-status" data-invisible-status>{strings.invisibleReady}</span>
+    </div>
+    <div class="invisible-controls">
+      <label class="field">
+        <span>{strings.invisiblePayload}</span>
+        <input type="text" value="asset-42" maxlength="12" data-invisible-payload />
+      </label>
+      <label class="field">
+        <span>{strings.invisibleKey}</span>
+        <input type="password" value="example-only-key-2026" data-invisible-key />
+      </label>
+      <CustomSelect
+        id={`${idPrefix}-invisible-strength`}
+        label={strings.invisibleStrength}
+        name="invisible-strength"
+        options={invisibleStrengths}
+        value="robust"
+      />
+    </div>
+    <div class="invisible-actions">
+      <button class="primary-button" type="button" data-invisible-embed>
+        {strings.invisibleEmbed}
+      </button>
+      <button class="quiet-button" type="button" data-invisible-detect disabled>
+        {strings.invisibleDetect}
+      </button>
+    </div>
+    <p class="invisible-warning">{strings.invisibleWarning}</p>
+  </section>
+
+  <section
     class="batch-panel"
     aria-labelledby={`${idPrefix}-batch-title`}
     data-batch-panel
@@ -963,6 +1055,13 @@ const blendModes = [
     const batchRun = asElement<HTMLButtonElement>(root, '[data-batch-run]');
     const batchCancel = asElement<HTMLButtonElement>(root, '[data-batch-cancel]');
     const batchResults = asElement<HTMLElement>(root, '[data-batch-results]');
+    const invisiblePanel = asElement<HTMLElement>(root, '[data-invisible-panel]');
+    const invisiblePayload = asElement<HTMLInputElement>(root, '[data-invisible-payload]');
+    const invisibleKey = asElement<HTMLInputElement>(root, '[data-invisible-key]');
+    const invisibleStrength = asElement<HTMLSelectElement>(root, '[data-invisible-strength]');
+    const invisibleStatus = asElement<HTMLElement>(root, '[data-invisible-status]');
+    const invisibleEmbed = asElement<HTMLButtonElement>(root, '[data-invisible-embed]');
+    const invisibleDetect = asElement<HTMLButtonElement>(root, '[data-invisible-detect]');
 
     const getTextLayer = (Position: PositionEnum) => ({
       text: textInput.value || 'IMAGE MARKER',
@@ -1222,6 +1321,11 @@ ${layers}
         batchPanel.focus({ preventScroll: true });
         return;
       }
+      if (example === 'invisible') {
+        invisiblePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        invisiblePanel.focus({ preventScroll: true });
+        return;
+      }
 
       bold.checked = true;
       colorInput.value = '#ffffff';
@@ -1321,6 +1425,7 @@ ${layers}
     let renderTimer = 0;
     let batchController: AbortController | undefined;
     let batchObjectUrls: string[] = [];
+    let invisibleResult = '';
 
     const clearBatchResults = () => {
       batchObjectUrls.forEach((url) => URL.revokeObjectURL(url));
@@ -1442,7 +1547,80 @@ ${layers}
       }
     };
 
+    const setInvisibleBusy = (busy: boolean) => {
+      invisibleEmbed.disabled = busy;
+      invisibleDetect.disabled = busy || !invisibleResult;
+    };
+
+    const showInvisibleResult = async (result: string) => {
+      const size = await imageDimensions(result);
+      state.result = result;
+      preview.src = result;
+      preview.alt = root.dataset.generatedAlt ?? '';
+      dimensions.textContent = `${size.width} × ${size.height}`;
+      resultUri.textContent = `${result.slice(0, 42)}…${result.slice(-16)}`;
+      copyResultButton.disabled = false;
+      download.href = result;
+      download.download = `${root.dataset.filename ?? 'image-marker-web-demo'}-trace.png`;
+      download.classList.remove('is-disabled');
+      download.removeAttribute('aria-disabled');
+    };
+
+    const runInvisibleEmbed = async () => {
+      setInvisibleBusy(true);
+      invisibleStatus.textContent = root.dataset.invisibleEmbedding ?? '';
+      const startedAt = performance.now();
+      try {
+        const sdk = await sdkPromise;
+        const result = await sdk.default.embedInvisible({
+          image: { src: state.backgroundSrc },
+          payload: invisiblePayload.value,
+          key: invisibleKey.value,
+          strength: invisibleStrength.value as 'subtle' | 'balanced' | 'robust',
+          saveFormat: sdk.ImageFormat.png,
+          filename: `${root.dataset.filename ?? 'image-marker-web-demo'}-trace`,
+        });
+        invisibleResult = result;
+        await showInvisibleResult(result);
+        elapsed.textContent = `${Math.round(performance.now() - startedAt)} ms`;
+        invisibleStatus.textContent = root.dataset.invisibleEmbedded ?? '';
+        setStatus('rendered', root.dataset.invisibleEmbedded);
+      } catch (error) {
+        invisibleResult = '';
+        const message = error instanceof Error ? error.message : String(error);
+        invisibleStatus.textContent = `${root.dataset.failed ?? ''}: ${message}`;
+        setStatus('failed', invisibleStatus.textContent);
+      } finally {
+        setInvisibleBusy(false);
+      }
+    };
+
+    const runInvisibleDetect = async () => {
+      if (!invisibleResult) return;
+      setInvisibleBusy(true);
+      invisibleStatus.textContent = root.dataset.invisibleDetecting ?? '';
+      try {
+        const sdk = await sdkPromise;
+        const detection = await sdk.default.detectInvisible({
+          image: { src: invisibleResult },
+          key: invisibleKey.value,
+          strength: invisibleStrength.value as 'subtle' | 'balanced' | 'robust',
+          search: 'fast',
+        });
+        invisibleStatus.textContent = detection.detected
+          ? `${root.dataset.invisibleDetected ?? ''}: ${detection.payload ?? '—'} · ${Math.round(detection.confidence * 100)}%`
+          : root.dataset.invisibleNotDetected ?? '';
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        invisibleStatus.textContent = `${root.dataset.failed ?? ''}: ${message}`;
+      } finally {
+        setInvisibleBusy(false);
+      }
+    };
+
     const clearResult = () => {
+      invisibleResult = '';
+      invisibleDetect.disabled = true;
       state.result = '';
       preview.src = state.backgroundSrc;
       preview.alt = sourceAlt;
@@ -1693,6 +1871,13 @@ ${layers}
       batchStatus.textContent = root.dataset.batchCancelling ?? '';
     });
     window.addEventListener('pagehide', clearBatchResults, { once: true });
+    invisibleEmbed.addEventListener('click', () => void runInvisibleEmbed());
+    invisibleDetect.addEventListener('click', () => void runInvisibleDetect());
+    [invisiblePayload, invisibleKey, invisibleStrength].forEach((input) => {
+      input.addEventListener('input', () => {
+        invisibleStatus.textContent = root.dataset.invisibleReady ?? '';
+      });
+    });
 
     asElement<HTMLButtonElement>(root, '[data-default-background]').addEventListener('click', () => {
       state.backgroundSrc = defaultBackground;
@@ -1715,6 +1900,10 @@ ${layers}
       updateLayout('text', 'single');
       updateLayout('image', 'single');
       setActiveExample('mixed');
+      invisiblePayload.value = 'asset-42';
+      invisibleKey.value = 'example-only-key-2026';
+      setCustomSelectValue(invisibleStrength, 'robust');
+      invisibleStatus.textContent = root.dataset.invisibleReady ?? '';
       updateStrokeOptions();
       scheduleRender();
     });
@@ -1961,6 +2150,7 @@ ${layers}
 
   .preview-panel,
   .controls-panel,
+  .invisible-panel,
   .batch-panel,
   .code-panel,
   .differences {
@@ -2572,6 +2762,7 @@ ${layers}
   }
 
   .field input[type='text'],
+  .field input[type='password'],
   .field input[type='number'],
   .field select {
     width: 100%;
@@ -2647,6 +2838,78 @@ ${layers}
   .output-grid {
     grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr);
     margin-top: 0;
+  }
+
+  .invisible-panel {
+    margin-top: 1rem;
+    padding: 1rem;
+    background:
+      radial-gradient(circle at 88% 10%, color-mix(in srgb, var(--marker-blue) 13%, transparent), transparent 30%),
+      var(--playground-panel);
+  }
+
+  .invisible-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1.5rem;
+  }
+
+  .invisible-heading h3 {
+    margin: 0;
+    color: var(--marker-ink);
+    font-size: 1.05rem;
+    letter-spacing: -0.025em;
+  }
+
+  .invisible-heading p:last-child {
+    max-width: 72ch;
+    margin: 0.35rem 0 0;
+    color: var(--marker-muted);
+    font-size: 0.72rem;
+    line-height: 1.55;
+  }
+
+  .invisible-status {
+    flex: none;
+    max-width: 22rem;
+    padding: 0.35rem 0.62rem;
+    border: 1px solid var(--playground-line);
+    border-radius: 999px;
+    color: var(--marker-blue);
+    background: var(--playground-panel-raised);
+    font-family: var(--sl-font-mono);
+    font-size: 0.64rem;
+    line-height: 1.4;
+    text-align: center;
+  }
+
+  .invisible-controls {
+    display: grid;
+    grid-template-columns: minmax(10rem, 1fr) minmax(12rem, 1.2fr) minmax(9rem, 0.72fr);
+    align-items: end;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--playground-line);
+  }
+
+  .invisible-actions {
+    display: flex;
+    gap: 0.55rem;
+    margin-top: 0.75rem;
+  }
+
+  .invisible-actions button {
+    min-width: 10rem;
+    padding-inline: 0.85rem;
+  }
+
+  .invisible-warning {
+    margin: 0.75rem 0 0;
+    color: var(--marker-muted);
+    font-size: 0.66rem;
+    line-height: 1.5;
   }
 
   .batch-panel {
@@ -2982,6 +3245,7 @@ ${layers}
     }
 
     .preview-actions,
+    .invisible-controls,
     .batch-heading,
     .batch-progress-row,
     .field-grid,
@@ -3000,6 +3264,25 @@ ${layers}
 
     .batch-picker {
       justify-content: flex-start;
+    }
+
+    .invisible-heading {
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .invisible-status {
+      max-width: 100%;
+    }
+
+    .invisible-actions {
+      display: grid;
+      grid-template-columns: 1fr;
+    }
+
+    .invisible-actions button {
+      width: 100%;
+      min-width: 0;
     }
 
     .batch-actions {

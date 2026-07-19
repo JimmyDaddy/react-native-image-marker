@@ -1,0 +1,80 @@
+---
+title: Invisible trace watermarks
+description: Embed and authenticate a short distribution locator on iOS, Android, and Web.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Invisible trace watermarks keep the visible composition unchanged while carrying a short authenticated locator in the image pixels. Use the locator to look up an asset, recipient, export job, or signed server record.
+
+<Aside type="caution" title="Beta security boundary">
+  This is distribution tracing—not DRM, encryption, authorship proof, or proof
+  that an image was never edited. A determined attacker can damage or remove the
+  mark by sacrificing image quality.
+</Aside>
+
+## Embed and verify
+
+```ts
+import Marker, { ImageFormat } from 'react-native-image-marker';
+
+const key = await loadWatermarkKeyFromTrustedStorage();
+const output = await Marker.embedInvisible({
+  image: { src: require('./photo.jpg') },
+  payload: 'asset-42',
+  key,
+  strength: 'robust',
+  saveFormat: ImageFormat.png,
+  filename: 'traced-photo',
+});
+
+const result = await Marker.detectInvisible({
+  image: { src: { uri: output } },
+  key,
+  strength: 'robust',
+  search: 'fast',
+});
+
+if (result.detected) {
+  console.log(result.payload, result.confidence, result.bitErrorRate);
+}
+```
+
+Native embedding returns a cache-file path; Web returns a data URL. Detection does not create a file.
+
+## Payload and key rules
+
+- `payload` must contain 1–12 UTF-8 bytes. Prefer a random locator such as a compact asset or distribution ID.
+- `key` must contain at least 16 UTF-8 bytes. Do not commit it, bundle a master key, or reuse the public Playground key.
+- Do not put names, email addresses, order details, or other personal data in the payload. Store that data behind the locator with appropriate access controls and retention.
+- Detection authenticates the embedded frame with a truncated HMAC tag. It does not create a public digital signature.
+
+Browser scripts and extensions can read any key available to page JavaScript. For production Web delivery, embed on a trusted server or issue narrowly scoped, short-lived keys to a controlled client.
+
+## Strength and search
+
+| Setting            | Use it when                                      | Trade-off                         |
+| ------------------ | ------------------------------------------------ | --------------------------------- |
+| `subtle`           | The cleanest pixels matter most                  | Least tolerant of later encoding  |
+| `balanced`         | General photos and direct output                 | Default visual/robustness balance |
+| `robust`           | The image will be recompressed                   | Strongest pixel change            |
+| `search: 'fast'`   | Original dimensions and block grid are preserved | Low detection cost                |
+| `search: 'robust'` | A limited crop may have shifted the grid         | Much more CPU work                |
+
+Use the same `strength` for embedding and detection. `robust` search can recover some crops, but it does not currently compensate for resizing.
+
+## What survives
+
+The project test matrix covers direct PNG output, JPEG re-encoding at quality 90/75/60, mild brightness and contrast changes, wrong-key rejection, and limited crop recovery. Real images and encoders vary, so validate your own delivery pipeline before relying on a threshold.
+
+Heavy blur, aggressive resizing, large crops, painting over the image, generative edits, screenshots, and print-camera workflows are not stable guarantees in v1.10. Detection returns `detected: false` instead of throwing when no authenticated frame is found.
+
+## Recommended server workflow
+
+1. Generate a random locator for each exported copy.
+2. Store the locator, asset ID, recipient or channel, timestamp, and a signed audit record on the server.
+3. Embed only the locator after visible layers are composed and before final encoding.
+4. Keep the original and marked output long enough to investigate false negatives.
+5. When detecting, apply your own confidence policy and confirm the locator against the server record.
+
+The frame format and threat model are specified in [RFC 0003 on GitHub](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/docs/rfcs/0003-v1.10-invisible-trace-watermarks.md).

@@ -10,6 +10,9 @@ description: React Native Image Marker 的自动生成 API 参考文档。
 - [`Marker.markText`](/zh-cn/api/classes/marker/#marktext) 渲染纯文字图层。
 - [`Marker.markImage`](/zh-cn/api/classes/marker/#markimage) 渲染纯图片图层。
 - [`Marker.mark`](/zh-cn/api/classes/marker/#mark) 渲染按顺序排列的混合图层。
+- [`Marker.createRecipe`](/zh-cn/api/classes/marker/#createrecipe) 创建可复用的批量处理流程。
+- [`Marker.embedInvisible`](/zh-cn/api/classes/marker/#embedinvisible) 将经过认证的短追踪 ID 写入图片像素。
+- [`Marker.detectInvisible`](/zh-cn/api/classes/marker/#detectinvisible) 恢复并验证隐形追踪 ID。
 
 ## 从主要选项类型开始
 
@@ -17,5 +20,8 @@ description: React Native Image Marker 的自动生成 API 参考文档。
 - [`ImageMarkOptions`](/zh-cn/api/interfaces/imagemarkoptions/)
 - [`MarkOptions`](/zh-cn/api/interfaces/markoptions/)
 - [`PositionOptions`](/zh-cn/api/interfaces/positionoptions/)
+- [`EmbedInvisibleWatermarkOptions`](/zh-cn/api/interfaces/embedinvisiblewatermarkoptions/)
+- [`DetectInvisibleWatermarkOptions`](/zh-cn/api/interfaces/detectinvisiblewatermarkoptions/)
+- [`InvisibleWatermarkDetectionResult`](/zh-cn/api/interfaces/invisiblewatermarkdetectionresult/)
 
 使用侧边栏中生成的 **API 参考** 分组，浏览所有枚举、接口和类型别名。

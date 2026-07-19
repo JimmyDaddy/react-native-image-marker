@@ -17,6 +17,7 @@ Use this page to find the shortest path to the documentation you need.
 - [Choose an API](/guides/choose-an-api/) — decide between `markText`, `markImage`, and `mark`.
 - [Position and style](/guides/position-and-style/) — place text and logos and adjust their appearance.
 - [Output and image quality](/guides/output-and-quality/) — choose a format, quality, and background color.
+- [Invisible trace watermarks](/guides/invisible-watermarks/) — embed and authenticate a short distribution locator.
 - [Visual cookbook](/cookbook/) — start from complete examples.
 
 ## Reference and help

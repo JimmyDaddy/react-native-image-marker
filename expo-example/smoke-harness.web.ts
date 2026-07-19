@@ -25,6 +25,20 @@ interface WebSmokeHarness {
   }>;
   renderLargeCropped(): Promise<ImageResult>;
   renderTiledLayers(): Promise<ImageResult>;
+  verifyInvisibleWatermark(): Promise<{
+    payload: string;
+    pngDetected: boolean;
+    jpeg90Detected: boolean;
+    jpeg75Detected: boolean;
+    jpeg60Detected: boolean;
+    adjustedDetected: boolean;
+    wrongKeyDetected: boolean;
+  }>;
+  verifyInvisibleCorpus(sources: string[]): Promise<{
+    fixtureCount: number;
+    detectedCount: number;
+    unmarkedFalsePositives: number;
+  }>;
   renderCrossOrigin(url: string): Promise<string>;
 }
 
@@ -51,6 +65,34 @@ async function getDimensions(dataUrl: string): Promise<ImageResult> {
     width: image.naturalWidth,
     height: image.naturalHeight,
   };
+}
+
+async function transformDataUrl(
+  dataUrl: string,
+  type: 'image/jpeg' | 'image/png',
+  quality?: number,
+  adjustPixels = false
+): Promise<string> {
+  const image = new Image();
+  image.src = dataUrl;
+  await image.decode();
+  const canvas = document.createElement('canvas');
+  canvas.width = image.naturalWidth;
+  canvas.height = image.naturalHeight;
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('Canvas 2D is unavailable.');
+  context.drawImage(image, 0, 0);
+  if (adjustPixels) {
+    const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+    for (let index = 0; index < pixels.data.length; index += 4) {
+      for (let channel = 0; channel < 3; channel += 1) {
+        pixels.data[index + channel] =
+          (pixels.data[index + channel]! - 128) * 1.05 + 133;
+      }
+    }
+    context.putImageData(pixels, 0, 0);
+  }
+  return canvas.toDataURL(type, quality);
 }
 
 async function createLargeImage(): Promise<File> {
@@ -215,6 +257,90 @@ function createHarness(assets: SmokeHarnessAssets): WebSmokeHarness {
         saveFormat: ImageFormat.png,
       });
       return getDimensions(dataUrl);
+    },
+
+    async verifyInvisibleWatermark() {
+      const key = 'smoke-test-key-2026';
+      const payload = 'asset-42';
+      const marked = await Marker.embedInvisible({
+        image: { src: assets.backgroundUri },
+        payload,
+        key,
+        strength: 'robust',
+        saveFormat: ImageFormat.png,
+      });
+      const [jpeg90, jpeg75, jpeg60, adjusted] = await Promise.all([
+        transformDataUrl(marked, 'image/jpeg', 0.9),
+        transformDataUrl(marked, 'image/jpeg', 0.75),
+        transformDataUrl(marked, 'image/jpeg', 0.6),
+        transformDataUrl(marked, 'image/png', undefined, true),
+      ]);
+      const detect = (image: string, detectKey = key) =>
+        Marker.detectInvisible({
+          image: { src: image },
+          key: detectKey,
+          strength: 'robust',
+          search: 'fast',
+        });
+      const [png, q90, q75, q60, adjustedResult, wrongKey] = await Promise.all([
+        detect(marked),
+        detect(jpeg90),
+        detect(jpeg75),
+        detect(jpeg60),
+        detect(adjusted),
+        detect(marked, 'different-smoke-key'),
+      ]);
+      return {
+        payload: png.payload ?? '',
+        pngDetected: png.detected,
+        jpeg90Detected: q90.detected,
+        jpeg75Detected: q75.detected,
+        jpeg60Detected: q60.detected,
+        adjustedDetected: adjustedResult.detected,
+        wrongKeyDetected: wrongKey.detected,
+      };
+    },
+
+    async verifyInvisibleCorpus(sources: string[]) {
+      const key = 'corpus-test-key-2026';
+      let detectedCount = 0;
+      let unmarkedFalsePositives = 0;
+      for (let index = 0; index < sources.length; index += 1) {
+        const source = sources[index]!;
+        const unmarked = await Marker.detectInvisible({
+          image: { src: source },
+          key,
+          strength: 'balanced',
+          search: 'fast',
+          maxSize: 512,
+        });
+        if (unmarked.detected) unmarkedFalsePositives += 1;
+
+        const payload = `fixture-${index}`;
+        const marked = await Marker.embedInvisible({
+          image: { src: source },
+          payload,
+          key,
+          strength: 'balanced',
+          saveFormat: ImageFormat.png,
+          maxSize: 512,
+        });
+        const detected = await Marker.detectInvisible({
+          image: { src: marked },
+          key,
+          strength: 'balanced',
+          search: 'fast',
+          maxSize: 512,
+        });
+        if (detected.detected && detected.payload === payload) {
+          detectedCount += 1;
+        }
+      }
+      return {
+        fixtureCount: sources.length,
+        detectedCount,
+        unmarkedFalsePositives,
+      };
     },
 
     async renderCrossOrigin(url: string) {

@@ -289,6 +289,73 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         }
     }
 
+    @objc(embedInvisible:resolve:reject:)
+    func embedInvisible(
+        _ opts: [AnyHashable: Any],
+        resolve: @escaping RCTPromiseResolveBlock,
+        reject: @escaping RCTPromiseRejectBlock
+    ) -> Void {
+        guard let invisibleOpts = InvisibleWatermarkOptions.checkEmbed(opts, rejecter: reject) else {
+            return
+        }
+        Task(priority: .userInitiated) {
+            do {
+                let result = try await self.operationLimiter.withPermit {
+                    var images = try await self.loadImages(
+                        with: [invisibleOpts.backgroundImage],
+                        maxSize: invisibleOpts.maxSize
+                    )
+                    let markedImage = try Utils.renderAndReleaseSources(&images) { sources in
+                        try InvisibleWatermark.embed(
+                            image: sources[0],
+                            payload: invisibleOpts.requiredPayload(),
+                            key: invisibleOpts.key,
+                            strength: invisibleOpts.strength
+                        )
+                    }
+                    try Task.checkCancellation()
+                    return try self.saveImageForMarker(markedImage, with: invisibleOpts)
+                }
+                resolve(result)
+            } catch {
+                reject("error", error.localizedDescription, error)
+            }
+        }
+    }
+
+    @objc(detectInvisible:resolve:reject:)
+    func detectInvisible(
+        _ opts: [AnyHashable: Any],
+        resolve: @escaping RCTPromiseResolveBlock,
+        reject: @escaping RCTPromiseRejectBlock
+    ) -> Void {
+        guard let invisibleOpts = InvisibleWatermarkOptions.checkDetect(opts, rejecter: reject) else {
+            return
+        }
+        Task(priority: .userInitiated) {
+            do {
+                let result = try await self.operationLimiter.withPermit {
+                    var images = try await self.loadImages(
+                        with: [invisibleOpts.backgroundImage],
+                        maxSize: invisibleOpts.maxSize
+                    )
+                    defer { images.removeAll() }
+                    let detection = try InvisibleWatermark.detect(
+                        image: images[0],
+                        key: invisibleOpts.key,
+                        strength: invisibleOpts.strength,
+                        search: invisibleOpts.search
+                    )
+                    try Task.checkCancellation()
+                    return try detection.json()
+                }
+                resolve(result)
+            } catch {
+                reject("error", error.localizedDescription, error)
+            }
+        }
+    }
+
     func markImgWithText(_ image: UIImage, _ opts: MarkTextOptions) throws -> UIImage? {
         return try ImageMarkerRenderer.renderCanvas(
             background: image,
