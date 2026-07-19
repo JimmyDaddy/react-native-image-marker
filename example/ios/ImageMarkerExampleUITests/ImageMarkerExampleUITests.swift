@@ -256,7 +256,7 @@ final class ImageMarkerExampleUITests: XCTestCase {
 
     XCTAssertTrue(app.otherElements["result-preview-ready"].waitForExistence(timeout: 30))
     let verified = app.staticTexts.matching(
-      NSPredicate(format: "label BEGINSWITH %@", "Invisible trace verified: asset-42")
+      NSPredicate(format: "label BEGINSWITH %@", "Invisible batch verified · 2 outputs")
     ).firstMatch
     XCTAssertTrue(verified.waitForExistence(timeout: 10))
   }
