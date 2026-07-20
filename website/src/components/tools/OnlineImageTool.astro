@@ -65,6 +65,7 @@ const copy = zh
       runLab: '运行稳健性实验',
       inspect: '读取 Content Credentials',
       emptyPreview: '结果会显示在这里',
+      backToTools: '返回全部工具',
       developerNote: '需要完整参数与代码生成？',
       playground: '打开 SDK Playground',
     }
@@ -112,6 +113,7 @@ const copy = zh
       runLab: 'Run robustness lab',
       inspect: 'Read Content Credentials',
       emptyPreview: 'Your result will appear here',
+      backToTools: 'Back to all tools',
       developerNote: 'Need every option and generated code?',
       playground: 'Open the SDK playground',
     };
@@ -122,6 +124,7 @@ const defaultText = tool === 'confidential-watermark'
   ? zh ? '仅供内部' : 'CONFIDENTIAL'
   : zh ? '由 Image Marker 制作' : 'MADE WITH IMAGE MARKER';
 const playgroundHref = zh ? '/zh-cn/playground/' : '/playground/';
+const toolsHref = zh ? '/zh-cn/tools/' : '/tools/';
 const defaultRecipeJson = JSON.stringify(
   {
     schemaVersion: 1,
@@ -154,7 +157,13 @@ const defaultRecipeJson = JSON.stringify(
   data-locale={locale}
   aria-label={copy.settings}
 >
-  <div class="tool-local-badge"><span></span>{copy.local}</div>
+  <div class="tool-page-navigation">
+    <a class="tool-back-link" href={toolsHref} data-tool-back>
+      <span aria-hidden="true">←</span>
+      {copy.backToTools}
+    </a>
+    <div class="tool-local-badge"><span></span>{copy.local}</div>
+  </div>
 
   <div class="tool-workbench">
     <form class="tool-controls" data-tool-form onsubmit="return false">
