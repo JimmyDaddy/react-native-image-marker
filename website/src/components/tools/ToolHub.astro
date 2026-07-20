@@ -1,0 +1,116 @@
+---
+interface Props { locale?: 'en' | 'zh-CN' }
+const { locale = 'en' } = Astro.props;
+const zh = locale === 'zh-CN';
+const prefix = zh ? '/zh-cn' : '';
+const tools = zh
+  ? [
+      ['watermark', '图片加水印', '文字、Logo、单个或平铺，一张图马上导出。', '常用'],
+      ['batch-watermark', '批量加水印', '同一个 Recipe 处理多张图片，打包下载 ZIP。', '批处理'],
+      ['confidential-watermark', '保密水印', '用“仅供内部”、DRAFT 等模板快速覆盖整张图。', '模板'],
+      ['invisible-watermark', '嵌入隐形水印', '在像素中写入经过认证的短追踪 locator。', '追踪'],
+      ['trace-checker', '检查追踪水印', '上传一张疑似图片，恢复 Image Marker locator。', '检测'],
+      ['recipe-builder', 'Recipe 构建器', '编辑、验证、预览并导出可复用的 Recipe JSON。', '开发者'],
+      ['recipient-trace-package', '收件人追踪包', '为每个收件人生成不同 locator 和本地映射表。', '分发'],
+      ['trace-lab', '追踪稳健性实验室', '在 JPEG、缩放与裁剪后检查 locator 是否可恢复。', '实验'],
+      ['content-credentials', 'Content Credentials 检查器', '读取图片中已有的 C2PA manifest，不上传文件。', 'C2PA'],
+    ]
+  : [
+      ['watermark', 'Watermark an image', 'Add text, a logo, or a tiled pattern and export one image.', 'Popular'],
+      ['batch-watermark', 'Batch watermark', 'Apply one recipe to several images and download a ZIP.', 'Batch'],
+      ['confidential-watermark', 'Confidential watermark', 'Cover a document image with CONFIDENTIAL, DRAFT, or your own label.', 'Preset'],
+      ['invisible-watermark', 'Embed an invisible trace', 'Write an authenticated short locator into the image pixels.', 'Trace'],
+      ['trace-checker', 'Check a trace watermark', 'Upload a suspect image and recover its Image Marker locator.', 'Detect'],
+      ['recipe-builder', 'Recipe builder', 'Edit, validate, preview, and export reusable Recipe JSON.', 'Developer'],
+      ['recipient-trace-package', 'Recipient trace package', 'Give each recipient a random locator and keep the mapping locally.', 'Distribution'],
+      ['trace-lab', 'Trace robustness lab', 'Check recovery after JPEG recompression, resizing, and a limited crop.', 'Experiment'],
+      ['content-credentials', 'Content Credentials inspector', 'Read an existing C2PA manifest locally without signing the file.', 'C2PA'],
+    ];
+---
+
+<div class="tool-hub">
+  {tools.map(([slug, title, description, badge], index) => (
+    <a class:list={['tool-hub-card', index === 0 && 'tool-hub-card-featured']} href={`${prefix}/tools/${slug}/`}>
+      <span class="tool-hub-index">{String(index + 1).padStart(2, '0')}</span>
+      <span class="tool-hub-badge">{badge}</span>
+      <h2>{title}</h2>
+      <p>{description}</p>
+      <strong>{zh ? '打开工具' : 'Open tool'} <span aria-hidden="true">→</span></strong>
+    </a>
+  ))}
+</div>
+
+<style>
+  .tool-hub {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.9rem;
+    width: min(100%, 88rem);
+    margin: 1.5rem auto 3.5rem;
+  }
+  .tool-hub-card {
+    position: relative;
+    display: flex;
+    min-height: 15rem;
+    flex-direction: column;
+    padding: clamp(1.15rem, 3vw, 1.65rem);
+    border: 1px solid var(--marker-border);
+    border-radius: 1rem;
+    color: var(--marker-ink);
+    background: var(--marker-panel);
+    text-decoration: none;
+    transition: transform 160ms ease, border-color 160ms ease;
+  }
+  .tool-hub-card:hover {
+    border-color: color-mix(in srgb, var(--marker-blue) 60%, var(--marker-border));
+    transform: translateY(-3px);
+  }
+  .tool-hub-index {
+    color: var(--marker-coral);
+    font-family: var(--sl-font-mono);
+    font-size: 0.68rem;
+    font-weight: 750;
+  }
+  .tool-hub-badge {
+    position: absolute;
+    top: 1rem;
+    inset-inline-end: 1rem;
+    padding: 0.25rem 0.55rem;
+    border-radius: 999px;
+    color: var(--marker-muted);
+    background: color-mix(in srgb, var(--marker-blue) 10%, transparent);
+    font-size: 0.65rem;
+    font-weight: 700;
+  }
+  .tool-hub-card h2 {
+    margin: 2.1rem 0 0.55rem;
+    color: var(--marker-ink);
+    font-size: clamp(1.25rem, 2.5vw, 1.7rem);
+    line-height: 1.1;
+    letter-spacing: -0.035em;
+  }
+  .tool-hub-card p {
+    margin: 0 0 1.25rem;
+    color: var(--marker-muted);
+    font-size: 0.84rem;
+    line-height: 1.55;
+  }
+  .tool-hub-card strong {
+    margin-top: auto;
+    color: var(--marker-blue);
+    font-size: 0.76rem;
+  }
+  .tool-hub-card-featured {
+    grid-column: span 2;
+    background:
+      radial-gradient(circle at 90% 10%, color-mix(in srgb, var(--marker-blue) 24%, transparent), transparent 38%),
+      var(--marker-panel);
+  }
+  @media (max-width: 58rem) { .tool-hub { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 36rem) {
+    .tool-hub { grid-template-columns: 1fr; }
+    .tool-hub-card-featured { grid-column: auto; }
+    .tool-hub-card { min-height: 13rem; }
+  }
+  @media (prefers-reduced-motion: reduce) { .tool-hub-card { transition: none; } }
+</style>

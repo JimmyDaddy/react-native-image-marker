@@ -194,6 +194,63 @@ export default defineConfig({
           ],
         },
         {
+          label: 'Online tools',
+          translations: { 'zh-CN': '在线工具' },
+          collapsed: true,
+          items: [
+            {
+              label: 'All tools',
+              translations: { 'zh-CN': '全部工具' },
+              slug: 'tools',
+            },
+            {
+              label: 'Watermark an image',
+              translations: { 'zh-CN': '图片加水印' },
+              slug: 'tools/watermark',
+            },
+            {
+              label: 'Batch watermark',
+              translations: { 'zh-CN': '批量加水印' },
+              slug: 'tools/batch-watermark',
+            },
+            {
+              label: 'Confidential watermark',
+              translations: { 'zh-CN': '保密水印' },
+              slug: 'tools/confidential-watermark',
+            },
+            {
+              label: 'Invisible watermark',
+              translations: { 'zh-CN': '嵌入隐形水印' },
+              slug: 'tools/invisible-watermark',
+            },
+            {
+              label: 'Trace checker',
+              translations: { 'zh-CN': '检查追踪水印' },
+              slug: 'tools/trace-checker',
+            },
+            {
+              label: 'Recipe builder',
+              translations: { 'zh-CN': 'Recipe 构建器' },
+              slug: 'tools/recipe-builder',
+            },
+            {
+              label: 'Recipient trace package',
+              translations: { 'zh-CN': '收件人追踪包' },
+              slug: 'tools/recipient-trace-package',
+            },
+            {
+              label: 'Trace robustness lab',
+              translations: { 'zh-CN': '追踪稳健性实验室' },
+              slug: 'tools/trace-lab',
+            },
+            {
+              label: 'Content Credentials',
+              translations: { 'zh-CN': 'Content Credentials 检查器' },
+              slug: 'tools/content-credentials',
+            },
+          ],
+        },
+        {
           label: 'Guides',
           translations: { 'zh-CN': '指南' },
           items: [

@@ -1,0 +1,15 @@
+---
+title: 在线检查隐形追踪水印
+description: 本地检测 React Native Image Marker dct-qim-v1 locator，并查看置信度、误码率和估计缩放。
+template: splash
+---
+
+import OnlineImageTool from '../../../../components/tools/OnlineImageTool.astro';
+
+上传疑似图片，并输入嵌入时使用的相同密钥与强度。稳健模式还会搜索有限的缩放范围。
+
+<OnlineImageTool tool="trace-checker" locale="zh-CN" />
+
+## 怎样理解结果
+
+这里只检查 React Native Image Marker 的 `dct-qim-v1` 帧，不能查找 SynthID 或任意第三方水印，也不是 AI 图片检测器。“检测到”表示格式、CRC 和认证校验通过，不表示图片一定没有经过编辑。

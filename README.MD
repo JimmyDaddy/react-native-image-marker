@@ -231,7 +231,9 @@ For signed provenance, `Marker.embedInvisibleWithCredentials()` composes the loc
 
 ## Live Web SDK
 
-[Try the live playground](https://image-marker.corerobin.com/playground/) to compose visible layers or embed and verify an invisible trace ID entirely in your browser. Images stay local.
+Need a finished file without installing anything? Use the [free online image tools](https://image-marker.corerobin.com/tools/) for single or batch watermarks, recipient trace packages, robustness checks, and Content Credentials inspection. Images stay local.
+
+[Try the live playground](https://image-marker.corerobin.com/playground/) when you want to compose every SDK layer, inspect its options, or embed and verify an invisible trace ID.
 
 The Web renderer accepts URL strings, `{ uri }`, data URLs, `Blob`, `File`, and loaded browser images. In Expo Web, resolve a numeric bundled asset first:
 
@@ -276,6 +278,7 @@ See the full [compatibility guide](https://image-marker.corerobin.com/compatibil
 - [简体中文文档](https://image-marker.corerobin.com/zh-cn/)
 - [Installation](https://image-marker.corerobin.com/getting-started/)
 - [Live playground](https://image-marker.corerobin.com/playground/)
+- [Free online image tools](https://image-marker.corerobin.com/tools/)
 - [Guides](https://image-marker.corerobin.com/guides/choose-an-api/)
 - [Visual cookbook](https://image-marker.corerobin.com/cookbook/)
 - [Invisible trace watermarks](https://image-marker.corerobin.com/guides/invisible-watermarks/)

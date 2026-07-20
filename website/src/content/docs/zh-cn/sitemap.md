@@ -12,6 +12,19 @@ description: 浏览 React Native Image Marker 网站中的全部指南、示例�
 - [安装与第一个示例](/zh-cn/getting-started/) — 安装软件包并生成第一张图片。
 - [兼容性](/zh-cn/compatibility/) — 查看支持的平台和 Expo 要求。
 
+## 在线工具
+
+- [全部图片工具](/zh-cn/tools/) — 选择一个专注的本地浏览器任务。
+- [图片加水印](/zh-cn/tools/watermark/) — 添加文字、Logo 或平铺水印。
+- [批量加水印](/zh-cn/tools/batch-watermark/) — 处理多张图片并下载 ZIP。
+- [保密水印](/zh-cn/tools/confidential-watermark/) — 从清晰的评审模板开始。
+- [嵌入隐形水印](/zh-cn/tools/invisible-watermark/) — 写入经过认证的短 locator。
+- [追踪水印检查器](/zh-cn/tools/trace-checker/) — 恢复 Image Marker locator。
+- [Recipe 构建器](/zh-cn/tools/recipe-builder/) — 验证、预览并导出 Recipe JSON。
+- [收件人追踪包](/zh-cn/tools/recipient-trace-package/) — 为每个收件人生成独立追踪副本。
+- [追踪稳健性实验室](/zh-cn/tools/trace-lab/) — 比较常见变换后的恢复结果。
+- [Content Credentials 检查器](/zh-cn/tools/content-credentials/) — 读取已有 C2PA manifest。
+
 ## 指南与示例
 
 - [选择 API](/zh-cn/guides/choose-an-api/) — 在 `markText`、`markImage` 和 `mark` 之间选择。

@@ -1,0 +1,40 @@
+---
+interface Props {
+  copy: {
+    key: string;
+    strength: string;
+    search: string;
+  };
+  search?: boolean;
+}
+
+const { copy, search = false } = Astro.props;
+---
+
+<div class="tool-field-grid">
+  <label class="tool-field tool-field-wide">
+    <span>{copy.key}</span>
+    <input
+      type="password"
+      value="demo-image-marker-key-2026"
+      autocomplete="off"
+      data-key
+    />
+  </label>
+  <label class="tool-field">
+    <span>{copy.strength}</span>
+    <select data-strength>
+      <option value="balanced">Balanced</option>
+      <option value="robust">Robust</option>
+    </select>
+  </label>
+  {search && (
+    <label class="tool-field">
+      <span>{copy.search}</span>
+      <select data-search>
+        <option value="fast">Fast</option>
+        <option value="robust">Robust</option>
+      </select>
+    </label>
+  )}
+</div>

@@ -7,6 +7,8 @@ coverage/**
 website/.astro/**
 website/public/worker/**
 website/src/content/docs/api/**
+!website/src/lib/
+!website/src/lib/online-tools.ts
 
 base64.js
 example/src/bas64bg.js

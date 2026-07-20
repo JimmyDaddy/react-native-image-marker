@@ -1,0 +1,15 @@
+---
+title: 隐形水印稳健性实验室
+description: 在浏览器中测量 dct-qim-v1 经 JPEG 重编码、95% 缩放和有限边缘裁剪后的恢复结果。
+template: splash
+---
+
+import OnlineImageTool from '../../../../components/tools/OnlineImageTool.astro';
+
+嵌入一个 locator，生成小型、可重复的变换矩阵，然后比较经过认证的检测结果。
+
+<OnlineImageTool tool="trace-lab" locale="zh-CN" />
+
+## 一次实用的兼容性检查
+
+矩阵覆盖 PNG、JPEG 质量 90/75/60、95% 缩放和 2% 边缘裁剪。结果受图片细节、尺寸、强度和后续处理影响；这里不承诺抵抗截图、透视变化、大幅裁剪、生成式编辑或刻意移除。

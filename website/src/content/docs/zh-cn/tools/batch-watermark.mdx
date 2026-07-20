@@ -1,0 +1,15 @@
+---
+title: 在线批量给图片加水印
+description: 用同一个文字 Recipe 处理多张图片，支持文件名变量、进度、停止和本地 ZIP 下载。
+template: splash
+---
+
+import OnlineImageTool from '../../../../components/tools/OnlineImageTool.astro';
+
+选择多张图片，只配置一次水印，然后把结果打包为 ZIP。`{{filename}}` 和 `{{index}}` 会为每张图片生成不同文字。
+
+<OnlineImageTool tool="batch-watermark" locale="zh-CN" />
+
+## 本地批处理
+
+Recipe API 会保持输入顺序、隔离单项失败、报告进度，并在停止后跳过尚未开始的项目。一次本地任务最多选择 20 张、总计 80 MB；更大的文件或带机密密钥的生产任务应放在自己的鉴权服务中。

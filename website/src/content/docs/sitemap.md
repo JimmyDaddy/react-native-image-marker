@@ -12,6 +12,19 @@ Use this page to find the shortest path to the documentation you need.
 - [Installation](/getting-started/) — install the package and create your first watermark.
 - [Compatibility](/compatibility/) — check supported platforms and Expo requirements.
 
+## Online tools
+
+- [All image tools](/tools/) — choose a focused local browser workflow.
+- [Watermark an image](/tools/watermark/) — add text, a logo, or a tiled pattern.
+- [Batch watermark](/tools/batch-watermark/) — process several images and download a ZIP.
+- [Confidential watermark](/tools/confidential-watermark/) — start from a readable review preset.
+- [Embed an invisible watermark](/tools/invisible-watermark/) — write an authenticated short locator.
+- [Trace checker](/tools/trace-checker/) — recover an Image Marker locator.
+- [Recipe builder](/tools/recipe-builder/) — validate, preview, and export Recipe JSON.
+- [Recipient trace package](/tools/recipient-trace-package/) — generate one tracked copy per recipient.
+- [Trace robustness lab](/tools/trace-lab/) — compare recovery after common transformations.
+- [Content Credentials inspector](/tools/content-credentials/) — read an existing C2PA manifest.
+
 ## Guides and examples
 
 - [Choose an API](/guides/choose-an-api/) — decide between `markText`, `markImage`, and `mark`.

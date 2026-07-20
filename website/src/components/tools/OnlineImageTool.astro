@@ -1,0 +1,367 @@
+---
+import '../../styles/online-tools.css';
+import TraceFields from './TraceFields.astro';
+
+type Tool =
+  | 'watermark'
+  | 'batch-watermark'
+  | 'confidential-watermark'
+  | 'invisible-watermark'
+  | 'trace-checker'
+  | 'recipe-builder'
+  | 'recipient-trace-package'
+  | 'trace-lab'
+  | 'content-credentials';
+
+interface Props {
+  tool: Tool;
+  locale?: 'en' | 'zh-CN';
+}
+
+const { tool, locale = 'en' } = Astro.props;
+const zh = locale === 'zh-CN';
+const copy = zh
+  ? {
+      local: '图片不上传 · 处理只在当前浏览器中完成',
+      source: '选择图片',
+      sources: '选择多张图片',
+      replace: '更换图片',
+      demo: '未选择时使用内置示例图',
+      preview: '结果预览',
+      settings: '设置',
+      text: '水印文字',
+      textTemplate: '文字模板',
+      preset: '快速模板',
+      logo: '同时添加 Logo',
+      layout: '排列方式',
+      single: '单个水印',
+      tile: '平铺水印',
+      position: '位置',
+      opacity: '透明度',
+      size: '字号',
+      rotation: '旋转',
+      stroke: '描边宽度',
+      format: '输出格式',
+      render: '生成水印',
+      download: '下载图片',
+      runBatch: '开始批量处理',
+      cancel: '停止',
+      downloadZip: '下载 ZIP',
+      progress: '尚未开始',
+      payload: '短 locator（1–12 字节）',
+      key: '体验密钥（至少 16 字节）',
+      strength: '强度',
+      embed: '嵌入隐形水印',
+      downloadRecord: '下载本地记录',
+      search: '检测模式',
+      detect: '检查追踪水印',
+      exportResult: '导出检测结果',
+      recipe: 'Recipe JSON',
+      applyRecipe: '应用 Recipe',
+      downloadRecipe: '下载 Recipe',
+      copyCode: '复制调用代码',
+      recipients: '收件人标识（每行一个，或粘贴 CSV 第一列）',
+      package: '生成追踪包 ZIP',
+      runLab: '运行稳健性实验',
+      inspect: '读取 Content Credentials',
+      emptyPreview: '结果会显示在这里',
+      developerNote: '需要完整参数与代码生成？',
+      playground: '打开 SDK Playground',
+    }
+  : {
+      local: 'No upload · processing stays in this browser',
+      source: 'Choose an image',
+      sources: 'Choose images',
+      replace: 'Replace image',
+      demo: 'Uses the built-in sample until you choose a file',
+      preview: 'Result preview',
+      settings: 'Settings',
+      text: 'Watermark text',
+      textTemplate: 'Text template',
+      preset: 'Quick preset',
+      logo: 'Add the logo too',
+      layout: 'Layout',
+      single: 'Single watermark',
+      tile: 'Tiled watermark',
+      position: 'Position',
+      opacity: 'Opacity',
+      size: 'Font size',
+      rotation: 'Rotation',
+      stroke: 'Outline width',
+      format: 'Output format',
+      render: 'Create watermark',
+      download: 'Download image',
+      runBatch: 'Process images',
+      cancel: 'Stop',
+      downloadZip: 'Download ZIP',
+      progress: 'Not started',
+      payload: 'Short locator (1–12 bytes)',
+      key: 'Demo key (at least 16 bytes)',
+      strength: 'Strength',
+      embed: 'Embed invisible watermark',
+      downloadRecord: 'Download local record',
+      search: 'Detection mode',
+      detect: 'Check trace watermark',
+      exportResult: 'Export detection result',
+      recipe: 'Recipe JSON',
+      applyRecipe: 'Apply recipe',
+      downloadRecipe: 'Download recipe',
+      copyCode: 'Copy integration code',
+      recipients: 'Recipient IDs (one per line, or paste the first CSV column)',
+      package: 'Create trace package ZIP',
+      runLab: 'Run robustness lab',
+      inspect: 'Read Content Credentials',
+      emptyPreview: 'Your result will appear here',
+      developerNote: 'Need every option and generated code?',
+      playground: 'Open the SDK playground',
+    };
+
+const isVisible = tool === 'watermark' || tool === 'confidential-watermark';
+const acceptsMany = tool === 'batch-watermark';
+const defaultText = tool === 'confidential-watermark'
+  ? zh ? '仅供内部' : 'CONFIDENTIAL'
+  : zh ? '由 Image Marker 制作' : 'MADE WITH IMAGE MARKER';
+const playgroundHref = zh ? '/zh-cn/playground/' : '/playground/';
+const defaultRecipeJson = JSON.stringify(
+  {
+    schemaVersion: 1,
+    saveFormat: 'png',
+    quality: 92,
+    watermarks: [
+      {
+        type: 'text',
+        text: '© {{filename}}',
+        alpha: 0.82,
+        position: { position: 'bottomRight', X: 36, Y: 32 },
+        style: {
+          color: '#FFFFFF',
+          fontSize: 48,
+          bold: true,
+          strokeStyle: { color: '#111827', width: 2 },
+        },
+      },
+    ],
+  },
+  null,
+  2
+);
+---
+
+<section
+  class="online-tool"
+  data-online-tool
+  data-tool={tool}
+  data-locale={locale}
+  aria-label={copy.settings}
+>
+  <div class="tool-local-badge"><span></span>{copy.local}</div>
+
+  <div class="tool-workbench">
+    <form class="tool-controls" data-tool-form onsubmit="return false">
+      <div class="tool-section tool-upload-section">
+        <div class="tool-section-heading">
+          <span class="tool-step">01</span>
+          <h2>{acceptsMany ? copy.sources : copy.source}</h2>
+        </div>
+        <label class="tool-file-picker">
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            multiple={acceptsMany}
+            data-source-file
+          />
+          <span class="tool-file-icon" aria-hidden="true">↥</span>
+          <span>
+            <strong data-file-label>{acceptsMany ? copy.sources : copy.source}</strong>
+            <small>{copy.demo}</small>
+          </span>
+        </label>
+      </div>
+
+      {isVisible && (
+        <div class="tool-section">
+          <div class="tool-section-heading">
+            <span class="tool-step">02</span><h2>{copy.settings}</h2>
+          </div>
+          {tool === 'confidential-watermark' && (
+            <label class="tool-field tool-field-wide">
+              <span>{copy.preset}</span>
+              <select data-preset>
+                <option value="CONFIDENTIAL">CONFIDENTIAL</option>
+                <option value="DRAFT">DRAFT</option>
+                <option value="INTERNAL ONLY">INTERNAL ONLY</option>
+                <option value="仅供内部">仅供内部</option>
+                <option value="机密资料">机密资料</option>
+              </select>
+            </label>
+          )}
+          <label class="tool-field tool-field-wide">
+            <span>{copy.text}</span>
+            <input type="text" value={defaultText} maxlength="80" data-watermark-text />
+          </label>
+          <div class="tool-field-grid">
+            <label class="tool-field">
+              <span>{copy.layout}</span>
+              <select data-layout>
+                <option value="single">{copy.single}</option>
+                <option value="tile" selected={tool === 'confidential-watermark'}>{copy.tile}</option>
+              </select>
+            </label>
+            <label class="tool-field" data-position-field>
+              <span>{copy.position}</span>
+              <select data-position>
+                <option value="bottomRight">↘ {zh ? '右下' : 'Bottom right'}</option>
+                <option value="bottomLeft">↙ {zh ? '左下' : 'Bottom left'}</option>
+                <option value="topRight">↗ {zh ? '右上' : 'Top right'}</option>
+                <option value="topLeft">↖ {zh ? '左上' : 'Top left'}</option>
+                <option value="center">◎ {zh ? '居中' : 'Center'}</option>
+              </select>
+            </label>
+            <label class="tool-field tool-range-field">
+              <span>{copy.opacity} <output data-opacity-output>72%</output></span>
+              <input type="range" min="10" max="100" value={tool === 'confidential-watermark' ? '32' : '72'} aria-label={copy.opacity} data-opacity />
+            </label>
+            <label class="tool-field tool-range-field">
+              <span>{copy.size} <output data-size-output>52 px</output></span>
+              <input type="range" min="18" max="120" value="52" aria-label={copy.size} data-font-size />
+            </label>
+            <label class="tool-field tool-range-field">
+              <span>{copy.rotation} <output data-rotation-output>{tool === 'confidential-watermark' ? '-24°' : '0°'}</output></span>
+              <input type="range" min="-45" max="45" value={tool === 'confidential-watermark' ? '-24' : '0'} aria-label={copy.rotation} data-rotation />
+            </label>
+            <label class="tool-field tool-range-field">
+              <span>{copy.stroke} <output data-stroke-output>2 px</output></span>
+              <input type="range" min="0" max="8" value="2" aria-label={copy.stroke} data-stroke />
+            </label>
+            <label class="tool-field tool-check-field">
+              <input type="checkbox" checked={tool === 'watermark'} data-include-logo />
+              <span>{copy.logo}</span>
+            </label>
+            <label class="tool-field">
+              <span>{copy.format}</span>
+              <select data-format><option value="png">PNG</option><option value="jpg">JPEG</option></select>
+            </label>
+          </div>
+          <button class="tool-button tool-button-primary" type="button" data-run>{copy.render}</button>
+        </div>
+      )}
+
+      {tool === 'batch-watermark' && (
+        <div class="tool-section">
+          <div class="tool-section-heading"><span class="tool-step">02</span><h2>{copy.settings}</h2></div>
+          <label class="tool-field tool-field-wide">
+            <span>{copy.textTemplate}</span>
+            <input type="text" value="© {{filename}} · {{index}}" data-watermark-text />
+            <small>{zh ? '可用变量：{{filename}}、{{index}}' : 'Variables: {{filename}} and {{index}}'}</small>
+          </label>
+          <div class="tool-field-grid">
+            <label class="tool-field"><span>{copy.layout}</span><select data-layout><option value="single">{copy.single}</option><option value="tile">{copy.tile}</option></select></label>
+            <label class="tool-field tool-range-field"><span>{copy.opacity} <output data-opacity-output>72%</output></span><input type="range" min="10" max="100" value="72" aria-label={copy.opacity} data-opacity /></label>
+            <label class="tool-field"><span>{copy.format}</span><select data-format><option value="png">PNG</option><option value="jpg">JPEG</option></select></label>
+          </div>
+          <div class="tool-actions">
+            <button class="tool-button tool-button-primary" type="button" data-run>{copy.runBatch}</button>
+            <button class="tool-button" type="button" data-cancel disabled>{copy.cancel}</button>
+            <button class="tool-button" type="button" data-download-zip disabled>{copy.downloadZip}</button>
+          </div>
+          <div class="tool-progress" data-progress hidden><span data-progress-bar></span></div>
+          <p class="tool-help" data-progress-label>{copy.progress}</p>
+        </div>
+      )}
+
+      {tool === 'invisible-watermark' && (
+        <div class="tool-section">
+          <div class="tool-section-heading"><span class="tool-step">02</span><h2>{copy.settings}</h2></div>
+          <label class="tool-field tool-field-wide"><span>{copy.payload}</span><input type="text" value="asset-42" maxlength="12" data-payload /></label>
+          <TraceFields copy={copy} />
+          <div class="tool-actions">
+            <button class="tool-button tool-button-primary" type="button" data-run>{copy.embed}</button>
+            <button class="tool-button" type="button" data-download disabled>{copy.download}</button>
+            <button class="tool-button" type="button" data-export disabled>{copy.downloadRecord}</button>
+          </div>
+        </div>
+      )}
+
+      {tool === 'trace-checker' && (
+        <div class="tool-section">
+          <div class="tool-section-heading"><span class="tool-step">02</span><h2>{copy.settings}</h2></div>
+          <TraceFields copy={copy} search />
+          <div class="tool-actions">
+            <button class="tool-button tool-button-primary" type="button" data-run>{copy.detect}</button>
+            <button class="tool-button" type="button" data-export disabled>{copy.exportResult}</button>
+          </div>
+        </div>
+      )}
+
+      {tool === 'recipe-builder' && (
+        <div class="tool-section">
+          <div class="tool-section-heading"><span class="tool-step">02</span><h2>{copy.recipe}</h2></div>
+          <label class="tool-field tool-field-wide">
+            <span class="tool-sr-only">{copy.recipe}</span>
+            <textarea rows="18" spellcheck="false" data-recipe>{defaultRecipeJson}</textarea>
+          </label>
+          <div class="tool-actions">
+            <button class="tool-button tool-button-primary" type="button" data-run>{copy.applyRecipe}</button>
+            <button class="tool-button" type="button" data-download-recipe>{copy.downloadRecipe}</button>
+            <button class="tool-button" type="button" data-copy-code>{copy.copyCode}</button>
+          </div>
+        </div>
+      )}
+
+      {tool === 'recipient-trace-package' && (
+        <div class="tool-section">
+          <div class="tool-section-heading"><span class="tool-step">02</span><h2>{copy.settings}</h2></div>
+          <label class="tool-field tool-field-wide"><span>{copy.recipients}</span><textarea rows="7" data-recipients>reviewer-a
+reviewer-b
+reviewer-c</textarea></label>
+          <TraceFields copy={copy} />
+          <button class="tool-button tool-button-primary" type="button" data-run>{copy.package}</button>
+        </div>
+      )}
+
+      {tool === 'trace-lab' && (
+        <div class="tool-section">
+          <div class="tool-section-heading"><span class="tool-step">02</span><h2>{copy.settings}</h2></div>
+          <label class="tool-field tool-field-wide"><span>{copy.payload}</span><input type="text" value="lab-42" maxlength="12" data-payload /></label>
+          <TraceFields copy={copy} search />
+          <button class="tool-button tool-button-primary" type="button" data-run>{copy.runLab}</button>
+        </div>
+      )}
+
+      {tool === 'content-credentials' && (
+        <div class="tool-section">
+          <div class="tool-section-heading"><span class="tool-step">02</span><h2>{copy.settings}</h2></div>
+          <p class="tool-help">{zh ? '只读取文件中已有的 C2PA manifest，不签名，也不判断图片是否由 AI 生成。WASM 仅在点击后加载。' : 'Reads an existing C2PA manifest. It does not sign files or decide whether an image is AI-generated. WASM loads only after you click.'}</p>
+          <button class="tool-button tool-button-primary" type="button" data-run>{copy.inspect}</button>
+        </div>
+      )}
+    </form>
+
+    <div class="tool-output" data-tool-output>
+      <div class="tool-output-heading">
+        <div><span class="tool-eyebrow">{zh ? '实时结果' : 'Live result'}</span><h2>{copy.preview}</h2></div>
+        <span class="tool-status" data-status data-state="idle" role="status" aria-live="polite">{zh ? '可以开始' : 'Ready'}</span>
+      </div>
+      <div class="tool-preview-frame" data-preview-frame>
+        <img src="/media/playground-background.jpg" alt={copy.preview} data-preview />
+        <div class="tool-empty" data-empty hidden>{copy.emptyPreview}</div>
+      </div>
+      <div class="tool-result" data-result hidden></div>
+      <table class="tool-result-table" data-result-table hidden>
+        <thead><tr><th>{zh ? '变换' : 'Transform'}</th><th>{zh ? '检测' : 'Detected'}</th><th>{zh ? '置信度' : 'Confidence'}</th><th>{zh ? '误码率' : 'BER'}</th></tr></thead>
+        <tbody data-result-rows></tbody>
+      </table>
+      <pre class="tool-json" data-json hidden></pre>
+      {isVisible && <button class="tool-button tool-output-download" type="button" data-download disabled>{copy.download}</button>}
+    </div>
+  </div>
+
+  <p class="tool-developer-link">{copy.developerNote} <a href={playgroundHref}>{copy.playground} →</a></p>
+</section>
+
+<script>
+  import { initializeOnlineTools } from '../../lib/online-tools';
+  document.querySelectorAll<HTMLElement>('[data-online-tool]').forEach((root) => {
+    if (root.dataset.initialized !== 'true') initializeOnlineTools(root);
+  });
+</script>

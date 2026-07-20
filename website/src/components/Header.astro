@@ -14,19 +14,23 @@ const pathname = Astro.url.pathname;
 const isZh = pathname === '/zh-cn/' || pathname.startsWith('/zh-cn/');
 const links = isZh
   ? [
+      { label: '在线工具', href: '/zh-cn/tools/' },
       { label: '在线体验', href: '/zh-cn/playground/' },
-      { label: '快速开始', href: '/zh-cn/getting-started/' },
       { label: '使用指南', href: '/zh-cn/guides/choose-an-api/' },
       { label: 'API', href: '/zh-cn/api/' },
     ]
   : [
+      { label: 'Tools', href: '/tools/' },
       { label: 'Playground', href: '/playground/' },
-      { label: 'Get started', href: '/getting-started/' },
       { label: 'Guides', href: '/guides/choose-an-api/' },
       { label: 'API', href: '/api/' },
     ];
 
 const isActive = (href: string) => {
+  if (href.endsWith('/tools/')) {
+    return pathname.startsWith(isZh ? '/zh-cn/tools/' : '/tools/');
+  }
+
   if (href.includes('/guides/')) {
     return pathname.startsWith(isZh ? '/zh-cn/guides/' : '/guides/');
   }

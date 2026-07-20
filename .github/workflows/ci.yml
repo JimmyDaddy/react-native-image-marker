@@ -241,13 +241,19 @@ jobs:
           node-version: '22.22.0'
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm ci
+          npm ci --prefix website
 
       - name: Enforce production dependency audit
-        run: npm audit --omit=dev --audit-level=moderate
+        run: |
+          npm audit --omit=dev --audit-level=moderate
+          npm audit --prefix website --omit=dev --audit-level=moderate
 
       - name: Report development-tooling audit
-        run: npm audit --audit-level=moderate
+        run: |
+          npm audit --audit-level=moderate
+          npm audit --prefix website --audit-level=moderate
         continue-on-error: true
 
   js-check:
@@ -440,7 +446,7 @@ jobs:
       - name: Install Chromium
         run: npm exec --prefix website -- playwright install --with-deps chromium firefox webkit
 
-      - name: Smoke test live playground
+      - name: Smoke test playground and online tools
         run: npm --prefix website run smoke
 
   web-example:
