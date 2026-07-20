@@ -104,6 +104,11 @@ const strings = isZh
       autoPreviewHint: '关闭后可一次调整多项，再点击更新预览。',
       codeTitle: '把这个效果用到项目里',
       codeDescription: '下面的代码已经包含当前设置，可直接复制。',
+      batchCodeTitle: '批量处理代码',
+      batchCodeDescription: '使用当前水印设置创建 Recipe，并按顺序处理多张图片。',
+      invisibleCodeTitle: '隐形追踪代码',
+      invisibleCodeDescription:
+        '下面展示写入和验证流程；批量分发与内容凭证示例仍可在上方展开。',
       webTab: 'Web',
       nativeTab: 'React Native',
       copyCode: '复制代码',
@@ -276,6 +281,12 @@ const strings = isZh
       autoPreviewHint: 'Turn this off to make several changes before rendering again.',
       codeTitle: 'Use this result in your project',
       codeDescription: 'The code below already includes your current settings.',
+      batchCodeTitle: 'Batch processing code',
+      batchCodeDescription:
+        'Create a Recipe from the current watermark settings and process images in order.',
+      invisibleCodeTitle: 'Invisible trace code',
+      invisibleCodeDescription:
+        'Embed and verify a trace below. Batch distribution and Content Credentials examples remain expandable above.',
       webTab: 'Web',
       nativeTab: 'React Native',
       copyCode: 'Copy code',
@@ -423,6 +434,12 @@ const invisibleExecutors = ['main', 'worker'].map((value, index) => ({
   data-invisible-cancelled={strings.invisibleCancelled}
   data-invisible-detected={strings.invisibleDetected}
   data-invisible-not-detected={strings.invisibleNotDetected}
+  data-visible-code-title={strings.codeTitle}
+  data-visible-code-description={strings.codeDescription}
+  data-batch-code-title={strings.batchCodeTitle}
+  data-batch-code-description={strings.batchCodeDescription}
+  data-invisible-code-title={strings.invisibleCodeTitle}
+  data-invisible-code-description={strings.invisibleCodeDescription}
 >
   <header class="playground-heading">
     <div>
@@ -1016,8 +1033,8 @@ const credentials = await Marker.verifyContentCredentials({
   <section class="code-panel" aria-labelledby={`${idPrefix}-code-title`}>
     <div class="code-heading">
       <div>
-        <h3 id={`${idPrefix}-code-title`}>{strings.codeTitle}</h3>
-        <p>{strings.codeDescription}</p>
+        <h3 id={`${idPrefix}-code-title`} data-code-title>{strings.codeTitle}</h3>
+        <p data-code-description>{strings.codeDescription}</p>
       </div>
       <button class="quiet-button" type="button" data-copy-code>{strings.copyCode}</button>
     </div>
@@ -1215,6 +1232,9 @@ const credentials = await Marker.verifyContentCredentials({
     const imageStagger = asElement<HTMLInputElement>(root, '[data-image-stagger]');
     const format = asElement<HTMLSelectElement>(root, '[data-format]');
     const quality = asElement<HTMLInputElement>(root, '[data-quality]');
+    const codePanel = asElement<HTMLElement>(root, '.code-panel');
+    const codeTitle = asElement<HTMLElement>(root, '[data-code-title]');
+    const codeDescription = asElement<HTMLElement>(root, '[data-code-description]');
     const webCode = asElement<HTMLElement>(root, '[data-web-code]');
     const nativeCode = asElement<HTMLElement>(root, '[data-native-code]');
     const batchFiles = asElement<HTMLInputElement>(root, '[data-batch-files]');
@@ -1336,8 +1356,8 @@ const credentials = await Marker.verifyContentCredentials({
     stagger: ${stagger.checked},
   }`;
 
-    const textLayerCode = () => `{
-  text: ${JSON.stringify(textInput.value || 'IMAGE MARKER')},
+    const textLayerCode = (text = textInput.value || 'IMAGE MARKER') => `{
+  text: ${JSON.stringify(text)},
   alpha: ${Number(textOpacity.value)},
   blendMode: '${textBlend.value}',
   ${state.textLayout === 'tile'
@@ -1370,7 +1390,7 @@ const credentials = await Marker.verifyContentCredentials({
     const indentCode = (value: string, spaces: number) =>
       value.replace(/^/gm, ' '.repeat(spaces));
 
-    const createCode = (target: CodeTarget): string => {
+    const createVisibleCode = (target: CodeTarget): string => {
       const method = methodName();
       const background = target === 'web' ? "'/photo.jpg'" : "require('./photo.jpg')";
       const outputFormat = format.value === 'jpg' ? 'jpg' : 'png';
@@ -1404,7 +1424,163 @@ ${layers}
 }`;
     };
 
+    const recipeLayersCode = (target: CodeTarget): string => {
+      const textCode = textLayerCode(
+        `${textInput.value || 'IMAGE MARKER'} · {{sourceName}}`
+      ).replace(/^\{/, "{\n  type: 'text',");
+      const imageCode = imageLayerCode(target).replace(
+        /^\{/,
+        "{\n  type: 'image',"
+      );
+      const layers = state.mode === 'text'
+        ? [textCode]
+        : state.mode === 'image'
+          ? [imageCode]
+          : [imageCode, textCode];
+      return `[\n${layers.map((layer) => indentCode(layer, 4)).join(',\n')}\n  ]`;
+    };
+
+    const createBatchCode = (target: CodeTarget): string => {
+      const outputFormat = format.value === 'jpg' ? 'jpg' : 'png';
+      const recipeOptions = `{
+  schemaVersion: 1,
+  watermarks: ${recipeLayersCode(target)},
+  saveFormat: ImageFormat.${outputFormat},
+  quality: ${Number(quality.value)},
+}`;
+
+      if (target === 'web') {
+        return `import Marker, { ImageFormat, Position } from 'react-native-image-marker';
+
+const recipe = Marker.createRecipe(
+${indentCode(recipeOptions, 2)},
+  { resultType: 'blob' }
+);
+
+export async function markFiles(
+  files: readonly File[],
+  signal?: AbortSignal
+) {
+  const results = await recipe.applyMany(
+    files.map((file) => ({
+      backgroundImage: { src: file },
+      filename: file.name.replace(/\\.[^.]+$/, ''),
+      variables: { sourceName: file.name },
+    })),
+    {
+      concurrency: 4,
+      signal,
+      onProgress: ({ settled, total }) => console.log(\`${'${settled}'}/${'${total}'}\`),
+    }
+  );
+  // Fulfilled values are Blobs. Create and revoke object URLs in your UI.
+  return results;
+}`;
+      }
+
+      return `import type { ImageSourcePropType } from 'react-native';
+import Marker, { ImageFormat, Position } from 'react-native-image-marker';
+
+const recipe = Marker.createRecipe(${recipeOptions});
+
+export async function markPhotos(
+  photos: ReadonlyArray<ImageSourcePropType>,
+  signal?: AbortSignal
+) {
+  return recipe.applyMany(
+    photos.map((src, index) => ({
+      backgroundImage: { src },
+      filename: \`marked-${'${index + 1}'}\`,
+      variables: { sourceName: \`photo-${'${index + 1}'}\` },
+    })),
+    {
+      concurrency: 1,
+      signal,
+      onProgress: ({ settled, total }) => console.log(\`${'${settled}'}/${'${total}'}\`),
+    }
+  );
+}`;
+    };
+
+    const createInvisibleCode = (target: CodeTarget): string => {
+      const strength = invisibleStrength.value;
+      const payload = JSON.stringify(invisiblePayload.value || 'asset-42');
+      const transformNote = invisibleTransform.value === '1'
+        ? ''
+        : `  // The playground also checks ${invisibleTransform.value}× resize tolerance.\n`;
+
+      if (target === 'web') {
+        const worker = invisibleExecutor.value === 'worker'
+          ? `
+    worker: {
+      scriptUrl: '/worker/invisible-watermark.js',
+      signal,
+    },`
+          : '';
+        const signalParameter = invisibleExecutor.value === 'worker'
+          ? ', signal?: AbortSignal'
+          : '';
+        return `import Marker, { ImageFormat } from 'react-native-image-marker';
+
+export async function embedAndVerifyTrace(file: File${signalParameter}) {
+  // Keep production keys in trusted storage, not in browser source code.
+  const key = await loadTraceKeyFromTrustedStorage();
+  const marked = await Marker.embedInvisible({
+    image: { src: file },
+    payload: ${payload},
+    key,
+    strength: '${strength}',
+    saveFormat: ImageFormat.png,
+    filename: 'traced-photo',
+  });
+
+${transformNote}  const detection = await Marker.detectInvisible({
+    image: { src: marked },
+    key,
+    strength: '${strength}',
+    search: 'robust',${worker}
+  });
+
+  return { marked, detection };
+}`;
+      }
+
+      return `import type { ImageSourcePropType } from 'react-native';
+import Marker, { ImageFormat } from 'react-native-image-marker';
+
+export async function embedAndVerifyTrace(source: ImageSourcePropType) {
+  const key = await loadTraceKeyFromTrustedStorage();
+  const marked = await Marker.embedInvisible({
+    image: { src: source },
+    payload: ${payload},
+    key,
+    strength: '${strength}',
+    saveFormat: ImageFormat.png,
+    filename: 'traced-photo',
+  });
+
+${transformNote}  const detection = await Marker.detectInvisible({
+    image: { src: { uri: marked } },
+    key,
+    strength: '${strength}',
+    search: 'robust',
+  });
+
+  return { marked, detection };
+}`;
+    };
+
     const updateCode = () => {
+      const createCode = state.workspace === 'batch'
+        ? createBatchCode
+        : state.workspace === 'invisible'
+          ? createInvisibleCode
+          : createVisibleCode;
+      const titleKey = `${state.workspace}CodeTitle` as keyof DOMStringMap;
+      const descriptionKey = `${state.workspace}CodeDescription` as keyof DOMStringMap;
+      codePanel.dataset.codeWorkspace = state.workspace;
+      codeTitle.textContent = root.dataset[titleKey] ?? '';
+      codeDescription.textContent = root.dataset[descriptionKey] ?? '';
       webCode.textContent = createCode('web');
       nativeCode.textContent = createCode('native');
     };
@@ -1451,6 +1627,7 @@ ${layers}
         panel.hidden = !selected;
         if (selected && focusPanel) panel.focus({ preventScroll: true });
       });
+      updateCode();
     };
     updateWorkspace(state.workspace);
 
@@ -2127,9 +2304,12 @@ ${layers}
     invisibleDetect.addEventListener('click', () => void runInvisibleDetect());
     invisibleCancel.addEventListener('click', () => invisibleController?.abort());
     [invisiblePayload, invisibleKey, invisibleStrength, invisibleTransform, invisibleExecutor].forEach((input) => {
-      input.addEventListener('input', () => {
+      const handleInvisibleOptionChange = () => {
         invisibleStatus.textContent = root.dataset.invisibleReady ?? '';
-      });
+        updateCode();
+      };
+      input.addEventListener('input', handleInvisibleOptionChange);
+      input.addEventListener('change', handleInvisibleOptionChange);
     });
 
     asElement<HTMLButtonElement>(root, '[data-default-background]').addEventListener('click', () => {

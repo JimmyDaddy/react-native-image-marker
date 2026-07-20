@@ -95,6 +95,7 @@ try {
   await assertLayoutControlsAndCode(page, playground);
   await assertInvisibleTrace(page, playground);
   await assertBatchRecipe(page, playground);
+  await selectWorkspaceTab(playground, 'visible');
 
   const code = await playground.locator('[data-web-code]').textContent();
   assert.match(
@@ -106,7 +107,6 @@ try {
     /fileToDataUrl|backgroundFile|logoFile|setMarkedImageUri/
   );
 
-  await selectWorkspaceTab(playground, 'visible');
   await playground.locator('[data-live-preview]').uncheck();
   await selectCustomOptionWithKeyboard(playground, 'format', 'jpg');
   await playground.getByText('Changes ready. Update the preview.').waitFor();
@@ -245,6 +245,20 @@ async function assertVisibleLogo(playground) {
 
 async function assertInvisibleTrace(page, playground) {
   await selectWorkspaceTab(playground, 'invisible');
+  assert.equal(
+    await playground.locator('[data-code-title]').textContent(),
+    'Invisible trace code'
+  );
+  let webCode = await playground.locator('[data-web-code]').textContent();
+  let nativeCode = await playground.locator('[data-native-code]').textContent();
+  assert.match(webCode ?? '', /Marker\.embedInvisible/);
+  assert.match(webCode ?? '', /Marker\.detectInvisible/);
+  assert.match(webCode ?? '', /payload: "asset-42"/);
+  assert.match(webCode ?? '', /strength: 'robust'/);
+  assert.match(webCode ?? '', /worker: \{/);
+  assert.match(webCode ?? '', /invisible-watermark\.js/);
+  assert.match(nativeCode ?? '', /image: \{ src: \{ uri: marked \} \}/);
+  assert.doesNotMatch(nativeCode ?? '', /worker: \{/);
   await playground.locator('[data-invisible-embed]').click();
   await page.waitForFunction(() =>
     document
@@ -269,10 +283,31 @@ async function assertInvisibleTrace(page, playground) {
     (await playground.locator('.invisible-code').last().textContent()) ?? '',
     /embedInvisibleWithCredentials/
   );
+
+  await playground.locator('[data-invisible-payload]').fill('asset-84');
+  webCode = await playground.locator('[data-web-code]').textContent();
+  nativeCode = await playground.locator('[data-native-code]').textContent();
+  assert.match(webCode ?? '', /payload: "asset-84"/);
+  assert.match(nativeCode ?? '', /payload: "asset-84"/);
 }
 
 async function assertBatchRecipe(page, playground) {
   await selectWorkspaceTab(playground, 'batch');
+  assert.equal(
+    await playground.locator('[data-code-title]').textContent(),
+    'Batch processing code'
+  );
+  const webCode = await playground.locator('[data-web-code]').textContent();
+  const nativeCode = await playground.locator('[data-native-code]').textContent();
+  assert.match(webCode ?? '', /Marker\.createRecipe/);
+  assert.match(webCode ?? '', /resultType: 'blob'/);
+  assert.match(webCode ?? '', /recipe\.applyMany/);
+  assert.match(webCode ?? '', /\{\{sourceName\}\}/);
+  assert.match(webCode ?? '', /concurrency: 4/);
+  assert.match(nativeCode ?? '', /Marker\.createRecipe/);
+  assert.match(nativeCode ?? '', /recipe\.applyMany/);
+  assert.match(nativeCode ?? '', /concurrency: 1/);
+  assert.doesNotMatch(nativeCode ?? '', /resultType: 'blob'/);
   const batchFiles = playground.locator('[data-batch-files]');
   const fixtureNames = [
     'playground-background.jpg',
@@ -449,6 +484,10 @@ async function selectWorkspaceTab(playground, workspace) {
   await tab.click();
   assert.equal(await tab.getAttribute('aria-selected'), 'true');
   assert.equal(await panel.getAttribute('hidden'), null);
+  assert.equal(
+    await playground.locator('.code-panel').getAttribute('data-code-workspace'),
+    workspace
+  );
   assert(
     await panel.isVisible(),
     `${workspace} workspace panel should be visible.`
