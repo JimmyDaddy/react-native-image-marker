@@ -221,9 +221,13 @@ if (detection.detected) {
 
 For distribution batches, call `Marker.embedInvisibleMany(inputs, { concurrency, signal, onProgress })` and `Marker.detectInvisibleMany(inputs)`. Robust detection covers limited crops and tested 0.9×–1.1× resize hypotheses; a successful resized detection reports `scale`.
 
+On Web, copy `lib/worker/invisible-watermark.js` to a trusted same-origin static directory and pass `worker: { scriptUrl, signal, onProgress }` to move detection off the main thread and make an active detection cancellable.
+
+For trusted services, import `createInvisibleWatermarkRuntime` only from `react-native-image-marker/trace-runtime.js` and inject your own RGBA image codec. This explicit subpath is not loaded by the normal React Native entry. The independent [Node.js Trace Service example](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/examples/trace-service) uses Node.js 22 and `sharp` without adding `sharp` to this package's production dependencies.
+
 This Beta feature is designed for distribution tracing, not DRM or proof that an image was never edited. JPEG recompression, mild pixel adjustments, and light resizing are covered by the browser test matrix; aggressive crops, resizing outside the tested range, blur, redrawing, and deliberate removal can destroy the mark. Browser code cannot keep a long-lived secret, so production Web workflows should embed on a trusted server or use tightly scoped keys.
 
-For signed provenance, `Marker.embedInvisibleWithCredentials()` composes the locator with an application-supplied Content Credentials adapter. The optional [Node.js C2PA service example](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/examples/c2pa-service) keeps the official C2PA runtime and signing material outside the core package. See the [invisible watermark guide](https://image-marker.corerobin.com/guides/invisible-watermarks/) for the security and C2PA boundaries.
+For signed provenance, `Marker.embedInvisibleWithCredentials()` composes the locator with an application-supplied Content Credentials adapter. The optional [Node.js C2PA service example](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/examples/c2pa-service) keeps the official C2PA runtime and signing material outside the core package. See the [invisible watermark guide](https://image-marker.corerobin.com/guides/invisible-watermarks/) for the server runtime, Worker, security, and C2PA boundaries.
 
 ## Live Web SDK
 
@@ -242,16 +246,16 @@ Browser Canvas and native graphics stacks share the API and positioning model bu
 
 ## Choose an API
 
-| Method                   | Use it for                                       |
-| ------------------------ | ------------------------------------------------ |
-| `Marker.markText`        | One or many text layers                          |
-| `Marker.markImage`       | One or many logo, icon, or image layers          |
-| `Marker.mark`            | Ordered text and image layers in one render pass |
-| `Marker.createRecipe`    | Reusable, personalized batch workflows           |
-| `Marker.embedInvisible`  | Write an authenticated short trace ID            |
-| `Marker.detectInvisible` | Recover and verify an invisible trace ID         |
-| `Marker.embedInvisibleMany` / `detectInvisibleMany` | Process ordered trace batches       |
-| `Marker.embedInvisibleWithCredentials` | Add a signed provenance adapter workflow    |
+| Method                                              | Use it for                                       |
+| --------------------------------------------------- | ------------------------------------------------ |
+| `Marker.markText`                                   | One or many text layers                          |
+| `Marker.markImage`                                  | One or many logo, icon, or image layers          |
+| `Marker.mark`                                       | Ordered text and image layers in one render pass |
+| `Marker.createRecipe`                               | Reusable, personalized batch workflows           |
+| `Marker.embedInvisible`                             | Write an authenticated short trace ID            |
+| `Marker.detectInvisible`                            | Recover and verify an invisible trace ID         |
+| `Marker.embedInvisibleMany` / `detectInvisibleMany` | Process ordered trace batches                    |
+| `Marker.embedInvisibleWithCredentials`              | Add a signed provenance adapter workflow         |
 
 Layers render in array order, so later layers draw over earlier layers. `markText` and `markImage` remain supported; use `mark` when mixed layer order matters.
 

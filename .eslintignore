@@ -5,6 +5,7 @@ docs
 **/dist/**
 coverage/**
 website/.astro/**
+website/public/worker/**
 website/src/content/docs/api/**
 
 base64.js

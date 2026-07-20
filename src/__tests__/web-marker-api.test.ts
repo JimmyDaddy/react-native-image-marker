@@ -11,12 +11,18 @@ const mockRenderWebCompositionToCanvas = jest.fn<
   }>,
   unknown[]
 >();
+const mockDetectInvisibleWatermarkInWorker = jest.fn();
 
 jest.mock('../web/renderer', () => ({
   renderWebComposition: (...args: unknown[]) =>
     mockRenderWebComposition(...args),
   renderWebCompositionToCanvas: (...args: unknown[]) =>
     mockRenderWebCompositionToCanvas(...args),
+}));
+
+jest.mock('../web/invisible-worker-client', () => ({
+  detectInvisibleWatermarkInWorker: (...args: unknown[]) =>
+    mockDetectInvisibleWatermarkInWorker(...args),
 }));
 
 const WebMarker = require('../web').default as typeof import('../web').default;
@@ -32,6 +38,12 @@ describe('WebMarker public API', () => {
     mockRenderWebComposition.mockReset();
     mockRenderWebComposition.mockResolvedValue('data:image/png;base64,result');
     mockRenderWebCompositionToCanvas.mockReset();
+    mockDetectInvisibleWatermarkInWorker.mockReset();
+    mockDetectInvisibleWatermarkInWorker.mockResolvedValue({
+      detected: false,
+      confidence: 0,
+      algorithm: 'dct-qim-v1',
+    });
     pixels = new Uint8ClampedArray(256 * 176 * 4);
     for (let index = 0; index < 256 * 176; index += 1) {
       const value = 80 + (index % 96);
@@ -100,6 +112,27 @@ describe('WebMarker public API', () => {
         key: '0123456789abcdef',
       })
     ).rejects.toThrow('Configure CORS');
+  });
+
+  it('uses the explicitly configured Worker after browser decoding', async () => {
+    const worker = {
+      scriptUrl: '/worker/invisible-watermark.js',
+      onProgress: jest.fn(),
+    };
+    const options = {
+      image: { src: '/background.jpg' },
+      key: '0123456789abcdef',
+      strength: 'robust' as const,
+      worker,
+    };
+
+    await WebMarker.detectInvisible(options);
+
+    expect(mockDetectInvisibleWatermarkInWorker).toHaveBeenCalledWith(
+      { data: pixels, width: 256, height: 176 },
+      options,
+      worker
+    );
   });
 
   it('maps markText options to ordered web text layers', async () => {

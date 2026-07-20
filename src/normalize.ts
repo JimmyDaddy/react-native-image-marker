@@ -344,10 +344,11 @@ export function createNativeEmbedInvisibleOptions(
 export function createNativeDetectInvisibleOptions(
   options: DetectInvisibleWatermarkOptions,
   assetResolver: AssetResolver = defaultAssetResolver
-): Omit<DetectInvisibleWatermarkOptions, 'image'> & {
+): Omit<DetectInvisibleWatermarkOptions, 'image' | 'worker'> & {
   backgroundImage: ImageOptions;
 } {
   const { image, ...rest } = options;
+  delete rest.worker;
   return {
     ...rest,
     backgroundImage: resolveImageOptions(image, assetResolver),

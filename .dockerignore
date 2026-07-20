@@ -1,0 +1,9 @@
+.git
+**/node_modules
+lib
+coverage
+website/.astro
+website/dist
+example/android/build
+example/ios/build
+examples/trace-service/benchmark-report.json

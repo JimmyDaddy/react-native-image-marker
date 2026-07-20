@@ -27,6 +27,7 @@ import type {
   EmbedInvisibleWatermarkOptions,
   InvisibleWatermarkDetectionResult,
 } from '../invisible-watermark';
+import { detectInvisibleWatermarkInWorker } from './invisible-worker-client';
 import { runWatermarkBatch } from '../batch';
 import type { WatermarkBatchOptions, WatermarkBatchResult } from '../batch';
 import {
@@ -236,6 +237,13 @@ class Marker {
       maxSize: options.maxSize,
     });
     const imageData = readImageData(canvas);
+    if (options.worker) {
+      return detectInvisibleWatermarkInWorker(
+        { data: imageData.data, width: canvas.width, height: canvas.height },
+        options,
+        options.worker
+      );
+    }
     return detectInvisibleWatermarkPixelsAsync(
       { data: imageData.data, width: canvas.width, height: canvas.height },
       options

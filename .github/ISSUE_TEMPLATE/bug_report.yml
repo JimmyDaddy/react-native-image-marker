@@ -15,6 +15,7 @@ body:
         - Android
         - iOS
         - Web / React Native Web
+        - Node.js Trace Runtime
         - Expo development build
     validations:
       required: true
@@ -63,6 +64,11 @@ body:
     attributes:
       label: Image details
       description: Source type, dimensions, format, orientation, transparency, and whether the URL permits CORS.
+  - type: textarea
+    id: invisible_details
+    attributes:
+      label: Invisible watermark details
+      description: If applicable, include original dimensions, encoding/transform chain, strength, search mode, main thread vs Worker/server runtime, and whether a sanitized sample can be shared safely. Never include the production key.
   - type: checkboxes
     id: checks
     attributes:

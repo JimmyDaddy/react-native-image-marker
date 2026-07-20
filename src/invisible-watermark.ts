@@ -10,7 +10,7 @@ export const INVISIBLE_WATERMARK_MIN_HEIGHT = 88;
 export const INVISIBLE_WATERMARK_RESIZE_SCALES = [
   0.95, 1.05, 0.9, 1.1,
 ] as const;
-const INVISIBLE_WATERMARK_RESIZE_DELTA_FACTORS = [1, 0.9];
+const INVISIBLE_WATERMARK_RESIZE_DELTA_FACTORS = [1, 0.9, 0.8, 0.7, 0.6];
 
 const BLOCK_SIZE = 8;
 const TILE_WIDTH = 16;
@@ -70,6 +70,23 @@ export interface InvisibleWatermarkImage {
   src: any;
 }
 
+export type InvisibleWatermarkWorkerProgressPhase =
+  | 'queued'
+  | 'detecting'
+  | 'complete';
+
+/** Browser-only dedicated Worker settings for CPU-intensive detection. */
+export interface InvisibleWatermarkWorkerOptions {
+  /** Trusted same-origin URL of the packaged invisible watermark worker. */
+  scriptUrl: string;
+  /** Cancels the current detection and terminates its one-time Worker. */
+  signal?: AbortSignal;
+  /** Coarse lifecycle updates. Exceptions thrown here are ignored. */
+  onProgress?: (progress: {
+    phase: InvisibleWatermarkWorkerProgressPhase;
+  }) => void;
+}
+
 /** Options for writing an authenticated short locator into image pixels. */
 export interface EmbedInvisibleWatermarkOptions {
   /** Source image. It must be at least 128×88 pixels after `maxSize` is applied. */
@@ -102,6 +119,8 @@ export interface DetectInvisibleWatermarkOptions {
   search?: InvisibleWatermarkSearch;
   /** Maximum decoded width or height. Keep this consistent with embedding. @defaultValue 2048 */
   maxSize?: number;
+  /** Run pixel detection in a dedicated browser Worker. Ignored on native. */
+  worker?: InvisibleWatermarkWorkerOptions;
 }
 
 /** Authenticated detection result. A positive result does not prove the image was unmodified. */
@@ -554,6 +573,28 @@ export function validateDetectInvisibleOptions(
   validateStrength(options.strength);
   validateSearch(options.search);
   validateOutputNumber(options.maxSize, 'maxSize', 1);
+  if (options.worker !== undefined) {
+    if (
+      typeof options.worker.scriptUrl !== 'string' ||
+      options.worker.scriptUrl.trim().length === 0
+    ) {
+      throw new Error('worker.scriptUrl must be a non-empty string.');
+    }
+    if (
+      options.worker.onProgress !== undefined &&
+      typeof options.worker.onProgress !== 'function'
+    ) {
+      throw new Error('worker.onProgress must be a function.');
+    }
+    if (
+      options.worker.signal !== undefined &&
+      (typeof options.worker.signal.aborted !== 'boolean' ||
+        typeof options.worker.signal.addEventListener !== 'function' ||
+        typeof options.worker.signal.removeEventListener !== 'function')
+    ) {
+      throw new Error('worker.signal must be an AbortSignal.');
+    }
+  }
 }
 
 function nearestParity(value: number, bit: number): number {

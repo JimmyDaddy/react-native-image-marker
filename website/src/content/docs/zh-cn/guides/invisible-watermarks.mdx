@@ -77,6 +77,65 @@ const verified = await Marker.detectInvisibleMany(
 
 调用 `abort()` 只会阻止尚未开始的项目。已经交给 Canvas 或原生解码器的任务会正常完成并报告结果。
 
+## 在 Web Worker 中检测
+
+`robust` 检测会占用较多 CPU。先把随包发布的独立 Worker 文件复制到可信的同源静态目录：
+
+```sh
+cp node_modules/react-native-image-marker/lib/worker/invisible-watermark.js \
+  public/worker/invisible-watermark.js
+```
+
+然后在需要时显式启用：
+
+```ts
+const controller = new AbortController();
+
+const result = await Marker.detectInvisible({
+  image: { src: suspectImage },
+  key,
+  strength: 'robust',
+  search: 'robust',
+  worker: {
+    scriptUrl: '/worker/invisible-watermark.js',
+    signal: controller.signal,
+    onProgress: ({ phase }) => console.log(phase),
+  },
+});
+
+controller.abort(); // 终止正在执行的 Worker，并以 AbortError reject
+```
+
+不传 `worker` 时继续使用 v1.11 的主线程协作式检测。显式配置 Worker 后，脚本、协议或运行错误会直接报告，不会悄悄回退。不要使用不可信的第三方 Worker URL，因为 Worker 能读取图片像素和检测密钥。[在线体验](/zh-cn/playground/)使用本站同源文件，可以直接切换两种执行方式。
+
+## 在可信服务端嵌入与检测
+
+服务端运行时通过独立子路径按需引入。普通 React Native 入口不会加载它，SDK 也不会安装图片 codec：
+
+```js
+const {
+  createInvisibleWatermarkRuntime,
+} = require('react-native-image-marker/trace-runtime.js');
+
+const runtime = createInvisibleWatermarkRuntime({
+  codec: yourRgbaCodec,
+  maxConcurrency: 4,
+});
+
+const output = await runtime.embedInvisible({
+  image: { src: inputBuffer },
+  payload: 'asset-42',
+  key: await secretManager.get('trace-watermark-key'),
+  strength: 'robust',
+  saveFormat: 'png',
+});
+```
+
+codec 负责解码、EXIF 方向归一化、等比例 `maxSize` 限制、RGBA 转换与 JPEG/PNG 编码。运行时会先复制解码后的像素再嵌入，并提供与 `Marker` 相同的单项和批量方法，包括同序结果、进度和取消语义。
+
+独立的 [Node.js Trace Service 示例](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/examples/trace-service)
+使用 Node.js 22、`sharp`、服务端自有密钥、有限制的 JSON/base64 请求、可注入记录存储与可选 Content Credentials。内存存储和无鉴权只适合本地演示，不能直接当作生产安全边界。
+
 ## Payload 与密钥规则
 
 - `payload` 必须是 1–12 个 UTF-8 字节。推荐使用随机 locator，例如压缩后的素材 ID 或分发 ID。
@@ -88,12 +147,12 @@ const verified = await Marker.detectInvisibleMany(
 
 ## 强度与搜索方式
 
-| 设置               | 适合场景                | 代价                 |
-| ------------------ | ----------------------- | -------------------- |
-| `subtle`           | 最重视像素干净程度      | 最不耐后续编码       |
-| `balanced`         | 普通照片与直接输出      | 默认的视觉与抗性平衡 |
-| `robust`           | 图片还会被压缩          | 像素改动最强         |
-| `search: 'fast'`   | 尺寸和 8×8 网格没有变化 | 检测开销低           |
+| 设置               | 适合场景                        | 代价                   |
+| ------------------ | ------------------------------- | ---------------------- |
+| `subtle`           | 最重视像素干净程度              | 最不耐后续编码         |
+| `balanced`         | 普通照片与直接输出              | 默认的视觉与抗性平衡   |
+| `robust`           | 图片还会被压缩                  | 像素改动最强           |
+| `search: 'fast'`   | 尺寸和 8×8 网格没有变化         | 检测开销低             |
 | `search: 'robust'` | 可能有有限裁剪或 0.9×–1.1× 缩放 | CPU 与临时内存开销更高 |
 
 嵌入和检测必须使用相同 `strength`。Web 检测会在采集像素块和搜索候选时主动让出事件循环；总 CPU 工作量仍然存在，但页面不会被一个持续很久的同步任务完全卡住。
@@ -141,3 +200,4 @@ assertion 中只保存算法名与 `SHA-256(locator)`；不会声明 `c2pa.water
 5. 检测时应用自己的置信度策略，并到服务端确认 locator 记录。
 
 帧格式与威胁模型见 [RFC 0003](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/docs/rfcs/0003-v1.10-invisible-trace-watermarks.md)。批量处理、缩放恢复、Web 响应性与 Content Credentials 集成见 [RFC 0004](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/docs/rfcs/0004-v1.11-durable-provenance-workflows.md)。
+按需服务端运行时、Trace Service、Worker 协议与可靠性矩阵见 [RFC 0005](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/docs/rfcs/0005-v1.12-server-trace-runtime.md)。

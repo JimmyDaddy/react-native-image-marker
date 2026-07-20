@@ -3,7 +3,7 @@ import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { chromium } from 'playwright';
+import { chromium, firefox, webkit } from 'playwright';
 
 const websiteRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -106,6 +106,7 @@ try {
     /fileToDataUrl|backgroundFile|logoFile|setMarkedImageUri/
   );
 
+  await selectWorkspaceTab(playground, 'visible');
   await playground.locator('[data-live-preview]').uncheck();
   await selectCustomOptionWithKeyboard(playground, 'format', 'jpg');
   await playground.getByText('Changes ready. Update the preview.').waitFor();
@@ -150,8 +151,41 @@ try {
     `Browser runtime errors: ${pageErrors.join('\n')}`
   );
 
+  await browser.close();
+  browser = undefined;
+  const additionalBrowsers = process.env.CI
+    ? [
+        ['Firefox', firefox],
+        ['WebKit', webkit],
+      ]
+    : [];
+  for (const [browserName, browserType] of additionalBrowsers) {
+    browser = await browserType.launch({ headless: true });
+    const workerPage = await browser.newPage();
+    const workerErrors = [];
+    workerPage.on('pageerror', (error) => workerErrors.push(error.message));
+    workerPage.setDefaultTimeout(25_000);
+    await workerPage.goto(`${origin}/playground/`, {
+      waitUntil: 'networkidle',
+    });
+    const workerPlayground = workerPage.locator('[data-marker-playground]');
+    await waitForRendered(workerPlayground);
+    assert.equal(
+      await workerPlayground.locator('[data-invisible-executor]').inputValue(),
+      'worker'
+    );
+    await assertInvisibleTrace(workerPage, workerPlayground);
+    assert.deepEqual(
+      workerErrors,
+      [],
+      `${browserName} Worker runtime errors: ${workerErrors.join('\n')}`
+    );
+    await browser.close();
+    browser = undefined;
+  }
+
   console.log(
-    'Verified navigation, responsive layout, watermark controls, invisible trace embed/detect, preview-to-code parity, batch Blob results, cancellation, both playground routes, downloads, and the HTML sitemap.'
+    'Verified navigation, responsive layout, watermark controls, Worker detection (plus Firefox and WebKit in CI), preview-to-code parity, batch Blob results, cancellation, both playground routes, downloads, and the HTML sitemap.'
   );
 } finally {
   await browser?.close();
@@ -210,6 +244,7 @@ async function assertVisibleLogo(playground) {
 }
 
 async function assertInvisibleTrace(page, playground) {
+  await selectWorkspaceTab(playground, 'invisible');
   await playground.locator('[data-invisible-embed]').click();
   await page.waitForFunction(() =>
     document
@@ -237,6 +272,7 @@ async function assertInvisibleTrace(page, playground) {
 }
 
 async function assertBatchRecipe(page, playground) {
+  await selectWorkspaceTab(playground, 'batch');
   const batchFiles = playground.locator('[data-batch-files]');
   const fixtureNames = [
     'playground-background.jpg',
@@ -305,7 +341,19 @@ async function assertLayoutControlsAndCode(page, playground) {
   );
   const preview = playground.locator('[data-preview]');
 
-  assert.equal(await playground.locator('[data-example]').count(), 8);
+  const workspaceTabs = playground.locator('[data-workspace-tab]');
+  assert.equal(await workspaceTabs.count(), 3);
+  assert.equal(
+    await playground
+      .locator('[data-workspace-tab="visible"]')
+      .getAttribute('aria-selected'),
+    'true'
+  );
+  assert(
+    await playground.locator('[data-workspace-panel="visible"]').isVisible(),
+    'Visible watermark controls should be the initial workspace.'
+  );
+  assert.equal(await playground.locator('[data-example]').count(), 6);
   assert.equal(await playground.locator('.capability-index li').count(), 11);
   assert(
     await textSingle.isVisible(),
@@ -395,6 +443,18 @@ async function assertLayoutControlsAndCode(page, playground) {
   await waitForPreviewChange(page, playground, previousSource);
 }
 
+async function selectWorkspaceTab(playground, workspace) {
+  const tab = playground.locator(`[data-workspace-tab="${workspace}"]`);
+  const panel = playground.locator(`[data-workspace-panel="${workspace}"]`);
+  await tab.click();
+  assert.equal(await tab.getAttribute('aria-selected'), 'true');
+  assert.equal(await panel.getAttribute('hidden'), null);
+  assert(
+    await panel.isVisible(),
+    `${workspace} workspace panel should be visible.`
+  );
+}
+
 async function waitForPreviewChange(page, playground, previousSource) {
   await page.waitForFunction((previous) => {
     const preview = document.querySelector(
@@ -427,6 +487,7 @@ async function assertWorkbenchLayout(page) {
       h1Count: document.querySelectorAll('main h1').length,
       pageWidth: document.documentElement.scrollWidth,
       viewportWidth: window.innerWidth,
+      viewportHeight: window.innerHeight,
       marker: bounds('.marker-playground'),
       controls: bounds('.controls-panel'),
       preview: bounds('.preview-panel'),
@@ -462,7 +523,7 @@ async function assertWorkbenchLayout(page) {
     'Workbench should use the available desktop width.'
   );
   assert(
-    layout.controls.y < 280,
+    layout.controls.y < layout.viewportHeight / 2,
     'Controls should be visible in the first viewport.'
   );
   assert(
@@ -636,8 +697,8 @@ async function assertCustomSelects(playground) {
   const customSelects = playground.locator('[data-custom-select]');
   assert.equal(
     await customSelects.count(),
-    7,
-    'Playground should render seven custom selectors.'
+    8,
+    'Playground should render eight custom selectors.'
   );
   for (const select of await playground.locator('select').all()) {
     assert.equal(
@@ -667,12 +728,7 @@ async function selectCustomOptionWithKeyboard(playground, name, expectedValue) {
 }
 
 async function launchChromium() {
-  try {
-    return await chromium.launch({ headless: true });
-  } catch (error) {
-    if (process.env.CI) {
-      throw error;
-    }
-    return chromium.launch({ channel: 'chrome', headless: true });
-  }
+  return process.env.CI
+    ? chromium.launch({ headless: true })
+    : chromium.launch({ channel: 'chrome', headless: true });
 }

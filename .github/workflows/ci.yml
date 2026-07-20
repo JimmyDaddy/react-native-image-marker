@@ -19,6 +19,7 @@ jobs:
       web: ${{ steps.filter.outputs.web }}
       docs: ${{ steps.filter.outputs.docs }}
       c2pa: ${{ steps.filter.outputs.c2pa }}
+      trace: ${{ steps.filter.outputs.trace }}
       native: ${{ steps.filter.outputs.native }}
       security: ${{ steps.filter.outputs.security }}
     steps:
@@ -139,10 +140,7 @@ jobs:
           )
           web = any_changed(
               [
-                  "src/index.ts",
-                  "src/marker.ts",
-                  "src/marker.web.ts",
-                  "src/web/**",
+                  "src/**",
                   "package.json",
                   "package-lock.json",
                   "expo-example/**",
@@ -151,10 +149,7 @@ jobs:
           )
           docs = any_changed(
               [
-                  "src/index.ts",
-                  "src/marker.ts",
-                  "src/marker.web.ts",
-                  "src/web/**",
+                  "src/**",
                   "website/**",
                   "README.MD",
                   "package.json",
@@ -165,6 +160,20 @@ jobs:
           c2pa = any_changed(
               [
                   "examples/c2pa-service/**",
+                  ".github/workflows/ci.yml",
+              ]
+          )
+          trace = any_changed(
+              [
+                  "examples/trace-service/**",
+                  "src/batch.ts",
+                  "src/index.ts",
+                  "src/invisible-watermark.ts",
+                  "src/trace-runtime.ts",
+                  "trace-runtime.js",
+                  "trace-runtime.d.ts",
+                  "package.json",
+                  "package-lock.json",
                   ".github/workflows/ci.yml",
               ]
           )
@@ -180,6 +189,8 @@ jobs:
                   "expo-example/package-lock.json",
                   "examples/c2pa-service/package.json",
                   "examples/c2pa-service/package-lock.json",
+                  "examples/trace-service/package.json",
+                  "examples/trace-service/package-lock.json",
                   "react-native-image-marker.podspec",
                   "android/build.gradle",
                   "android/gradle.properties",
@@ -199,6 +210,7 @@ jobs:
               "web": web,
               "docs": docs,
               "c2pa": c2pa,
+              "trace": trace,
               "native": android or ios,
               "security": security,
           }
@@ -315,6 +327,90 @@ jobs:
         run: |
           node -e "import('@contentauth/c2pa-node').then(({ Builder, Reader, LocalSigner }) => { if (!Builder || !Reader || !LocalSigner) process.exit(1) })"
 
+  trace-service:
+    runs-on: ubuntu-latest
+    name: Trace Service (Node ${{ matrix.node }})
+    needs: changes
+    if: needs.changes.outputs.trace == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['22.22.0', '24']
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v7
+
+      - name: Setup node
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            examples/trace-service/package-lock.json
+
+      - name: Install and build the core package
+        run: |
+          npm ci
+          npm run prepack
+
+      - name: Install Trace Service dependencies
+        run: npm ci --prefix examples/trace-service
+
+      - name: Typecheck and test
+        run: |
+          npm --prefix examples/trace-service run typecheck
+          npm --prefix examples/trace-service test
+
+      - name: Load sharp and audit production dependencies
+        working-directory: examples/trace-service
+        run: |
+          node -e "import('sharp').then(({ default: sharp }) => { if (!sharp.versions.sharp) process.exit(1) })"
+          npm audit --omit=dev --audit-level=moderate
+
+      - name: Build Trace Service container
+        if: matrix.node == '22.22.0'
+        run: docker build -f examples/trace-service/Dockerfile -t image-marker-trace:test .
+
+      - name: Verify on-demand package boundary
+        if: matrix.node == '22.22.0'
+        run: |
+          node - <<'NODE'
+          const Module = require('module');
+          const loaded = [];
+          const original = Module._load;
+          Module._load = function (request, parent, isMain) {
+            loaded.push(request);
+            return original.apply(this, arguments);
+          };
+          require('./lib/commonjs/index');
+          if (loaded.some((request) => request.includes('trace-runtime'))) {
+            throw new Error('The root entry loaded trace-runtime eagerly.');
+          }
+          const runtime = require('./trace-runtime.js');
+          if (typeof runtime.createInvisibleWatermarkRuntime !== 'function') {
+            throw new Error('The trace-runtime subpath is missing.');
+          }
+          NODE
+          npm pack --ignore-scripts --dry-run --json > package-files.json
+          node - <<'NODE'
+          const names = require('./package-files.json')[0].files.map((file) => file.path);
+          for (const required of [
+            'trace-runtime.js',
+            'trace-runtime.d.ts',
+            'lib/commonjs/trace-runtime.js',
+            'lib/typescript/trace-runtime.d.ts',
+            'lib/worker/invisible-watermark.js',
+          ]) {
+            if (!names.includes(required)) {
+              throw new Error(`${required} is missing from the package.`);
+            }
+          }
+          if (names.some((name) => name.includes('examples/trace-service') || name.toLowerCase().includes('sharp'))) {
+            throw new Error('Trace Service dependencies leaked into the package.');
+          }
+          NODE
+
   docs-site:
     runs-on: ubuntu-latest
     name: Documentation Site
@@ -342,7 +438,7 @@ jobs:
         run: npm run docs
 
       - name: Install Chromium
-        run: npm exec --prefix website -- playwright install --with-deps chromium
+        run: npm exec --prefix website -- playwright install --with-deps chromium firefox webkit
 
       - name: Smoke test live playground
         run: npm --prefix website run smoke
@@ -961,6 +1057,7 @@ jobs:
         security,
         js-check,
         c2pa-service,
+        trace-service,
         docs-site,
         web-example,
         expo-current,
