@@ -368,6 +368,10 @@ jobs:
           node -e "import('sharp').then(({ default: sharp }) => { if (!sharp.versions.sharp) process.exit(1) })"
           npm audit --omit=dev --audit-level=moderate
 
+      - name: Build Trace Service container
+        if: matrix.node == '22.22.0'
+        run: docker build -f examples/trace-service/Dockerfile -t image-marker-trace:test .
+
       - name: Verify on-demand package boundary
         if: matrix.node == '22.22.0'
         run: |
