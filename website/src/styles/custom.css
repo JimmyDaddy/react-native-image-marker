@@ -56,6 +56,22 @@ html:lang(zh-CN) .sl-markdown-content h3 {
   letter-spacing: -0.035em;
 }
 
+/* Task-focused tool pages do not render the documentation sidebars. Remove
+   Starlight's desktop sidebar reservation so their wide workspaces stay
+   centered in the viewport. */
+.main-pane:has(.online-tool),
+.main-pane:has(.tool-hub) {
+  --sl-sidebar-width: 0rem;
+  --sl-content-width: 92rem;
+  --sl-content-margin-inline: auto;
+  width: 100%;
+}
+
+.content-panel:has(.online-tool),
+.content-panel:has(.tool-hub) {
+  padding-inline: clamp(0.75rem, 2vw, 2rem);
+}
+
 :root[data-has-hero] main > .content-panel {
   padding-inline: clamp(1rem, 3vw, 3rem);
 }

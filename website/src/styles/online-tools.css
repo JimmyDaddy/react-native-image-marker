@@ -9,12 +9,47 @@
   display: none !important;
 }
 
+.tool-page-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.tool-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2rem;
+  padding: 0.35rem 0.72rem;
+  border: 1px solid var(--marker-border);
+  border-radius: 999px;
+  color: var(--marker-ink);
+  background: var(--tool-panel);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: border-color 150ms ease, background 150ms ease;
+}
+
+.tool-back-link:hover {
+  border-color: color-mix(in srgb, var(--marker-blue) 58%, var(--marker-border));
+  background: color-mix(in srgb, var(--marker-blue) 10%, var(--tool-panel));
+}
+
+.tool-back-link:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--marker-blue) 35%, transparent);
+  outline-offset: 2px;
+}
+
 .tool-local-badge {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   min-height: 2rem;
-  margin-bottom: 1rem;
+  margin: 0;
   padding: 0.35rem 0.75rem;
   border: 1px solid var(--marker-border);
   border-radius: 999px;
@@ -466,6 +501,13 @@
 }
 
 @media (max-width: 30rem) {
+  .tool-page-navigation {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .tool-local-badge {
+    max-width: 100%;
+  }
   .tool-field-grid { grid-template-columns: 1fr; }
   .tool-field-wide { grid-column: auto; }
   .tool-actions .tool-button { width: 100%; }

@@ -63,6 +63,22 @@ try {
 
   await page.goto(`${origin}/tools/watermark/`, { waitUntil: 'networkidle' });
   const watermark = page.locator('[data-online-tool]');
+  const toolBackLink = watermark.locator('[data-tool-back]');
+  assert.equal(await toolBackLink.getAttribute('href'), '/tools/');
+  assert.equal((await toolBackLink.innerText()).replace(/\s+/g, ' ').trim(), '← Back to all tools');
+  const desktopLayout = await page.evaluate(() => {
+    const workbench = document.querySelector('.tool-workbench');
+    if (!workbench) throw new Error('Tool workbench is missing.');
+    const rect = workbench.getBoundingClientRect();
+    return {
+      left: rect.left,
+      right: window.innerWidth - rect.right,
+      mainPaneWidth: document.querySelector('.main-pane')?.getBoundingClientRect().width ?? 0,
+      viewportWidth: window.innerWidth,
+    };
+  });
+  assert.ok(Math.abs(desktopLayout.left - desktopLayout.right) <= 2, `Tool workbench should be centered: ${JSON.stringify(desktopLayout)}`);
+  assert.equal(desktopLayout.mainPaneWidth, desktopLayout.viewportWidth, 'Tool page should use the full main pane width.');
   await watermark.locator('[data-status][data-state="success"]').waitFor();
   const visibleSource = await watermark.locator('[data-preview]').getAttribute('src');
   assert.match(visibleSource ?? '', /^data:image\/png;base64,/);
@@ -142,6 +158,8 @@ try {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(`${origin}/zh-cn/tools/watermark/`, { waitUntil: 'networkidle' });
   await page.locator('[data-online-tool] [data-status][data-state="success"]').waitFor();
+  assert.equal(await page.locator('[data-tool-back]').getAttribute('href'), '/zh-cn/tools/');
+  assert.equal((await page.locator('[data-tool-back]').innerText()).replace(/\s+/g, ' ').trim(), '← 返回全部工具');
   const dimensions = await page.evaluate(() => ({ page: document.documentElement.scrollWidth, viewport: window.innerWidth }));
   assert.equal(dimensions.page, dimensions.viewport, 'Mobile tool page should not overflow.');
 
