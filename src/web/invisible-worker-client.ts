@@ -9,7 +9,18 @@ import { INVISIBLE_WATERMARK_ALGORITHM } from '../invisible-watermark';
 const WORKER_PROTOCOL = 1 as const;
 let requestSequence = 0;
 
-type WorkerConstructor = new (scriptURL: string | URL) => Worker;
+interface DedicatedWorkerClient {
+  onmessage: ((event: { data: unknown }) => void) | null;
+  onerror: (() => void) | null;
+  postMessage(message: unknown, transfer?: ArrayBuffer[]): void;
+  terminate(): void;
+}
+
+type WorkerConstructor = new (scriptURL: string | URL) => DedicatedWorkerClient;
+
+const defaultWorkerConstructor = (
+  globalThis as unknown as { Worker?: WorkerConstructor }
+).Worker;
 
 function abortError(): Error {
   const error = new Error('Invisible watermark worker detection was aborted.');
@@ -68,7 +79,7 @@ export function detectInvisibleWatermarkInWorker(
     'key' | 'strength' | 'search'
   >,
   options: InvisibleWatermarkWorkerOptions,
-  WorkerClass: WorkerConstructor | undefined = globalThis.Worker
+  WorkerClass: WorkerConstructor | undefined = defaultWorkerConstructor
 ): Promise<InvisibleWatermarkDetectionResult> {
   report(options, 'queued');
   if (options.signal?.aborted) return Promise.reject(abortError());
@@ -79,7 +90,7 @@ export function detectInvisibleWatermarkInWorker(
   }
 
   return new Promise((resolve, reject) => {
-    let worker: Worker;
+    let worker: DedicatedWorkerClient;
     try {
       worker = new WorkerClass(options.scriptUrl);
     } catch (error) {
@@ -111,7 +122,7 @@ export function detectInvisibleWatermarkInWorker(
         new Error('Invisible watermark Worker script failed to load or run.')
       );
     };
-    worker.onmessage = (event: MessageEvent<unknown>) => {
+    worker.onmessage = (event) => {
       const message = event.data as {
         protocol?: unknown;
         id?: unknown;
