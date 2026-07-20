@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.12.0](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.11.0...v1.12.0) (2026-07-20)
+
+### Features
+
+* add server trace runtime and worker detection ([b9976c5](https://github.com/JimmyDaddy/react-native-image-marker/commit/b9976c52d2a9e99ae478259e4a7b2f77aa926f7a))
+* **docs:** reorganize playground workflows ([f26524c](https://github.com/JimmyDaddy/react-native-image-marker/commit/f26524c56d0d1359cc9853188853511b16c38032))
+
+### Bug Fixes
+
+* isolate worker types from native consumers ([d79379d](https://github.com/JimmyDaddy/react-native-image-marker/commit/d79379d4660cdac12f35e0f8281fbff85e158e63))
+
 ## [1.11.0](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.10.1...v1.11.0) (2026-07-19)
 
 ### Features
