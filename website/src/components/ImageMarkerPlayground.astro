@@ -18,6 +18,13 @@ const strings = isZh
         '选择示例或自己的图片，调整文字和 Logo，然后保存结果。所有处理只在当前浏览器中完成。',
       privacy: '图片不上传',
       steps: ['选择内容', '调整样式', '保存或复制代码'],
+      workspaceLabel: '选择体验功能',
+      visibleTab: '可见水印',
+      visibleTabMeta: '文字、Logo、平铺与样式',
+      batchTab: '批量处理',
+      batchTabMeta: 'Recipe、进度与 Blob',
+      invisibleTab: '隐形追踪',
+      invisibleTabMeta: '短 ID、缩放验证与 Worker',
       capabilitiesTitle: '主要功能都可以直接试',
       capabilities: [
         '文字水印',
@@ -61,8 +68,6 @@ const strings = isZh
         { id: 'tiled-logo', title: '平铺 Logo', meta: '一次解码，多处绘制', version: '' },
         { id: 'opacity', title: '半透明文字', meta: '整个文字图层 40%', version: 'v1.8' },
         { id: 'blend', title: '自然融合', meta: 'Screen 文字 + Multiply Logo', version: 'v1.9' },
-        { id: 'batch', title: '个性化批量 Recipe', meta: '文件名变量、进度与 Blob', version: 'v1.9' },
-        { id: 'invisible', title: '隐形追踪', meta: '服务端运行时、Worker 与轻度缩放', version: 'v1.12' },
       ],
       textLayer: '文字设置',
       text: '文字内容',
@@ -185,6 +190,13 @@ const strings = isZh
         'Use the sample or choose your own image, adjust the text and logo, then save the result. Everything runs in this browser tab.',
       privacy: 'Images are not uploaded',
       steps: ['Choose content', 'Adjust the look', 'Save or copy code'],
+      workspaceLabel: 'Choose a playground workflow',
+      visibleTab: 'Visible marks',
+      visibleTabMeta: 'Text, logo, tiling, and styles',
+      batchTab: 'Batch Recipe',
+      batchTabMeta: 'Variables, progress, and Blob',
+      invisibleTab: 'Invisible trace',
+      invisibleTabMeta: 'Short IDs, resize checks, and Worker',
       capabilitiesTitle: 'Try every core workflow',
       capabilities: [
         'Text watermark',
@@ -228,8 +240,6 @@ const strings = isZh
         { id: 'tiled-logo', title: 'Tiled logo', meta: 'Decode once, draw many', version: '' },
         { id: 'opacity', title: 'Translucent text', meta: 'Whole text layer at 40%', version: 'v1.8' },
         { id: 'blend', title: 'Natural compositing', meta: 'Screen text + Multiply logo', version: 'v1.9' },
-        { id: 'batch', title: 'Personalized batch Recipe', meta: 'Filename variables, progress, and Blob', version: 'v1.9' },
-        { id: 'invisible', title: 'Invisible trace', meta: 'Server runtime, Worker, and light resizing', version: 'v1.12' },
       ],
       textLayer: 'Text settings',
       text: 'Watermark text',
@@ -376,6 +386,7 @@ const invisibleExecutors = ['main', 'worker'].map((value, index) => ({
 <section
   class="marker-playground not-content"
   data-marker-playground
+  data-workspace="visible"
   data-locale={locale}
   data-background-url={`${base}media/playground-background.jpg`}
   data-logo-url={`${base}media/marker-compass.png`}
@@ -433,6 +444,45 @@ const invisibleExecutors = ['main', 'worker'].map((value, index) => ({
       </li>
     ))}
   </ol>
+
+  <div class="workspace-tabs" role="tablist" aria-label={strings.workspaceLabel}>
+    <button
+      id={`${idPrefix}-workspace-visible-tab`}
+      type="button"
+      role="tab"
+      aria-selected="true"
+      aria-controls={`${idPrefix}-workspace-visible`}
+      tabindex="0"
+      data-workspace-tab="visible"
+    >
+      <span>{strings.visibleTab}</span>
+      <small>{strings.visibleTabMeta}</small>
+    </button>
+    <button
+      id={`${idPrefix}-workspace-batch-tab`}
+      type="button"
+      role="tab"
+      aria-selected="false"
+      aria-controls={`${idPrefix}-workspace-batch`}
+      tabindex="-1"
+      data-workspace-tab="batch"
+    >
+      <span>{strings.batchTab} <em>v1.9</em></span>
+      <small>{strings.batchTabMeta}</small>
+    </button>
+    <button
+      id={`${idPrefix}-workspace-invisible-tab`}
+      type="button"
+      role="tab"
+      aria-selected="false"
+      aria-controls={`${idPrefix}-workspace-invisible`}
+      tabindex="-1"
+      data-workspace-tab="invisible"
+    >
+      <span>{strings.invisibleTab} <em>v1.12</em></span>
+      <small>{strings.invisibleTabMeta}</small>
+    </button>
+  </div>
 
   <div class="playground-shell">
     <section class="preview-panel" aria-labelledby={`${idPrefix}-preview-title`}>
@@ -495,7 +545,16 @@ const invisibleExecutors = ['main', 'worker'].map((value, index) => ({
       </div>
     </section>
 
-    <form class="controls-panel" data-controls>
+    <div class="workspace-panel-stack">
+    <form
+      id={`${idPrefix}-workspace-visible`}
+      class="controls-panel"
+      role="tabpanel"
+      aria-labelledby={`${idPrefix}-workspace-visible-tab`}
+      data-controls
+      data-workspace-panel="visible"
+      tabindex="0"
+    >
       <fieldset class="control-section preset-section">
         <legend>{strings.presets}</legend>
         <div class="segmented-control" data-mode-control>
@@ -788,75 +847,127 @@ const invisibleExecutors = ['main', 'worker'].map((value, index) => ({
         <p class="field-hint">{strings.qualityHint}</p>
       </fieldset>
     </form>
-  </div>
 
-  <section class="capability-index" aria-labelledby={`${idPrefix}-capabilities-title`}>
-    <strong id={`${idPrefix}-capabilities-title`}>{strings.capabilitiesTitle}</strong>
-    <ul>
-      {strings.capabilities.map((capability) => <li>{capability}</li>)}
-    </ul>
-  </section>
-
-  <section
-    class="invisible-panel"
-    aria-labelledby={`${idPrefix}-invisible-title`}
-    data-invisible-panel
-    tabindex="-1"
-  >
-    <div class="invisible-heading">
-      <div>
-        <p class="panel-kicker">{strings.invisibleEyebrow}</p>
-        <h3 id={`${idPrefix}-invisible-title`}>{strings.invisibleTitle}</h3>
-        <p>{strings.invisibleDescription}</p>
+    <section
+      id={`${idPrefix}-workspace-batch`}
+      class="batch-panel"
+      role="tabpanel"
+      aria-labelledby={`${idPrefix}-workspace-batch-tab`}
+      data-batch-panel
+      data-workspace-panel="batch"
+      tabindex="0"
+      hidden
+    >
+      <div class="batch-heading">
+        <div>
+          <p class="panel-kicker">{strings.batchEyebrow}</p>
+          <h3 id={`${idPrefix}-batch-title`}>{strings.batchTitle}</h3>
+          <p>{strings.batchDescription}</p>
+        </div>
+        <div class="batch-picker">
+          <input
+            id={`${idPrefix}-batch-files`}
+            type="file"
+            accept="image/*"
+            multiple
+            data-batch-files
+          />
+          <label class="file-button" for={`${idPrefix}-batch-files`}>{strings.chooseBatch}</label>
+          <span data-batch-selection>{strings.batchNone}</span>
+        </div>
       </div>
-      <span class="invisible-status" data-invisible-status>{strings.invisibleReady}</span>
-    </div>
-    <div class="invisible-controls">
-      <label class="field">
-        <span>{strings.invisiblePayload}</span>
-        <input type="text" value="asset-42" maxlength="12" data-invisible-payload />
-      </label>
-      <label class="field">
-        <span>{strings.invisibleKey}</span>
-        <input type="password" value="example-only-key-2026" data-invisible-key />
-      </label>
-      <CustomSelect
-        id={`${idPrefix}-invisible-strength`}
-        label={strings.invisibleStrength}
-        name="invisible-strength"
-        options={invisibleStrengths}
-        value="robust"
-      />
-      <CustomSelect
-        id={`${idPrefix}-invisible-transform`}
-        label={strings.invisibleTransform}
-        name="invisible-transform"
-        options={invisibleTransforms}
-        value="1"
-      />
-      <CustomSelect
-        id={`${idPrefix}-invisible-executor`}
-        label={strings.invisibleExecutor}
-        name="invisible-executor"
-        options={invisibleExecutors}
-        value="worker"
-      />
-    </div>
-    <div class="invisible-actions">
-      <button class="primary-button" type="button" data-invisible-embed>
-        {strings.invisibleEmbed}
-      </button>
-      <button class="quiet-button" type="button" data-invisible-detect disabled>
-        {strings.invisibleDetect}
-      </button>
-      <button class="quiet-button" type="button" data-invisible-cancel disabled>
-        {strings.invisibleCancel}
-      </button>
-    </div>
-    <p class="invisible-warning">{strings.invisibleWarning}</p>
-    <details class="invisible-code">
-      <summary>{strings.invisibleBatchCode}</summary>
-      <pre><code>{`const embedded = await Marker.embedInvisibleMany(
+      <div class="batch-progress-row">
+        <div
+          class="batch-progress"
+          role="progressbar"
+          aria-label={strings.batchRunning}
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuenow="0"
+        >
+          <span data-batch-progress></span>
+        </div>
+        <span aria-live="polite" data-batch-status>{strings.batchReady}</span>
+        <div class="batch-actions">
+          <button class="primary-button" type="button" data-batch-run disabled>
+            {strings.runBatch}
+          </button>
+          <button class="quiet-button" type="button" data-batch-cancel disabled>
+            {strings.cancelBatch}
+          </button>
+        </div>
+      </div>
+      <div class="batch-results-heading">
+        <h4>{strings.batchResults}</h4>
+        <span data-batch-summary>0 / 0</span>
+      </div>
+      <div class="batch-results" data-batch-results></div>
+    </section>
+
+    <section
+      id={`${idPrefix}-workspace-invisible`}
+      class="invisible-panel"
+      role="tabpanel"
+      aria-labelledby={`${idPrefix}-workspace-invisible-tab`}
+      data-invisible-panel
+      data-workspace-panel="invisible"
+      tabindex="0"
+      hidden
+    >
+      <div class="invisible-heading">
+        <div>
+          <p class="panel-kicker">{strings.invisibleEyebrow}</p>
+          <h3 id={`${idPrefix}-invisible-title`}>{strings.invisibleTitle}</h3>
+          <p>{strings.invisibleDescription}</p>
+        </div>
+        <span class="invisible-status" data-invisible-status>{strings.invisibleReady}</span>
+      </div>
+      <div class="invisible-controls">
+        <label class="field">
+          <span>{strings.invisiblePayload}</span>
+          <input type="text" value="asset-42" maxlength="12" data-invisible-payload />
+        </label>
+        <label class="field">
+          <span>{strings.invisibleKey}</span>
+          <input type="password" value="example-only-key-2026" data-invisible-key />
+        </label>
+        <CustomSelect
+          id={`${idPrefix}-invisible-strength`}
+          label={strings.invisibleStrength}
+          name="invisible-strength"
+          options={invisibleStrengths}
+          value="robust"
+        />
+        <CustomSelect
+          id={`${idPrefix}-invisible-transform`}
+          label={strings.invisibleTransform}
+          name="invisible-transform"
+          options={invisibleTransforms}
+          value="1"
+        />
+        <CustomSelect
+          id={`${idPrefix}-invisible-executor`}
+          label={strings.invisibleExecutor}
+          name="invisible-executor"
+          options={invisibleExecutors}
+          value="worker"
+        />
+      </div>
+      <div class="invisible-actions">
+        <button class="primary-button" type="button" data-invisible-embed>
+          {strings.invisibleEmbed}
+        </button>
+        <button class="quiet-button" type="button" data-invisible-detect disabled>
+          {strings.invisibleDetect}
+        </button>
+        <button class="quiet-button" type="button" data-invisible-cancel disabled>
+          {strings.invisibleCancel}
+        </button>
+      </div>
+      <p class="invisible-warning">{strings.invisibleWarning}</p>
+      <details class="invisible-code">
+        <summary>{strings.invisibleBatchCode}</summary>
+        <pre><code>{`const embedded = await Marker.embedInvisibleMany(
   recipients.map((recipient) => ({
     image: { src: source },
     payload: recipient.locator,
@@ -873,11 +984,11 @@ const verified = await Marker.detectInvisibleMany(
       : []
   )
 );`}</code></pre>
-    </details>
-    <details class="invisible-code">
-      <summary>{strings.invisibleCredentialsCode}</summary>
-      <p>{strings.invisibleCredentialsNote}</p>
-      <pre><code>{`const signed = await Marker.embedInvisibleWithCredentials({
+      </details>
+      <details class="invisible-code">
+        <summary>{strings.invisibleCredentialsCode}</summary>
+        <p>{strings.invisibleCredentialsNote}</p>
+        <pre><code>{`const signed = await Marker.embedInvisibleWithCredentials({
   watermark: { image: { src: source }, payload: locator, key },
   claim: { title: 'distribution-copy.png', format: 'image/png' },
   adapter: yourServerAdapter,
@@ -887,62 +998,19 @@ const credentials = await Marker.verifyContentCredentials({
   image: signed.signedImage,
   adapter: yourServerAdapter,
 });`}</code></pre>
-      <a href="https://github.com/JimmyDaddy/react-native-image-marker/tree/master/examples/c2pa-service">
-        {strings.invisibleCredentialsLink}
-      </a>
-    </details>
-  </section>
+        <a href="https://github.com/JimmyDaddy/react-native-image-marker/tree/master/examples/c2pa-service">
+          {strings.invisibleCredentialsLink}
+        </a>
+      </details>
+    </section>
+    </div>
+  </div>
 
-  <section
-    class="batch-panel"
-    aria-labelledby={`${idPrefix}-batch-title`}
-    data-batch-panel
-    tabindex="-1"
-  >
-    <div class="batch-heading">
-      <div>
-        <p class="panel-kicker">{strings.batchEyebrow}</p>
-        <h3 id={`${idPrefix}-batch-title`}>{strings.batchTitle}</h3>
-        <p>{strings.batchDescription}</p>
-      </div>
-      <div class="batch-picker">
-        <input
-          id={`${idPrefix}-batch-files`}
-          type="file"
-          accept="image/*"
-          multiple
-          data-batch-files
-        />
-        <label class="file-button" for={`${idPrefix}-batch-files`}>{strings.chooseBatch}</label>
-        <span data-batch-selection>{strings.batchNone}</span>
-      </div>
-    </div>
-    <div class="batch-progress-row">
-      <div
-        class="batch-progress"
-        role="progressbar"
-        aria-label={strings.batchRunning}
-        aria-valuemin="0"
-        aria-valuemax="100"
-        aria-valuenow="0"
-      >
-        <span data-batch-progress></span>
-      </div>
-      <span aria-live="polite" data-batch-status>{strings.batchReady}</span>
-      <div class="batch-actions">
-        <button class="primary-button" type="button" data-batch-run disabled>
-          {strings.runBatch}
-        </button>
-        <button class="quiet-button" type="button" data-batch-cancel disabled>
-          {strings.cancelBatch}
-        </button>
-      </div>
-    </div>
-    <div class="batch-results-heading">
-      <h4>{strings.batchResults}</h4>
-      <span data-batch-summary>0 / 0</span>
-    </div>
-    <div class="batch-results" data-batch-results></div>
+  <section class="capability-index" aria-labelledby={`${idPrefix}-capabilities-title`}>
+    <strong id={`${idPrefix}-capabilities-title`}>{strings.capabilitiesTitle}</strong>
+    <ul>
+      {strings.capabilities.map((capability) => <li>{capability}</li>)}
+    </ul>
   </section>
 
   <section class="code-panel" aria-labelledby={`${idPrefix}-code-title`}>
@@ -1015,6 +1083,7 @@ const credentials = await Marker.verifyContentCredentials({
   type PlaygroundMode = 'text' | 'image' | 'mixed';
   type LayoutMode = 'single' | 'tile';
   type CodeTarget = 'web' | 'native';
+  type WorkspaceTab = 'visible' | 'batch' | 'invisible';
   type MarkerSdk = typeof import('../../../src/index');
   type PositionEnum = MarkerSdk['Position'];
 
@@ -1026,6 +1095,7 @@ const credentials = await Marker.verifyContentCredentials({
     logoSrc: string;
     result: string;
     codeTarget: CodeTarget;
+    workspace: WorkspaceTab;
     renderSequence: number;
   }
 
@@ -1088,9 +1158,16 @@ const credentials = await Marker.verifyContentCredentials({
       logoSrc: defaultLogo,
       result: '',
       codeTarget: 'web',
+      workspace: 'visible',
       renderSequence: 0,
     };
 
+    const workspaceTabs = [
+      ...root.querySelectorAll<HTMLButtonElement>('[data-workspace-tab]'),
+    ];
+    const workspacePanels = [
+      ...root.querySelectorAll<HTMLElement>('[data-workspace-panel]'),
+    ];
     const previewFrame = asElement<HTMLElement>(root, '[data-preview-frame]');
     const preview = asElement<HTMLImageElement>(root, '[data-preview]');
     const statusText = asElement<HTMLElement>(root, '[data-status-text]');
@@ -1149,7 +1226,6 @@ const credentials = await Marker.verifyContentCredentials({
     const batchRun = asElement<HTMLButtonElement>(root, '[data-batch-run]');
     const batchCancel = asElement<HTMLButtonElement>(root, '[data-batch-cancel]');
     const batchResults = asElement<HTMLElement>(root, '[data-batch-results]');
-    const invisiblePanel = asElement<HTMLElement>(root, '[data-invisible-panel]');
     const invisiblePayload = asElement<HTMLInputElement>(root, '[data-invisible-payload]');
     const invisibleKey = asElement<HTMLInputElement>(root, '[data-invisible-key]');
     const invisibleStrength = asElement<HTMLSelectElement>(root, '[data-invisible-strength]');
@@ -1362,6 +1438,22 @@ ${layers}
     renderButton.dataset.defaultLabel = renderButton.textContent ?? '';
     root.dataset.render = renderButton.textContent ?? '';
 
+    const updateWorkspace = (workspace: WorkspaceTab, focusPanel = false) => {
+      state.workspace = workspace;
+      root.dataset.workspace = workspace;
+      workspaceTabs.forEach((tab) => {
+        const selected = tab.dataset.workspaceTab === workspace;
+        tab.setAttribute('aria-selected', String(selected));
+        tab.tabIndex = selected ? 0 : -1;
+      });
+      workspacePanels.forEach((panel) => {
+        const selected = panel.dataset.workspacePanel === workspace;
+        panel.hidden = !selected;
+        if (selected && focusPanel) panel.focus({ preventScroll: true });
+      });
+    };
+    updateWorkspace(state.workspace);
+
     const updateMode = (mode: PlaygroundMode) => {
       state.mode = mode;
       root.dataset.mode = mode;
@@ -1413,14 +1505,11 @@ ${layers}
     const applyExample = (example: string) => {
       setActiveExample(example);
       if (example === 'batch') {
-        const batchPanel = asElement<HTMLElement>(root, '[data-batch-panel]');
-        batchPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        batchPanel.focus({ preventScroll: true });
+        updateWorkspace('batch', true);
         return;
       }
       if (example === 'invisible') {
-        invisiblePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        invisiblePanel.focus({ preventScroll: true });
+        updateWorkspace('invisible', true);
         return;
       }
 
@@ -1869,6 +1958,30 @@ ${layers}
       requestRender();
     });
 
+    workspaceTabs.forEach((tab, index) => {
+      tab.addEventListener('click', () => {
+        updateWorkspace((tab.dataset.workspaceTab ?? 'visible') as WorkspaceTab);
+      });
+      tab.addEventListener('keydown', (event) => {
+        let nextIndex = index;
+        if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+          nextIndex = (index + 1) % workspaceTabs.length;
+        } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+          nextIndex = (index - 1 + workspaceTabs.length) % workspaceTabs.length;
+        } else if (event.key === 'Home') {
+          nextIndex = 0;
+        } else if (event.key === 'End') {
+          nextIndex = workspaceTabs.length - 1;
+        } else {
+          return;
+        }
+        event.preventDefault();
+        const nextTab = workspaceTabs[nextIndex];
+        nextTab?.focus();
+        updateWorkspace((nextTab?.dataset.workspaceTab ?? 'visible') as WorkspaceTab);
+      });
+    });
+
     root.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach((button) => {
       button.addEventListener('click', () => {
         setActiveExample(undefined);
@@ -2281,6 +2394,83 @@ ${layers}
     line-height: 1.35;
   }
 
+  .workspace-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.4rem;
+    margin: 0 0 0.75rem;
+    padding: 0.35rem;
+    border: 1px solid var(--playground-line);
+    border-radius: 1rem;
+    background: color-mix(in srgb, var(--playground-panel) 90%, transparent);
+  }
+
+  .workspace-tabs button {
+    display: flex;
+    min-width: 0;
+    min-height: 3.4rem;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0.15rem;
+    padding: 0.55rem 0.72rem;
+    border: 1px solid transparent;
+    border-radius: 0.75rem;
+    color: var(--marker-muted);
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .workspace-tabs button:hover {
+    color: var(--marker-ink);
+    background: var(--playground-panel-raised);
+  }
+
+  .workspace-tabs button[aria-selected='true'] {
+    border-color: color-mix(in srgb, var(--marker-blue) 42%, var(--playground-line));
+    color: var(--marker-ink);
+    background: color-mix(in srgb, var(--marker-blue) 11%, var(--playground-panel-raised));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--marker-blue) 8%, transparent);
+  }
+
+  .workspace-tabs button:focus-visible {
+    outline: 2px solid var(--marker-blue);
+    outline-offset: 2px;
+  }
+
+  .workspace-tabs button > span {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.76rem;
+    font-weight: 760;
+    line-height: 1.25;
+  }
+
+  .workspace-tabs em {
+    padding: 0.1rem 0.32rem;
+    border-radius: 999px;
+    color: var(--marker-blue);
+    background: color-mix(in srgb, var(--marker-blue) 12%, transparent);
+    font-family: var(--sl-font-mono);
+    font-size: 0.52rem;
+    font-style: normal;
+    font-weight: 700;
+  }
+
+  .workspace-tabs small {
+    overflow: hidden;
+    max-width: 100%;
+    color: var(--marker-muted);
+    font-size: 0.61rem;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .playground-shell {
     display: grid;
     grid-template-areas: 'controls preview';
@@ -2288,6 +2478,11 @@ ${layers}
     gap: 1rem;
     align-items: start;
     margin: 0;
+  }
+
+  .marker-playground[data-workspace='batch'] .playground-shell,
+  .marker-playground[data-workspace='invisible'] .playground-shell {
+    grid-template-columns: minmax(25rem, 32rem) minmax(0, 1fr);
   }
 
   .preview-panel,
@@ -2309,14 +2504,23 @@ ${layers}
     padding: 1rem;
   }
 
-  .controls-panel {
+  .workspace-panel-stack {
     grid-area: controls;
     position: sticky;
     top: 5rem;
+    min-width: 0;
+    max-height: calc(100vh - 6rem);
+  }
+
+  .workspace-panel-stack > [data-workspace-panel] {
     max-height: calc(100vh - 6rem);
     overflow-x: hidden;
     overflow-y: auto;
     scrollbar-gutter: stable;
+  }
+
+  .workspace-panel-stack > [data-workspace-panel][hidden] {
+    display: none;
   }
 
   .panel-heading,
@@ -2983,7 +3187,6 @@ ${layers}
   }
 
   .invisible-panel {
-    margin-top: 1rem;
     padding: 1rem;
     background:
       radial-gradient(circle at 88% 10%, color-mix(in srgb, var(--marker-blue) 13%, transparent), transparent 30%),
@@ -2992,9 +3195,9 @@ ${layers}
 
   .invisible-heading {
     display: flex;
+    flex-direction: column;
     align-items: flex-start;
-    justify-content: space-between;
-    gap: 1.5rem;
+    gap: 0.75rem;
   }
 
   .invisible-heading h3 {
@@ -3014,7 +3217,7 @@ ${layers}
 
   .invisible-status {
     flex: none;
-    max-width: 22rem;
+    max-width: 100%;
     padding: 0.35rem 0.62rem;
     border: 1px solid var(--playground-line);
     border-radius: 999px;
@@ -3023,12 +3226,12 @@ ${layers}
     font-family: var(--sl-font-mono);
     font-size: 0.64rem;
     line-height: 1.4;
-    text-align: center;
+    text-align: left;
   }
 
   .invisible-controls {
     display: grid;
-    grid-template-columns: repeat(5, minmax(9rem, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: end;
     gap: 0.75rem;
     margin-top: 1rem;
@@ -3043,7 +3246,8 @@ ${layers}
   }
 
   .invisible-actions button {
-    min-width: 10rem;
+    min-width: 0;
+    flex: 1 1 8rem;
     padding-inline: 0.85rem;
   }
 
@@ -3093,15 +3297,14 @@ ${layers}
   }
 
   .batch-panel {
-    margin-top: 1rem;
     padding: 1rem;
   }
 
   .batch-heading {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 1.5rem;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 0.85rem;
   }
 
   .batch-heading h3,
@@ -3127,7 +3330,7 @@ ${layers}
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    justify-content: flex-end;
+    justify-content: flex-start;
     gap: 0.55rem;
   }
 
@@ -3141,7 +3344,7 @@ ${layers}
 
   .batch-progress-row {
     display: grid;
-    grid-template-columns: minmax(8rem, 1fr) minmax(10rem, auto) auto;
+    grid-template-columns: minmax(0, 1fr);
     align-items: center;
     gap: 0.8rem;
     margin-top: 1rem;
@@ -3188,7 +3391,7 @@ ${layers}
 
   .batch-results {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
     gap: 0.65rem;
     margin-top: 0.65rem;
   }
@@ -3375,20 +3578,23 @@ ${layers}
       grid-template-columns: 1fr;
     }
 
+    .marker-playground[data-workspace='batch'] .playground-shell,
+    .marker-playground[data-workspace='invisible'] .playground-shell {
+      grid-template-columns: 1fr;
+    }
+
     .preview-panel,
-    .controls-panel {
+    .workspace-panel-stack {
       position: static;
       max-height: none;
     }
 
-    .controls-panel {
+    .workspace-panel-stack > [data-workspace-panel] {
+      max-height: none;
       overflow-y: visible;
       scrollbar-gutter: auto;
     }
 
-    .batch-results {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
   }
 
   @media (max-width: 44rem) {
@@ -3398,6 +3604,27 @@ ${layers}
 
     .marker-playground {
       margin-bottom: 3rem;
+    }
+
+    .workspace-tabs {
+      gap: 0.25rem;
+      padding: 0.28rem;
+    }
+
+    .workspace-tabs button {
+      min-height: 2.85rem;
+      align-items: center;
+      padding: 0.45rem 0.3rem;
+      text-align: center;
+    }
+
+    .workspace-tabs button > span {
+      justify-content: center;
+      font-size: 0.68rem;
+    }
+
+    .workspace-tabs small {
+      display: none;
     }
 
     .playground-heading {

@@ -106,6 +106,7 @@ try {
     /fileToDataUrl|backgroundFile|logoFile|setMarkedImageUri/
   );
 
+  await selectWorkspaceTab(playground, 'visible');
   await playground.locator('[data-live-preview]').uncheck();
   await selectCustomOptionWithKeyboard(playground, 'format', 'jpg');
   await playground.getByText('Changes ready. Update the preview.').waitFor();
@@ -243,6 +244,7 @@ async function assertVisibleLogo(playground) {
 }
 
 async function assertInvisibleTrace(page, playground) {
+  await selectWorkspaceTab(playground, 'invisible');
   await playground.locator('[data-invisible-embed]').click();
   await page.waitForFunction(() =>
     document
@@ -270,6 +272,7 @@ async function assertInvisibleTrace(page, playground) {
 }
 
 async function assertBatchRecipe(page, playground) {
+  await selectWorkspaceTab(playground, 'batch');
   const batchFiles = playground.locator('[data-batch-files]');
   const fixtureNames = [
     'playground-background.jpg',
@@ -338,7 +341,19 @@ async function assertLayoutControlsAndCode(page, playground) {
   );
   const preview = playground.locator('[data-preview]');
 
-  assert.equal(await playground.locator('[data-example]').count(), 8);
+  const workspaceTabs = playground.locator('[data-workspace-tab]');
+  assert.equal(await workspaceTabs.count(), 3);
+  assert.equal(
+    await playground
+      .locator('[data-workspace-tab="visible"]')
+      .getAttribute('aria-selected'),
+    'true'
+  );
+  assert(
+    await playground.locator('[data-workspace-panel="visible"]').isVisible(),
+    'Visible watermark controls should be the initial workspace.'
+  );
+  assert.equal(await playground.locator('[data-example]').count(), 6);
   assert.equal(await playground.locator('.capability-index li').count(), 11);
   assert(
     await textSingle.isVisible(),
@@ -428,6 +443,18 @@ async function assertLayoutControlsAndCode(page, playground) {
   await waitForPreviewChange(page, playground, previousSource);
 }
 
+async function selectWorkspaceTab(playground, workspace) {
+  const tab = playground.locator(`[data-workspace-tab="${workspace}"]`);
+  const panel = playground.locator(`[data-workspace-panel="${workspace}"]`);
+  await tab.click();
+  assert.equal(await tab.getAttribute('aria-selected'), 'true');
+  assert.equal(await panel.getAttribute('hidden'), null);
+  assert(
+    await panel.isVisible(),
+    `${workspace} workspace panel should be visible.`
+  );
+}
+
 async function waitForPreviewChange(page, playground, previousSource) {
   await page.waitForFunction((previous) => {
     const preview = document.querySelector(
@@ -460,6 +487,7 @@ async function assertWorkbenchLayout(page) {
       h1Count: document.querySelectorAll('main h1').length,
       pageWidth: document.documentElement.scrollWidth,
       viewportWidth: window.innerWidth,
+      viewportHeight: window.innerHeight,
       marker: bounds('.marker-playground'),
       controls: bounds('.controls-panel'),
       preview: bounds('.preview-panel'),
@@ -495,7 +523,7 @@ async function assertWorkbenchLayout(page) {
     'Workbench should use the available desktop width.'
   );
   assert(
-    layout.controls.y < 280,
+    layout.controls.y < layout.viewportHeight / 2,
     'Controls should be visible in the first viewport.'
   );
   assert(
