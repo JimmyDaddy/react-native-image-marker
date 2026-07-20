@@ -29,6 +29,8 @@ export type {
   InvisibleWatermarkImage,
   InvisibleWatermarkSearch,
   InvisibleWatermarkStrength,
+  InvisibleWatermarkWorkerOptions,
+  InvisibleWatermarkWorkerProgressPhase,
 } from './invisible-watermark';
 
 export {
@@ -39,6 +41,15 @@ export {
   INVISIBLE_WATERMARK_MIN_WIDTH,
   INVISIBLE_WATERMARK_RESIZE_SCALES,
 } from './invisible-watermark';
+
+export type {
+  InvisibleWatermarkCodec,
+  InvisibleWatermarkDecodedImage,
+  InvisibleWatermarkRuntime,
+  InvisibleWatermarkRuntimeOptions,
+  RuntimeDetectInvisibleWatermarkOptions,
+  RuntimeEmbedInvisibleWatermarkOptions,
+} from './trace-runtime';
 
 export type {
   ContentCredentialsAdapter,

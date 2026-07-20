@@ -23,6 +23,14 @@ export const invisibleDetection = Marker.detectInvisible({
   image: { src: 'file:///tmp/marked.png' },
   key: '0123456789abcdef',
   search: 'robust',
+  worker: {
+    scriptUrl: '/worker/invisible-watermark.js',
+    signal: new AbortController().signal,
+    onProgress({ phase }) {
+      const currentPhase: 'queued' | 'detecting' | 'complete' = phase;
+      currentPhase.toString();
+    },
+  },
 });
 
 export const invisibleBatch = Marker.embedInvisibleMany(

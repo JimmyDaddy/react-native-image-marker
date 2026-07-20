@@ -40,6 +40,7 @@ const requiredFiles = [
   'media/watermark-after-dark.jpg',
   'media/watermark-tiled.jpg',
   'media/marker-compass.png',
+  'worker/invisible-watermark.js',
   'robots.txt',
   'sitemap-index.xml',
   'sitemap-0.xml',

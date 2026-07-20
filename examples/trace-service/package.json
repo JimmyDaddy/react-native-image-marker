@@ -1,0 +1,22 @@
+{
+  "name": "react-native-image-marker-trace-service-example",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/server.mjs",
+    "test": "node --test",
+    "typecheck": "tsc --noEmit",
+    "benchmark": "node scripts/run-reliability-benchmark.mjs"
+  },
+  "dependencies": {
+    "sharp": "0.35.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.9.3"
+  }
+}

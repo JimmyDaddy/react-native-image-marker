@@ -82,6 +82,77 @@ const verified = await Marker.detectInvisibleMany(
 Calling `abort()` stops new items from starting. Work already handed to Canvas
 or a native decoder finishes normally and still reports its result.
 
+## Run Web detection in a Worker
+
+Robust detection is CPU intensive. Copy the standalone Worker artifact into a
+trusted same-origin static directory:
+
+```sh
+cp node_modules/react-native-image-marker/lib/worker/invisible-watermark.js \
+  public/worker/invisible-watermark.js
+```
+
+Then opt in for each detection:
+
+```ts
+const controller = new AbortController();
+
+const result = await Marker.detectInvisible({
+  image: { src: suspectImage },
+  key,
+  strength: 'robust',
+  search: 'robust',
+  worker: {
+    scriptUrl: '/worker/invisible-watermark.js',
+    signal: controller.signal,
+    onProgress: ({ phase }) => console.log(phase),
+  },
+});
+
+controller.abort(); // terminates an active Worker and rejects with AbortError
+```
+
+Without `worker`, detection keeps the v1.11 cooperative main-thread behavior.
+When a Worker is configured, script, protocol, and runtime failures are
+reported instead of silently falling back. Never load this Worker from an
+untrusted third-party origin: it receives both image pixels and the detection
+key. The [live Playground](/playground/) uses the same-origin artifact and lets
+you compare both execution modes.
+
+## Embed and detect on a trusted server
+
+Import the runtime through its explicit subpath. The normal React Native entry
+does not load this module, and the SDK does not install an image codec:
+
+```js
+const {
+  createInvisibleWatermarkRuntime,
+} = require('react-native-image-marker/trace-runtime.js');
+
+const runtime = createInvisibleWatermarkRuntime({
+  codec: yourRgbaCodec,
+  maxConcurrency: 4,
+});
+
+const output = await runtime.embedInvisible({
+  image: { src: inputBuffer },
+  payload: 'asset-42',
+  key: await secretManager.get('trace-watermark-key'),
+  strength: 'robust',
+  saveFormat: 'png',
+});
+```
+
+The codec owns decoding, EXIF orientation, aspect-preserving `maxSize`, RGBA
+conversion, and JPEG/PNG encoding. The runtime copies decoded pixels before
+embedding and provides single and batch methods with the same result ordering,
+progress, and cancellation semantics as `Marker`.
+
+The independent [Node.js Trace Service example](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/examples/trace-service)
+uses Node.js 22, `sharp`, a service-owned key, bounded JSON/base64 requests, an
+injectable record store, and optional Content Credentials. Its in-memory store
+and lack of authentication are local-demo defaults, not a production perimeter.
+
 ## Payload and key rules
 
 - `payload` must contain 1–12 UTF-8 bytes. Prefer a random locator such as a compact asset or distribution ID.
@@ -163,3 +234,5 @@ does not claim `c2pa.watermarked` or standard soft-binding compatibility.
 The frame format and threat model are specified in [RFC 0003](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/docs/rfcs/0003-v1.10-invisible-trace-watermarks.md).
 Batching, resize recovery, responsive Web detection, and Content Credentials
 integration are specified in [RFC 0004](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/docs/rfcs/0004-v1.11-durable-provenance-workflows.md).
+The on-demand server runtime, Trace Service, Worker protocol, and reliability
+matrix are specified in [RFC 0005](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/docs/rfcs/0005-v1.12-server-trace-runtime.md).

@@ -58,6 +58,7 @@ package-lock.json
 !/package-lock.json
 !website/package-lock.json
 !examples/c2pa-service/package-lock.json
+!examples/trace-service/package-lock.json
 yarn.lock
 
 # BUCK
@@ -77,7 +78,9 @@ lib/
 
 website/.astro/
 website/dist/
+website/public/worker/
 website/src/content/docs/api/
 
 # testing
 /coverage
+examples/trace-service/benchmark-report.json

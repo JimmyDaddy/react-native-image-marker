@@ -62,7 +62,7 @@ const strings = isZh
         { id: 'opacity', title: '半透明文字', meta: '整个文字图层 40%', version: 'v1.8' },
         { id: 'blend', title: '自然融合', meta: 'Screen 文字 + Multiply Logo', version: 'v1.9' },
         { id: 'batch', title: '个性化批量 Recipe', meta: '文件名变量、进度与 Blob', version: 'v1.9' },
-        { id: 'invisible', title: '隐形追踪', meta: '批量写入，并验证轻度缩放', version: 'v1.11' },
+        { id: 'invisible', title: '隐形追踪', meta: '服务端运行时、Worker 与轻度缩放', version: 'v1.12' },
       ],
       textLayer: '文字设置',
       text: '文字内容',
@@ -128,7 +128,7 @@ const strings = isZh
       batchFailed: '批量处理失败',
       batchResults: '处理结果',
       downloadResult: '保存',
-      invisibleEyebrow: 'v1.11 · 批量隐形追踪',
+      invisibleEyebrow: 'v1.12 · 跨端隐形追踪',
       invisibleTitle: '画面看不出变化，也能找回短 ID。',
       invisibleDescription:
         '把短 locator 写入图片像素，再用相同密钥验证。适合素材分发追踪；它不是 DRM，也不能证明图片从未被修改。',
@@ -138,12 +138,18 @@ const strings = isZh
       invisibleStrengths: ['轻微', '均衡', '耐压缩'],
       invisibleTransform: '验证哪种图片？',
       invisibleTransforms: ['原始结果', '缩小到 0.9×', '放大到 1.1×'],
+      invisibleExecutor: '检测执行位置',
+      invisibleExecutors: ['主线程', 'Web Worker'],
       invisibleEmbed: '嵌入并预览',
       invisibleDetect: '验证当前结果',
+      invisibleCancel: '停止检测',
       invisibleReady: '等待嵌入',
       invisibleEmbedding: '正在写入像素…',
       invisibleEmbedded: '已嵌入；肉眼预览应基本不变',
       invisibleDetecting: '正在验证…',
+      invisibleWorkerQueued: 'Worker 已排队…',
+      invisibleWorkerRunning: 'Worker 正在检测，可随时停止…',
+      invisibleCancelled: '检测已停止',
       invisibleDetected: '验证成功',
       invisibleNotDetected: '未找到可验证的追踪 ID',
       invisibleWarning:
@@ -223,7 +229,7 @@ const strings = isZh
         { id: 'opacity', title: 'Translucent text', meta: 'Whole text layer at 40%', version: 'v1.8' },
         { id: 'blend', title: 'Natural compositing', meta: 'Screen text + Multiply logo', version: 'v1.9' },
         { id: 'batch', title: 'Personalized batch Recipe', meta: 'Filename variables, progress, and Blob', version: 'v1.9' },
-        { id: 'invisible', title: 'Invisible trace', meta: 'Batch locators and verify light resizing', version: 'v1.11' },
+        { id: 'invisible', title: 'Invisible trace', meta: 'Server runtime, Worker, and light resizing', version: 'v1.12' },
       ],
       textLayer: 'Text settings',
       text: 'Watermark text',
@@ -289,7 +295,7 @@ const strings = isZh
       batchFailed: 'Batch failed',
       batchResults: 'Batch results',
       downloadResult: 'Save',
-      invisibleEyebrow: 'v1.11 · Batched invisible traces',
+      invisibleEyebrow: 'v1.12 · Cross-runtime invisible traces',
       invisibleTitle: 'Keep the image clean. Recover a short ID later.',
       invisibleDescription:
         'Write a short locator into the pixels, then authenticate it with the same key. Use it for distribution tracing—not as DRM or proof that an image was never edited.',
@@ -299,12 +305,18 @@ const strings = isZh
       invisibleStrengths: ['Subtle', 'Balanced', 'Compression resistant'],
       invisibleTransform: 'Which image should be verified?',
       invisibleTransforms: ['Original result', 'Resize to 0.9×', 'Resize to 1.1×'],
+      invisibleExecutor: 'Run detection on',
+      invisibleExecutors: ['Main thread', 'Web Worker'],
       invisibleEmbed: 'Embed and preview',
       invisibleDetect: 'Verify current result',
+      invisibleCancel: 'Stop detection',
       invisibleReady: 'Waiting to embed',
       invisibleEmbedding: 'Writing into pixels…',
       invisibleEmbedded: 'Embedded. The preview should look nearly unchanged.',
       invisibleDetecting: 'Verifying…',
+      invisibleWorkerQueued: 'Worker queued…',
+      invisibleWorkerRunning: 'Worker detecting. You can stop it at any time…',
+      invisibleCancelled: 'Detection stopped',
       invisibleDetected: 'Verified',
       invisibleNotDetected: 'No authenticated trace ID found',
       invisibleWarning:
@@ -355,6 +367,10 @@ const invisibleTransforms = ['1', '0.9', '1.1'].map((value, index) => ({
   value,
   label: strings.invisibleTransforms[index]!,
 }));
+const invisibleExecutors = ['main', 'worker'].map((value, index) => ({
+  value,
+  label: strings.invisibleExecutors[index]!,
+}));
 ---
 
 <section
@@ -363,6 +379,7 @@ const invisibleTransforms = ['1', '0.9', '1.1'].map((value, index) => ({
   data-locale={locale}
   data-background-url={`${base}media/playground-background.jpg`}
   data-logo-url={`${base}media/marker-compass.png`}
+  data-worker-url={`${base}worker/invisible-watermark.js`}
   data-ready={strings.ready}
   data-rendering={strings.rendering}
   data-rendered={strings.rendered}
@@ -390,6 +407,9 @@ const invisibleTransforms = ['1', '0.9', '1.1'].map((value, index) => ({
   data-invisible-embedding={strings.invisibleEmbedding}
   data-invisible-embedded={strings.invisibleEmbedded}
   data-invisible-detecting={strings.invisibleDetecting}
+  data-invisible-worker-queued={strings.invisibleWorkerQueued}
+  data-invisible-worker-running={strings.invisibleWorkerRunning}
+  data-invisible-cancelled={strings.invisibleCancelled}
   data-invisible-detected={strings.invisibleDetected}
   data-invisible-not-detected={strings.invisibleNotDetected}
 >
@@ -814,6 +834,13 @@ const invisibleTransforms = ['1', '0.9', '1.1'].map((value, index) => ({
         options={invisibleTransforms}
         value="1"
       />
+      <CustomSelect
+        id={`${idPrefix}-invisible-executor`}
+        label={strings.invisibleExecutor}
+        name="invisible-executor"
+        options={invisibleExecutors}
+        value="worker"
+      />
     </div>
     <div class="invisible-actions">
       <button class="primary-button" type="button" data-invisible-embed>
@@ -821,6 +848,9 @@ const invisibleTransforms = ['1', '0.9', '1.1'].map((value, index) => ({
       </button>
       <button class="quiet-button" type="button" data-invisible-detect disabled>
         {strings.invisibleDetect}
+      </button>
+      <button class="quiet-button" type="button" data-invisible-cancel disabled>
+        {strings.invisibleCancel}
       </button>
     </div>
     <p class="invisible-warning">{strings.invisibleWarning}</p>
@@ -1124,9 +1154,11 @@ const credentials = await Marker.verifyContentCredentials({
     const invisibleKey = asElement<HTMLInputElement>(root, '[data-invisible-key]');
     const invisibleStrength = asElement<HTMLSelectElement>(root, '[data-invisible-strength]');
     const invisibleTransform = asElement<HTMLSelectElement>(root, '[data-invisible-transform]');
+    const invisibleExecutor = asElement<HTMLSelectElement>(root, '[data-invisible-executor]');
     const invisibleStatus = asElement<HTMLElement>(root, '[data-invisible-status]');
     const invisibleEmbed = asElement<HTMLButtonElement>(root, '[data-invisible-embed]');
     const invisibleDetect = asElement<HTMLButtonElement>(root, '[data-invisible-detect]');
+    const invisibleCancel = asElement<HTMLButtonElement>(root, '[data-invisible-cancel]');
 
     const getTextLayer = (Position: PositionEnum) => ({
       text: textInput.value || 'IMAGE MARKER',
@@ -1491,6 +1523,7 @@ ${layers}
     let batchController: AbortController | undefined;
     let batchObjectUrls: string[] = [];
     let invisibleResult = '';
+    let invisibleController: AbortController | undefined;
 
     const clearBatchResults = () => {
       batchObjectUrls.forEach((url) => URL.revokeObjectURL(url));
@@ -1615,6 +1648,7 @@ ${layers}
     const setInvisibleBusy = (busy: boolean) => {
       invisibleEmbed.disabled = busy;
       invisibleDetect.disabled = busy || !invisibleResult;
+      invisibleCancel.disabled = !busy || !invisibleController;
     };
 
     const showInvisibleResult = async (result: string) => {
@@ -1685,19 +1719,40 @@ ${layers}
           Number(invisibleTransform.value)
         );
         await showInvisibleResult(inspected);
+        const useWorker = invisibleExecutor.value === 'worker';
+        invisibleController = useWorker ? new AbortController() : undefined;
+        invisibleCancel.disabled = !invisibleController;
         const detection = await sdk.default.detectInvisible({
           image: { src: inspected },
           key: invisibleKey.value,
           strength: invisibleStrength.value as 'subtle' | 'balanced' | 'robust',
           search: 'robust',
+          ...(useWorker
+            ? {
+                worker: {
+                  scriptUrl: root.dataset.workerUrl ?? '/worker/invisible-watermark.js',
+                  signal: invisibleController!.signal,
+                  onProgress: ({ phase }: { phase: 'queued' | 'detecting' | 'complete' }) => {
+                    if (phase === 'queued') {
+                      invisibleStatus.textContent = root.dataset.invisibleWorkerQueued ?? '';
+                    } else if (phase === 'detecting') {
+                      invisibleStatus.textContent = root.dataset.invisibleWorkerRunning ?? '';
+                    }
+                  },
+                },
+              }
+            : {}),
         });
         invisibleStatus.textContent = detection.detected
           ? `${root.dataset.invisibleDetected ?? ''}: ${detection.payload ?? '—'} · ${Math.round(detection.confidence * 100)}%${detection.scale ? ` · ${detection.scale}×` : ''}`
           : root.dataset.invisibleNotDetected ?? '';
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        invisibleStatus.textContent = `${root.dataset.failed ?? ''}: ${message}`;
+        invisibleStatus.textContent = error instanceof Error && error.name === 'AbortError'
+          ? root.dataset.invisibleCancelled ?? ''
+          : `${root.dataset.failed ?? ''}: ${message}`;
       } finally {
+        invisibleController = undefined;
         setInvisibleBusy(false);
       }
     };
@@ -1957,7 +2012,8 @@ ${layers}
     window.addEventListener('pagehide', clearBatchResults, { once: true });
     invisibleEmbed.addEventListener('click', () => void runInvisibleEmbed());
     invisibleDetect.addEventListener('click', () => void runInvisibleDetect());
-    [invisiblePayload, invisibleKey, invisibleStrength, invisibleTransform].forEach((input) => {
+    invisibleCancel.addEventListener('click', () => invisibleController?.abort());
+    [invisiblePayload, invisibleKey, invisibleStrength, invisibleTransform, invisibleExecutor].forEach((input) => {
       input.addEventListener('input', () => {
         invisibleStatus.textContent = root.dataset.invisibleReady ?? '';
       });
@@ -1988,6 +2044,7 @@ ${layers}
       invisibleKey.value = 'example-only-key-2026';
       setCustomSelectValue(invisibleStrength, 'robust');
       setCustomSelectValue(invisibleTransform, '1');
+      setCustomSelectValue(invisibleExecutor, 'worker');
       invisibleStatus.textContent = root.dataset.invisibleReady ?? '';
       updateStrokeOptions();
       scheduleRender();
@@ -2971,7 +3028,7 @@ ${layers}
 
   .invisible-controls {
     display: grid;
-    grid-template-columns: minmax(10rem, 1fr) minmax(12rem, 1.2fr) repeat(2, minmax(9rem, 0.72fr));
+    grid-template-columns: repeat(5, minmax(9rem, 1fr));
     align-items: end;
     gap: 0.75rem;
     margin-top: 1rem;
