@@ -135,7 +135,7 @@ try {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(`${origin}/zh-cn/playground/`, { waitUntil: 'networkidle' });
   await page.getByText('菜单', { exact: true }).click();
-  await page.getByRole('link', { name: '快速开始', exact: true }).waitFor();
+  await page.getByRole('link', { name: '使用指南', exact: true }).waitFor();
   const mobileWidth = await page.evaluate(() => ({
     page: document.documentElement.scrollWidth,
     viewport: window.innerWidth,

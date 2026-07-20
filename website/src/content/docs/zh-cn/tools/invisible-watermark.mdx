@@ -1,0 +1,15 @@
+---
+title: 在线嵌入隐形追踪水印
+description: 在浏览器本地把经过认证的 1–12 字节 locator 写进图片像素，下载 PNG 和不含密钥的追踪记录。
+template: splash
+---
+
+import OnlineImageTool from '../../../../components/tools/OnlineImageTool.astro';
+
+把短 locator 写进像素，不添加可见文字。输出图片和记录都只在当前浏览器中生成。
+
+<OnlineImageTool tool="invisible-watermark" locale="zh-CN" />
+
+## 写 locator，不写个人信息
+
+payload 应该是短小、随机且不透明的 locator，再由受保护的数据库映射到收件人或业务记录。浏览器可以读到体验密钥，因此不要把生产主密钥放在这里。之后的阳性结果只确认 locator 通过认证，不证明所有权或文件从未被修改。

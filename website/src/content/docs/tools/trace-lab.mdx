@@ -1,0 +1,15 @@
+---
+title: Invisible watermark robustness lab
+description: Measure dct-qim-v1 recovery after JPEG recompression, 95 percent resize, and a limited edge crop directly in the browser.
+template: splash
+---
+
+import OnlineImageTool from '../../../components/tools/OnlineImageTool.astro';
+
+Embed one locator, generate a small deterministic transform matrix, and compare authenticated detection results.
+
+<OnlineImageTool tool="trace-lab" />
+
+## A practical compatibility check
+
+The matrix covers PNG, JPEG quality 90/75/60, 95% resizing, and a 2% edge crop. Results depend on image detail, dimensions, strength, and later processing. It does not claim resistance to screenshots, perspective changes, heavy crops, generative editing, or determined removal.

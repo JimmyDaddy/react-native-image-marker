@@ -1,0 +1,15 @@
+---
+title: Embed an invisible trace watermark
+description: Write an authenticated 1–12 byte locator into an image locally, then download the marked PNG and a key-free trace record.
+template: splash
+---
+
+import OnlineImageTool from '../../../components/tools/OnlineImageTool.astro';
+
+Embed a short random locator into the pixels without adding visible text. The output and record are created in this browser.
+
+<OnlineImageTool tool="invisible-watermark" />
+
+## Use locators, not personal data
+
+Keep the payload short and opaque, then resolve it to a recipient or record in your own protected database. The demo key is visible to browser code and is not suitable for production. A positive trace later confirms an authenticated locator, not ownership or an unedited file.

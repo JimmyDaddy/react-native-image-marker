@@ -1,0 +1,15 @@
+---
+title: Create recipient trace packages
+description: Generate one invisibly traced PNG per recipient, with random locators and a local mapping file packaged as a ZIP.
+template: splash
+---
+
+import OnlineImageTool from '../../../components/tools/OnlineImageTool.astro';
+
+Paste recipient IDs, generate a different random locator for each copy, and download the images plus their mapping in one ZIP.
+
+<OnlineImageTool tool="recipient-trace-package" />
+
+## Keep the mapping protected
+
+Recipient IDs are written only to `recipient-mapping.json`; image pixels contain random locators. The ZIP does not include the key. A browser run is limited to 30 recipients. Move the mapping into your protected audit store, apply an appropriate retention policy, and perform production embedding in a trusted service.

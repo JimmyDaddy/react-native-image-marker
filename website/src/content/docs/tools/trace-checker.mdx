@@ -1,0 +1,15 @@
+---
+title: Check an invisible trace watermark
+description: Detect an authenticated React Native Image Marker dct-qim-v1 locator, confidence, error rate, and estimated resize locally.
+template: splash
+---
+
+import OnlineImageTool from '../../../components/tools/OnlineImageTool.astro';
+
+Upload a suspect image and use the same key and strength that were used at embedding time. Robust mode also searches a limited resize range.
+
+<OnlineImageTool tool="trace-checker" />
+
+## What a result means
+
+This checks only React Native Image Marker’s `dct-qim-v1` frame. It cannot find SynthID or arbitrary watermarks and it is not an AI-image detector. “Detected” means the frame passed its format, CRC, and authentication checks; edits may still have occurred.

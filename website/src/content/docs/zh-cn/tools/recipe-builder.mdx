@@ -1,0 +1,15 @@
+---
+title: 图片水印 Recipe 构建器
+description: 编辑并验证可复用的 React Native Image Marker Recipe JSON，在图片上预览、导出并复制调用代码。
+template: splash
+---
+
+import OnlineImageTool from '../../../../components/tools/OnlineImageTool.astro';
+
+从有效 Recipe 开始，修改有序图层和输出设置，然后用真正的 Web 渲染器预览结果。
+
+<OnlineImageTool tool="recipe-builder" locale="zh-CN" />
+
+## 数据驱动、可复用
+
+Recipe 可以保存文字模板、有序文字和图片图层、条件显示、输出格式、质量与画布设置。图片资源不要直接塞进 JSON，而应在运行时注入可信来源。导入的 JSON 会先经过 SDK 验证再渲染。

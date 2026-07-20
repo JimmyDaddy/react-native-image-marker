@@ -1,0 +1,15 @@
+---
+title: Batch watermark images online
+description: Apply one text watermark recipe to several images, use filename variables, follow progress, stop safely, and download a ZIP locally.
+template: splash
+---
+
+import OnlineImageTool from '../../../components/tools/OnlineImageTool.astro';
+
+Select several images, write one template, and download the completed files as a ZIP. `{{filename}}` and `{{index}}` personalize each result.
+
+<OnlineImageTool tool="batch-watermark" />
+
+## Local batch processing
+
+The Recipe API preserves input order, isolates failures, reports progress, and stops unstarted items after cancellation. One local run accepts up to 20 images and 80 MB in total; production jobs with larger files or confidential keys belong in your own authenticated service.

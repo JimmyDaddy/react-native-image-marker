@@ -1,0 +1,15 @@
+---
+title: 生成收件人追踪包
+description: 为每个收件人生成带不同随机 locator 的隐形水印 PNG，并把图片和本地映射表打包为 ZIP。
+template: splash
+---
+
+import OnlineImageTool from '../../../../components/tools/OnlineImageTool.astro';
+
+粘贴收件人标识，为每份副本生成不同的随机 locator，然后把图片和映射表一起下载。
+
+<OnlineImageTool tool="recipient-trace-package" locale="zh-CN" />
+
+## 保护好映射表
+
+收件人标识只写在 `recipient-mapping.json` 中，图片像素里只有随机 locator，ZIP 也不包含密钥。浏览器一次最多处理 30 个收件人。请把映射表移入受保护的审计存储，设置合适的保留周期，并在生产环境的可信服务中完成嵌入。
