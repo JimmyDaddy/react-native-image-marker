@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@expo/react-native-action-sheet": "^4.0.1",
-    "filesize": "^10.1.0",
+    "filesize": "^11.0.22",
     "pako": "^3.0.1",
     "react": "18.2.0",
     "react-native": "0.73.3",
