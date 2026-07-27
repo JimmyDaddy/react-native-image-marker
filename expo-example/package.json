@@ -15,15 +15,15 @@
     "expo-install": "npx expo install"
   },
   "dependencies": {
-    "@expo/metro-runtime": "~57.0.6",
-    "expo": "57.0.7",
+    "@expo/metro-runtime": "~57.0.7",
+    "expo": "57.0.8",
     "expo-asset": "~57.0.6",
     "expo-font": "~57.0.1",
-    "expo-image-picker": "~57.0.5",
-    "expo-splash-screen": "~57.0.4",
+    "expo-image-picker": "~57.0.6",
+    "expo-splash-screen": "~57.0.5",
     "expo-status-bar": "~57.0.1",
     "react": "19.2.3",
-    "react-dom": "19.2.7",
+    "react-dom": "19.2.8",
     "react-native": "0.86.0",
     "react-native-image-marker": "file:..",
     "react-native-web": "^0.21.2"
