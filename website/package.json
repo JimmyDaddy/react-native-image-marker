@@ -27,7 +27,7 @@
     "typescript": "5.9.3"
   },
   "devDependencies": {
-    "playwright": "1.61.1"
+    "playwright": "1.62.0"
   },
   "overrides": {
     "ts-deepmerge": "8.0.0"
