@@ -17,7 +17,7 @@
   "dependencies": {
     "@astrojs/check": "0.9.9",
     "@astrojs/starlight": "0.41.3",
-    "@contentauth/c2pa-web": "0.12.3",
+    "@contentauth/c2pa-web": "0.13.0",
     "astro": "7.1.1",
     "fflate": "0.8.3",
     "starlight-typedoc": "0.23.0",
