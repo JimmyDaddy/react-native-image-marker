@@ -135,7 +135,7 @@
     "esbuild": "^0.28.1",
     "eslint": "^8.4.1",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-prettier": "^4.0.0",
+    "eslint-plugin-prettier": "^5.5.6",
     "husky": "^8.0.3",
     "jest": "^28.1.1",
     "metro-react-native-babel-preset": "^0.77.0",
