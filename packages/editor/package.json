@@ -3,6 +3,11 @@
   "version": "0.0.1",
   "description": "Optional interactive Recipe v2 editor for react-native-image-marker",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JimmyDaddy/react-native-image-marker.git",
+    "directory": "packages/editor"
+  },
   "main": "lib/commonjs/index.js",
   "module": "lib/module/index.js",
   "types": "lib/module/index.d.ts",
