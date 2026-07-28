@@ -253,10 +253,11 @@ jobs:
         with:
           fail-on-severity: moderate
           # ESLint 8 still requires minimatch 3's CommonJS brace-expansion API,
-          # and the RN 0.73 CLI still pulls ip without a patched release.
-          # These advisories are accepted only for the dev graph; the packed
-          # Core and Editor production graphs are audited below.
-          allow-ghsas: GHSA-mh99-v99m-4gvg,GHSA-2p57-rm9w-gvfp
+          # and the RN 0.73 CLI still pulls ip and fast-xml-parser without
+          # compatible patched releases. These advisories are accepted only
+          # for the dev graph; the packed Core and Editor production graphs
+          # are audited below.
+          allow-ghsas: GHSA-mh99-v99m-4gvg,GHSA-2p57-rm9w-gvfp,GHSA-gh4j-gqv2-49f6
 
       - name: Setup node
         uses: actions/setup-node@v7
