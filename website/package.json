@@ -18,13 +18,13 @@
     "preview": "astro preview"
   },
   "devDependencies": {
-    "@astrojs/check": "0.9.9",
-    "@astrojs/starlight": "0.41.3",
+    "@astrojs/check": "0.9.10",
+    "@astrojs/starlight": "0.41.5",
     "@axe-core/playwright": "^4.12.1",
-    "@contentauth/c2pa-web": "0.12.3",
-    "astro": "7.1.1",
+    "@contentauth/c2pa-web": "0.13.1",
+    "astro": "7.1.4",
     "fflate": "0.8.3",
-    "playwright": "1.61.1",
+    "playwright": "1.62.0",
     "starlight-typedoc": "0.23.0",
     "typedoc": "0.28.20",
     "typedoc-plugin-markdown": "4.12.0",
