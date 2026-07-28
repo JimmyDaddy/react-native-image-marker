@@ -75,7 +75,7 @@ jobs:
           fi
           npm publish --provenance --access public --tag latest
 
-      - name: Add Core v1 maintenance dist-tags
+      - name: Add the Core v1 LTS maintenance tag
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_BOOTSTRAP_TOKEN }}
         run: |
@@ -83,7 +83,8 @@ jobs:
             echo "The environment-scoped NPM_BOOTSTRAP_TOKEN is required."
             exit 1
           fi
-          npm dist-tag add react-native-image-marker@1.12.0 v1
+          # npm forbids dist-tags that are valid SemVer ranges, so consumers use
+          # @1 for the major line and @lts for the explicit maintenance alias.
           npm dist-tag add react-native-image-marker@1.12.0 lts
 
       - name: Verify published provenance and dist-tags
@@ -99,9 +100,9 @@ jobs:
             echo "Editor 0.0.1 did not expose provenance metadata in time."
             exit 1
           fi
-          test "$(npm view react-native-image-marker dist-tags.v1)" = "1.12.0"
           test "$(npm view react-native-image-marker dist-tags.lts)" = "1.12.0"
-          test "$(npm view react-native-image-marker@1 version)" = "1.12.0"
+          test "$(npm view react-native-image-marker@1 version --json | jq -r 'if type == "array" then last else . end')" = "1.12.0"
+          test "$(npm view react-native-image-marker@lts version)" = "1.12.0"
 
       - name: Verify a fresh Editor registry consumer
         run: >-
