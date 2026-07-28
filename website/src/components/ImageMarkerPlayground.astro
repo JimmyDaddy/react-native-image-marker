@@ -515,7 +515,7 @@ const invisibleExecutors = ['main', 'worker'].map((value, index) => ({
       tabindex="-1"
       data-workspace-tab="editor"
     >
-      <span>{strings.editorTab} <em>0.0.1</em></span>
+      <span>{strings.editorTab} <em>0.0.2</em></span>
       <small>{strings.editorTabMeta}</small>
     </button>
   </div>
@@ -1099,7 +1099,7 @@ const credentials = await Marker.verifyContentCredentials({
       aria-labelledby={`${idPrefix}-web-tab`}
       data-code-panel="web"
     >
-      <pre><code data-web-code></code></pre>
+      <pre tabindex="0"><code data-web-code></code></pre>
     </div>
     <div
       id={`${idPrefix}-native-code`}
@@ -1109,7 +1109,7 @@ const credentials = await Marker.verifyContentCredentials({
       data-code-panel="native"
       hidden
     >
-      <pre><code data-native-code></code></pre>
+      <pre tabindex="0"><code data-native-code></code></pre>
     </div>
   </section>
 
@@ -1197,9 +1197,10 @@ const credentials = await Marker.verifyContentCredentials({
 
     const defaultBackground = root.dataset.backgroundUrl ?? '';
     const defaultLogo = root.dataset.logoUrl ?? '';
-    const requestedWorkspace = new URLSearchParams(window.location.search).get(
-      'workflow'
-    );
+    const normalizedHash = window.location.hash.replace(/\/$/, '');
+    const requestedWorkspace =
+      new URLSearchParams(window.location.search).get('workflow') ??
+      (normalizedHash === '#editor-playground' ? 'editor' : null);
     const initialWorkspace: WorkspaceTab = [
       'visible',
       'batch',
@@ -1676,7 +1677,7 @@ ${transformNote}  const detection = await Marker.detectInvisible({
     updateWorkspace(state.workspace);
     if (
       state.workspace === 'editor' &&
-      window.location.hash === '#editor-playground'
+      normalizedHash === '#editor-playground'
     ) {
       window.requestAnimationFrame(() =>
         document.getElementById('editor-playground')?.scrollIntoView()
@@ -2688,7 +2689,7 @@ ${transformNote}  const detection = await Marker.detectInvisible({
   .workspace-tabs em {
     padding: 0.1rem 0.32rem;
     border-radius: 999px;
-    color: var(--marker-blue);
+    color: var(--marker-ink);
     background: color-mix(in srgb, var(--marker-blue) 12%, transparent);
     font-family: var(--sl-font-mono);
     font-size: 0.52rem;
@@ -3026,6 +3027,10 @@ ${transformNote}  const detection = await Marker.detectInvisible({
     background: var(--marker-blue);
   }
 
+  :global(:root[data-theme='light']) .primary-button {
+    color: #ffffff;
+  }
+
   .secondary-button,
   .file-button,
   .quiet-button,
@@ -3045,7 +3050,12 @@ ${transformNote}  const detection = await Marker.detectInvisible({
   button:disabled,
   .is-disabled {
     cursor: not-allowed;
-    opacity: 0.5;
+  }
+
+  .primary-button:disabled {
+    border-color: color-mix(in srgb, var(--marker-blue) 38%, var(--playground-line));
+    color: var(--marker-ink);
+    background: color-mix(in srgb, var(--marker-blue) 22%, var(--playground-panel));
   }
 
   .quiet-button {
@@ -3174,6 +3184,11 @@ ${transformNote}  const detection = await Marker.detectInvisible({
     border: 1px solid var(--playground-line);
     border-radius: 0.72rem;
     background: color-mix(in srgb, var(--playground-panel) 76%, black);
+  }
+
+  :global(:root[data-theme='light']) .segmented-control,
+  :global(:root[data-theme='light']) .result-row {
+    background: var(--playground-panel);
   }
 
   .segmented-control button {

@@ -39,19 +39,19 @@ const strings = locale === 'zh-CN'
       galleryLabel: '更多水印输出示例',
       gallery: [
         {
-          src: 'watermark-after-dark.jpg',
+          src: 'watermark-after-dark.webp',
           alt: '夜间街道上叠加了多层文字、旋转说明和图片 Logo 水印',
           title: '文字和 Logo',
           meta: '角度 · 顺序 · 样式',
         },
         {
-          src: 'watermark-image-layer.jpg',
+          src: 'watermark-image-layer.webp',
           alt: '混凝土建筑上叠加了大型半透明钴蓝色图片水印',
           title: '大型 Logo',
           meta: '大小 · 透明度 · 位置',
         },
         {
-          src: 'watermark-tiled.jpg',
+          src: 'watermark-tiled.webp',
           alt: '山间湖泊上错行平铺了带深色描边的 CONFIDENTIAL 文字，并保留右上角 Logo',
           title: '平铺保护',
           meta: '描边 · 旋转 · 错行',
@@ -97,19 +97,19 @@ const strings = locale === 'zh-CN'
       galleryLabel: 'More watermark output examples',
       gallery: [
         {
-          src: 'watermark-after-dark.jpg',
+          src: 'watermark-after-dark.webp',
           alt: 'Night street with multiple text layers, a rotated caption, and an image logo watermark',
           title: 'Text and logo',
           meta: 'Angle · order · style',
         },
         {
-          src: 'watermark-image-layer.jpg',
+          src: 'watermark-image-layer.webp',
           alt: 'Concrete architecture with a large translucent cobalt image watermark',
           title: 'Large logo',
           meta: 'Size · opacity · position',
         },
         {
-          src: 'watermark-tiled.jpg',
+          src: 'watermark-tiled.webp',
           alt: 'Mountain lake covered by staggered CONFIDENTIAL text with dark outlines and a logo in the top right',
           title: 'Tiled protection',
           meta: 'Outline · rotate · stagger',
@@ -142,7 +142,7 @@ const strings = locale === 'zh-CN'
       ))}
     </div>
 
-    <div class="install-block" aria-label={strings.installLabel}>
+    <div class="install-block" aria-label={strings.installLabel} role="region" tabindex="0">
       <code>npm install react-native-image-marker</code>
     </div>
   </div>
@@ -150,10 +150,10 @@ const strings = locale === 'zh-CN'
   <div class="product-preview">
     <figure class="preview-card preview-card-primary">
       <img
-        src={`${base}media/watermark-coast.jpg`}
+        src={`${base}media/watermark-coast.webp`}
         alt={strings.coastAlt}
-        width="1586"
-        height="992"
+        width="1200"
+        height="751"
         loading="eager"
         decoding="async"
       />
@@ -190,8 +190,8 @@ const strings = locale === 'zh-CN'
         <img
           src={`${base}media/${item.src}`}
           alt={item.alt}
-          width="1586"
-          height="992"
+          width="1200"
+          height="751"
           loading="lazy"
           decoding="async"
         />

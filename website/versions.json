@@ -30,11 +30,12 @@
     },
     {
       "id": "editor",
-      "label": "Editor 0.0.x",
+      "label": "Editor 0.0.2",
       "status": "experimental",
       "basePath": "/editor/",
       "source": "master",
       "packageRange": "0.0.x",
+      "currentVersion": "0.0.2",
       "peerCoreRange": "^2.0.0"
     }
   ]

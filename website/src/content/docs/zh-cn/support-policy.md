@@ -11,7 +11,7 @@ React Native Image Marker 使用彼此独立的发布和文档线路，让现有
 | Core v2（`2.0.x`） | 当前正式版本 | [v2 文档](/zh-cn/)              | `npm install react-native-image-marker@latest`       |
 | v1 LTS（`1.12.x`） | 当前维护线   | [v1 文档](/v1/zh-cn/)           | `npm install react-native-image-marker@1`            |
 | v1.0.0             | 不可变归档   | [v1.0.0 归档](/versions/1.0.0/) | `npm install react-native-image-marker@1.0.0`        |
-| Editor `0.0.x`     | 实验性       | [Editor 状态](/editor/)         | `npm install react-native-image-marker-editor@0.0.1` |
+| Editor `0.0.x`     | 实验性       | [Editor 状态](/editor/)         | `npm install react-native-image-marker-editor@0.0.2` |
 
 ## v1 LTS 承诺
 

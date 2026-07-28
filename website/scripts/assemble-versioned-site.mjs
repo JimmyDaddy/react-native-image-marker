@@ -49,6 +49,13 @@ if (archiveManifest.version !== '1.0.0') {
 const versions = JSON.parse(
   await readFile(new URL('../versions.json', import.meta.url), 'utf8')
 );
+const editorManifest = JSON.parse(
+  await readFile(
+    new URL('../../packages/editor/package.json', import.meta.url),
+    'utf8'
+  )
+);
+const editorVersion = editorManifest.version;
 const isGa = versions.releaseStage === 'ga';
 if (!['pre-ga', 'ga'].includes(versions.releaseStage)) {
   throw new Error(
@@ -216,7 +223,7 @@ const editorPage = `<!doctype html>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="${isGa ? 'index,follow' : 'noindex'}">
     <link rel="canonical" href="${siteOrigin}/editor/">
-    <title>Image Marker Editor 0.0.x</title>
+    <title>Image Marker Editor ${escapeHtml(editorVersion)}</title>
     <style>
       :root { color-scheme: light dark; font-family: ui-sans-serif, system-ui, sans-serif; }
       body { max-width: 52rem; margin: 0 auto; padding: 4rem 1.5rem; line-height: 1.65; }
@@ -228,10 +235,10 @@ const editorPage = `<!doctype html>
   </head>
   <body>
     <span class="badge">Experimental</span>
-    <h1>React Native Image Marker Editor 0.0.1</h1>
+    <h1>React Native Image Marker Editor ${escapeHtml(editorVersion)}</h1>
     <p>The optional interaction editor is a separate JS/TS package. It requires <code>react-native-image-marker@^2.0.0</code> and delegates previews and final encoding to Core.</p>
-    <pre><code>npm install react-native-image-marker@^2 react-native-image-marker-editor@0.0.1</code></pre>
-    <h2>Included in 0.0.1</h2>
+    <pre><code>npm install react-native-image-marker@^2 react-native-image-marker-editor@${escapeHtml(editorVersion)}</code></pre>
+    <h2>Included in ${escapeHtml(editorVersion)}</h2>
     <ul>
       <li>Text and image layers with select, drag, scale, rotate, reorder, visibility, and locks.</li>
       <li>Alignment guides, snapping, safe areas, grouped undo/redo, keyboard controls, and baseline accessibility.</li>
@@ -241,6 +248,8 @@ const editorPage = `<!doctype html>
     <p>Video, general filters, cloud collaboration, and duplicate native encoding are intentionally outside this release.</p>
     <nav>
       <a href="${v2DocsBase}guides/editor/">Integration guide</a>
+      <a href="${v2DocsBase}guides/editor/reference/">API reference</a>
+      <a href="${v2DocsBase}playground/?workflow=editor#editor-playground">Browser Playground</a>
       <a href="${v2DocsBase}guides/performance-and-jobs/">Preview and export performance</a>
       <a href="/editor/zh-cn/">简体中文</a>
       <a href="${v2DocsBase}">Core 2 documentation</a>
@@ -255,7 +264,7 @@ const editorZhPage = `<!doctype html>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="${isGa ? 'index,follow' : 'noindex'}">
     <link rel="canonical" href="${siteOrigin}/editor/zh-cn/">
-    <title>Image Marker Editor 0.0.1</title>
+    <title>Image Marker Editor ${escapeHtml(editorVersion)}</title>
     <style>
       :root { color-scheme: light dark; font-family: ui-sans-serif, system-ui, sans-serif; }
       body { max-width: 52rem; margin: 0 auto; padding: 4rem 1.5rem; line-height: 1.65; }
@@ -267,10 +276,10 @@ const editorZhPage = `<!doctype html>
   </head>
   <body>
     <span class="badge">实验性</span>
-    <h1>React Native Image Marker Editor 0.0.1</h1>
+    <h1>React Native Image Marker Editor ${escapeHtml(editorVersion)}</h1>
     <p>可选交互编辑器是独立 JS/TS 包，依赖 <code>react-native-image-marker@^2.0.0</code>，预览与最终编码仍委托给 Core。</p>
-    <pre><code>npm install react-native-image-marker@^2 react-native-image-marker-editor@0.0.1</code></pre>
-    <h2>0.0.1 包含</h2>
+    <pre><code>npm install react-native-image-marker@^2 react-native-image-marker-editor@${escapeHtml(editorVersion)}</code></pre>
+    <h2>${escapeHtml(editorVersion)} 包含</h2>
     <ul>
       <li>文字和图片图层，以及选择、拖动、缩放、旋转、排序、显隐和锁定。</li>
       <li>对齐线、吸附、安全区域、分组 undo/redo、键盘操作和基础无障碍。</li>
@@ -280,6 +289,8 @@ const editorZhPage = `<!doctype html>
     <p>视频、通用滤镜、云端协作和重复的原生编码不进入此版本。</p>
     <nav>
       <a href="${v2DocsBase}zh-cn/guides/editor/">接入指南</a>
+      <a href="${v2DocsBase}guides/editor/reference/">API 参考</a>
+      <a href="${v2DocsBase}zh-cn/playground/?workflow=editor#editor-playground">浏览器 Playground</a>
       <a href="${v2DocsBase}zh-cn/guides/performance-and-jobs/">预览与导出性能</a>
       <a href="/editor/">English</a>
       <a href="${v2DocsBase}zh-cn/">Core 2 文档</a>
