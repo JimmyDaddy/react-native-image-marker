@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "releaseStage": "pre-ga",
-  "current": "v1",
+  "releaseStage": "ga",
+  "current": "v2",
   "versions": [
     {
       "id": "v2",
-      "label": "v2 Preview",
-      "status": "preview",
-      "basePath": "/next/",
+      "label": "v2 Current",
+      "status": "current",
+      "basePath": "/v2/",
       "source": "master",
-      "packageRange": "2.0.0 prerelease"
+      "packageRange": "2.0.x"
     },
     {
       "id": "v1",
