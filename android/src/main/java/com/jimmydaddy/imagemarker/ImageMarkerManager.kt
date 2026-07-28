@@ -22,6 +22,7 @@ import com.jimmydaddy.imagemarker.base.Options
 import com.jimmydaddy.imagemarker.base.OutputFileName
 import com.jimmydaddy.imagemarker.base.SaveFormat
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -32,6 +33,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Created by jimmydaddy on 2017/3/6.
@@ -41,25 +43,40 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : NativeI
 ) {
   private val moduleScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
   private val markerJobLimiter = MarkerJobLimiter(parallelism = 1)
+  private val markerJobs = ConcurrentHashMap<String, kotlinx.coroutines.Job>()
 
   override fun invalidate() {
+    markerJobs.values.forEach { it.cancel() }
+    markerJobs.clear()
     moduleScope.cancel()
     super.invalidate()
   }
 
   private fun getSaveFormat(saveFormat: SaveFormat?): CompressFormat {
-    return if (saveFormat == SaveFormat.PNG) CompressFormat.PNG else CompressFormat.JPEG
+    return when (saveFormat) {
+      SaveFormat.PNG -> CompressFormat.PNG
+      SaveFormat.WEBP ->
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+          CompressFormat.WEBP_LOSSY
+        } else {
+          @Suppress("DEPRECATION")
+          CompressFormat.WEBP
+        }
+      else -> CompressFormat.JPEG
+    }
   }
 
   private fun launchMarkerJob(
+    jobId: String,
     promise: Promise,
     block: suspend () -> String
   ) {
-    moduleScope.launch {
+    val job = moduleScope.launch(start = CoroutineStart.LAZY) {
       try {
         promise.resolve(markerJobLimiter.run(block))
       } catch (e: CancellationException) {
         Log.d(IMAGE_MARKER_TAG, "marker job cancelled")
+        promise.reject("ABORTED", "Image marker operation was aborted", e)
       } catch (error: OutOfMemoryError) {
         val markerError = MarkerError(
           ErrorCode.RENDER_FAILED,
@@ -70,8 +87,12 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : NativeI
       } catch (e: Exception) {
         Log.d(IMAGE_MARKER_TAG, "error: " + e.message)
         promise.rejectMarkerError(e)
+      } finally {
+        markerJobs.remove(jobId)
       }
     }
+    markerJobs[jobId] = job
+    job.start()
   }
 
   private fun Promise.rejectMarkerError(error: Exception) {
@@ -245,7 +266,7 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : NativeI
     promise: Promise
   ) {
     val opts = InvisibleWatermarkOptions.checkEmbed(options, promise) ?: return
-    launchMarkerJob(promise) {
+    launchMarkerJob(opts.jobId, promise) {
       val bitmaps = MarkerImageLoader(context, opts.maxSize).loadImages(
         listOf(opts.backgroundImage)
       )
@@ -265,7 +286,7 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : NativeI
     promise: Promise
   ) {
     val opts = InvisibleWatermarkOptions.checkDetect(options, promise) ?: return
-    launchMarkerJob(promise) {
+    launchMarkerJob(opts.jobId, promise) {
       val bitmaps = MarkerImageLoader(context, opts.maxSize).loadImages(
         listOf(opts.backgroundImage)
       )
@@ -293,7 +314,7 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : NativeI
     val markOpts = MarkTextOptions.checkParams(options, promise) ?: return
     Log.d(IMAGE_MARKER_TAG, "uri: " + markOpts.backgroundImage.uri)
     Log.d(IMAGE_MARKER_TAG, "src: " + markOpts.backgroundImage.src.toString())
-    launchMarkerJob(promise) {
+    launchMarkerJob(markOpts.jobId, promise) {
       val bitmaps = MarkerImageLoader(context, markOpts.maxSize).loadImages(
         listOf(
           markOpts.backgroundImage,
@@ -316,7 +337,7 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : NativeI
     promise: Promise
   ) {
     val markOpts = MarkImageOptions.checkParams(options, promise) ?: return
-    launchMarkerJob(promise) {
+    launchMarkerJob(markOpts.jobId, promise) {
       val markers = markOpts.watermarkImages.map { it.imageOption }
       val concatenatedArray = listOf(
         markOpts.backgroundImage,
@@ -343,7 +364,7 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : NativeI
     promise: Promise
   ) {
     val markOpts = MarkWatermarkOptions.checkParams(options, promise) ?: return
-    launchMarkerJob(promise) {
+    launchMarkerJob(markOpts.jobId, promise) {
       val markers = markOpts.imageLayers.map { it.imageOptions.imageOption }
       val concatenatedArray = listOf(
         markOpts.backgroundImage,
@@ -361,6 +382,20 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : NativeI
         recycleBitmaps(bitmaps)
       }
     }
+  }
+
+  @ReactMethod
+  override fun cancel(
+    jobId: String,
+    promise: Promise
+  ) {
+    val job = markerJobs.remove(jobId)
+    if (job == null) {
+      promise.resolve(false)
+      return
+    }
+    job.cancel(CancellationException("Image marker job $jobId was cancelled"))
+    promise.resolve(true)
   }
 
   private fun generateCacheFilePathForMarker(

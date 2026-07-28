@@ -7,6 +7,7 @@ import com.jimmydaddy.imagemarker.base.Constants.DEFAULT_FONT_SIZE
 class TextStyle(private val options: ReadableMap?) {
   var color: String? = "#000000"
   var fontName: String? = null
+  var fontFallbacks: List<String> = emptyList()
   var fontSize: Float = DEFAULT_FONT_SIZE
   var fontSizeRatio: Float? = null
   var shadowLayerStyle: ShadowLayerStyle? = null
@@ -25,6 +26,20 @@ class TextStyle(private val options: ReadableMap?) {
       if (options != null) {
         color = options.stringOrNull("color") ?: color
         fontName = options.stringOrNull("fontName")
+        if (options.hasKey("fontFallbacks") && !options.isNull("fontFallbacks")) {
+          val values = options.getArray("fontFallbacks")
+            ?: throw MarkerError(
+              ErrorCode.INVALID_PARAMS,
+              "fontFallbacks must be an array"
+            )
+          fontFallbacks = List(values.size()) { index ->
+            values.getString(index)?.takeUnless { it.isBlank() }
+              ?: throw MarkerError(
+                ErrorCode.INVALID_PARAMS,
+                "fontFallbacks must contain non-empty font family names"
+              )
+          }
+        }
         fontSize = options.numberOrNull("fontSize")?.toFloat() ?: DEFAULT_FONT_SIZE
         fontSizeRatio = options.numberOrNull("fontSizeRatio")?.toFloat()
         shadowLayerStyle = options.mapOrNull("shadowStyle")?.let(::ShadowLayerStyle)

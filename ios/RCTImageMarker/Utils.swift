@@ -217,11 +217,15 @@ class Utils: NSObject {
             )
         }
 
-        let ratio = CGFloat(maxSize) / largestPixelDimension
+        let fitted = IMImageMarkerFitWithinMax(
+            Double(pixelWidth),
+            Double(pixelHeight),
+            Int32(maxSize)
+        )
         return ImageMarkerImageLoadRequest(
             size: CGSize(
-                width: max((pixelWidth * ratio).rounded(), 1),
-                height: max((pixelHeight * ratio).rounded(), 1)
+                width: Int(fitted.width),
+                height: Int(fitted.height)
             ),
             scale: 1,
             resizeMode: .contain
@@ -317,12 +321,18 @@ class Utils: NSObject {
     }
 
     static func getExt(_ saveFormat: String?) -> String {
-        return isPng(saveFormat) ? ".png" : ".jpg"
+        if isPng(saveFormat) {
+            return ".png"
+        }
+        if saveFormat?.caseInsensitiveCompare("webp") == .orderedSame {
+            return ".webp"
+        }
+        return ".jpg"
     }
 
     static func canonicalOutputFilename(_ filename: String, ext: String) -> String {
         let lowercased = filename.lowercased()
-        let knownExtension = [".jpeg", ".jpg", ".png"].first { lowercased.hasSuffix($0) }
+        let knownExtension = [".jpeg", ".jpg", ".png", ".webp"].first { lowercased.hasSuffix($0) }
         let stem = knownExtension.map { String(filename.dropLast($0.count)) } ?? filename
         return "\(stem)\(ext)"
     }
@@ -334,7 +344,7 @@ class Utils: NSObject {
         }
         let lowercased = trimmed.lowercased()
         guard trimmed != ".", trimmed != "..",
-              ![".jpeg", ".jpg", ".png"].contains(lowercased),
+              ![".jpeg", ".jpg", ".png", ".webp"].contains(lowercased),
               !filename.contains("/"), !filename.contains("\\"),
               filename.rangeOfCharacter(from: .controlCharacters) == nil else {
             return false

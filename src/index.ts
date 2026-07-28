@@ -1,30 +1,55 @@
 import Marker from './marker';
 
 export type {
+  MarkerOperation,
+  MarkerOutputFormat,
+  MarkerMetadataResult,
+  MarkerResult,
+  MarkerResultDescriptor,
+} from './result';
+
+export type {
+  ImageMarkerErrorCode,
+  MarkerJobOptions,
+  MarkerJobPhase,
+  MarkerJobProgress,
+} from './job';
+
+export { ImageMarkerError } from './job';
+
+export type {
   WatermarkBatchAbortedResult,
   WatermarkBatchFulfilledResult,
   WatermarkBatchOptions,
   WatermarkBatchProgress,
   WatermarkBatchRejectedResult,
   WatermarkBatchResult,
+  LegacyWatermarkRecipeDefinition,
   WatermarkRecipe,
   WatermarkBlobRecipeResultOptions,
   WatermarkRecipeCondition,
   WatermarkRecipeDefinition,
+  WatermarkRecipeDefinitionLayer,
+  WatermarkRecipeDocument,
   WatermarkRecipeInput,
   WatermarkRecipeLayer,
+  WatermarkMarkerResultRecipeOptions,
   WatermarkRecipeOptions,
+  WatermarkRecipeOutputOptions,
   WatermarkRecipeResultOptions,
   WatermarkRecipeSchemaVersion,
   WatermarkRecipeVariable,
-  WatermarkStringRecipeResultOptions,
 } from './recipe';
 
-export { WATERMARK_RECIPE_SCHEMA_VERSION } from './recipe';
+export {
+  migrateWatermarkRecipe,
+  WATERMARK_RECIPE_SCHEMA_VERSION,
+} from './recipe';
 
 export type {
   DetectInvisibleWatermarkOptions,
   EmbedInvisibleWatermarkOptions,
+  InvisibleWatermarkDetectionData,
   InvisibleWatermarkDetectionResult,
   InvisibleWatermarkImage,
   InvisibleWatermarkSearch,
@@ -93,6 +118,8 @@ export enum TextBackgroundType {
 export enum ImageFormat {
   png = 'png',
   jpg = 'jpg',
+  /** WebP output on Android and compatible browsers. iOS rejects it explicitly. */
+  webp = 'webp',
   // base64 string
   base64 = 'base64',
 }
@@ -303,6 +330,8 @@ export interface TextStyle {
    *  fontName: 'Arial'
    */
   fontName?: string;
+  /** Ordered platform font families tried after `fontName`. */
+  fontFallbacks?: string[];
   /**
    * font size used when rendering text onto the output image
    * @example
@@ -583,19 +612,6 @@ export interface TextOptions {
    */
   blendMode?: BlendMode;
   /**
-   * @deprecated since 1.2.4 use position instead
-   * text position options
-   * @example
-   *  positionOptions: {
-   *   X: 10,
-   *   Y: 10,
-   *   // or
-   *   // position: Position.center
-   * }
-   */
-  positionOptions?: PositionOptions;
-
-  /**
    * text position options
    * @example
    *  position: {
@@ -609,7 +625,7 @@ export interface TextOptions {
 
   /**
    * Render this watermark once or repeat it across the image. Tiled layouts
-   * cannot be combined with `position` or the deprecated `positionOptions`.
+   * cannot be combined with `position`.
    * @defaultValue `{ type: 'single' }`
    */
   layout?: WatermarkLayout;
@@ -936,33 +952,6 @@ export interface ImageMarkOptions {
    **/
   backgroundImage: ImageOptions;
   /**
-   * @since 1.1.0
-   * @deprecated use watermarkImages instead
-   * watermark image options
-   * @example
-   *  watermarkImage: {
-   *    src: require('./images/logo.png'),
-   *    scale: 0.5,
-   *    rotate: 45,
-   *    alpha: 0.5
-   *  }
-   */
-  watermarkImage?: WatermarkImageOptions;
-  /**
-   * @since 1.1.0
-   * @deprecated use watermarkImages instead
-   * watermark position options
-   * @example
-   * watermarkPositions: {
-   *  X: 10,
-   *  Y: 10,
-   *  // or
-   *  position: Position.center
-   * }
-   * Note: use watermarkImages instead
-   */
-  watermarkPositions?: PositionOptions; // watermark position options see @PositionOptions
-  /**
    * Integer image quality from `0` to `100`, where `100` is best.
    * @defaultValue 100
    * @example
@@ -1078,16 +1067,6 @@ export interface MarkOptions {
    * Text watermark options. Kept for compatibility; use watermarks instead for ordered mixed layers.
    */
   watermarkTexts?: TextOptions[];
-  /**
-   * @deprecated use watermarkImages instead
-   * Legacy single image watermark options.
-   */
-  watermarkImage?: WatermarkImageOptions;
-  /**
-   * @deprecated use position on watermarkImages instead
-   * Legacy single image watermark position options.
-   */
-  watermarkPositions?: PositionOptions;
   /**
    * Image watermark options. Kept for compatibility; use watermarks instead for ordered mixed layers.
    */

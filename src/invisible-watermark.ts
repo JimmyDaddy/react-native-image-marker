@@ -123,8 +123,8 @@ export interface DetectInvisibleWatermarkOptions {
   worker?: InvisibleWatermarkWorkerOptions;
 }
 
-/** Authenticated detection result. A positive result does not prove the image was unmodified. */
-export interface InvisibleWatermarkDetectionResult {
+/** Authenticated detector payload before a public Core job envelope is added. */
+export interface InvisibleWatermarkDetectionData {
   /** Whether the frame passed magic, CRC, and authentication checks. */
   detected: boolean;
   /** Recovered locator, present only when `detected` is true. */
@@ -139,20 +139,28 @@ export interface InvisibleWatermarkDetectionResult {
   scale?: number;
 }
 
+/** Structured public detection result. A positive result does not prove the image was unmodified. */
+export interface InvisibleWatermarkDetectionResult
+  extends InvisibleWatermarkDetectionData {
+  jobId: string;
+  operation: 'detectInvisible';
+  durationMs: number;
+}
+
 export interface InvisibleWatermarkPixelBuffer {
   data: Uint8Array | Uint8ClampedArray;
   width: number;
   height: number;
 }
 
-interface DetectionCandidate extends InvisibleWatermarkDetectionResult {
+interface DetectionCandidate extends InvisibleWatermarkDetectionData {
   frame?: Uint8Array;
 }
 
 function toPublicDetectionResult(
   candidate: DetectionCandidate
-): InvisibleWatermarkDetectionResult {
-  const result: InvisibleWatermarkDetectionResult = {
+): InvisibleWatermarkDetectionData {
+  const result: InvisibleWatermarkDetectionData = {
     detected: candidate.detected,
     confidence: candidate.confidence,
     algorithm: candidate.algorithm,
@@ -558,6 +566,17 @@ export function validateEmbedInvisibleOptions(
   validateStrength(options.strength);
   validateOutputNumber(options.quality, 'quality', 0, 100);
   validateOutputNumber(options.maxSize, 'maxSize', 1);
+  if (
+    options.saveFormat !== undefined &&
+    options.saveFormat !== 'jpg' &&
+    options.saveFormat !== 'png' &&
+    options.saveFormat !== 'webp' &&
+    options.saveFormat !== 'base64'
+  ) {
+    throw new Error(
+      `saveFormat is not supported: ${String(options.saveFormat)}.`
+    );
+  }
 }
 
 export function validateDetectInvisibleOptions(
@@ -1210,7 +1229,7 @@ async function resizeInvisibleWatermarkPixelsNearestAsync(
   return { data: output, width, height };
 }
 
-function emptyDetectionResult(): InvisibleWatermarkDetectionResult {
+function emptyDetectionResult(): InvisibleWatermarkDetectionData {
   return {
     detected: false,
     confidence: 0,
@@ -1221,7 +1240,7 @@ function emptyDetectionResult(): InvisibleWatermarkDetectionResult {
 export function detectInvisibleWatermarkPixels(
   buffer: InvisibleWatermarkPixelBuffer,
   options: Pick<DetectInvisibleWatermarkOptions, 'key' | 'strength' | 'search'>
-): InvisibleWatermarkDetectionResult {
+): InvisibleWatermarkDetectionData {
   validatePixelBuffer(buffer);
   const context = createDetectionContext(options);
   const search = validateSearch(options.search);
@@ -1256,7 +1275,7 @@ export function detectInvisibleWatermarkPixels(
 export async function detectInvisibleWatermarkPixelsAsync(
   buffer: InvisibleWatermarkPixelBuffer,
   options: Pick<DetectInvisibleWatermarkOptions, 'key' | 'strength' | 'search'>
-): Promise<InvisibleWatermarkDetectionResult> {
+): Promise<InvisibleWatermarkDetectionData> {
   validatePixelBuffer(buffer);
   const context = createDetectionContext(options);
   const search = validateSearch(options.search);

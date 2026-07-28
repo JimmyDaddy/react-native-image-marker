@@ -110,14 +110,13 @@ data class TextOptions(val options: ReadableMap) {
     }
 
     var typefaceFamily = Typeface.DEFAULT
-    if (style.fontName != null) {
-      typefaceFamily = try {
-          //设置字体失败时使用默认字体
-        ReactFontManager.getInstance()
-          .getTypeface(style.fontName!!, Typeface.NORMAL, context.assets)
+    for (fontName in listOfNotNull(style.fontName) + style.fontFallbacks) {
+      try {
+        typefaceFamily = ReactFontManager.getInstance()
+          .getTypeface(fontName, Typeface.NORMAL, context.assets)
+        break
       } catch (e: Exception) {
-        Log.e(Constants.IMAGE_MARKER_TAG, "Could not get typeface: " + e.message)
-        Typeface.DEFAULT
+        Log.e(Constants.IMAGE_MARKER_TAG, "Could not get typeface $fontName: " + e.message)
       }
     }
 //    val textSize = TypedValue.applyDimension(

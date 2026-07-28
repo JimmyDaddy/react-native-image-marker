@@ -130,6 +130,27 @@ describe('WebMarker pure helpers', () => {
     expect(canvas.toDataURL).toHaveBeenCalledWith('image/png', 1);
   });
 
+  it('uses WebP only when the browser returns the requested MIME type', () => {
+    const supportedCanvas = {
+      width: 100,
+      height: 50,
+      toDataURL: jest.fn(() => 'data:image/webp;base64,abc'),
+    };
+    expect(encodeCanvas(supportedCanvas, 'webp', 80)).toBe(
+      'data:image/webp;base64,abc'
+    );
+    expect(supportedCanvas.toDataURL).toHaveBeenCalledWith('image/webp', 0.8);
+
+    const unsupportedCanvas = {
+      width: 100,
+      height: 50,
+      toDataURL: jest.fn(() => 'data:image/png;base64,fallback'),
+    };
+    expect(() => encodeCanvas(unsupportedCanvas, 'webp', 80)).toThrow(
+      'browser could not encode'
+    );
+  });
+
   it('encodes PNG and JPEG recipes as browser Blobs', async () => {
     const canvas = {
       width: 100,

@@ -14,6 +14,7 @@ class TextStyleTest {
 
     assertEquals("#000000", style.color)
     assertNull(style.fontName)
+    assertEquals(emptyList<String>(), style.fontFallbacks)
     assertEquals(14f, style.fontSize, 0f)
     assertNull(style.fontSizeRatio)
     assertNull(style.shadowLayerStyle)

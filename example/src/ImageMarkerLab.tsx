@@ -39,6 +39,10 @@ import {
 
 const { width } = Dimensions.get('window');
 
+async function resultUri(operation: Promise<{ uri: string }>): Promise<string> {
+  return (await operation).uri;
+}
+
 export type PickImageTarget = 'image' | 'mark';
 
 type BackgroundFormat =
@@ -690,35 +694,41 @@ function useViewModel(props: ImageMarkerLabProps) {
       let path: string;
 
       if (nextConfig.waterMarkType === 'image') {
-        path = await Marker.markImage({
-          backgroundImage,
-          watermarkImages: [imageWatermark],
-          quality: nextConfig.quality,
-          saveFormat: nextConfig.saveFormat,
-        });
+        path = await resultUri(
+          Marker.markImage({
+            backgroundImage,
+            watermarkImages: [imageWatermark],
+            quality: nextConfig.quality,
+            saveFormat: nextConfig.saveFormat,
+          })
+        );
       } else if (nextConfig.waterMarkType === 'mixed') {
-        path = await Marker.mark({
-          backgroundImage,
-          watermarks: [
-            {
-              ...textWatermark,
-              type: 'text',
-            },
-            {
-              ...imageWatermark,
-              type: 'image',
-            },
-          ],
-          quality: nextConfig.quality,
-          saveFormat: nextConfig.saveFormat,
-        });
+        path = await resultUri(
+          Marker.mark({
+            backgroundImage,
+            watermarks: [
+              {
+                ...textWatermark,
+                type: 'text',
+              },
+              {
+                ...imageWatermark,
+                type: 'image',
+              },
+            ],
+            quality: nextConfig.quality,
+            saveFormat: nextConfig.saveFormat,
+          })
+        );
       } else {
-        path = await Marker.markText({
-          backgroundImage,
-          watermarkTexts: [textWatermark],
-          quality: nextConfig.quality,
-          saveFormat: nextConfig.saveFormat,
-        });
+        path = await resultUri(
+          Marker.markText({
+            backgroundImage,
+            watermarkTexts: [textWatermark],
+            quality: nextConfig.quality,
+            saveFormat: nextConfig.saveFormat,
+          })
+        );
       }
 
       setUri(formatResultUri(path, nextConfig.saveFormat));
@@ -834,58 +844,60 @@ function useViewModel(props: ImageMarkerLabProps) {
     setLoading(true);
 
     try {
-      const path = await Marker.mark({
-        backgroundImage: {
-          src: assets.bg,
-          scale: 1,
-        },
-        watermarks: [
-          {
-            type: 'text',
-            text: 'Mixed watermark',
-            alpha: 0.85,
-            position: {
-              position: Position.bottomCenter,
-              X: 0,
-              Y: 30,
-            },
-            style: {
-              color: '#FFFFFF',
-              fontName: exampleFontName,
-              fontSize: 34,
-              bold: true,
-              shadowStyle: {
-                dx: 8,
-                dy: 10,
-                radius: 12,
-                color: '#0F172A',
+      const path = await resultUri(
+        Marker.mark({
+          backgroundImage: {
+            src: assets.bg,
+            scale: 1,
+          },
+          watermarks: [
+            {
+              type: 'text',
+              text: 'Mixed watermark',
+              alpha: 0.85,
+              position: {
+                position: Position.bottomCenter,
+                X: 0,
+                Y: 30,
               },
-              textBackgroundStyle: {
-                type: TextBackgroundType.none,
-                paddingX: 14,
-                paddingY: 9,
-                color: '#1E293BCC',
-                cornerRadius: {
-                  all: { x: 10, y: 10 },
+              style: {
+                color: '#FFFFFF',
+                fontName: exampleFontName,
+                fontSize: 34,
+                bold: true,
+                shadowStyle: {
+                  dx: 8,
+                  dy: 10,
+                  radius: 12,
+                  color: '#0F172A',
+                },
+                textBackgroundStyle: {
+                  type: TextBackgroundType.none,
+                  paddingX: 14,
+                  paddingY: 9,
+                  color: '#1E293BCC',
+                  cornerRadius: {
+                    all: { x: 10, y: 10 },
+                  },
                 },
               },
             },
-          },
-          {
-            type: 'image',
-            src: assets.icon,
-            scale: 0.58,
-            alpha: 0.92,
-            position: {
-              position: Position.topRight,
-              X: 26,
-              Y: 26,
+            {
+              type: 'image',
+              src: assets.icon,
+              scale: 0.58,
+              alpha: 0.92,
+              position: {
+                position: Position.topRight,
+                X: 26,
+                Y: 26,
+              },
             },
-          },
-        ],
-        quality: 100,
-        saveFormat: ImageFormat.png,
-      });
+          ],
+          quality: 100,
+          saveFormat: ImageFormat.png,
+        })
+      );
 
       setUri(formatResultUri(path, ImageFormat.png));
       setShow(true);
@@ -923,41 +935,43 @@ function useViewModel(props: ImageMarkerLabProps) {
     setLoading(true);
 
     try {
-      const path = await Marker.mark({
-        backgroundImage: { src: assets.bg },
-        watermarks: [
-          {
-            type: 'image',
-            src: assets.icon,
-            blendMode: 'multiply',
-            position: { position: Position.center, X: 0, Y: 0 },
-            scale: 0.78,
-            alpha: 0.88,
-            rotate: -8,
-          },
-          {
-            type: 'text',
-            text: 'SCREEN LIGHT',
-            blendMode: 'screen',
-            alpha: 0.92,
-            position: { position: Position.bottomCenter, X: 0, Y: 36 },
-            style: {
-              color: '#FFE9B8',
-              fontName: exampleFontName,
-              fontSize: 38,
-              bold: true,
-              shadowStyle: {
-                dx: 0,
-                dy: 3,
-                radius: 8,
-                color: '#0F172A99',
+      const path = await resultUri(
+        Marker.mark({
+          backgroundImage: { src: assets.bg },
+          watermarks: [
+            {
+              type: 'image',
+              src: assets.icon,
+              blendMode: 'multiply',
+              position: { position: Position.center, X: 0, Y: 0 },
+              scale: 0.78,
+              alpha: 0.88,
+              rotate: -8,
+            },
+            {
+              type: 'text',
+              text: 'SCREEN LIGHT',
+              blendMode: 'screen',
+              alpha: 0.92,
+              position: { position: Position.bottomCenter, X: 0, Y: 36 },
+              style: {
+                color: '#FFE9B8',
+                fontName: exampleFontName,
+                fontSize: 38,
+                bold: true,
+                shadowStyle: {
+                  dx: 0,
+                  dy: 3,
+                  radius: 8,
+                  color: '#0F172A99',
+                },
               },
             },
-          },
-        ],
-        quality: 100,
-        saveFormat: ImageFormat.png,
-      });
+          ],
+          quality: 100,
+          saveFormat: ImageFormat.png,
+        })
+      );
 
       setUri(formatResultUri(path, ImageFormat.png));
       setShow(true);
@@ -992,35 +1006,37 @@ function useViewModel(props: ImageMarkerLabProps) {
     setLoading(true);
 
     try {
-      const path = await Marker.markText({
-        backgroundImage: { src: assets.bg },
-        watermarkTexts: [
-          {
-            text: 'CONFIDENTIAL',
-            alpha: 0.55,
-            layout: {
-              type: 'tile',
-              gapX: '8%',
-              gapY: '7%',
-              offsetX: '-2%',
-              stagger: true,
-            },
-            style: {
-              color: '#FFFFFF',
-              fontName: exampleFontName,
-              fontSize: 30,
-              bold: true,
-              rotate: -24,
-              strokeStyle: {
-                color: '#0F172A',
-                width: 2,
+      const path = await resultUri(
+        Marker.markText({
+          backgroundImage: { src: assets.bg },
+          watermarkTexts: [
+            {
+              text: 'CONFIDENTIAL',
+              alpha: 0.55,
+              layout: {
+                type: 'tile',
+                gapX: '8%',
+                gapY: '7%',
+                offsetX: '-2%',
+                stagger: true,
+              },
+              style: {
+                color: '#FFFFFF',
+                fontName: exampleFontName,
+                fontSize: 30,
+                bold: true,
+                rotate: -24,
+                strokeStyle: {
+                  color: '#0F172A',
+                  width: 2,
+                },
               },
             },
-          },
-        ],
-        quality: 100,
-        saveFormat: ImageFormat.png,
-      });
+          ],
+          quality: 100,
+          saveFormat: ImageFormat.png,
+        })
+      );
 
       setUri(formatResultUri(path, ImageFormat.png));
       setShow(true);
@@ -1055,26 +1071,28 @@ function useViewModel(props: ImageMarkerLabProps) {
     setLoading(true);
 
     try {
-      const path = await Marker.markImage({
-        backgroundImage: { src: assets.bg },
-        watermarkImages: [
-          {
-            src: assets.icon,
-            layout: {
-              type: 'tile',
-              gapX: '8%',
-              gapY: '8%',
-              stagger: true,
+      const path = await resultUri(
+        Marker.markImage({
+          backgroundImage: { src: assets.bg },
+          watermarkImages: [
+            {
+              src: assets.icon,
+              layout: {
+                type: 'tile',
+                gapX: '8%',
+                gapY: '8%',
+                stagger: true,
+              },
+              scale: 0.22,
+              alpha: 0.55,
+              rotate: -12,
+              trimTransparentPadding: true,
             },
-            scale: 0.22,
-            alpha: 0.55,
-            rotate: -12,
-            trimTransparentPadding: true,
-          },
-        ],
-        quality: 100,
-        saveFormat: ImageFormat.png,
-      });
+          ],
+          quality: 100,
+          saveFormat: ImageFormat.png,
+        })
+      );
 
       setUri(formatResultUri(path, ImageFormat.png));
       setShow(true);
@@ -1126,7 +1144,7 @@ function useViewModel(props: ImageMarkerLabProps) {
             ? result.reason
             : new Error('Invisible batch was aborted.');
         }
-        return result.value;
+        return result.value.uri;
       });
       const detected = await Marker.detectInvisibleMany(
         paths.map((path) => ({
@@ -1187,8 +1205,8 @@ function useViewModel(props: ImageMarkerLabProps) {
 
     try {
       const recipe = Marker.createRecipe({
-        schemaVersion: 1,
-        watermarks: [
+        schemaVersion: 2,
+        layers: [
           {
             type: 'text',
             text: 'BATCH {{label}} · #{{index}}',
@@ -1214,9 +1232,11 @@ function useViewModel(props: ImageMarkerLabProps) {
             alpha: 0.9,
           },
         ],
-        quality: 92,
-        saveFormat: ImageFormat.jpg,
-        maxSize: 1600,
+        output: {
+          quality: 92,
+          saveFormat: ImageFormat.jpg,
+          maxSize: 1600,
+        },
       });
       const batchId = Date.now();
       const results = await recipe.applyMany(
@@ -1254,9 +1274,9 @@ function useViewModel(props: ImageMarkerLabProps) {
         throw new Error('The batch did not produce an image.');
       }
 
-      setUri(formatResultUri(outputs[0], ImageFormat.jpg));
+      setUri(formatResultUri(outputs[0].uri, ImageFormat.jpg));
       setShow(true);
-      await updateFileSize(outputs[0], ImageFormat.jpg);
+      await updateFileSize(outputs[0].uri, ImageFormat.jpg);
       setResultContract(
         `Batch complete: ${outputs.length}/${results.length} succeeded · native renderer stayed serial`
       );
@@ -1295,26 +1315,28 @@ function useViewModel(props: ImageMarkerLabProps) {
     setLoading(true);
 
     try {
-      const path = await Marker.markImage({
-        backgroundImage: {
-          src: assets.bg,
-          scale: 1,
-        },
-        watermarkImages: [
-          {
-            src: sharpWatermarkDataUrl,
-            scale: 2.4,
-            alpha: 1,
-            position: {
-              position: Position.center,
-              X: 0,
-              Y: 0,
-            },
+      const path = await resultUri(
+        Marker.markImage({
+          backgroundImage: {
+            src: assets.bg,
+            scale: 1,
           },
-        ],
-        quality: 100,
-        saveFormat: ImageFormat.png,
-      });
+          watermarkImages: [
+            {
+              src: sharpWatermarkDataUrl,
+              scale: 2.4,
+              alpha: 1,
+              position: {
+                position: Position.center,
+                X: 0,
+                Y: 0,
+              },
+            },
+          ],
+          quality: 100,
+          saveFormat: ImageFormat.png,
+        })
+      );
 
       setUri(formatResultUri(path, ImageFormat.png));
       setShow(true);
@@ -1377,33 +1399,39 @@ function useViewModel(props: ImageMarkerLabProps) {
           edgeInset: 0,
         },
       };
-      const path = await Marker.markImage({
-        ...outputOptions,
-        watermarkImages: [
-          { ...watermarkOptions, trimTransparentPadding: true },
-        ],
-        matteColor: '#F8FAFC',
-      });
-
-      let untrimmedProbePath = '';
-      let darkMatteProbePath = '';
-      try {
-        untrimmedProbePath = await Marker.markImage({
-          ...outputOptions,
-          watermarkImages: [
-            { ...watermarkOptions, trimTransparentPadding: false },
-          ],
-          matteColor: '#F8FAFC',
-          filename: 'rotation-output-untrimmed-probe',
-        });
-        darkMatteProbePath = await Marker.markImage({
+      const path = await resultUri(
+        Marker.markImage({
           ...outputOptions,
           watermarkImages: [
             { ...watermarkOptions, trimTransparentPadding: true },
           ],
-          matteColor: '#000000',
-          filename: 'rotation-output-dark-matte-probe',
-        });
+          matteColor: '#F8FAFC',
+        })
+      );
+
+      let untrimmedProbePath = '';
+      let darkMatteProbePath = '';
+      try {
+        untrimmedProbePath = await resultUri(
+          Marker.markImage({
+            ...outputOptions,
+            watermarkImages: [
+              { ...watermarkOptions, trimTransparentPadding: false },
+            ],
+            matteColor: '#F8FAFC',
+            filename: 'rotation-output-untrimmed-probe',
+          })
+        );
+        darkMatteProbePath = await resultUri(
+          Marker.markImage({
+            ...outputOptions,
+            watermarkImages: [
+              { ...watermarkOptions, trimTransparentPadding: true },
+            ],
+            matteColor: '#000000',
+            filename: 'rotation-output-dark-matte-probe',
+          })
+        );
 
         const [outputBytes, untrimmedBytes, darkMatteBytes] = await Promise.all(
           [
@@ -1505,26 +1533,30 @@ function useViewModel(props: ImageMarkerLabProps) {
         },
         trimTransparentPadding: false,
       };
-      referencePath = await Marker.markImage({
-        backgroundImage: {
-          src: asymmetricWatermarkDataUrl,
-          scale: 1,
-        },
-        watermarkImages: [{ ...watermarkOptions, alpha: 0 }],
-        quality: 100,
-        saveFormat: ImageFormat.png,
-        filename: 'watermark-orientation-reference',
-      });
-      const path = await Marker.markImage({
-        backgroundImage: {
-          src: solidWatermarkBackgroundDataUrl,
-          scale: 1,
-        },
-        watermarkImages: [{ ...watermarkOptions, alpha: 1 }],
-        quality: 100,
-        saveFormat: ImageFormat.png,
-        filename: 'watermark-orientation-output',
-      });
+      referencePath = await resultUri(
+        Marker.markImage({
+          backgroundImage: {
+            src: asymmetricWatermarkDataUrl,
+            scale: 1,
+          },
+          watermarkImages: [{ ...watermarkOptions, alpha: 0 }],
+          quality: 100,
+          saveFormat: ImageFormat.png,
+          filename: 'watermark-orientation-reference',
+        })
+      );
+      const path = await resultUri(
+        Marker.markImage({
+          backgroundImage: {
+            src: solidWatermarkBackgroundDataUrl,
+            scale: 1,
+          },
+          watermarkImages: [{ ...watermarkOptions, alpha: 1 }],
+          quality: 100,
+          saveFormat: ImageFormat.png,
+          filename: 'watermark-orientation-output',
+        })
+      );
 
       const [outputBytes, referenceBytes] = await Promise.all([
         props.readFileBase64(path),
@@ -1598,134 +1630,129 @@ function useViewModel(props: ImageMarkerLabProps) {
     try {
       const path =
         nextConfig.waterMarkType === 'image'
-          ? await Marker.markImage({
-              backgroundImage: {
-                src: nextConfig.image,
-                scale: nextConfig.backgroundScale,
-                alpha: nextConfig.backgroundAlpha,
-                rotate: nextConfig.backgroundRotate,
-              },
-              watermarkImage: {
-                src: nextConfig.marker,
-                scale: nextConfig.watermarkScale,
-                alpha: nextConfig.watermarkAlpha,
-                rotate: nextConfig.watermarkRotate,
-              },
-              watermarkPositions: {
-                position: nextConfig.position,
-              },
-              quality: nextConfig.quality,
-              saveFormat: nextConfig.saveFormat,
-              watermarkImages: [
-                {
-                  src: assets.icon1,
-                  scale: nextConfig.watermarkScale,
-                  alpha: nextConfig.watermarkAlpha,
-                  rotate: nextConfig.watermarkRotate,
-                  position: {
-                    position: Position.topLeft,
-                  },
+          ? await resultUri(
+              Marker.markImage({
+                backgroundImage: {
+                  src: nextConfig.image,
+                  scale: nextConfig.backgroundScale,
+                  alpha: nextConfig.backgroundAlpha,
+                  rotate: nextConfig.backgroundRotate,
                 },
-                {
-                  src: nextConfig.marker,
-                  scale: nextConfig.watermarkScale,
-                  alpha: nextConfig.watermarkAlpha,
-                  rotate: nextConfig.watermarkRotate,
-                  position: {
-                    position: Position.topRight,
+                quality: nextConfig.quality,
+                saveFormat: nextConfig.saveFormat,
+                watermarkImages: [
+                  {
+                    src: assets.icon1,
+                    scale: nextConfig.watermarkScale,
+                    alpha: nextConfig.watermarkAlpha,
+                    rotate: nextConfig.watermarkRotate,
+                    position: {
+                      position: Position.topLeft,
+                    },
                   },
+                  {
+                    src: nextConfig.marker,
+                    scale: nextConfig.watermarkScale,
+                    alpha: nextConfig.watermarkAlpha,
+                    rotate: nextConfig.watermarkRotate,
+                    position: {
+                      position: Position.topRight,
+                    },
+                  },
+                ],
+              })
+            )
+          : await resultUri(
+              Marker.markText({
+                backgroundImage: {
+                  src: nextConfig.image,
+                  scale: nextConfig.backgroundScale,
+                  alpha: nextConfig.backgroundAlpha,
+                  rotate: nextConfig.backgroundRotate,
                 },
-              ],
-            })
-          : await Marker.markText({
-              backgroundImage: {
-                src: nextConfig.image,
-                scale: nextConfig.backgroundScale,
-                alpha: nextConfig.backgroundAlpha,
-                rotate: nextConfig.backgroundRotate,
-              },
-              watermarkTexts: [
-                {
-                  text: nextConfig.text,
-                  position: {
-                    position: nextConfig.position,
+                watermarkTexts: [
+                  {
+                    text: nextConfig.text,
+                    position: {
+                      position: nextConfig.position,
+                    },
+                    style: {
+                      color: '#FF0000AA',
+                      fontName: 'MaShanZheng-Regular',
+                      fontSize: nextConfig.fontSize,
+                      underline: nextConfig.underline,
+                      bold: nextConfig.bold,
+                      italic: nextConfig.italic,
+                      strikeThrough: nextConfig.strikeThrough,
+                      textAlign: nextConfig.textAlign,
+                      rotate: nextConfig.textRotate,
+                      shadowStyle: nextConfig.useTextShadow
+                        ? {
+                            dx: 10.5,
+                            dy: 20.8,
+                            radius: 20.9,
+                            color: '#0000FF',
+                          }
+                        : null,
+                      textBackgroundStyle: nextConfig.useTextBgStyle
+                        ? {
+                            type: nextConfig.textBgStretch,
+                            paddingBottom: '15%',
+                            paddingRight: '10%',
+                            paddingTop: '15%',
+                            paddingLeft: '100',
+                            color: '#0f0A',
+                          }
+                        : null,
+                    },
                   },
-                  style: {
-                    color: '#FF0000AA',
-                    fontName: 'MaShanZheng-Regular',
-                    fontSize: nextConfig.fontSize,
-                    underline: nextConfig.underline,
-                    bold: nextConfig.bold,
-                    italic: nextConfig.italic,
-                    strikeThrough: nextConfig.strikeThrough,
-                    textAlign: nextConfig.textAlign,
-                    rotate: nextConfig.textRotate,
-                    shadowStyle: nextConfig.useTextShadow
-                      ? {
-                          dx: 10.5,
-                          dy: 20.8,
-                          radius: 20.9,
-                          color: '#0000FF',
-                        }
-                      : null,
-                    textBackgroundStyle: nextConfig.useTextBgStyle
-                      ? {
-                          type: nextConfig.textBgStretch,
-                          paddingBottom: '15%',
-                          paddingRight: '10%',
-                          paddingTop: '15%',
-                          paddingLeft: '100',
-                          color: '#0f0A',
-                        }
-                      : null,
-                  },
-                },
-                {
-                  text: 'text marker normal',
-                  position: {
-                    position: Position.center,
-                  },
-                  style: {
-                    color: '#FF00AA9F',
-                    fontName: 'RubikBurned-Regular',
-                    fontSize: nextConfig.fontSize,
-                    underline: nextConfig.underline,
-                    bold: nextConfig.bold,
-                    italic: nextConfig.italic,
-                    strikeThrough: nextConfig.strikeThrough,
-                    textAlign: nextConfig.textAlign,
-                    rotate: nextConfig.textRotate,
-                    shadowStyle: nextConfig.useTextShadow
-                      ? {
-                          dx: 10.5,
-                          dy: 20.8,
-                          radius: 20.9,
-                          color: '#00EEFF',
-                        }
-                      : null,
-                    textBackgroundStyle: nextConfig.useTextBgStyle
-                      ? {
-                          type: nextConfig.textBgStretch,
-                          padding: '10%',
-                          color: '#0fA',
-                          cornerRadius: {
-                            topLeft: {
-                              x: '20%',
-                              y: '50%',
+                  {
+                    text: 'text marker normal',
+                    position: {
+                      position: Position.center,
+                    },
+                    style: {
+                      color: '#FF00AA9F',
+                      fontName: 'RubikBurned-Regular',
+                      fontSize: nextConfig.fontSize,
+                      underline: nextConfig.underline,
+                      bold: nextConfig.bold,
+                      italic: nextConfig.italic,
+                      strikeThrough: nextConfig.strikeThrough,
+                      textAlign: nextConfig.textAlign,
+                      rotate: nextConfig.textRotate,
+                      shadowStyle: nextConfig.useTextShadow
+                        ? {
+                            dx: 10.5,
+                            dy: 20.8,
+                            radius: 20.9,
+                            color: '#00EEFF',
+                          }
+                        : null,
+                      textBackgroundStyle: nextConfig.useTextBgStyle
+                        ? {
+                            type: nextConfig.textBgStretch,
+                            padding: '10%',
+                            color: '#0fA',
+                            cornerRadius: {
+                              topLeft: {
+                                x: '20%',
+                                y: '50%',
+                              },
+                              topRight: {
+                                x: '20%',
+                                y: '50%',
+                              },
                             },
-                            topRight: {
-                              x: '20%',
-                              y: '50%',
-                            },
-                          },
-                        }
-                      : null,
+                          }
+                        : null,
+                    },
                   },
-                },
-              ],
-              quality: nextConfig.quality,
-              saveFormat: nextConfig.saveFormat,
-            });
+                ],
+                quality: nextConfig.quality,
+                saveFormat: nextConfig.saveFormat,
+              })
+            );
 
       setUri(formatResultUri(path, nextConfig.saveFormat));
       setShow(true);
@@ -1750,113 +1777,117 @@ function useViewModel(props: ImageMarkerLabProps) {
     try {
       const path =
         nextConfig.waterMarkType === 'image'
-          ? await Marker.markImage({
-              backgroundImage: {
-                src: nextConfig.image,
-                scale: nextConfig.backgroundScale,
-                rotate: nextConfig.backgroundRotate,
-                alpha: nextConfig.backgroundAlpha,
-              },
-              watermarkImages: [
-                {
-                  src: nextConfig.marker,
-                  scale: nextConfig.watermarkScale,
-                  alpha: nextConfig.watermarkAlpha,
-                  rotate: nextConfig.watermarkRotate,
-                  position: {
-                    X: normalizeOffset(nextConfig.X),
-                    Y: normalizeOffset(nextConfig.Y),
-                  },
+          ? await resultUri(
+              Marker.markImage({
+                backgroundImage: {
+                  src: nextConfig.image,
+                  scale: nextConfig.backgroundScale,
+                  rotate: nextConfig.backgroundRotate,
+                  alpha: nextConfig.backgroundAlpha,
                 },
-                {
-                  src: assets.icon1,
-                  scale: nextConfig.watermarkScale,
-                  alpha: nextConfig.watermarkAlpha,
-                  rotate: nextConfig.watermarkRotate,
-                  position: { X: 200, Y: 100 },
+                watermarkImages: [
+                  {
+                    src: nextConfig.marker,
+                    scale: nextConfig.watermarkScale,
+                    alpha: nextConfig.watermarkAlpha,
+                    rotate: nextConfig.watermarkRotate,
+                    position: {
+                      X: normalizeOffset(nextConfig.X),
+                      Y: normalizeOffset(nextConfig.Y),
+                    },
+                  },
+                  {
+                    src: assets.icon1,
+                    scale: nextConfig.watermarkScale,
+                    alpha: nextConfig.watermarkAlpha,
+                    rotate: nextConfig.watermarkRotate,
+                    position: { X: 200, Y: 100 },
+                  },
+                ],
+                quality: nextConfig.quality,
+                saveFormat: nextConfig.saveFormat,
+              })
+            )
+          : await resultUri(
+              Marker.markText({
+                backgroundImage: {
+                  src: nextConfig.image,
+                  scale: nextConfig.backgroundScale,
+                  alpha: nextConfig.backgroundAlpha,
+                  rotate: nextConfig.backgroundRotate,
                 },
-              ],
-              quality: nextConfig.quality,
-              saveFormat: nextConfig.saveFormat,
-            })
-          : await Marker.markText({
-              backgroundImage: {
-                src: nextConfig.image,
-                scale: nextConfig.backgroundScale,
-                alpha: nextConfig.backgroundAlpha,
-                rotate: nextConfig.backgroundRotate,
-              },
-              watermarkTexts: [
-                {
-                  text: nextConfig.text,
-                  position: {
-                    X: normalizeOffset(nextConfig.X),
-                    Y: normalizeOffset(nextConfig.Y),
+                watermarkTexts: [
+                  {
+                    text: nextConfig.text,
+                    position: {
+                      X: normalizeOffset(nextConfig.X),
+                      Y: normalizeOffset(nextConfig.Y),
+                    },
+                    style: {
+                      underline: nextConfig.underline,
+                      strikeThrough: nextConfig.strikeThrough,
+                      color: '#FF0',
+                      fontName: 'NotoSansSC-Regular',
+                      fontSize: nextConfig.fontSize,
+                      bold: nextConfig.bold,
+                      italic: nextConfig.italic,
+                      textAlign: nextConfig.textAlign,
+                      rotate: nextConfig.textRotate,
+                      shadowStyle: nextConfig.useTextShadow
+                        ? {
+                            dx: 10.5,
+                            dy: 20.8,
+                            radius: 20.9,
+                            color: '#0000FF',
+                          }
+                        : null,
+                      textBackgroundStyle: nextConfig.useTextBgStyle
+                        ? {
+                            type: nextConfig.textBgStretch,
+                            paddingX: 10,
+                            paddingY: 10,
+                            color: '#00B96B',
+                          }
+                        : null,
+                    },
                   },
-                  style: {
-                    underline: nextConfig.underline,
-                    strikeThrough: nextConfig.strikeThrough,
-                    color: '#FF0',
-                    fontName: 'NotoSansSC-Regular',
-                    fontSize: nextConfig.fontSize,
-                    bold: nextConfig.bold,
-                    italic: nextConfig.italic,
-                    textAlign: nextConfig.textAlign,
-                    rotate: nextConfig.textRotate,
-                    shadowStyle: nextConfig.useTextShadow
-                      ? {
-                          dx: 10.5,
-                          dy: 20.8,
-                          radius: 20.9,
-                          color: '#0000FF',
-                        }
-                      : null,
-                    textBackgroundStyle: nextConfig.useTextBgStyle
-                      ? {
-                          type: nextConfig.textBgStretch,
-                          paddingX: 10,
-                          paddingY: 10,
-                          color: '#00B96B',
-                        }
-                      : null,
+                  {
+                    text: nextConfig.text,
+                    position: {
+                      X: 500,
+                      Y: 600,
+                    },
+                    style: {
+                      underline: true,
+                      strikeThrough: true,
+                      bold: true,
+                      italic: true,
+                      color: '#FF0',
+                      fontSize: nextConfig.fontSize,
+                      textAlign: nextConfig.textAlign,
+                      rotate: nextConfig.textRotate,
+                      shadowStyle: nextConfig.useTextShadow
+                        ? {
+                            dx: 10.5,
+                            dy: 20.8,
+                            radius: 20.9,
+                            color: '#0000FF',
+                          }
+                        : null,
+                      textBackgroundStyle: nextConfig.useTextBgStyle
+                        ? {
+                            type: nextConfig.textBgStretch,
+                            padding: '10%',
+                            color: '#0f09',
+                          }
+                        : null,
+                    },
                   },
-                },
-                {
-                  text: nextConfig.text,
-                  position: {
-                    X: 500,
-                    Y: 600,
-                  },
-                  style: {
-                    underline: true,
-                    strikeThrough: true,
-                    bold: true,
-                    italic: true,
-                    color: '#FF0',
-                    fontSize: nextConfig.fontSize,
-                    textAlign: nextConfig.textAlign,
-                    rotate: nextConfig.textRotate,
-                    shadowStyle: nextConfig.useTextShadow
-                      ? {
-                          dx: 10.5,
-                          dy: 20.8,
-                          radius: 20.9,
-                          color: '#0000FF',
-                        }
-                      : null,
-                    textBackgroundStyle: nextConfig.useTextBgStyle
-                      ? {
-                          type: nextConfig.textBgStretch,
-                          padding: '10%',
-                          color: '#0f09',
-                        }
-                      : null,
-                  },
-                },
-              ],
-              quality: nextConfig.quality,
-              saveFormat: nextConfig.saveFormat,
-            });
+                ],
+                quality: nextConfig.quality,
+                saveFormat: nextConfig.saveFormat,
+              })
+            );
 
       setUri(formatResultUri(path, nextConfig.saveFormat));
       setShow(true);

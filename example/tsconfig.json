@@ -3,7 +3,11 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "react-native-image-marker": ["../src/index"]
+      "react-native-image-marker": ["../src/index"],
+      "react-native-image-marker-editor": ["../packages/editor/src/index"],
+      "react-native-image-marker-editor/core-adapter": [
+        "../packages/editor/src/core-adapter"
+      ]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"]

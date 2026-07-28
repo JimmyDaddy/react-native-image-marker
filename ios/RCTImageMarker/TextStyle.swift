@@ -42,6 +42,7 @@ class TextStyle: NSObject {
     var textBackground: TextBackground?
     var strokeStyle: TextStrokeStyle?
     var fontName: String?
+    var fontFallbacks: [String] = []
     var fontSize: CGFloat = 14.0
     var fontSizeRatio: CGFloat?
     var skewX: CGFloat = 0.0
@@ -66,6 +67,19 @@ class TextStyle: NSObject {
             self.strokeStyle = nil
         }
         self.fontName = opts["fontName"] as? String
+        if let rawFallbacks = opts["fontFallbacks"], !Utils.isNULL(rawFallbacks) {
+            guard let fallbackNames = rawFallbacks as? [String],
+                  fallbackNames.allSatisfy({
+                      !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                  }) else {
+                throw NSError(
+                    domain: ErrorDomainEnum.PARAMS_INVALID.rawValue,
+                    code: 0,
+                    userInfo: [NSLocalizedDescriptionKey: "fontFallbacks must contain non-empty font family names"]
+                )
+            }
+            self.fontFallbacks = fallbackNames
+        }
         self.fontSize = opts["fontSize"] != nil ? RCTConvert.cgFloat(opts["fontSize"]) : 14.0
         self.fontSizeRatio = opts["fontSizeRatio"] != nil ? RCTConvert.cgFloat(opts["fontSizeRatio"]) : nil
         self.skewX = RCTConvert.cgFloat(opts["skewX"])
@@ -81,6 +95,11 @@ class TextStyle: NSObject {
 
     func resolvedFont(backgroundWidth: CGFloat) -> UIFont {
         let resolvedSize = fontSizeRatio.map { backgroundWidth * $0 } ?? fontSize
-        return UIFont(name: fontName ?? "", size: resolvedSize) ?? UIFont.systemFont(ofSize: resolvedSize)
+        for name in [fontName].compactMap({ $0 }) + fontFallbacks {
+            if let font = UIFont(name: name, size: resolvedSize) {
+                return font
+            }
+        }
+        return UIFont.systemFont(ofSize: resolvedSize)
     }
 }

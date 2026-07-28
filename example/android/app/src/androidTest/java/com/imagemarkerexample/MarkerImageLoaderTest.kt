@@ -2,6 +2,7 @@ package com.imagemarkerexample
 
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.os.SystemClock
 import android.util.Base64
 import androidx.exifinterface.media.ExifInterface
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -9,10 +10,12 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.facebook.react.bridge.JavaOnlyMap
 import com.facebook.react.bridge.ReactApplicationContext
 import com.jimmydaddy.imagemarker.MarkerImageLoader
+import com.jimmydaddy.imagemarker.ImageMarkerCore
 import com.jimmydaddy.imagemarker.base.ImageOptions
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.ByteArrayOutputStream
@@ -22,6 +25,11 @@ import java.io.FileOutputStream
 @RunWith(AndroidJUnit4::class)
 class MarkerImageLoaderTest {
   private val targetContext = InstrumentationRegistry.getInstrumentation().targetContext
+
+  @Test
+  fun packagesAndLoadsSharedCppCore() {
+    assertEquals(true, ImageMarkerCore.isNativeAvailable)
+  }
 
   @Test
   fun loadsContentUriThroughCoil() = runBlocking {
@@ -121,6 +129,24 @@ class MarkerImageLoaderTest {
     assertEquals(20, bitmap.width)
     assertEquals(16, bitmap.height)
     bitmap.recycle()
+  }
+
+  @Test
+  fun repeatedlyDownsamplesLargeInputsWithinTheMemoryBound() = runBlocking {
+    val source = solidPngDataUri(1600, 1200, Color.GREEN)
+    val startedAt = SystemClock.elapsedRealtime()
+
+    repeat(12) {
+      val bitmap = load(source, maxSize = 400)
+      assertEquals(400, bitmap.width)
+      assertEquals(300, bitmap.height)
+      bitmap.recycle()
+    }
+
+    assertTrue(
+      "Repeated large-image downsampling exceeded the 15 second stress budget",
+      SystemClock.elapsedRealtime() - startedAt < 15_000
+    )
   }
 
   @Test

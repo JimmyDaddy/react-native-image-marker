@@ -1,9 +1,17 @@
 import React from 'react';
-import { LogBox } from 'react-native';
+import {
+  LogBox,
+  Pressable,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import RNBlobUtil from 'react-native-blob-util';
 
 import ImageMarkerLab from './ImageMarkerLab';
+import EditorExample from './EditorExample';
 
 const icon = require('./icon.jpeg');
 const icon1 = require('./yahaha.jpeg');
@@ -48,17 +56,84 @@ async function removeFile(path: string) {
 }
 
 function App() {
+  const [surface, setSurface] = React.useState<'core' | 'editor'>('core');
+
   return (
-    <ImageMarkerLab
-      assets={{ icon, icon1, bg, base64Bg, orientationBg }}
-      backgroundFormats={['normal image', 'base64', 'rotated image']}
-      featureVariant="orientation"
-      getFileSize={getFileSize}
-      pickImage={pickImage}
-      readFileBase64={readFileBase64}
-      removeFile={removeFile}
-    />
+    <SafeAreaView style={styles.app}>
+      <View accessibilityRole="tablist" style={styles.surfaceTabs}>
+        {(['core', 'editor'] as const).map((value) => (
+          <Pressable
+            accessibilityRole="tab"
+            accessibilityState={{ selected: surface === value }}
+            key={value}
+            onPress={() => setSurface(value)}
+            style={[
+              styles.surfaceTab,
+              surface === value && styles.surfaceTabSelected,
+            ]}
+          >
+            <Text
+              style={[
+                styles.surfaceTabText,
+                surface === value && styles.surfaceTabTextSelected,
+              ]}
+            >
+              {value === 'core' ? 'Core lab' : 'Editor 0.0.1'}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+      <View style={styles.surface}>
+        {surface === 'core' ? (
+          <ImageMarkerLab
+            assets={{ icon, icon1, bg, base64Bg, orientationBg }}
+            backgroundFormats={['normal image', 'base64', 'rotated image']}
+            featureVariant="orientation"
+            getFileSize={getFileSize}
+            pickImage={pickImage}
+            readFileBase64={readFileBase64}
+            removeFile={removeFile}
+          />
+        ) : (
+          <EditorExample />
+        )}
+      </View>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  app: {
+    backgroundColor: '#F8FAFC',
+    flex: 1,
+  },
+  surface: {
+    flex: 1,
+  },
+  surfaceTabs: {
+    alignSelf: 'center',
+    backgroundColor: '#E2E8F0',
+    borderRadius: 9,
+    flexDirection: 'row',
+    margin: 8,
+    padding: 3,
+  },
+  surfaceTab: {
+    borderRadius: 7,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  surfaceTabSelected: {
+    backgroundColor: '#FFFFFF',
+  },
+  surfaceTabText: {
+    color: '#64748B',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  surfaceTabTextSelected: {
+    color: '#3156D9',
+  },
+});
 
 export default App;

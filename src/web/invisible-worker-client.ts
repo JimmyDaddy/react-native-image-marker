@@ -1,6 +1,6 @@
 import type {
   DetectInvisibleWatermarkOptions,
-  InvisibleWatermarkDetectionResult,
+  InvisibleWatermarkDetectionData,
   InvisibleWatermarkPixelBuffer,
   InvisibleWatermarkWorkerOptions,
 } from '../invisible-watermark';
@@ -41,9 +41,9 @@ function report(
 
 function isDetectionResult(
   value: unknown
-): value is InvisibleWatermarkDetectionResult {
+): value is InvisibleWatermarkDetectionData {
   if (!value || typeof value !== 'object') return false;
-  const result = value as Partial<InvisibleWatermarkDetectionResult>;
+  const result = value as Partial<InvisibleWatermarkDetectionData>;
   const validPayload =
     result.payload === undefined || typeof result.payload === 'string';
   const validBitErrorRate =
@@ -80,7 +80,7 @@ export function detectInvisibleWatermarkInWorker(
   >,
   options: InvisibleWatermarkWorkerOptions,
   WorkerClass: WorkerConstructor | undefined = defaultWorkerConstructor
-): Promise<InvisibleWatermarkDetectionResult> {
+): Promise<InvisibleWatermarkDetectionData> {
   report(options, 'queued');
   if (options.signal?.aborted) return Promise.reject(abortError());
   if (typeof WorkerClass !== 'function') {

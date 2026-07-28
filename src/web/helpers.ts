@@ -26,7 +26,7 @@ export interface CanvasEncoder {
   ): void;
 }
 
-export type WebOutputFormat = 'png' | 'jpg' | 'base64';
+export type WebOutputFormat = 'png' | 'jpg' | 'webp' | 'base64';
 
 const DEFAULT_EDGE_INSET = 20;
 export const DEFAULT_WEB_MAX_SIZE = 2048;
@@ -251,7 +251,12 @@ export function normalizeOutputFormat(
   format: string | undefined
 ): WebOutputFormat {
   const resolved = format ?? 'jpg';
-  if (resolved !== 'png' && resolved !== 'jpg' && resolved !== 'base64') {
+  if (
+    resolved !== 'png' &&
+    resolved !== 'jpg' &&
+    resolved !== 'webp' &&
+    resolved !== 'base64'
+  ) {
     throw new Error(`Unsupported web image format: ${resolved}.`);
   }
   return resolved;
@@ -265,11 +270,16 @@ export function encodeCanvas(
 ): string {
   const normalizedFormat = normalizeOutputFormat(format);
   const normalizedQuality = normalizeQuality(quality);
-  const mimeType = normalizedFormat === 'jpg' ? 'image/jpeg' : 'image/png';
+  const mimeType =
+    normalizedFormat === 'jpg'
+      ? 'image/jpeg'
+      : normalizedFormat === 'webp'
+      ? 'image/webp'
+      : 'image/png';
 
   try {
     const dataUrl = canvas.toDataURL(mimeType, normalizedQuality / 100);
-    if (!dataUrl.startsWith('data:image/')) {
+    if (!dataUrl.startsWith(`data:${mimeType}`)) {
       throw new Error('The browser could not encode the rendered canvas.');
     }
     return dataUrl;
@@ -295,7 +305,12 @@ export function encodeCanvasToBlob(
 ): Promise<Blob> {
   const normalizedFormat = normalizeOutputFormat(format);
   const normalizedQuality = normalizeQuality(quality);
-  const mimeType = normalizedFormat === 'jpg' ? 'image/jpeg' : 'image/png';
+  const mimeType =
+    normalizedFormat === 'jpg'
+      ? 'image/jpeg'
+      : normalizedFormat === 'webp'
+      ? 'image/webp'
+      : 'image/png';
   if (typeof canvas.toBlob !== 'function') {
     return Promise.reject(
       new Error('This browser does not support Canvas toBlob() encoding.')

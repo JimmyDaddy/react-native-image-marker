@@ -6,3 +6,4 @@
 #import <React/RCTImageLoader.h>
 #import <React/RCTConvert.h>
 #import <React/RCTLog.h>
+#import "ImageMarkerCoreBridge.h"

@@ -1,19 +1,24 @@
 import type { MarkOptions } from '../index';
 import {
   createWatermarkRecipe,
+  importWatermarkRecipe,
+  migrateWatermarkRecipe,
   WATERMARK_RECIPE_SCHEMA_VERSION,
+  type LegacyWatermarkRecipeDefinition,
   type WatermarkRecipeOptions,
 } from '../recipe';
 
 describe('watermark recipes', () => {
-  it('snapshots nested settings while retaining source references', async () => {
+  it('snapshots nested settings while retaining runtime source references', async () => {
     const logoSource = { uri: 'logo.png' };
     const options: WatermarkRecipeOptions = {
-      watermarks: [
+      layers: [
         {
+          id: 'title',
+          name: 'Title',
           type: 'text',
           text: 'ORIGINAL',
-          positionOptions: { X: 12, Y: 18 },
+          position: { X: 12, Y: 18 },
           layout: { type: 'single' },
           style: {
             color: '#FFFFFF',
@@ -24,20 +29,25 @@ describe('watermark recipes', () => {
             },
           },
         },
-        { type: 'image', src: logoSource, layout: { type: 'tile', gapX: 20 } },
+        {
+          id: 'logo',
+          type: 'image',
+          src: logoSource,
+          layout: { type: 'tile', gapX: 20 },
+        },
       ],
-      quality: 90,
+      output: { quality: 90 },
     };
     const renderer = jest.fn<Promise<string>, [MarkOptions]>(
       async () => 'done'
     );
     const recipe = createWatermarkRecipe(options, renderer);
 
-    const textLayer = options.watermarks[0];
-    const imageLayer = options.watermarks[1];
+    const textLayer = options.layers[0];
+    const imageLayer = options.layers[1];
     if (textLayer?.type === 'text') {
       textLayer.text = 'MUTATED';
-      if (textLayer.positionOptions) textLayer.positionOptions.X = 999;
+      if (textLayer.position) textLayer.position.X = 999;
       if (textLayer.style?.strokeStyle) textLayer.style.strokeStyle.width = 9;
       const all = textLayer.style?.textBackgroundStyle?.cornerRadius?.all;
       if (all) all.x = 99;
@@ -45,7 +55,7 @@ describe('watermark recipes', () => {
     if (imageLayer?.type === 'image' && imageLayer.layout) {
       imageLayer.layout.gapX = 999;
     }
-    options.quality = 1;
+    if (options.output) options.output.quality = 1;
 
     await expect(
       recipe.apply({
@@ -65,7 +75,7 @@ describe('watermark recipes', () => {
     expect(rendered?.watermarks?.[0]).toEqual(
       expect.objectContaining({
         text: 'ORIGINAL',
-        positionOptions: { X: 12, Y: 18 },
+        position: { X: 12, Y: 18 },
         style: expect.objectContaining({
           strokeStyle: { color: '#000000', width: 2 },
           textBackgroundStyle: expect.objectContaining({
@@ -74,9 +84,8 @@ describe('watermark recipes', () => {
         }),
       })
     );
-    expect(rendered?.watermarks?.[1]).toEqual(
-      expect.objectContaining({ layout: { type: 'tile', gapX: 20 } })
-    );
+    expect(rendered?.watermarks?.[0]).not.toHaveProperty('id');
+    expect(rendered?.watermarks?.[0]).not.toHaveProperty('name');
     expect(
       rendered?.watermarks?.[1]?.type === 'image'
         ? rendered.watermarks[1].src
@@ -86,7 +95,7 @@ describe('watermark recipes', () => {
 
   it('snapshots each input wrapper before rendering', async () => {
     const recipe = createWatermarkRecipe(
-      { watermarks: [{ type: 'text', text: 'Reusable' }] },
+      { layers: [{ type: 'text', text: 'Reusable' }] },
       async (options) => String(options.backgroundImage.src)
     );
     const input = {
@@ -101,32 +110,39 @@ describe('watermark recipes', () => {
     await expect(output).resolves.toBe('before.jpg');
   });
 
-  it('validates modern ordered layers and each apply input', async () => {
+  it('validates Recipe v2 shape, layer IDs, and each apply input', async () => {
     expect(() =>
-      createWatermarkRecipe({ watermarks: [] }, async () => 'done')
-    ).toThrow('createRecipe requires at least one watermark layer.');
+      createWatermarkRecipe({ layers: [] }, async () => 'done')
+    ).toThrow('createRecipe requires at least one layer.');
+    expect(() =>
+      createWatermarkRecipe(
+        { layers: [{ type: 'image', src: '' }] },
+        async () => 'done'
+      )
+    ).toThrow('layers[0].src is required.');
     expect(() =>
       createWatermarkRecipe(
         {
-          watermarks: [{ type: 'image', src: '' }],
+          layers: [
+            { id: 'same', type: 'text', text: 'A' },
+            { id: 'same', type: 'text', text: 'B' },
+          ],
         },
         async () => 'done'
       )
-    ).toThrow('please set mark image!');
+    ).toThrow('Duplicate layer id "same".');
     expect(() =>
       createWatermarkRecipe(
         {
-          watermarks: [{ type: 'text', text: 'Modern' }],
-          watermarkTexts: [{ text: 'Legacy' }],
+          layers: [{ type: 'text', text: 'Modern' }],
+          saveFormat: 'png',
         } as unknown as WatermarkRecipeOptions,
         async () => 'done'
       )
-    ).toThrow(
-      'createRecipe does not accept "watermarkTexts"; use ordered watermarks and pass per-image fields to apply().'
-    );
+    ).toThrow('createRecipe does not accept "saveFormat" in Recipe v2');
 
     const recipe = createWatermarkRecipe(
-      { watermarks: [{ type: 'text', text: 'Reusable' }] },
+      { layers: [{ type: 'text', text: 'Reusable' }] },
       async () => 'done'
     );
     await expect(
@@ -140,7 +156,7 @@ describe('watermark recipes', () => {
     );
     const recipe = createWatermarkRecipe(
       {
-        watermarks: [
+        layers: [
           {
             type: 'text',
             text: '{{name}} · {{count}} · {{enabled}} · {{name}} · \\{{literal}} · #{{index}} · {{filename}}',
@@ -160,24 +176,34 @@ describe('watermark recipes', () => {
     ).resolves.toBe('Ada · 3 · true · Ada · {{literal}} · #0 · photo');
   });
 
-  it('uses strict conditions and removes recipe-only fields before rendering', async () => {
+  it('uses strict conditions and strips editor-only fields before rendering', async () => {
     const renderer = jest.fn<Promise<string>, [MarkOptions]>(
       async () => 'done'
     );
     const recipe = createWatermarkRecipe(
       {
-        watermarks: [
+        layers: [
           {
+            id: 'visible',
+            name: 'Visible',
+            locked: true,
             type: 'text',
             text: 'VISIBLE',
             visibleWhen: { variable: 'approved', equals: true },
           },
           {
+            id: 'hidden-by-condition',
             type: 'text',
             text: 'STRICTLY HIDDEN',
             visibleWhen: { variable: 'level', equals: 1 },
           },
-          { type: 'text', text: 'ALWAYS' },
+          {
+            id: 'hidden',
+            visible: false,
+            type: 'text',
+            text: 'HIDDEN',
+          },
+          { id: 'always', type: 'text', text: 'ALWAYS' },
         ],
       },
       renderer
@@ -194,29 +220,57 @@ describe('watermark recipes', () => {
     ]);
   });
 
-  it('serializes a detached versioned definition and supports JSON round-trip', async () => {
+  it('serializes Recipe v2 and explicitly migrates persisted Recipe v1', async () => {
     const source = { uri: 'logo.png', headers: { Authorization: 'token' } };
     const recipe = createWatermarkRecipe(
       {
-        watermarks: [
+        layers: [
           { type: 'image', src: source },
-          { type: 'text', text: '{{label}}' },
+          { id: 'label', type: 'text', text: '{{label}}' },
         ],
-        quality: 88,
+        output: { quality: 88, saveFormat: 'png' },
       },
       async (options) => options.watermarks?.[1]?.text ?? ''
     );
     const definition = recipe.toJSON();
 
-    expect(definition.schemaVersion).toBe(1);
-    const imageLayer = definition.watermarks[0];
+    expect(definition).toEqual(
+      expect.objectContaining({
+        schemaVersion: 2,
+        output: { quality: 88, saveFormat: 'png' },
+      })
+    );
+    expect(definition.layers.map((layer) => layer.id)).toEqual([
+      'layer-1',
+      'label',
+    ]);
+    const imageLayer = definition.layers[0];
     if (imageLayer?.type === 'image') {
       imageLayer.src.headers.Authorization = 'changed';
     }
     expect(source.headers.Authorization).toBe('token');
 
-    const restored = createWatermarkRecipe(
-      JSON.parse(JSON.stringify(recipe)) as WatermarkRecipeOptions,
+    const legacy: LegacyWatermarkRecipeDefinition = {
+      schemaVersion: 1,
+      watermarks: [
+        { type: 'image', src: '/logo.png' },
+        { type: 'text', text: '{{label}}' },
+      ],
+      quality: 84,
+      saveFormat: 'jpg',
+    };
+    expect(migrateWatermarkRecipe(legacy)).toEqual(
+      expect.objectContaining({
+        schemaVersion: 2,
+        output: expect.objectContaining({ quality: 84, saveFormat: 'jpg' }),
+        layers: [
+          expect.objectContaining({ id: 'layer-1', type: 'image' }),
+          expect.objectContaining({ id: 'layer-2', type: 'text' }),
+        ],
+      })
+    );
+    const restored = importWatermarkRecipe(
+      JSON.parse(JSON.stringify(legacy)) as LegacyWatermarkRecipeDefinition,
       async (options) => options.watermarks?.[1]?.text ?? ''
     );
     await expect(
@@ -231,22 +285,22 @@ describe('watermark recipes', () => {
     expect(() =>
       createWatermarkRecipe(
         {
-          schemaVersion: 2,
-          watermarks: [{ type: 'text', text: 'test' }],
+          schemaVersion: 1,
+          layers: [{ type: 'text', text: 'test' }],
         } as unknown as WatermarkRecipeOptions,
         async () => 'done'
       )
-    ).toThrow('Unsupported recipe schemaVersion: 2.');
+    ).toThrow('Unsupported recipe schemaVersion: 1.');
     expect(() =>
       createWatermarkRecipe(
-        { watermarks: [{ type: 'text', text: '{{not valid}}' }] },
+        { layers: [{ type: 'text', text: '{{not valid}}' }] },
         async () => 'done'
       )
-    ).toThrow('watermarks[0].text contains an invalid variable template');
+    ).toThrow('layers[0].text contains an invalid variable template');
     expect(() =>
       createWatermarkRecipe(
         {
-          watermarks: [
+          layers: [
             {
               type: 'text',
               text: 'test',
@@ -256,10 +310,10 @@ describe('watermark recipes', () => {
         },
         async () => 'done'
       )
-    ).toThrow('watermarks[0].visibleWhen.variable');
+    ).toThrow('layers[0].visibleWhen.variable');
 
     const recipe = createWatermarkRecipe(
-      { watermarks: [{ type: 'text', text: '{{name}}' }] },
+      { layers: [{ type: 'text', text: '{{name}}' }] },
       async () => 'done'
     );
     await expect(
@@ -283,7 +337,7 @@ describe('watermark recipes', () => {
 
   it('isolates template failures and resolves zero-based batch indexes', async () => {
     const recipe = createWatermarkRecipe(
-      { watermarks: [{ type: 'text', text: '{{name}} #{{index}}' }] },
+      { layers: [{ type: 'text', text: '{{name}} #{{index}}' }] },
       async (options) => options.watermarks?.[0]?.text ?? ''
     );
 

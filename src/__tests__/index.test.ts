@@ -8,6 +8,10 @@ function deepFreeze<T>(value: T): T {
   return value;
 }
 
+function markerResult(uri: string) {
+  return expect.objectContaining({ uri });
+}
+
 describe('Marker JS wrapper', () => {
   let Marker: any;
   let ImageFormat: any;
@@ -19,6 +23,7 @@ describe('Marker JS wrapper', () => {
     markWithWatermarks: jest.Mock;
     embedInvisible: jest.Mock;
     detectInvisible: jest.Mock;
+    cancel: jest.Mock;
   };
   let resolveAssetSource: jest.Mock;
 
@@ -32,6 +37,7 @@ describe('Marker JS wrapper', () => {
       markWithWatermarks: jest.fn(),
       embedInvisible: jest.fn(),
       detectInvisible: jest.fn(),
+      cancel: jest.fn().mockResolvedValue(true),
     };
     reactNative.NativeModules.ImageMarker = nativeModule;
     reactNative.Image.resolveAssetSource = jest.fn();
@@ -82,7 +88,7 @@ describe('Marker JS wrapper', () => {
         key: '0123456789abcdef',
         strength: 'robust',
       })
-    ).resolves.toBe('/tmp/invisible.png');
+    ).resolves.toEqual(markerResult('/tmp/invisible.png'));
     expect(nativeModule.embedInvisible).toHaveBeenCalledWith(
       expect.objectContaining({
         backgroundImage: expect.objectContaining({
@@ -150,8 +156,8 @@ describe('Marker JS wrapper', () => {
   it('creates reusable native recipes through the public Marker API', async () => {
     nativeModule.markWithWatermarks.mockResolvedValue('/tmp/recipe.jpg');
     const recipe = Marker.createRecipe({
-      watermarks: [{ type: 'text', text: 'Reusable' }],
-      quality: 88,
+      layers: [{ type: 'text', text: 'Reusable' }],
+      output: { quality: 88 },
     });
 
     await expect(
@@ -159,7 +165,7 @@ describe('Marker JS wrapper', () => {
         backgroundImage: { src: 'file:///tmp/background.jpg' },
         filename: 'recipe-output',
       })
-    ).resolves.toBe('/tmp/recipe.jpg');
+    ).resolves.toEqual(markerResult('/tmp/recipe.jpg'));
     expect(nativeModule.markWithWatermarks).toHaveBeenCalledWith(
       expect.objectContaining({
         quality: 88,
@@ -175,7 +181,7 @@ describe('Marker JS wrapper', () => {
   it('rejects Web-only Blob recipe output on native targets', () => {
     expect(() =>
       Marker.createRecipe(
-        { watermarks: [{ type: 'text', text: 'Reusable' }] },
+        { layers: [{ type: 'text', text: 'Reusable' }] },
         { resultType: 'blob' }
       )
     ).toThrow('Blob recipe output is only supported on Web.');
@@ -192,7 +198,7 @@ describe('Marker JS wrapper', () => {
       return '/tmp/recipe.jpg';
     });
     const recipe = Marker.createRecipe({
-      watermarks: [{ type: 'text', text: 'Reusable' }],
+      layers: [{ type: 'text', text: 'Reusable' }],
     });
 
     const results = await recipe.applyMany(
@@ -231,12 +237,18 @@ describe('Marker JS wrapper', () => {
 
     expect(maximumActive).toBe(1);
     expect(results).toEqual([
-      { status: 'fulfilled', value: '/tmp/recipient-1.png' },
+      {
+        status: 'fulfilled',
+        value: markerResult('/tmp/recipient-1.png'),
+      },
       {
         status: 'rejected',
         reason: expect.objectContaining({ message: 'write failed' }),
       },
-      { status: 'fulfilled', value: '/tmp/recipient-3.png' },
+      {
+        status: 'fulfilled',
+        value: markerResult('/tmp/recipient-3.png'),
+      },
     ]);
     expect(
       nativeModule.embedInvisible.mock.calls.map(([value]) => value.payload)
@@ -253,7 +265,7 @@ describe('Marker JS wrapper', () => {
       watermarkTexts: [
         {
           text: 'Hello',
-          positionOptions: {
+          position: {
             position: Position.topRight,
             X: 12,
             Y: '5%',
@@ -271,7 +283,9 @@ describe('Marker JS wrapper', () => {
     };
     deepFreeze(options);
 
-    await expect(Marker.markText(options)).resolves.toBe('/tmp/text.png');
+    await expect(Marker.markText(options)).resolves.toEqual(
+      markerResult('/tmp/text.png')
+    );
 
     expect(nativeModule.markWithText).toHaveBeenCalledTimes(1);
     expect(nativeModule.markWithText).toHaveBeenCalledWith(
@@ -286,23 +300,40 @@ describe('Marker JS wrapper', () => {
     const nativeOptions = nativeModule.markWithText.mock.calls[0][0];
     expect(nativeOptions.backgroundImage.src).toEqual({
       uri: 'file:///tmp/background.png',
-      __packager_asset: false,
     });
     expect(nativeOptions.watermarkTexts[0].position).toEqual({
       position: Position.topRight,
-      X: 12,
+      X: '12',
       Y: '5%',
-      edgeInset: 0,
+      edgeInset: '0',
     });
-    expect(nativeOptions.watermarkTexts[0]).not.toHaveProperty(
-      'positionOptions'
-    );
     expect(options.backgroundImage.src).toBe('file:///tmp/background.png');
-    expect(options.watermarkTexts[0]).toHaveProperty('positionOptions');
-    expect(options.watermarkTexts[0]).not.toHaveProperty('position');
+    expect(options.watermarkTexts[0]).toHaveProperty('position');
     expect(nativeOptions.watermarkTexts[0].position).not.toBe(
-      options.watermarkTexts[0].positionOptions
+      options.watermarkTexts[0].position
     );
+  });
+
+  it('forwards AbortSignal cancellation to the native job ID', async () => {
+    const controller = new AbortController();
+    nativeModule.markWithText.mockImplementation(
+      () => new Promise<string>(() => {})
+    );
+
+    const operation = Marker.markText(
+      {
+        backgroundImage: { src: 'file:///tmp/background.png' },
+        watermarkTexts: [{ text: 'Cancel me' }],
+      },
+      { signal: controller.signal }
+    );
+    const jobId = nativeModule.markWithText.mock.calls[0][0].jobId;
+    controller.abort();
+
+    await expect(operation).rejects.toEqual(
+      expect.objectContaining({ code: 'ABORTED', jobId })
+    );
+    expect(nativeModule.cancel).toHaveBeenCalledWith(jobId);
   });
 
   it('resolves markImage assets and preserves explicit maxSize', async () => {
@@ -311,14 +342,6 @@ describe('Marker JS wrapper', () => {
       backgroundImage: {
         src: 10,
         scale: 1,
-      },
-      watermarkImage: {
-        src: 'file:///tmp/legacy-watermark.png',
-        scale: 1,
-      },
-      watermarkPositions: {
-        position: Position.center,
-        edgeInset: '2%',
       },
       watermarkImages: [
         {
@@ -340,7 +363,9 @@ describe('Marker JS wrapper', () => {
     };
     deepFreeze(options);
 
-    await expect(Marker.markImage(options)).resolves.toBe('/tmp/image.png');
+    await expect(Marker.markImage(options)).resolves.toEqual(
+      markerResult('/tmp/image.png')
+    );
 
     expect(nativeModule.markWithImage).toHaveBeenCalledTimes(1);
     const nativeOptions = nativeModule.markWithImage.mock.calls[0][0];
@@ -353,13 +378,8 @@ describe('Marker JS wrapper', () => {
       height: 80,
       scale: 1,
     });
-    expect(nativeOptions.watermarkImage.src).toEqual({
-      uri: 'file:///tmp/legacy-watermark.png',
-      __packager_asset: false,
-    });
     expect(nativeOptions.watermarkImages[0].src).toEqual({
       uri: 'file:///tmp/watermark.png',
-      __packager_asset: false,
     });
     expect(nativeOptions.watermarkImages[0]).toEqual(
       expect.objectContaining({
@@ -369,28 +389,18 @@ describe('Marker JS wrapper', () => {
     expect(nativeOptions.watermarkImages[0].position).toEqual({
       position: Position.bottomRight,
       X: '10%',
-      Y: 20,
-      edgeInset: 0,
+      Y: '20',
+      edgeInset: '0',
     });
     expect(nativeOptions.watermarkImages[0].position).not.toBe(
       options.watermarkImages[0].position
     );
-    expect(nativeOptions.watermarkPositions).toEqual({
-      position: Position.center,
-      edgeInset: '2%',
-    });
-    expect(nativeOptions.watermarkPositions).not.toBe(
-      options.watermarkPositions
-    );
     expect(options.backgroundImage.src).toBe(10);
-    expect(options.watermarkImage.src).toBe('file:///tmp/legacy-watermark.png');
     expect(options.watermarkImages[0].src).toBe('file:///tmp/watermark.png');
   });
 
-  it('supports the legacy watermarkImage-only markImage shape', async () => {
-    nativeModule.markWithImage.mockResolvedValue('/tmp/legacy-image.png');
-
-    await expect(
+  it('rejects the removed singular image watermark shape with migration guidance', () => {
+    expect(() =>
       Marker.markImage({
         backgroundImage: {
           src: 'file:///tmp/background.png',
@@ -399,21 +409,8 @@ describe('Marker JS wrapper', () => {
           src: 'file:///tmp/legacy-watermark.png',
           alpha: 0.75,
         },
-      })
-    ).resolves.toBe('/tmp/legacy-image.png');
-
-    expect(nativeModule.markWithImage).toHaveBeenCalledWith(
-      expect.objectContaining({
-        watermarkImages: [],
-        watermarkImage: expect.objectContaining({
-          alpha: 0.75,
-          src: {
-            uri: 'file:///tmp/legacy-watermark.png',
-            __packager_asset: false,
-          },
-        }),
-      })
-    );
+      } as any)
+    ).toThrow('watermarkImage and watermarkPositions were removed in v2');
   });
 
   it('rejects markImage calls without any image watermark', () => {
@@ -465,7 +462,7 @@ describe('Marker JS wrapper', () => {
       expect(() =>
         Marker.markImage({
           backgroundImage: { src: 'file:///tmp/background.png' },
-          watermarkImage: { src: 'file:///tmp/watermark.png' },
+          watermarkImages: [{ src: 'file:///tmp/watermark.png' }],
           quality,
         })
       ).toThrow('quality must be a finite integer between 0 and 100.');
@@ -489,7 +486,7 @@ describe('Marker JS wrapper', () => {
       expect(() =>
         Marker.markImage({
           backgroundImage: { src: 'file:///tmp/background.png' },
-          watermarkImage: { src: 'file:///tmp/watermark.png' },
+          watermarkImages: [{ src: 'file:///tmp/watermark.png' }],
           maxSize,
         })
       ).toThrow('maxSize must be a positive finite integer.');
@@ -514,8 +511,8 @@ describe('Marker JS wrapper', () => {
     };
     deepFreeze(options);
 
-    await expect(Marker.markText(options)).resolves.toBe(
-      '/tmp/outlined-text.png'
+    await expect(Marker.markText(options)).resolves.toEqual(
+      markerResult('/tmp/outlined-text.png')
     );
 
     const nativeStroke =
@@ -576,17 +573,13 @@ describe('Marker JS wrapper', () => {
         watermarkTexts: [{ text: 'boundary', alpha: 0 }],
         quality: 0,
       })
-    ).resolves.toBe('/tmp/boundary-text.png');
+    ).resolves.toEqual(markerResult('/tmp/boundary-text.png'));
 
     await expect(
       Marker.mark({
         backgroundImage: {
           src: 'file:///tmp/background.png',
           alpha: 1,
-        },
-        watermarkImage: {
-          src: 'file:///tmp/legacy-watermark.png',
-          alpha: 0,
         },
         watermarkImages: [
           {
@@ -608,7 +601,7 @@ describe('Marker JS wrapper', () => {
         ],
         quality: 100,
       })
-    ).resolves.toBe('/tmp/boundary-watermarks.png');
+    ).resolves.toEqual(markerResult('/tmp/boundary-watermarks.png'));
   });
 
   it('preserves tiled layouts without mutating caller input', async () => {
@@ -630,11 +623,18 @@ describe('Marker JS wrapper', () => {
     };
     deepFreeze(options);
 
-    await expect(Marker.mark(options)).resolves.toBe('/tmp/tiled.png');
+    await expect(Marker.mark(options)).resolves.toEqual(
+      markerResult('/tmp/tiled.png')
+    );
 
     const nativeLayout =
       nativeModule.markWithWatermarks.mock.calls[0][0].watermarks[0].layout;
-    expect(nativeLayout).toEqual(options.watermarks[0].layout);
+    expect(nativeLayout).toEqual({
+      type: 'tile',
+      gapX: '8%',
+      gapY: '24',
+      stagger: true,
+    });
     expect(nativeLayout).not.toBe(options.watermarks[0].layout);
     expect(
       nativeModule.markWithWatermarks.mock.calls[0][0].watermarks[0]
@@ -681,13 +681,15 @@ describe('Marker JS wrapper', () => {
     expect(() =>
       Marker.markImage({
         backgroundImage: { src: 'file:///tmp/background.png' },
-        watermarkImage: {
-          src: 'file:///tmp/logo.png',
-          layout: { type: 'tile' },
-        },
-        watermarkPositions: { position: Position.center },
+        watermarkImages: [
+          {
+            src: 'file:///tmp/logo.png',
+            position: { position: Position.center },
+            layout: { type: 'tile' },
+          },
+        ],
       })
-    ).toThrow('watermarkImage.layout cannot be combined with position.');
+    ).toThrow('watermarkImages[0].layout cannot be combined with position.');
 
     expect(() =>
       Marker.mark({
@@ -747,12 +749,14 @@ describe('Marker JS wrapper', () => {
         invoke: () =>
           Marker.markImage({
             backgroundImage: { src: 'file:///tmp/background.png' },
-            watermarkImage: {
-              src: 'file:///tmp/legacy-watermark.png',
-              alpha: -0.01,
-            },
+            watermarkImages: [
+              {
+                src: 'file:///tmp/legacy-watermark.png',
+                alpha: -0.01,
+              },
+            ],
           }),
-        path: 'watermarkImage',
+        path: 'watermarkImages[0]',
       },
       {
         invoke: () =>
@@ -827,7 +831,7 @@ describe('Marker JS wrapper', () => {
           { type: 'text', text: 'Light', blendMode: 'screen' },
         ],
       })
-    ).resolves.toBe('/tmp/blended.png');
+    ).resolves.toEqual(markerResult('/tmp/blended.png'));
     expect(nativeModule.markWithWatermarks.mock.calls[0][0].watermarks).toEqual(
       [
         expect.objectContaining({ blendMode: 'multiply' }),
@@ -851,7 +855,7 @@ describe('Marker JS wrapper', () => {
     expect(nativeModule.markWithWatermarks).not.toHaveBeenCalled();
   });
 
-  it('sends legacy text and image watermarks as ordered native layers', async () => {
+  it('sends compatibility text and image arrays as ordered native layers', async () => {
     nativeModule.markWithWatermarks.mockResolvedValueOnce('/tmp/final.jpg');
     const options = {
       backgroundImage: {
@@ -861,7 +865,7 @@ describe('Marker JS wrapper', () => {
       watermarkTexts: [
         {
           text: 'Mixed',
-          positionOptions: {
+          position: {
             position: Position.bottomCenter,
             Y: 24,
           },
@@ -898,7 +902,9 @@ describe('Marker JS wrapper', () => {
     };
     deepFreeze(options);
 
-    await expect(Marker.mark(options)).resolves.toBe('/tmp/final.jpg');
+    await expect(Marker.mark(options)).resolves.toEqual(
+      markerResult('/tmp/final.jpg')
+    );
 
     expect(nativeModule.markWithText).not.toHaveBeenCalled();
     expect(nativeModule.markWithImage).not.toHaveBeenCalled();
@@ -917,7 +923,6 @@ describe('Marker JS wrapper', () => {
     );
     expect(nativeOptions.backgroundImage.src).toEqual({
       uri: 'file:///tmp/background.png',
-      __packager_asset: false,
     });
     expect(nativeOptions.watermarks).toHaveLength(2);
     expect(nativeOptions.watermarks[0]).toEqual(
@@ -928,7 +933,7 @@ describe('Marker JS wrapper', () => {
     );
     expect(nativeOptions.watermarks[0].position).toEqual({
       position: Position.bottomCenter,
-      Y: 24,
+      Y: '24',
     });
     expect(nativeOptions.watermarks[1]).toEqual(
       expect.objectContaining({
@@ -943,13 +948,13 @@ describe('Marker JS wrapper', () => {
       height: 80,
       scale: 1,
     });
-    expect(options.watermarkTexts[0]).toHaveProperty('positionOptions');
+    expect(options.watermarkTexts[0]).toHaveProperty('position');
     expect(options.watermarkImages[0].src).toBe(12);
     expect(nativeOptions.watermarks[1].position).toEqual({
       position: Position.topRight,
-      X: 20,
-      Y: 16,
-      edgeInset: 4,
+      X: '20',
+      Y: '16',
+      edgeInset: '4',
     });
     expect(nativeOptions.watermarks[1].position).not.toBe(
       options.watermarkImages[0].position
@@ -982,7 +987,7 @@ describe('Marker JS wrapper', () => {
         ],
         saveFormat: ImageFormat.png,
       })
-    ).resolves.toBe('/tmp/final.png');
+    ).resolves.toEqual(markerResult('/tmp/final.png'));
 
     expect(nativeModule.markWithWatermarks).toHaveBeenCalledTimes(1);
     const nativeOptions = nativeModule.markWithWatermarks.mock.calls[0][0];
@@ -997,7 +1002,6 @@ describe('Marker JS wrapper', () => {
     ]);
     expect(nativeOptions.watermarks[0].src).toEqual({
       uri: 'file:///tmp/watermark.png',
-      __packager_asset: false,
     });
   });
 

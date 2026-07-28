@@ -10,6 +10,16 @@ const watermark = {
   key: '0123456789abcdef',
 } as const;
 
+const watermarkedResult = {
+  jobId: 'embed-1',
+  operation: 'embedInvisible' as const,
+  uri: 'watermarked.png',
+  output: 'file' as const,
+  format: 'png' as const,
+  mimeType: 'image/png' as const,
+  durationMs: 1,
+};
+
 describe('Content Credentials adapter workflow', () => {
   it('embeds before signing and returns both stages', async () => {
     const calls: string[] = [];
@@ -38,7 +48,7 @@ describe('Content Credentials adapter workflow', () => {
       embedInvisibleWithCredentials(
         async () => {
           calls.push('embed');
-          return 'watermarked.png';
+          return watermarkedResult;
         },
         {
           watermark,
@@ -51,7 +61,7 @@ describe('Content Credentials adapter workflow', () => {
         }
       )
     ).resolves.toEqual({
-      watermarkedImage: 'watermarked.png',
+      watermarkedImage: watermarkedResult,
       signedImage: 'signed.png',
       manifestId: 'urn:c2pa:test',
     });
@@ -68,14 +78,14 @@ describe('Content Credentials adapter workflow', () => {
       },
     };
     await expect(
-      embedInvisibleWithCredentials(async () => 'watermarked.png', {
+      embedInvisibleWithCredentials(async () => watermarkedResult, {
         watermark,
         adapter: validAdapter,
         claim: { title: 'Copy' },
       })
     ).rejects.toThrow('invalid signed image');
     await expect(
-      embedInvisibleWithCredentials(async () => 'watermarked.png', {
+      embedInvisibleWithCredentials(async () => watermarkedResult, {
         watermark,
         adapter: validAdapter,
         claim: { title: ' ' },
@@ -112,7 +122,7 @@ describe('Content Credentials adapter workflow', () => {
   it('preserves adapter errors', async () => {
     const expected = new Error('signing service unavailable');
     await expect(
-      embedInvisibleWithCredentials(async () => 'watermarked.png', {
+      embedInvisibleWithCredentials(async () => watermarkedResult, {
         watermark,
         claim: { title: 'Copy' },
         adapter: {
@@ -139,7 +149,7 @@ describe('Content Credentials adapter workflow', () => {
       async (options) => {
         embeddedPayload = options.payload;
         await Promise.resolve();
-        return 'watermarked.png';
+        return watermarkedResult;
       },
       {
         watermark: mutable,

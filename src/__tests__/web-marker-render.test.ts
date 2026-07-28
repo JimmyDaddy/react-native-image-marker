@@ -181,7 +181,9 @@ describe('WebMarker browser render integration', () => {
         ],
         saveFormat: ImageFormat.png,
       })
-    ).resolves.toBe('data:image/png;base64,rendered');
+    ).resolves.toEqual(
+      expect.objectContaining({ uri: 'data:image/png;base64,rendered' })
+    );
 
     expect(canvases).toHaveLength(1);
     expect(canvases[0]?.canvas.toDataURL).toHaveBeenCalledWith('image/png', 1);
@@ -231,6 +233,7 @@ describe('WebMarker browser render integration', () => {
           style: {
             color: '#F8FAFC',
             fontName: 'Marker "Display"',
+            fontFallbacks: ['Noto Sans', 'Arial'],
             fontSizeRatio: 0.08,
             italic: true,
             bold: true,
@@ -273,6 +276,9 @@ describe('WebMarker browser render integration', () => {
     expect(context.transform).toHaveBeenCalledWith(1, 0, 0.15, 1, 0, 0);
     expect(context.textAlign).toBe('right');
     expect(context.font).toContain('italic 700');
+    expect(context.font).toContain(
+      '"Marker \\"Display\\"", "Noto Sans", "Arial", sans-serif'
+    );
     expect(context.shadowBlur).toBe(4);
   });
 

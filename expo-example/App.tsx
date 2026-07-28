@@ -136,7 +136,7 @@ function App() {
         quality: 92,
         saveFormat: ImageFormat.jpg,
       });
-      setResult(output);
+      setResult(output.uri);
       setMessage('Rendered locally. The preview is the generated JPEG.');
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Rendering failed.');
@@ -168,7 +168,7 @@ function App() {
             ? batchResult.reason
             : new Error('Trace batch was aborted.');
         }
-        return batchResult.value;
+        return batchResult.value.uri;
       });
       const detected = await Marker.detectInvisibleMany(
         outputs.map((output) => ({

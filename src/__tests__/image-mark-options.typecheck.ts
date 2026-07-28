@@ -3,6 +3,7 @@ import Marker, {
   type ContentCredentialsAdapter,
   ImageFormat,
   type ImageMarkOptions,
+  type MarkerResult,
   type TextMarkOptions,
   type TextStrokeStyle,
   type WatermarkLayout,
@@ -11,7 +12,7 @@ import Marker, {
 
 export const photographicBlendMode: BlendMode = 'overlay';
 
-export const invisibleOutput: Promise<string> = Marker.embedInvisible({
+export const invisibleOutput: Promise<MarkerResult> = Marker.embedInvisible({
   image: { src: 'file:///tmp/background.png' },
   payload: 'asset-42',
   key: '0123456789abcdef',
@@ -74,17 +75,6 @@ export const credentialsVerification = Marker.verifyContentCredentials({
   adapter: contentCredentialsAdapter,
 });
 
-// The deprecated single-watermark shape remains source-compatible for users
-// that have not migrated to watermarkImages yet.
-export const legacyWatermarkOnly: ImageMarkOptions = {
-  backgroundImage: {
-    src: 'file:///tmp/background.png',
-  },
-  watermarkImage: {
-    src: 'file:///tmp/watermark.png',
-  },
-};
-
 export const multipleWatermarks: ImageMarkOptions = {
   backgroundImage: {
     src: 'file:///tmp/background.png',
@@ -95,10 +85,6 @@ export const multipleWatermarks: ImageMarkOptions = {
     },
   ],
 };
-
-export function markWithLegacyWatermarkOnly(): Promise<string> {
-  return Marker.markImage(legacyWatermarkOnly);
-}
 
 export const textStroke: TextStrokeStyle = {
   color: '#00000099',
@@ -129,8 +115,8 @@ export const tiledText: TextMarkOptions = {
 };
 
 export const reusableRecipe: WatermarkRecipe = Marker.createRecipe({
-  schemaVersion: 1,
-  watermarks: [
+  schemaVersion: 2,
+  layers: [
     {
       type: 'text',
       text: '{{label}} #{{index}}',
@@ -143,13 +129,13 @@ export const reusableRecipe: WatermarkRecipe = Marker.createRecipe({
       blendMode: 'multiply',
     },
   ],
-  saveFormat: ImageFormat.jpg,
+  output: { saveFormat: ImageFormat.jpg },
 });
 
 export const reusableBlobRecipe: WatermarkRecipe<Blob> = Marker.createRecipe(
   {
-    watermarks: [{ type: 'text', text: 'Reusable Web bytes' }],
-    saveFormat: ImageFormat.png,
+    layers: [{ type: 'text', text: 'Reusable Web bytes' }],
+    output: { saveFormat: ImageFormat.png },
   },
   { resultType: 'blob' }
 );
