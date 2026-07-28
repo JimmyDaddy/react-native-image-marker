@@ -10,6 +10,7 @@ const outputRoot = resolve(readArgument('--dir') || 'versioned-dist');
 const alwaysRequiredFiles = [
   'index.html',
   'v1/index.html',
+  'v1/zh-cn/index.html',
   'v1/getting-started/index.html',
   'v1/api/index.html',
   'versions/1.0.0/index.html',
@@ -35,6 +36,10 @@ async function collectHtml(directory) {
 }
 
 const v1Home = await readFile(join(outputRoot, 'v1/index.html'), 'utf8');
+const v1ZhHome = await readFile(
+  join(outputRoot, 'v1/zh-cn/index.html'),
+  'utf8'
+);
 const archive = await readFile(
   join(outputRoot, 'versions/1.0.0/index.html'),
   'utf8'
@@ -168,6 +173,17 @@ if (isGa) {
   if (v1Home.includes('/next/') || v1Home.includes('/v2/')) {
     throw new Error('v1 LTS still links to a non-canonical v2 namespace.');
   }
+  for (const destination of [
+    'value="/zh-cn/"',
+    'value="/v1/zh-cn/"',
+    'value="/editor/zh-cn/"',
+  ]) {
+    if (!v1ZhHome.includes(destination)) {
+      throw new Error(
+        `Chinese v1 documentation is missing localized version destination: ${destination}`
+      );
+    }
+  }
 
   for (const file of await collectHtml(outputRoot)) {
     const relativePath = relative(outputRoot, file).split(sep).join('/');
@@ -187,13 +203,15 @@ if (isGa) {
   }
 }
 
+const invalidVersionNamespaceLink = isGa
+  ? /(?:href|src|action)=["']\/(?!["']|\/|zh-cn\/|v1\/|v2\/|next\/|editor\/|versions\/)/
+  : /(?:href|src|action)=["']\/(?!["']|\/|v1\/|v2\/|next\/|editor\/|versions\/)/;
+
 for (const namespace of isGa ? ['v1'] : ['v1', 'next']) {
   const namespaceRoot = join(outputRoot, namespace);
   for (const file of await collectHtml(namespaceRoot)) {
     const html = await readFile(file, 'utf8');
-    const invalidRootLink = html.match(
-      /(?:href|src|action)=["']\/(?!["']|\/|v1\/|v2\/|next\/|editor\/|versions\/)/
-    );
+    const invalidRootLink = html.match(invalidVersionNamespaceLink);
     if (invalidRootLink) {
       throw new Error(
         `${file.slice(outputRoot.length)} escapes its version namespace: ${
