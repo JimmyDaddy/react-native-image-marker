@@ -12,7 +12,7 @@ import { TabItem, Tabs } from '@astrojs/starlight/components';
 | `Marker.markText` | 一个或多个文本水印 | 文本数组顺序 |
 | `Marker.markImage` | 一个或多个图像水印 | 图像数组顺序 |
 | `Marker.mark` | 同时包含文本和图像水印 | 严格按照 `watermarks` 数组顺序 |
-| `Marker.createRecipe` | 将同一组有序图层用于一张或多张图片 | 严格按照 `watermarks` 数组顺序 |
+| `Marker.createRecipe` | 将同一组有序图层用于一张或多张图片 | 严格按照 Recipe `layers` 数组顺序 |
 
 `markText` 和 `markImage` 仍受支持。当一次渲染需要同时包含文本和图像图层，或不同类型图层之间的顺序很重要时，请使用 `mark`。
 
@@ -91,19 +91,19 @@ import { TabItem, Tabs } from '@astrojs/starlight/components';
 
 ## 什么时候创建 Recipe
 
-当水印结构保持不变、只有底图或显示内容发生变化时，适合使用 `createRecipe`。Recipe 只接受现代的有序 `watermarks` 数组；每张图片的 `backgroundImage`、`filename` 和可选 `variables` 应传给 `apply()` 或 `applyMany()`。文字模板可以读取 `{{variableName}}`、`{{index}}` 和 `{{filename}}`；`visibleWhen` 可以按条件保留图层。
+当水印结构保持不变、只有底图或显示内容发生变化时，适合使用 `createRecipe`。Recipe v2 接受现代的有序 `layers` 数组与嵌套 `output`；每张图片的 `backgroundImage`、`filename` 和可选 `variables` 应传给 `apply()` 或 `applyMany()`。文字模板可以读取 `{{variableName}}`、`{{index}}` 和 `{{filename}}`；`visibleWhen` 可以按条件保留图层。
 
-`applyMany()` 会独立报告每一项，并保持输入顺序。默认并发为 1；Web 最多允许 4 个活动任务，iOS 和 Android 固定为 1，以控制原生内存压力。传入 `AbortSignal` 后会停止派发新任务，但不会宣称能够中断已经开始的渲染。
+`applyMany()` 会独立报告每一项，并保持输入顺序。默认并发为 1；Web 最多允许 4 个活动任务，iOS 和 Android 固定为 1，以控制原生内存压力。传入 `AbortSignal` 后会停止排队任务，并在支持时取消活动原生任务。
 
-需要保存 Recipe 时请设置 `schemaVersion: 1`，并持久化 `recipe.toJSON()`，不要保存内部运行时状态。
+需要保存 Recipe 时请设置 `schemaVersion: 2`，保留稳定的图层 `id`，并持久化 `recipe.toJSON()`。导入已保存的 v1 文档时先运行一次 `migrateWatermarkRecipe()`。
 
 ## 图层顺序
 
 图层按照数组顺序渲染。后面的图层会绘制在前面的图层之上。使用 `Marker.mark` 时这一点尤为重要，因为文本和图像图层共用同一个数组。
 
-## 旧版属性
+## 已删除的 v1 属性
 
-请优先使用复数形式的数组和当前的定位属性：
+Core 2 必须使用复数数组和当前的定位属性：
 
 | 新代码中避免使用 | 改用 |
 | --- | --- |

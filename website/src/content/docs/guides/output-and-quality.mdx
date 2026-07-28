@@ -1,17 +1,22 @@
 ---
 title: Output and image quality
-description: Choose JPEG, PNG, or base64 output and control quality, transparency, rotation, and filenames.
+description: Choose JPEG, PNG, WebP, or base64 output and control quality, metadata, transparency, rotation, and filenames.
 ---
 
 import { Aside } from '@astrojs/starlight/components';
 
 ## Output formats
 
-| `saveFormat` | Native result | Web result | Best for |
-| --- | --- | --- | --- |
-| `ImageFormat.jpg` | Cache-file path | JPEG data URL | Photos and smaller files |
-| `ImageFormat.png` | Cache-file path | PNG data URL | Transparency, QR codes, icons, and sharp edges |
-| `ImageFormat.base64` | PNG data URL | PNG data URL | In-memory transfer when you explicitly need base64 |
+Every render resolves to a structured `MarkerResult`. The table describes
+`result.uri`; inspect `result.format`, `result.mimeType`, `result.output`, and
+`result.metadata` instead of inferring them from a filename.
+
+| `saveFormat` | iOS `result.uri` | Android `result.uri` | Web `result.uri` | Best for |
+| --- | --- | --- | --- | --- |
+| `ImageFormat.jpg` | Cache-file path | Cache-file path | JPEG data URL | Photos and smaller files |
+| `ImageFormat.png` | Cache-file path | Cache-file path | PNG data URL | Transparency, QR codes, icons, and sharp edges |
+| `ImageFormat.webp` | Explicitly rejected | Cache-file path | WebP data URL | Smaller modern output where the platform is known |
+| `ImageFormat.base64` | PNG data URL | PNG data URL | PNG data URL | In-memory transfer when you explicitly need base64 |
 
 JPEG is the compatibility default. Set the format explicitly when output behavior matters.
 
@@ -27,6 +32,8 @@ const result = await Marker.markImage({
   filename: 'marked-photo',
   saveFormat: ImageFormat.png,
 });
+
+await shareOrDownload(result.uri);
 ```
 
 ## Quality
@@ -63,10 +70,19 @@ rotationCanvasMode: RotationCanvasMode.crop,
 
 ## Filenames and storage
 
-On native targets, the returned JPEG or PNG lives in the app's cache directory. `filename` must be a safe basename, not a directory path. A supplied `.jpg`, `.jpeg`, or `.png` suffix is normalized to match `saveFormat`.
+On native targets, supported file output lives in the app's cache directory. `filename` must be a safe basename, not a directory path. A supplied `.jpg`, `.jpeg`, `.png`, or `.webp` suffix is normalized to match `saveFormat`.
 
 Cache output does not automatically appear in the photo library. Pass the returned path to your preferred media-library or file-system package when you need a permanent copy.
 
-Web does not write a cache file: it returns a data URL and does not use `filename`. Set an anchor's `download` attribute or use your own browser file workflow when saving it.
+Web does not write a cache file: `result.uri` is a data URL and Web does not use `filename`. Set an anchor's `download` attribute or use your own browser file workflow when saving it.
 
 Data URLs keep more image data in JavaScript memory. This applies to every Web output and native base64 output, so avoid unnecessarily large source images.
+
+## Orientation and metadata
+
+Core 2 applies source orientation to pixels before composition and reports
+`result.metadata.orientation === 'normalized'`. It deliberately strips copied
+EXIF, GPS, and other source metadata from newly encoded output, reported as
+`result.metadata.policy === 'strip'`. This avoids stale orientation and
+accidental location leakage. Use an explicit Content Credentials adapter when
+you need signed provenance.

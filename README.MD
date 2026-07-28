@@ -35,7 +35,7 @@ Compose text and image layers, keep their render order under control, and export
 ## Install
 
 ```sh
-npm install react-native-image-marker
+npm install react-native-image-marker@^2
 ```
 
 Install iOS pods and rebuild the native app:
@@ -74,9 +74,11 @@ const result = await Marker.markText({
   saveFormat: ImageFormat.jpg,
   quality: 92,
 });
+
+console.log(result.uri, result.jobId, result.durationMs);
 ```
 
-On iOS and Android, JPEG and PNG calls resolve with a native cache-file path. On Web, every format resolves with a browser-ready data URL; native `ImageFormat.base64` also returns a PNG data URL.
+Core 2 returns a structured `MarkerResult`. Use `result.uri` as the native cache-file path or browser-ready data URL. The result also includes the job ID, operation, format, MIME type, duration, and applied metadata policy.
 
 ### Repeat a readable mark across the image
 
@@ -145,8 +147,8 @@ Save ordered layers once, then inject safe string, number, or boolean variables 
 
 ```ts
 const recipe = Marker.createRecipe({
-  schemaVersion: 1,
-  watermarks: [
+  schemaVersion: 2,
+  layers: [
     {
       type: 'text',
       text: '© {{studio}} · {{filename}} · #{{index}}',
@@ -161,8 +163,10 @@ const recipe = Marker.createRecipe({
       scale: 0.25,
     },
   ],
-  saveFormat: ImageFormat.jpg,
-  quality: 90,
+  output: {
+    saveFormat: ImageFormat.jpg,
+    quality: 90,
+  },
 });
 
 const controller = new AbortController();
@@ -180,6 +184,22 @@ const results = await recipe.applyMany(
 );
 
 const savedRecipe = JSON.stringify(recipe.toJSON());
+```
+
+### Control a render job
+
+Single jobs accept cancellation, timeout, and progress as a second argument.
+Failures use stable `ImageMarkerError.code` values and share a `jobId` with
+progress and successful results.
+
+```ts
+const controller = new AbortController();
+const result = await Marker.mark(options, {
+  signal: controller.signal,
+  timeoutMs: 15_000,
+  onProgress: ({ jobId, phase, progress }) =>
+    console.log(jobId, phase, progress),
+});
 ```
 
 On Web, request `Blob` results explicitly when processing many files without Data URL expansion:
@@ -208,7 +228,7 @@ const marked = await Marker.embedInvisible({
 });
 
 const detection = await Marker.detectInvisible({
-  image: { src: { uri: marked } },
+  image: { src: { uri: marked.uri } },
   key,
   strength: 'robust',
   search: 'robust',
@@ -246,6 +266,21 @@ const webSource = { uri: background.uri };
 
 Browser Canvas and native graphics stacks share the API and positioning model but are not guaranteed to be pixel-identical. Fonts, decoding, antialiasing, and JPEG encoding can differ.
 
+## Optional interaction editor
+
+The independently versioned
+`react-native-image-marker-editor@0.0.1` package provides Recipe v2 layer
+selection, drag/scale/rotate/reorder, visibility and locking, snapping,
+undo/redo, accessible keyboard controls, preview rendering, and final export.
+It requires Core `^2.0.0` and delegates image processing back to Core.
+
+```sh
+npm install react-native-image-marker-editor@0.0.1
+```
+
+Import `react-native-image-marker-editor/core-adapter` only when the editor
+should invoke Core directly; a custom adapter can render on a server instead.
+
 ## Choose an API
 
 | Method                                              | Use it for                                       |
@@ -267,7 +302,7 @@ Layers render in array order, so later layers draw over earlier layers. `markTex
 - Android API 24 or newer
 - Modern browsers with Canvas 2D / React Native Web
 - React Native New Architecture support since library v1.3.0
-- Legacy bridge fallback
+- Legacy bridge fallback with the same typed public contract
 - Expo development builds through native autolinking
 - CI coverage for RN 0.73 legacy/new architecture, RN 0.86 New Architecture, and Expo SDK 57 / RN 0.86
 

@@ -83,7 +83,7 @@ React Native Image Marker uses native code on iOS and Android and a Canvas 2D im
 
          Add the resolver explicitly with `npx expo install expo-asset` if it is not already a direct dependency.
 
-      3. Call `Marker.markText`, `Marker.markImage`, or `Marker.mark`. On Web, the result is an image URL you can display or download.
+      3. Call `Marker.markText`, `Marker.markImage`, or `Marker.mark`. On Web, display or download `result.uri`.
     </Steps>
   </TabItem>
 </Tabs>
@@ -94,7 +94,7 @@ React Native Image Marker uses native code on iOS and Android and a Canvas 2D im
 
 ## Add your first watermark
 
-`Marker.markText` renders one or more text layers and resolves with the generated image path.
+`Marker.markText` renders one or more text layers and resolves with a structured result. `result.uri` is the generated native path or Web data URL.
 
 ```ts
 import Marker, { ImageFormat, Position } from 'react-native-image-marker';
@@ -121,6 +121,8 @@ const result = await Marker.markText({
   saveFormat: ImageFormat.jpg,
   quality: 92,
 });
+
+console.log(result.uri, result.jobId, result.durationMs);
 ```
 
 For image-only or mixed layers, see [Choose an API](/guides/choose-an-api/).
@@ -135,4 +137,4 @@ On iOS and Android, use the same source shapes you already use in React Native:
 
 On Web, use a URL string, `{ uri }`, data URL, `Blob`, `File`, or loaded browser image. Remote URLs must permit CORS. Numeric React Native asset IDs must first be resolved to a URL.
 
-Native JPEG and PNG output is written to the platform cache directory. Web output is always a data URL; native `ImageFormat.base64` also returns an in-memory data URL.
+Native JPEG, PNG, and supported WebP output is written to the platform cache directory. Web output is always a data URL; native `ImageFormat.base64` also returns an in-memory data URL. The URI is always available as `result.uri`.

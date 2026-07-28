@@ -127,10 +127,8 @@ const playgroundHref = zh ? '/zh-cn/playground/' : '/playground/';
 const toolsHref = zh ? '/zh-cn/tools/' : '/tools/';
 const defaultRecipeJson = JSON.stringify(
   {
-    schemaVersion: 1,
-    saveFormat: 'png',
-    quality: 92,
-    watermarks: [
+    schemaVersion: 2,
+    layers: [
       {
         type: 'text',
         text: '© {{filename}}',
@@ -144,6 +142,10 @@ const defaultRecipeJson = JSON.stringify(
         },
       },
     ],
+    output: {
+      saveFormat: 'png',
+      quality: 92,
+    },
   },
   null,
   2

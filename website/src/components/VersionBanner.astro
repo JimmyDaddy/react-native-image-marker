@@ -10,8 +10,12 @@ const versionNotice =
       : 'These are the v2 preview docs. APIs may still change before release. See the <a href="/v1/">v1 LTS docs</a>.'
     : channel === 'v1'
       ? isZh
-        ? 'v1 处于长期维护状态，将继续接收兼容性、安全和严重错误修复。查看 <a href="/next/">v2 预览</a>。'
-        : 'v1 is in long-term maintenance and continues to receive compatibility, security, and critical bug fixes. See the <a href="/next/">v2 preview</a>.'
+        ? 'v1 处于长期维护状态，将继续接收兼容性、安全和严重错误修复。查看 <a href="/v2/">当前 v2 文档</a>。'
+        : 'v1 is in long-term maintenance and continues to receive compatibility, security, and critical bug fixes. See the <a href="/v2/">current v2 docs</a>.'
+      : channel === 'current'
+        ? isZh
+          ? '这是当前 v2 文档。需要兼容旧接口？查看 <a href="/v1/">v1 LTS 文档</a>。'
+          : 'These are the current v2 docs. Need the compatible API? See the <a href="/v1/">v1 LTS docs</a>.'
       : undefined;
 ---
 

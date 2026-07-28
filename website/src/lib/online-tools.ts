@@ -1,9 +1,14 @@
-import Marker, { ImageFormat, Position } from '../../../src/index';
+import Marker, {
+  ImageFormat,
+  Position,
+  migrateWatermarkRecipe,
+} from '../../../src/index';
 import type {
   InvisibleWatermarkDetectionResult,
   InvisibleWatermarkSearch,
   InvisibleWatermarkStrength,
   WatermarkRecipeDefinition,
+  WatermarkRecipeDocument,
 } from '../../../src/index';
 
 const DEFAULT_BACKGROUND = '/media/playground-background.jpg';
@@ -255,8 +260,8 @@ async function renderVisibleWatermark(context: ToolContext): Promise<void> {
     matteColor: '#FFFFFF',
     maxSize: 2048,
   });
-  context.currentResult = dataUrlToBlob(dataUrl);
-  context.preview.src = dataUrl;
+  context.currentResult = dataUrlToBlob(dataUrl.uri);
+  context.preview.src = dataUrl.uri;
   enable(context, 'download');
   setStatus(context, context.zh ? '水印已生成' : 'Watermark ready', 'success');
 }
@@ -291,9 +296,8 @@ async function runBatchWatermark(context: ToolContext): Promise<void> {
     const layout = requiredValue(context, 'layout');
     const recipe = Marker.createRecipe(
       {
-        saveFormat: format === 'jpg' ? ImageFormat.jpg : ImageFormat.png,
-        quality: 92,
-        watermarks: [
+        schemaVersion: 2,
+        layers: [
           {
             type: 'text',
             text: requiredValue(context, 'watermark-text'),
@@ -316,6 +320,10 @@ async function runBatchWatermark(context: ToolContext): Promise<void> {
             },
           },
         ],
+        output: {
+          saveFormat: format === 'jpg' ? ImageFormat.jpg : ImageFormat.png,
+          quality: 92,
+        },
       },
       { resultType: 'blob' }
     );
@@ -403,7 +411,7 @@ async function embedInvisibleWatermark(context: ToolContext): Promise<void> {
     saveFormat: ImageFormat.png,
     maxSize: 2048,
   });
-  context.currentResult = dataUrlToBlob(result);
+  context.currentResult = dataUrlToBlob(result.uri);
   context.currentJson = {
     algorithm: 'dct-qim-v1',
     payload,
@@ -413,7 +421,7 @@ async function embedInvisibleWatermark(context: ToolContext): Promise<void> {
       ? '密钥未写入记录，请在可信位置单独保存。'
       : 'The key is not included. Store it separately in a trusted system.',
   };
-  context.preview.src = result;
+  context.preview.src = result.uri;
   enable(context, 'download');
   enable(context, 'export');
   showJson(context, context.currentJson);
@@ -565,10 +573,10 @@ async function createRecipientPackage(context: ToolContext): Promise<void> {
       `images/${String(index + 1).padStart(3, '0')}-${safeName(
         mapping[index]!.recipient
       )}.png`
-    ] = new Uint8Array(await dataUrlToBlob(result.value).arrayBuffer());
+    ] = new Uint8Array(await dataUrlToBlob(result.value.uri).arrayBuffer());
     if (index === 0) {
-      context.currentResult = dataUrlToBlob(result.value);
-      context.preview.src = result.value;
+      context.currentResult = dataUrlToBlob(result.value.uri);
+      context.preview.src = result.value.uri;
     }
   }
   const record = {
@@ -616,9 +624,9 @@ async function runTraceLab(context: ToolContext): Promise<void> {
     saveFormat: ImageFormat.png,
     maxSize: 960,
   });
-  context.preview.src = embedded;
-  context.currentResult = dataUrlToBlob(embedded);
-  const variants = await createLabVariants(embedded);
+  context.preview.src = embedded.uri;
+  context.currentResult = dataUrlToBlob(embedded.uri);
+  const variants = await createLabVariants(embedded.uri);
   setStatus(
     context,
     context.zh ? '正在检测变换结果…' : 'Detecting transformed images…',
@@ -875,7 +883,7 @@ function parseRecipe(context: ToolContext): WatermarkRecipeDefinition {
       context.zh ? 'Recipe 不是有效的 JSON。' : 'Recipe is not valid JSON.'
     );
   }
-  return value as WatermarkRecipeDefinition;
+  return migrateWatermarkRecipe(value as WatermarkRecipeDocument);
 }
 
 function parseRecipients(raw: string): string[] {

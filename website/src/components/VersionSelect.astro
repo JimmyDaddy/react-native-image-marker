@@ -2,7 +2,7 @@
 const pathname = Astro.url.pathname;
 const channel = process.env.DOCS_CHANNEL || 'v1';
 const selected =
-  channel === 'preview'
+  channel === 'preview' || channel === 'current'
     ? 'v2'
     : channel === 'editor'
       ? 'editor'
@@ -12,12 +12,14 @@ const selected =
 const label = pathname.includes('/zh-cn/')
   ? '文档版本'
   : 'Documentation version';
+const v2Base = channel === 'current' ? '/v2/' : '/next/';
+const v2Label = channel === 'current' ? 'v2 Current' : 'v2 Preview';
 ---
 
 <label class="version-select print:hidden">
   <span class="sr-only">{label}</span>
   <select aria-label={label} data-version-select>
-    <option value="/next/" selected={selected === 'v2'}>v2 Preview</option>
+    <option value={v2Base} selected={selected === 'v2'}>{v2Label}</option>
     <option value="/v1/" selected={selected === 'v1'}>v1 LTS</option>
     <option value="/versions/1.0.0/" selected={selected === 'v1.0.0'}>
       v1.0.0 Archive

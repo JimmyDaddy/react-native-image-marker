@@ -997,7 +997,7 @@ const invisibleExecutors = ['main', 'worker'].map((value, index) => ({
 const verified = await Marker.detectInvisibleMany(
   embedded.flatMap((result) =>
     result.status === 'fulfilled'
-      ? [{ image: { src: result.value }, key, search: 'robust' }]
+      ? [{ image: { src: result.value.uri }, key, search: 'robust' }]
       : []
   )
 );`}</code></pre>
@@ -1407,13 +1407,13 @@ const credentials = await Marker.verifyContentCredentials({
       }
 
       const resultComment = target === 'web'
-        ? '// Resolves to a data:image/... URL on Web.'
-        : '// Resolves to a cache-file path on iOS and Android.';
+        ? '// result.uri is a data:image/... URL on Web.'
+        : '// result.uri is a cache-file path on iOS and Android.';
 
-      return `import Marker, { ImageFormat, Position } from 'react-native-image-marker';
+      return `import Marker, { ImageFormat, Position, type MarkerResult } from 'react-native-image-marker';
 
 ${resultComment}
-export async function createMarkedImage(): Promise<string> {
+export async function createMarkedImage(): Promise<MarkerResult> {
   return Marker.${method}({
     backgroundImage: { src: ${background} },
 ${layers}
@@ -1443,10 +1443,12 @@ ${layers}
     const createBatchCode = (target: CodeTarget): string => {
       const outputFormat = format.value === 'jpg' ? 'jpg' : 'png';
       const recipeOptions = `{
-  schemaVersion: 1,
-  watermarks: ${recipeLayersCode(target)},
-  saveFormat: ImageFormat.${outputFormat},
-  quality: ${Number(quality.value)},
+  schemaVersion: 2,
+  layers: ${recipeLayersCode(target)},
+  output: {
+    saveFormat: ImageFormat.${outputFormat},
+    quality: ${Number(quality.value)},
+  },
 }`;
 
       if (target === 'web') {
@@ -1535,7 +1537,7 @@ export async function embedAndVerifyTrace(file: File${signalParameter}) {
   });
 
 ${transformNote}  const detection = await Marker.detectInvisible({
-    image: { src: marked },
+    image: { src: marked.uri },
     key,
     strength: '${strength}',
     search: 'robust',${worker}
@@ -1560,7 +1562,7 @@ export async function embedAndVerifyTrace(source: ImageSourcePropType) {
   });
 
 ${transformNote}  const detection = await Marker.detectInvisible({
-    image: { src: { uri: marked } },
+    image: { src: { uri: marked.uri } },
     key,
     strength: '${strength}',
     search: 'robust',
@@ -1865,16 +1867,19 @@ ${transformNote}  const detection = await Marker.detectInvisible({
           text: `${textInput.value || 'IMAGE MARKER'} · {{sourceName}}`,
         };
         const imageLayer = { type: 'image' as const, ...getImageLayer(sdk.Position) };
-        const watermarks = state.mode === 'text'
+        const layers = state.mode === 'text'
           ? [textLayer]
           : state.mode === 'image'
             ? [imageLayer]
             : [imageLayer, textLayer];
         const recipe = sdk.default.createRecipe(
           {
-            watermarks,
-            saveFormat: format.value === 'jpg' ? sdk.ImageFormat.jpg : sdk.ImageFormat.png,
-            quality: numberValue(quality),
+            schemaVersion: 2,
+            layers,
+            output: {
+              saveFormat: format.value === 'jpg' ? sdk.ImageFormat.jpg : sdk.ImageFormat.png,
+              quality: numberValue(quality),
+            },
           },
           { resultType: 'blob' }
         );
@@ -1959,8 +1964,8 @@ ${transformNote}  const detection = await Marker.detectInvisible({
           saveFormat: sdk.ImageFormat.png,
           filename: `${root.dataset.filename ?? 'image-marker-web-demo'}-trace`,
         });
-        invisibleResult = result;
-        await showInvisibleResult(result);
+        invisibleResult = result.uri;
+        await showInvisibleResult(result.uri);
         elapsed.textContent = `${Math.round(performance.now() - startedAt)} ms`;
         invisibleStatus.textContent = root.dataset.invisibleEmbedded ?? '';
         setStatus('rendered', root.dataset.invisibleEmbedded);
@@ -2062,7 +2067,7 @@ ${transformNote}  const detection = await Marker.detectInvisible({
         const textLayer = getTextLayer(sdk.Position);
         const imageLayer = getImageLayer(sdk.Position);
 
-        let result: string;
+        let result;
         if (state.mode === 'text') {
           result = await sdk.default.markText({ ...common, watermarkTexts: [textLayer] });
         } else if (state.mode === 'image') {
@@ -2078,17 +2083,17 @@ ${transformNote}  const detection = await Marker.detectInvisible({
         }
 
         if (sequence !== state.renderSequence) return;
-        const size = await imageDimensions(result);
+        const size = await imageDimensions(result.uri);
         if (sequence !== state.renderSequence) return;
 
-        state.result = result;
-        preview.src = result;
+        state.result = result.uri;
+        preview.src = result.uri;
         preview.alt = root.dataset.generatedAlt ?? '';
         dimensions.textContent = `${size.width} × ${size.height}`;
         elapsed.textContent = `${Math.round(performance.now() - startedAt)} ms`;
-        resultUri.textContent = `${result.slice(0, 42)}…${result.slice(-16)}`;
+        resultUri.textContent = `${result.uri.slice(0, 42)}…${result.uri.slice(-16)}`;
         copyResultButton.disabled = false;
-        download.href = result;
+        download.href = result.uri;
         download.download = `${root.dataset.filename ?? 'image-marker-web-demo'}.${outputFormat}`;
         download.classList.remove('is-disabled');
         download.removeAttribute('aria-disabled');

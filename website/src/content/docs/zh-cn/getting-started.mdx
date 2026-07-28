@@ -83,7 +83,7 @@ React Native Image Marker 在 iOS 和 Android 上使用原生代码，在 Web �
 
          如果项目尚未直接依赖资源解析器，请运行 `npx expo install expo-asset`。
 
-      3. 调用 `Marker.markText`、`Marker.markImage` 或 `Marker.mark`。Web 端会返回可直接显示或下载的图片地址。
+      3. 调用 `Marker.markText`、`Marker.markImage` 或 `Marker.mark`。Web 端可显示或下载 `result.uri`。
     </Steps>
   </TabItem>
 </Tabs>
@@ -94,7 +94,7 @@ React Native Image Marker 在 iOS 和 Android 上使用原生代码，在 Web �
 
 ## 添加第一个水印
 
-`Marker.markText` 会渲染一个或多个文本图层，并返回生成图像的路径。
+`Marker.markText` 会渲染一个或多个文本图层，并返回结构化结果。`result.uri` 是生成的原生路径或 Web data URL。
 
 ```ts
 import Marker, { ImageFormat, Position } from 'react-native-image-marker';
@@ -121,6 +121,8 @@ const result = await Marker.markText({
   saveFormat: ImageFormat.jpg,
   quality: 92,
 });
+
+console.log(result.uri, result.jobId, result.durationMs);
 ```
 
 如需仅包含图像的图层或混合图层，请参阅[选择 API](/zh-cn/guides/choose-an-api/)。
@@ -135,4 +137,4 @@ const result = await Marker.markText({
 
 在 Web 上，可使用 URL 字符串、`{ uri }`、数据 URL、`Blob`、`File` 或已加载的浏览器图像。远程 URL 必须允许 CORS；数字形式的 React Native 资源 ID 需要先解析成 URL。
 
-原生 JPEG 和 PNG 输出会写入平台缓存目录；Web 输出始终是数据 URL，原生端请求 `ImageFormat.base64` 时也会返回内存中的数据 URL。
+原生 JPEG、PNG 和平台支持的 WebP 输出会写入平台缓存目录；Web 输出始终是数据 URL，原生端请求 `ImageFormat.base64` 时也会返回内存中的数据 URL。URI 始终位于 `result.uri`。

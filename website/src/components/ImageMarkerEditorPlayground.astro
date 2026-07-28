@@ -1,0 +1,859 @@
+---
+interface Props {
+  locale?: 'en' | 'zh-CN';
+}
+
+const { locale = 'en' } = Astro.props;
+const zh = locale === 'zh-CN';
+const base = import.meta.env.BASE_URL;
+const copy = zh
+  ? {
+      eyebrow: '可选包 · Editor 0.0.1',
+      title: '直接操作 Recipe v2',
+      intro:
+        '这个演示由 Editor controller 驱动：拖动图层、调整缩放和旋转、排序、锁定、撤销，再通过 Core 2.0 渲染真实结果。',
+      addText: '添加文字',
+      addImage: '添加图片',
+      undo: '撤销',
+      redo: '重做',
+      preview: 'Core 预览',
+      export: '导出原图',
+      layers: '图层',
+      selected: '所选图层',
+      scale: '缩放',
+      rotate: '旋转',
+      hide: '隐藏',
+      show: '显示',
+      lock: '锁定',
+      unlock: '解锁',
+      remove: '删除',
+      up: '上移',
+      down: '下移',
+      recipe: '实时 Recipe v2',
+      copyRecipe: '复制 Recipe',
+      canvas: 'Editor 可交互画布',
+      output: 'Core 渲染结果',
+      idle: '拖动任意图层开始编辑。',
+      copied: 'Recipe 已复制。',
+      rendering: '正在通过 Core 2.0 渲染…',
+      ready: '渲染完成',
+    }
+  : {
+      eyebrow: 'Optional package · Editor 0.0.1',
+      title: 'Manipulate Recipe v2 directly',
+      intro:
+        'This demo is driven by the Editor controller: drag, scale, rotate, reorder, lock, and undo layers, then render a real result through Core 2.0.',
+      addText: 'Add text',
+      addImage: 'Add image',
+      undo: 'Undo',
+      redo: 'Redo',
+      preview: 'Core preview',
+      export: 'Export original',
+      layers: 'Layers',
+      selected: 'Selected layer',
+      scale: 'Scale',
+      rotate: 'Rotate',
+      hide: 'Hide',
+      show: 'Show',
+      lock: 'Lock',
+      unlock: 'Unlock',
+      remove: 'Delete',
+      up: 'Move up',
+      down: 'Move down',
+      recipe: 'Live Recipe v2',
+      copyRecipe: 'Copy Recipe',
+      canvas: 'Interactive Editor canvas',
+      output: 'Core render result',
+      idle: 'Drag any layer to start editing.',
+      copied: 'Recipe copied.',
+      rendering: 'Rendering through Core 2.0…',
+      ready: 'Render ready',
+    };
+---
+
+<section
+  id="editor-playground"
+  class="editor-playground not-content"
+  data-editor-playground
+  data-background-url={`${base}media/playground-background.jpg`}
+  data-copy={JSON.stringify(copy)}
+  data-logo-url={`${base}media/marker-compass.png`}
+  lang={zh ? 'zh-CN' : 'en'}
+>
+  <header>
+    <p class="eyebrow">{copy.eyebrow}</p>
+    <h2>{copy.title}</h2>
+    <p>{copy.intro}</p>
+  </header>
+
+  <div class="editor-actions" aria-label={copy.title}>
+    <button type="button" data-editor-action="add-text">{copy.addText}</button>
+    <button type="button" data-editor-action="add-image">{copy.addImage}</button>
+    <button type="button" data-editor-action="undo">{copy.undo}</button>
+    <button type="button" data-editor-action="redo">{copy.redo}</button>
+    <button class="primary" type="button" data-editor-action="preview">{copy.preview}</button>
+    <button class="primary" type="button" data-editor-action="export">{copy.export}</button>
+  </div>
+
+  <div class="editor-workbench">
+    <aside class="editor-inspector">
+      <section>
+        <h3>{copy.layers}</h3>
+        <ol data-editor-layers></ol>
+      </section>
+      <section>
+        <h3>{copy.selected}</h3>
+        <div class="selection-controls">
+          <label>
+            <span>{copy.scale}</span>
+            <input data-editor-scale type="range" min="0.25" max="2.5" step="0.05" value="1" />
+            <output data-editor-scale-output>1.00×</output>
+          </label>
+          <label>
+            <span>{copy.rotate}</span>
+            <input data-editor-rotate type="range" min="0" max="359" step="1" value="0" />
+            <output data-editor-rotate-output>0°</output>
+          </label>
+          <div class="selection-actions">
+            <button type="button" data-editor-action="visibility">{copy.hide}</button>
+            <button type="button" data-editor-action="lock">{copy.lock}</button>
+            <button class="danger" type="button" data-editor-action="remove">{copy.remove}</button>
+          </div>
+        </div>
+      </section>
+    </aside>
+
+    <div class="editor-stage">
+      <div
+        aria-label={copy.canvas}
+        class="editor-canvas"
+        data-editor-canvas
+        role="application"
+        tabindex="0"
+      >
+        <img alt="" data-editor-background />
+        <div class="safe-area" aria-hidden="true"></div>
+        <div data-editor-layer-host></div>
+        <div data-editor-guides aria-hidden="true"></div>
+      </div>
+      <p aria-live="polite" class="editor-status" data-editor-status>{copy.idle}</p>
+      <figure data-editor-result hidden>
+        <figcaption>{copy.output}</figcaption>
+        <img alt={copy.output} data-editor-result-image />
+      </figure>
+    </div>
+  </div>
+
+  <section class="recipe-panel">
+    <div>
+      <h3>{copy.recipe}</h3>
+      <button type="button" data-editor-action="copy">{copy.copyRecipe}</button>
+    </div>
+    <pre><code data-editor-recipe></code></pre>
+  </section>
+</section>
+
+<script>
+  import { ImageMarkerEditorController } from '../../../packages/editor/src/controller';
+  import { createCoreEditorAdapter } from '../../../packages/editor/src/core-adapter';
+  import type { EditorState } from '../../../packages/editor/src/types';
+  import { ImageFormat } from '../../../src/index';
+
+  type PlaygroundCopy = {
+    addText: string;
+    addImage: string;
+    undo: string;
+    redo: string;
+    preview: string;
+    export: string;
+    hide: string;
+    show: string;
+    lock: string;
+    unlock: string;
+    remove: string;
+    up: string;
+    down: string;
+    idle: string;
+    copied: string;
+    rendering: string;
+    ready: string;
+  };
+
+  type RecipeLayer = EditorState['recipe']['layers'][number];
+
+  const coordinate = (value: number | string | undefined): number => {
+    if (typeof value === 'number') return value;
+    const parsed = Number.parseFloat(value ?? '');
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+
+  const layerScale = (layer: RecipeLayer): number =>
+    layer.type === 'image'
+      ? layer.scale ?? 1
+      : (layer.style?.fontSize ?? 14) / 14;
+
+  const layerRotation = (layer: RecipeLayer): number =>
+    layer.type === 'image' ? layer.rotate ?? 0 : layer.style?.rotate ?? 0;
+
+  const element = <T extends Element>(root: ParentNode, selector: string): T => {
+    const match = root.querySelector<T>(selector);
+    if (!match) throw new Error(`Missing Editor playground element: ${selector}`);
+    return match;
+  };
+
+  document.querySelectorAll<HTMLElement>('[data-editor-playground]').forEach((root) => {
+    if (root.dataset.initialized === 'true') return;
+    root.dataset.initialized = 'true';
+
+    const copy = JSON.parse(root.dataset.copy ?? '{}') as PlaygroundCopy;
+    const backgroundUrl = root.dataset.backgroundUrl ?? '';
+    const logoUrl = root.dataset.logoUrl ?? '';
+    const controller = new ImageMarkerEditorController({
+      schemaVersion: 2,
+      layers: [
+        {
+          id: 'web-title',
+          name: 'Campaign title',
+          type: 'text',
+          text: 'IMAGE MARKER 2.0',
+          position: { X: 54, Y: 56 },
+          style: {
+            color: '#FFFFFF',
+            fontSize: 28,
+            bold: true,
+            shadowStyle: { color: '#0F172A', dx: 1, dy: 2, radius: 3 },
+          },
+        },
+        {
+          id: 'web-logo',
+          name: 'Brand mark',
+          type: 'image',
+          src: logoUrl,
+          position: { X: 500, Y: 250 },
+          scale: 0.68,
+        },
+      ],
+      output: { saveFormat: ImageFormat.png },
+    });
+    controller.setSafeArea({ top: 24, right: 24, bottom: 24, left: 24 });
+    const adapter = createCoreEditorAdapter(960);
+    const canvas = element<HTMLElement>(root, '[data-editor-canvas]');
+    const background = element<HTMLImageElement>(root, '[data-editor-background]');
+    const layerHost = element<HTMLElement>(root, '[data-editor-layer-host]');
+    const guides = element<HTMLElement>(root, '[data-editor-guides]');
+    const layerList = element<HTMLOListElement>(root, '[data-editor-layers]');
+    const scale = element<HTMLInputElement>(root, '[data-editor-scale]');
+    const scaleOutput = element<HTMLOutputElement>(root, '[data-editor-scale-output]');
+    const rotate = element<HTMLInputElement>(root, '[data-editor-rotate]');
+    const rotateOutput = element<HTMLOutputElement>(root, '[data-editor-rotate-output]');
+    const recipe = element<HTMLElement>(root, '[data-editor-recipe]');
+    const status = element<HTMLElement>(root, '[data-editor-status]');
+    const result = element<HTMLElement>(root, '[data-editor-result]');
+    const resultImage = element<HTMLImageElement>(root, '[data-editor-result-image]');
+    const action = (name: string) =>
+      element<HTMLButtonElement>(root, `[data-editor-action="${name}"]`);
+    background.src = backgroundUrl;
+
+    let state = controller.getState();
+    let addSequence = 0;
+    let drag:
+      | {
+          id: string;
+          pointerId: number;
+          clientX: number;
+          clientY: number;
+          x: number;
+          y: number;
+        }
+      | undefined;
+
+    const selectedLayer = () =>
+      state.recipe.layers.find(
+        (layer: RecipeLayer) => layer.id === state.selectedLayerId
+      );
+
+    const renderLayer = (layer: RecipeLayer) => {
+      if (layer.visible === false) return;
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = `editor-layer editor-layer-${layer.type}`;
+      item.dataset.editorLayer = layer.id;
+      item.setAttribute('aria-label', layer.name ?? layer.id);
+      item.setAttribute(
+        'aria-pressed',
+        state.selectedLayerId === layer.id ? 'true' : 'false'
+      );
+      item.style.left = `${coordinate(layer.position?.X)}px`;
+      item.style.top = `${coordinate(layer.position?.Y)}px`;
+      item.style.opacity = layer.locked ? '0.68' : '1';
+      item.style.transform = `scale(${layerScale(layer)}) rotate(${layerRotation(layer)}deg)`;
+      if (layer.type === 'text') {
+        item.textContent = layer.text;
+        item.style.color = layer.style?.color ?? '#FFFFFF';
+        item.style.fontSize = `${layer.style?.fontSize ?? 14}px`;
+        item.style.fontWeight = layer.style?.bold ? '800' : '500';
+      } else {
+        const image = document.createElement('img');
+        image.alt = layer.name ?? layer.id;
+        image.draggable = false;
+        image.src = typeof layer.src === 'string' ? layer.src : logoUrl;
+        item.append(image);
+      }
+      layerHost.append(item);
+    };
+
+    const bindLayerList = () => {
+      layerList.replaceChildren();
+      state.recipe.layers.forEach((layer: RecipeLayer, index: number) => {
+        const item = document.createElement('li');
+        const select = document.createElement('button');
+        select.type = 'button';
+        select.className = 'layer-name';
+        select.textContent = `${layer.visible === false ? '○' : '●'} ${
+          layer.locked ? '🔒 ' : ''
+        }${layer.name ?? layer.id}`;
+        select.setAttribute(
+          'aria-current',
+          state.selectedLayerId === layer.id ? 'true' : 'false'
+        );
+        select.addEventListener('click', () => controller.selectLayer(layer.id));
+        const controls = document.createElement('span');
+        for (const [label, target] of [
+          [copy.down, index - 1],
+          [copy.up, index + 1],
+        ] as const) {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.textContent = target < index ? '↓' : '↑';
+          button.title = label;
+          button.disabled =
+            Boolean(layer.locked) ||
+            target < 0 ||
+            target >= state.recipe.layers.length;
+          button.addEventListener('click', () =>
+            controller.reorderLayer(layer.id, target)
+          );
+          controls.append(button);
+        }
+        item.append(select, controls);
+        layerList.prepend(item);
+      });
+    };
+
+    const renderState = (next: EditorState) => {
+      state = next;
+      layerHost.replaceChildren();
+      state.recipe.layers.forEach(renderLayer);
+      guides.replaceChildren();
+      state.snapGuides.forEach((guide) => {
+        const line = document.createElement('i');
+        line.className = `snap-guide snap-guide-${guide.axis}`;
+        if (guide.axis === 'x') line.style.left = `${guide.position}px`;
+        else line.style.top = `${guide.position}px`;
+        guides.append(line);
+      });
+      bindLayerList();
+      recipe.textContent = JSON.stringify(state.recipe, null, 2);
+
+      const selected = selectedLayer();
+      const selectedScale = selected ? layerScale(selected) : 1;
+      const selectedRotation = selected ? layerRotation(selected) : 0;
+      scale.value = String(selectedScale);
+      scale.disabled = !selected || Boolean(selected.locked);
+      scaleOutput.value = `${selectedScale.toFixed(2)}×`;
+      rotate.value = String(selectedRotation);
+      rotate.disabled = !selected || Boolean(selected.locked);
+      rotateOutput.value = `${Math.round(selectedRotation)}°`;
+      action('visibility').disabled = !selected || Boolean(selected.locked);
+      action('visibility').textContent =
+        selected?.visible === false ? copy.show : copy.hide;
+      action('lock').disabled = !selected;
+      action('lock').textContent = selected?.locked ? copy.unlock : copy.lock;
+      action('remove').disabled = !selected || Boolean(selected.locked);
+      action('undo').disabled = !state.canUndo;
+      action('redo').disabled = !state.canRedo;
+    };
+
+    controller.subscribe(renderState);
+
+    canvas.addEventListener('pointerdown', (event) => {
+      const target = (event.target as HTMLElement).closest<HTMLElement>(
+        '[data-editor-layer]'
+      );
+      if (!target?.dataset.editorLayer) {
+        controller.selectLayer(undefined);
+        return;
+      }
+      const id = target.dataset.editorLayer;
+      controller.selectLayer(id);
+      const layer = controller
+        .getState()
+        .recipe.layers.find((candidate: RecipeLayer) => candidate.id === id);
+      if (!layer || layer.locked) return;
+      drag = {
+        id,
+        pointerId: event.pointerId,
+        clientX: event.clientX,
+        clientY: event.clientY,
+        x: coordinate(layer.position?.X),
+        y: coordinate(layer.position?.Y),
+      };
+      controller.beginHistoryGroup();
+      canvas.setPointerCapture(event.pointerId);
+      event.preventDefault();
+    });
+
+    canvas.addEventListener('pointermove', (event) => {
+      if (!drag || drag.pointerId !== event.pointerId) return;
+      const bounds = canvas.getBoundingClientRect();
+      controller.moveLayer(
+        drag.id,
+        {
+          x: drag.x + ((event.clientX - drag.clientX) * 720) / bounds.width,
+          y: drag.y + ((event.clientY - drag.clientY) * 420) / bounds.height,
+        },
+        {
+          canvas: { width: 720, height: 420 },
+          layer: { width: 120, height: 72 },
+          threshold: 7,
+        }
+      );
+    });
+
+    const endDrag = (event: PointerEvent) => {
+      if (!drag || drag.pointerId !== event.pointerId) return;
+      drag = undefined;
+      controller.endHistoryGroup();
+      canvas.releasePointerCapture(event.pointerId);
+    };
+    canvas.addEventListener('pointerup', endDrag);
+    canvas.addEventListener('pointercancel', endDrag);
+    canvas.addEventListener('keydown', (event) => {
+      if (
+        controller.handleKeyCommand({
+          key: event.key,
+          altKey: event.altKey,
+          ctrlKey: event.ctrlKey,
+          metaKey: event.metaKey,
+          shiftKey: event.shiftKey,
+        })
+      ) {
+        event.preventDefault();
+      }
+    });
+
+    scale.addEventListener('input', () => {
+      const selected = selectedLayer();
+      if (selected) controller.scaleLayer(selected.id, Number(scale.value));
+    });
+    rotate.addEventListener('input', () => {
+      const selected = selectedLayer();
+      if (selected) controller.rotateLayer(selected.id, Number(rotate.value));
+    });
+    action('add-text').addEventListener('click', () => {
+      addSequence += 1;
+      controller.addLayer({
+        type: 'text',
+        text: `Text ${addSequence}`,
+        name: `Text ${addSequence}`,
+        position: { X: 80 + addSequence * 12, Y: 90 + addSequence * 10 },
+        style: { color: '#FFFFFF', fontSize: 22, bold: true },
+      });
+    });
+    action('add-image').addEventListener('click', () => {
+      addSequence += 1;
+      controller.addLayer({
+        type: 'image',
+        src: logoUrl,
+        name: `Image ${addSequence}`,
+        position: { X: 260 + addSequence * 10, Y: 160 + addSequence * 8 },
+        scale: 0.55,
+      });
+    });
+    action('undo').addEventListener('click', () => controller.undo());
+    action('redo').addEventListener('click', () => controller.redo());
+    action('visibility').addEventListener('click', () => {
+      const selected = selectedLayer();
+      if (selected) {
+        controller.setLayerVisible(selected.id, selected.visible === false);
+      }
+    });
+    action('lock').addEventListener('click', () => {
+      const selected = selectedLayer();
+      if (selected) controller.setLayerLocked(selected.id, !selected.locked);
+    });
+    action('remove').addEventListener('click', () => controller.removeLayer());
+    action('copy').addEventListener('click', async () => {
+      await navigator.clipboard.writeText(
+        JSON.stringify(controller.exportRecipe(), null, 2)
+      );
+      status.textContent = copy.copied;
+    });
+
+    const renderThroughCore = async (original: boolean) => {
+      status.textContent = copy.rendering;
+      action('preview').disabled = true;
+      action('export').disabled = true;
+      try {
+        const request = {
+          recipe: controller.exportRecipe(),
+          input: { backgroundImage: { src: backgroundUrl } },
+          control: { timeoutMs: 20_000 },
+        };
+        const rendered = original
+          ? (await adapter.exportOriginal(request)).final
+          : await adapter.renderPreview(request);
+        resultImage.src = rendered.uri;
+        result.hidden = false;
+        status.textContent = `${copy.ready} · ${rendered.format.toUpperCase()} · ${rendered.durationMs} ms`;
+        root.dataset.editorRenderState = 'rendered';
+      } catch (error) {
+        status.textContent = error instanceof Error ? error.message : String(error);
+        root.dataset.editorRenderState = 'error';
+      } finally {
+        action('preview').disabled = false;
+        action('export').disabled = false;
+      }
+    };
+    action('preview').addEventListener('click', () => void renderThroughCore(false));
+    action('export').addEventListener('click', () => void renderThroughCore(true));
+  });
+</script>
+
+<style>
+  .editor-playground {
+    max-width: 100rem;
+    padding: clamp(1rem, 3vw, 2rem);
+    margin: 4rem auto 1rem;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 1.2rem;
+    background:
+      radial-gradient(circle at top right, rgb(82 113 255 / 14%), transparent 30rem),
+      var(--sl-color-bg);
+    box-shadow: 0 1.5rem 4rem rgb(15 23 42 / 10%);
+  }
+
+  .editor-playground,
+  .editor-playground * {
+    box-sizing: border-box;
+  }
+
+  header {
+    max-width: 54rem;
+  }
+
+  header h2 {
+    margin: 0.25rem 0 0.7rem;
+    font-size: clamp(1.6rem, 3vw, 2.4rem);
+  }
+
+  header > p:last-child {
+    color: var(--sl-color-gray-2);
+  }
+
+  .eyebrow {
+    margin: 0;
+    color: var(--sl-color-accent-high);
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+  }
+
+  button {
+    min-height: 2.35rem;
+    padding: 0.48rem 0.72rem;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.55rem;
+    color: var(--sl-color-gray-1);
+    background: var(--sl-color-gray-6);
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  button:hover:not(:disabled),
+  button:focus-visible {
+    border-color: var(--sl-color-accent);
+    color: var(--sl-color-white);
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+    opacity: 0.42;
+  }
+
+  button.primary {
+    border-color: transparent;
+    color: white;
+    background: #3156d9;
+  }
+
+  button.danger {
+    color: #fb7185;
+  }
+
+  .editor-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    margin: 1.5rem 0 1rem;
+  }
+
+  .editor-workbench {
+    display: grid;
+    grid-template-columns: minmax(14rem, 18rem) minmax(0, 1fr);
+    gap: 1rem;
+  }
+
+  .editor-inspector,
+  .editor-stage,
+  .recipe-panel {
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.85rem;
+    background: color-mix(in srgb, var(--sl-color-bg) 90%, var(--sl-color-gray-6));
+  }
+
+  .editor-inspector {
+    padding: 1rem;
+  }
+
+  .editor-inspector section + section {
+    padding-top: 1rem;
+    margin-top: 1rem;
+    border-top: 1px solid var(--sl-color-gray-5);
+  }
+
+  h3 {
+    margin: 0 0 0.75rem;
+    font-size: 0.92rem;
+  }
+
+  [data-editor-layers] {
+    display: grid;
+    gap: 0.4rem;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+
+  [data-editor-layers] :global(li) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.35rem;
+  }
+
+  [data-editor-layers] :global(.layer-name) {
+    overflow: hidden;
+    text-align: start;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  [data-editor-layers] :global(.layer-name[aria-current='true']) {
+    border-color: var(--sl-color-accent);
+    color: var(--sl-color-text-accent);
+    background: var(--sl-color-accent-low);
+  }
+
+  [data-editor-layers] :global(li > span) {
+    display: flex;
+    gap: 0.2rem;
+  }
+
+  [data-editor-layers] :global(li > span button) {
+    min-width: 2rem;
+    padding: 0.35rem;
+  }
+
+  .selection-controls,
+  .selection-controls label {
+    display: grid;
+    gap: 0.45rem;
+  }
+
+  .selection-controls label + label {
+    margin-top: 0.8rem;
+  }
+
+  .selection-controls label span {
+    color: var(--sl-color-gray-2);
+    font-size: 0.76rem;
+    font-weight: 700;
+  }
+
+  .selection-controls output {
+    color: var(--sl-color-gray-2);
+    font-family: var(--__sl-font-mono);
+    font-size: 0.72rem;
+  }
+
+  .selection-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 1rem;
+  }
+
+  .editor-stage {
+    min-width: 0;
+    padding: 1rem;
+  }
+
+  .editor-canvas {
+    position: relative;
+    aspect-ratio: 12 / 7;
+    width: 100%;
+    max-width: 720px;
+    overflow: hidden;
+    border-radius: 0.7rem;
+    background: #0f172a;
+    touch-action: none;
+  }
+
+  [data-editor-background] {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    inset: 0;
+  }
+
+  .safe-area {
+    position: absolute;
+    border: 1px dashed rgb(255 255 255 / 58%);
+    inset: calc(24 / 420 * 100%) calc(24 / 720 * 100%);
+    pointer-events: none;
+  }
+
+  [data-editor-layer-host],
+  [data-editor-guides] {
+    position: absolute;
+    inset: 0;
+  }
+
+  [data-editor-guides] {
+    pointer-events: none;
+  }
+
+  [data-editor-layer-host] {
+    width: 720px;
+    height: 420px;
+    transform: scale(var(--editor-canvas-scale, 1));
+    transform-origin: top left;
+  }
+
+  .editor-canvas:has([data-editor-layer-host]) {
+    container-type: inline-size;
+  }
+
+  @supports (width: 1cqw) {
+    [data-editor-layer-host],
+    [data-editor-guides] {
+      --editor-canvas-scale: calc(100cqw / 720);
+    }
+  }
+
+  [data-editor-layer-host] :global(.editor-layer) {
+    position: absolute;
+    display: grid;
+    place-items: center;
+    min-width: 7.5rem;
+    min-height: 4.5rem;
+    padding: 0.5rem;
+    border: 1px solid transparent;
+    color: white;
+    background: transparent;
+    touch-action: none;
+    transform-origin: center;
+    user-select: none;
+  }
+
+  [data-editor-layer-host] :global(.editor-layer[aria-pressed='true']) {
+    border-color: #38bdf8;
+    border-style: dashed;
+  }
+
+  [data-editor-layer-host] :global(.editor-layer img) {
+    width: 7rem;
+    height: 7rem;
+    object-fit: contain;
+    pointer-events: none;
+  }
+
+  [data-editor-guides] :global(.snap-guide) {
+    position: absolute;
+    z-index: 4;
+    display: block;
+    background: #fb7185;
+  }
+
+  [data-editor-guides] :global(.snap-guide-x) {
+    width: 1px;
+    height: 100%;
+  }
+
+  [data-editor-guides] :global(.snap-guide-y) {
+    width: 100%;
+    height: 1px;
+  }
+
+  .editor-status {
+    min-height: 1.5rem;
+    margin: 0.7rem 0 0;
+    color: var(--sl-color-gray-2);
+    font-size: 0.78rem;
+  }
+
+  figure {
+    margin: 1rem 0 0;
+  }
+
+  figcaption {
+    margin-bottom: 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 750;
+  }
+
+  [data-editor-result-image] {
+    display: block;
+    width: min(100%, 36rem);
+    max-height: 22rem;
+    border-radius: 0.65rem;
+    object-fit: contain;
+  }
+
+  .recipe-panel {
+    padding: 1rem;
+    margin-top: 1rem;
+  }
+
+  .recipe-panel > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .recipe-panel h3 {
+    margin: 0;
+  }
+
+  .recipe-panel pre {
+    max-height: 22rem;
+    padding: 1rem;
+    margin: 0.8rem 0 0;
+    overflow: auto;
+    border-radius: 0.65rem;
+    color: #dbeafe;
+    background: #0f172a;
+    font-size: 0.75rem;
+  }
+
+  @media (max-width: 52rem) {
+    .editor-workbench {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

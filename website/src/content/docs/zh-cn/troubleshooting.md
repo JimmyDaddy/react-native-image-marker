@@ -25,7 +25,8 @@ JavaScript 层无法找到生成的 TurboModule 或旧版原生模块。
 - 在 Android 上，请确保字体已链接到 Android assets 中。
 - 在 Web 上，请先加载字体，并确认 Canvas 能够使用它，再调用 Marker。
 
-无法解析的字体会回退到平台默认字体。
+主字体可能缺少部分字形时，请在 `fontName` 后增加
+`fontFallbacks: ['Noto Sans', 'Arial']`。全部无法解析时，平台默认字体是最后回退。
 
 ## Web 无法加载或导出远程图片
 
@@ -50,11 +51,31 @@ Canvas 导出受浏览器 CORS 规则约束。图片服务器必须返回合适�
 
 ## 结果没有出现在照片图库中
 
-在原生目标上，JPEG 和 PNG 结果都是缓存文件。Image Marker 不会请求媒体库权限，也不会将文件保存到相机胶卷。请将返回的路径与媒体库包配合使用，例如 [React Native CameraRoll](https://github.com/react-native-cameraroll/react-native-cameraroll)。在 Web 上，请把返回的数据 URL 用作下载链接。
+在原生目标上，JPEG、PNG 和平台支持的 WebP 结果都是缓存文件。Image Marker
+不会请求媒体库权限，也不会将文件保存到相机胶卷。请将 `result.uri` 与媒体库包
+配合使用，例如 [React Native CameraRoll](https://github.com/react-native-cameraroll/react-native-cameraroll)。
+在 Web 上，请把 `result.uri` 用作下载链接。
 
 ## 大图占用过多内存
 
-图像合成和数据 URL 编码所需的内存都与解码后的位图大小成正比。请优先使用原生文件输出；如果不需要完整分辨率，请在合成前缩放输入图像，并按顺序处理大型批次。Web 的所有输出都是数据 URL，因此更需要控制源图尺寸。
+图像合成和 data URL 编码所需的内存都与解码后位图大小成正比。请显式设置
+`maxSize`、优先使用原生文件输出，并把原生批量并发保持为 1。Web 所有输出都是
+data URL，因此更需要控制来源尺寸。详见[性能与任务控制](/zh-cn/guides/performance-and-jobs/)。
+
+## 处理 Core 2 结构化错误
+
+捕获 `ImageMarkerError` 并记录 `code`、`jobId` 和 `operation`。消息也应上报，
+但应用逻辑不应解析消息字符串。
+
+```ts
+try {
+  await Marker.mark(options, { timeoutMs: 15_000 });
+} catch (error) {
+  if (error instanceof ImageMarkerError) {
+    console.error(error.code, error.jobId, error.operation, error.message);
+  }
+}
+```
 
 ## 仍然无法解决？
 

@@ -12,7 +12,7 @@ The three public methods share the same output options. Choose by layer type:
 | `Marker.markText` | One or many text watermarks | Text array order |
 | `Marker.markImage` | One or many image watermarks | Image array order |
 | `Marker.mark` | Text and image watermarks together | Exact `watermarks` array order |
-| `Marker.createRecipe` | Reuse ordered layers across one or many images | Exact `watermarks` array order |
+| `Marker.createRecipe` | Reuse ordered layers across one or many images | Exact Recipe `layers` array order |
 
 `markText` and `markImage` remain supported. Use `mark` when a single render needs both text and image layers or when cross-type ordering matters.
 
@@ -91,19 +91,19 @@ The three public methods share the same output options. Choose by layer type:
 
 ## When to create a Recipe
 
-Use `createRecipe` when the watermark structure stays the same while the background or displayed values change. A Recipe accepts only the modern ordered `watermarks` array; pass `backgroundImage`, `filename`, and optional `variables` to `apply()` or `applyMany()` for each input. Text templates can read `{{variableName}}`, `{{index}}`, and `{{filename}}`; `visibleWhen` conditionally includes a layer.
+Use `createRecipe` when the watermark structure stays the same while the background or displayed values change. Recipe v2 accepts the modern ordered `layers` array and nested `output`; pass `backgroundImage`, `filename`, and optional `variables` to `apply()` or `applyMany()` for each input. Text templates can read `{{variableName}}`, `{{index}}`, and `{{filename}}`; `visibleWhen` conditionally includes a layer.
 
-`applyMany()` reports every item independently and preserves input order. Its default concurrency is 1. Web accepts up to 4 active jobs; iOS and Android stay at 1 to limit native memory pressure. An `AbortSignal` stops new work from being dispatched without claiming to interrupt a render already in progress.
+`applyMany()` reports every item independently and preserves input order. Its default concurrency is 1. Web accepts up to 4 active jobs; iOS and Android stay at 1 to limit native memory pressure. An `AbortSignal` stops queued work and cancels the active native job when supported.
 
-Set `schemaVersion: 1` when a Recipe will be serialized, and persist `recipe.toJSON()` rather than internal runtime state.
+Set `schemaVersion: 2` when a Recipe will be serialized, preserve stable layer `id` values, and persist `recipe.toJSON()` rather than internal runtime state. Use `migrateWatermarkRecipe()` once when importing a saved v1 document.
 
 ## Layer order
 
 Layers render in array order. A later layer is drawn over an earlier one. This is especially important with `Marker.mark`, where text and image layers share the same array.
 
-## Legacy properties
+## Removed v1 properties
 
-Prefer the plural arrays and current position property:
+Core 2 requires the plural arrays and current position property:
 
 | Avoid in new code | Use instead |
 | --- | --- |

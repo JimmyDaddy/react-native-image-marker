@@ -1,6 +1,7 @@
 import starlight from '@astrojs/starlight';
 import { defineConfig } from 'astro/config';
 import starlightTypeDoc, { typeDocSidebarGroup } from 'starlight-typedoc';
+import { fileURLToPath } from 'node:url';
 
 const repository = 'https://github.com/JimmyDaddy/react-native-image-marker';
 const docsGitRef = process.env.DOCS_GIT_REF || 'master';
@@ -48,6 +49,15 @@ export default defineConfig({
   site: 'https://image-marker.corerobin.com',
   base: '/',
   trailingSlash: 'always',
+  vite: {
+    resolve: {
+      alias: {
+        'react-native-image-marker': fileURLToPath(
+          new URL('../src/index.ts', import.meta.url)
+        ),
+      },
+    },
+  },
   integrations: [
     starlight({
       title: 'React Native Image Marker',
@@ -272,9 +282,19 @@ export default defineConfig({
               slug: 'guides/output-and-quality',
             },
             {
+              label: 'Performance and job control',
+              translations: { 'zh-CN': '性能与任务控制' },
+              slug: 'guides/performance-and-jobs',
+            },
+            {
               label: 'Invisible trace watermarks',
               translations: { 'zh-CN': '隐形追踪水印' },
               slug: 'guides/invisible-watermarks',
+            },
+            {
+              label: 'Optional interaction editor',
+              translations: { 'zh-CN': '可选交互编辑器' },
+              slug: 'guides/editor',
             },
             {
               label: 'Visual cookbook',

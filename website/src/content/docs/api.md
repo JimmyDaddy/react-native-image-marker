@@ -16,6 +16,15 @@ The API reference is generated from the public TypeScript declarations on every 
 - `Marker.embedInvisibleMany` and `Marker.detectInvisibleMany` run ordered, independently reported trace batches.
 - `Marker.embedInvisibleWithCredentials` and `Marker.verifyContentCredentials` compose the pixel locator with an application-supplied signing adapter.
 
+Core 2 visible render and invisible embed methods resolve to `MarkerResult`.
+Use `result.uri` for the image and inspect `jobId`, `operation`, `format`,
+`mimeType`, `durationMs`, and `metadata` for diagnostics. Single operations
+accept `MarkerJobOptions` as their second argument; failures are
+`ImageMarkerError` instances with a stable code.
+
+Recipe v2 serializes stable `layers` and nested `output`. Import old persisted
+documents with `migrateWatermarkRecipe()` before creating the runtime Recipe.
+
 ## Start with the main option types
 
 - [`TextMarkOptions`](/api/interfaces/textmarkoptions/)
@@ -25,5 +34,7 @@ The API reference is generated from the public TypeScript declarations on every 
 - [`EmbedInvisibleWatermarkOptions`](/api/interfaces/embedinvisiblewatermarkoptions/)
 - [`DetectInvisibleWatermarkOptions`](/api/interfaces/detectinvisiblewatermarkoptions/)
 - [`InvisibleWatermarkDetectionResult`](/api/interfaces/invisiblewatermarkdetectionresult/)
+- [`MarkerResult`](/api/interfaces/markerresult/)
+- [`MarkerJobOptions`](/api/interfaces/markerjoboptions/)
 
 Use the generated **API reference** group in the sidebar to browse all enums, interfaces, and type aliases.
