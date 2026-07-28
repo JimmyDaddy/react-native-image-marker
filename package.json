@@ -1,6 +1,6 @@
 {
   "name": "react-native-image-marker",
-  "version": "2.0.0",
+  "version": "2.0.0-alpha.1",
   "packageManager": "npm@10.9.4",
   "workspaces": [
     "packages/editor"
