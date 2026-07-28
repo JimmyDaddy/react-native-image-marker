@@ -252,6 +252,10 @@ jobs:
         if: github.event_name == 'pull_request'
         with:
           fail-on-severity: moderate
+          # ESLint 8 still requires minimatch 3's CommonJS brace-expansion API.
+          # This advisory is therefore accepted only for the dev graph; the
+          # packed Core and Editor production graphs are audited below.
+          allow-ghsas: GHSA-mh99-v99m-4gvg
 
       - name: Setup node
         uses: actions/setup-node@v7
@@ -454,7 +458,7 @@ jobs:
             'trace-runtime.js',
             'trace-runtime.d.ts',
             'lib/commonjs/trace-runtime.js',
-            'lib/typescript/trace-runtime.d.ts',
+            'lib/typescript/module/trace-runtime.d.ts',
             'lib/worker/invisible-watermark.js',
           ]) {
             if (!names.includes(required)) {
