@@ -136,7 +136,7 @@
     "eslint": "^8.4.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^4.0.0",
-    "husky": "^8.0.3",
+    "husky": "^9.1.7",
     "jest": "^28.1.1",
     "metro-react-native-babel-preset": "^0.77.0",
     "patch-package": "^8.0.0",
