@@ -131,7 +131,7 @@
     "@types/react-native": "0.70.0",
     "commitlint": "^21.2.1",
     "conventional-changelog-conventionalcommits": "9.3.1",
-    "del-cli": "^5.0.0",
+    "del-cli": "^7.0.0",
     "esbuild": "^0.28.1",
     "eslint": "^8.4.1",
     "eslint-config-prettier": "^10.1.8",
