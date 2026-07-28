@@ -32,7 +32,12 @@ The main entry owns only UI and Recipe state. Import the opt-in `core-adapter`
 entry to render previews or final output through Core, or inject your own
 adapter for a server renderer.
 
-Run the repository's React Native example and choose **Editor 0.0.1**, or use
-the [browser playground](https://image-marker.corerobin.com/next/playground/)
+Run the repository's React Native example and choose **Editor 0.0.2**, or use
+the [browser playground](https://image-marker.corerobin.com/playground/?workflow=editor#editor-playground)
 to exercise drag, scale, rotation, ordering, locks, undo/redo, and a real Core
 render.
+
+Read the [integration guide](https://image-marker.corerobin.com/guides/editor/)
+or browse the
+[generated API reference](https://image-marker.corerobin.com/guides/editor/reference/)
+for controller methods, component props, adapters, state, and export types.
