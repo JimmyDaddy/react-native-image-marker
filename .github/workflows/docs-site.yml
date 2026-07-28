@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - release/1.x
     paths:
       - 'src/index.ts'
       - 'src/marker.ts'
@@ -13,6 +14,7 @@ on:
       - 'README.MD'
       - 'package.json'
       - '.github/workflows/docs-site.yml'
+      - 'website/versions.json'
 
   workflow_dispatch:
 
@@ -29,25 +31,69 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout v2 preview
         uses: actions/checkout@v7
+        with:
+          ref: master
+          path: current
 
-      - name: Setup node
+      - name: Checkout v1 LTS
+        uses: actions/checkout@v7
+        with:
+          ref: release/1.x
+          path: v1
+
+      - name: Checkout immutable v1.0.0 source
+        uses: actions/checkout@v7
+        with:
+          ref: v1.0.0
+          path: archive
+
+      - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
           node-version: '22.22.0'
           cache: npm
           cache-dependency-path: |
-            package-lock.json
-            website/package-lock.json
+            current/package-lock.json
+            current/website/package-lock.json
+            v1/package-lock.json
+            v1/website/package-lock.json
 
-      - name: Install dependencies
+      - name: Install v2 documentation dependencies
         run: |
-          npm ci
-          npm ci --prefix website
+          npm ci --prefix current
+          npm ci --prefix current/website
 
-      - name: Build documentation
-        run: npm run docs
+      - name: Install v1 documentation dependencies
+        run: |
+          npm ci --prefix v1
+          npm ci --prefix v1/website
+
+      - name: Build v2 preview
+        env:
+          DOCS_CHANNEL: preview
+          DOCS_GIT_REF: master
+        run: npm --prefix current run docs
+
+      - name: Build v1 LTS
+        env:
+          DOCS_CHANNEL: v1
+          DOCS_GIT_REF: release/1.x
+        run: npm --prefix v1 run docs
+
+      - name: Assemble versioned documentation
+        run: |
+          node current/website/scripts/assemble-versioned-site.mjs \
+            --v1-dir v1/website/dist \
+            --next-dir current/website/dist \
+            --archive-root archive \
+            --out-dir current/website/versioned-dist \
+            --v1-sha "$(git -C v1 rev-parse HEAD)" \
+            --next-sha "$(git -C current rev-parse HEAD)" \
+            --archive-sha "$(git -C archive rev-parse HEAD)"
+          node current/website/scripts/check-versioned-site.mjs \
+            --dir current/website/versioned-dist
 
       - name: Setup Pages
         uses: actions/configure-pages@v6
@@ -55,7 +101,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
         with:
-          path: website/dist
+          path: current/website/versioned-dist
 
   deploy:
     environment:

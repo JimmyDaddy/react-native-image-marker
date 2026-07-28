@@ -32,6 +32,7 @@
   ],
   "scripts": {
     "test": "jest",
+    "test:release-routing": "node --test scripts/__tests__/release-target.test.mjs",
     "test:web": "jest src/__tests__/web-marker.test.ts src/__tests__/web-marker-api.test.ts src/__tests__/web-marker-render.test.ts src/__tests__/invisible-worker-client.test.ts --runInBand",
     "typecheck": "tsc --noEmit && npm run typecheck:api",
     "typecheck:api": "tsc --noEmit --strict --skipLibCheck --esModuleInterop --verbatimModuleSyntax --moduleResolution node --module esnext --target esnext src/__tests__/image-mark-options.typecheck.ts src/__tests__/trace-runtime.typecheck.ts",
@@ -48,6 +49,7 @@
     "bootstrap-m1": "yarn example && yarn install && yarn example m1-pods",
     "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build",
     "docs": "npm --prefix website run build",
+    "verify:release-target": "node scripts/verify-release-target.mjs",
     "docs:dev": "npm --prefix website run dev",
     "expo-install": "yarn expo-example expo-install"
   },

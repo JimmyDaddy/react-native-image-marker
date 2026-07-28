@@ -3,6 +3,7 @@ import { defineConfig } from 'astro/config';
 import starlightTypeDoc, { typeDocSidebarGroup } from 'starlight-typedoc';
 
 const repository = 'https://github.com/JimmyDaddy/react-native-image-marker';
+const docsGitRef = process.env.DOCS_GIT_REF || 'master';
 
 const apiSidebarLabels = new Map([
   ['API reference', 'API 参考'],
@@ -73,13 +74,14 @@ export default defineConfig({
         './src/styles/preference-menu.css',
       ],
       components: {
+        Banner: './src/components/VersionBanner.astro',
         Header: './src/components/Header.astro',
         LanguageSelect: './src/components/LanguageSelect.astro',
         ThemeSelect: './src/components/ThemeSelect.astro',
         PageTitle: './src/components/PageTitle.astro',
       },
       editLink: {
-        baseUrl: `${repository}/edit/master/website/`,
+        baseUrl: `${repository}/edit/${docsGitRef}/website/`,
       },
       lastUpdated: true,
       social: [
@@ -159,7 +161,7 @@ export default defineConfig({
           typeDoc: {
             excludeExternals: true,
             excludePrivate: true,
-            gitRevision: 'master',
+            gitRevision: docsGitRef,
             plugin: ['typedoc-plugin-rename-defaults'],
             readme: 'none',
           },
@@ -294,6 +296,11 @@ export default defineConfig({
               label: 'Versions and migration',
               translations: { 'zh-CN': '版本与迁移' },
               slug: 'migration',
+            },
+            {
+              label: 'Versions and support',
+              translations: { 'zh-CN': '版本与支持政策' },
+              slug: 'support-policy',
             },
             {
               label: 'Sitemap',

@@ -78,6 +78,7 @@ lib/
 
 website/.astro/
 website/dist/
+website/versioned-dist/
 website/public/worker/
 website/src/content/docs/api/
 

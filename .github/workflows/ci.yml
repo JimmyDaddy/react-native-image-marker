@@ -296,7 +296,9 @@ jobs:
         run: npm run check:release-notes
 
       - name: Test
-        run: npm test -- --coverage --runInBand
+        run: |
+          npm test -- --coverage --runInBand
+          npm run test:release-routing
 
       - name: Build package
         run: npm run prepack

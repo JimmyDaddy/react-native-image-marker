@@ -1,36 +1,109 @@
-name: publish npm Package
+name: Publish npm package
 
 on:
   release:
     types: [published]
 
   workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to verify and publish
+        required: true
+        type: string
 
 jobs:
-  publish-npm:
+  resolve:
+    name: Resolve and verify release target
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.target.outputs.tag }}
+      package_name: ${{ steps.target.outputs.package_name }}
+      package_path: ${{ steps.target.outputs.package_path }}
+      version: ${{ steps.target.outputs.version }}
+      branch: ${{ steps.target.outputs.branch }}
+      npm_tag: ${{ steps.target.outputs.npm_tag }}
+      additional_dist_tags: ${{ steps.target.outputs.additional_dist_tags }}
+      channel: ${{ steps.target.outputs.channel }}
+    steps:
+      - name: Checkout the release tag
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.release.tag_name || inputs.tag }}
+
+      - name: Resolve release target
+        id: target
+        run: >-
+          node scripts/resolve-release-target.mjs
+          --tag "${{ github.event.release.tag_name || inputs.tag }}"
+          --github-output "$GITHUB_OUTPUT"
+
+      - name: Fetch protected release branch
+        run: git fetch origin "${{ steps.target.outputs.branch }}"
+
+      - name: Verify package version and release provenance
+        run: >-
+          node scripts/verify-release-target.mjs
+          --tag "${{ steps.target.outputs.tag }}"
+
+  publish:
+    name: Publish ${{ needs.resolve.outputs.package_name }}@${{ needs.resolve.outputs.version }}
+    needs: resolve
     runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - name: Checkout the verified release tag
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.resolve.outputs.tag }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
         with:
           node-version: '24'
           registry-url: https://registry.npmjs.org/
-      - run: npm install -g npm@latest
-      - run: npm ci
-      - run: npm run prepack
+
+      - name: Use the trusted-publishing npm CLI
+        run: npm install --global npm@12.0.1
+
+      - name: Install release dependencies
+        run: npm ci
+
+      - name: Build package
+        working-directory: ${{ needs.resolve.outputs.package_path }}
+        run: npm run prepack
+
       - name: Publish with provenance
-        run: npm publish --provenance --access public
+        working-directory: ${{ needs.resolve.outputs.package_path }}
+        run: >-
+          npm publish
+          --provenance
+          --access public
+          --tag "${{ needs.resolve.outputs.npm_tag }}"
+
+      - name: Add maintenance dist-tags
+        if: needs.resolve.outputs.additional_dist_tags != ''
+        env:
+          PACKAGE_NAME: ${{ needs.resolve.outputs.package_name }}
+          PACKAGE_VERSION: ${{ needs.resolve.outputs.version }}
+          ADDITIONAL_DIST_TAGS: ${{ needs.resolve.outputs.additional_dist_tags }}
+        run: |
+          for dist_tag in ${ADDITIONAL_DIST_TAGS//,/ }; do
+            npm dist-tag add "$PACKAGE_NAME@$PACKAGE_VERSION" "$dist_tag"
+          done
 
       - name: Verify registry provenance metadata
+        env:
+          PACKAGE_NAME: ${{ needs.resolve.outputs.package_name }}
+          PACKAGE_VERSION: ${{ needs.resolve.outputs.version }}
         run: |
-          package_version="$(node -p "require('./package.json').version")"
           for _ in $(seq 1 12); do
-            predicate_type="$(npm view "react-native-image-marker@$package_version" dist.attestations.provenance.predicateType 2>/dev/null || true)"
+            predicate_type="$(npm view "$PACKAGE_NAME@$PACKAGE_VERSION" dist.attestations.provenance.predicateType 2>/dev/null || true)"
             if [ "$predicate_type" = "https://slsa.dev/provenance/v1" ]; then
-              echo "Verified provenance for react-native-image-marker@$package_version"
+              echo "Verified provenance for $PACKAGE_NAME@$PACKAGE_VERSION"
               exit 0
             fi
             sleep 5

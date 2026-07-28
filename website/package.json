@@ -10,11 +10,13 @@
     "dev": "astro dev",
     "check": "astro check",
     "build": "node ../scripts/build-invisible-worker.mjs public/worker/invisible-watermark.js && astro check && astro build && node scripts/postbuild.mjs && node scripts/check-build.mjs",
+    "assemble:versions": "node scripts/assemble-versioned-site.mjs",
+    "check:versions": "node scripts/check-versioned-site.mjs",
     "smoke": "node scripts/smoke-playground.mjs && node scripts/smoke-tools.mjs",
     "generate:v1-7-example": "node scripts/generate-v1-7-example.mjs",
     "preview": "astro preview"
   },
-  "dependencies": {
+  "devDependencies": {
     "@astrojs/check": "0.9.9",
     "@astrojs/starlight": "0.41.3",
     "@contentauth/c2pa-web": "0.12.3",
@@ -24,9 +26,7 @@
     "typedoc": "0.28.20",
     "typedoc-plugin-markdown": "4.12.0",
     "typedoc-plugin-rename-defaults": "0.7.3",
-    "typescript": "5.9.3"
-  },
-  "devDependencies": {
+    "typescript": "5.9.3",
     "playwright": "1.61.1"
   },
   "overrides": {

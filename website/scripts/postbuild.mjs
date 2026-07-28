@@ -13,7 +13,7 @@ const redirects = new Map([
   ['hierarchy.html', '/api/'],
   ['modules.html', '/api/'],
   ['usage-guide.html', '/cookbook/'],
-  ['v1.0.x/index.html', '/migration/'],
+  ['v1.0.x/index.html', '/versions/1.0.0/'],
 ]);
 
 for (const typeName of [
