@@ -22,8 +22,8 @@ export function resolveReleaseTarget(tag) {
       packagePath: '.',
       version: v1[1],
       branch: 'release/1.x',
-      npmTag: 'v1',
-      additionalDistTags: ['lts'],
+      npmTag: 'lts',
+      additionalDistTags: [],
       channel: 'core-v1',
     };
   }

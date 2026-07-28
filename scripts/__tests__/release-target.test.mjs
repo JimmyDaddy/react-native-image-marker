@@ -9,8 +9,8 @@ test('routes a v1 maintenance release to the LTS branch', () => {
     packagePath: '.',
     version: '1.12.1',
     branch: 'release/1.x',
-    npmTag: 'v1',
-    additionalDistTags: ['lts'],
+    npmTag: 'lts',
+    additionalDistTags: [],
     channel: 'core-v1',
   });
 });
