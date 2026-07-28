@@ -77,7 +77,7 @@ function App() {
     );
 
     try {
-      const dataUrl = await Marker.mark({
+      const output = await Marker.mark({
         backgroundImage: {
           src: { uri: backgroundUri },
         },
@@ -189,7 +189,7 @@ function App() {
       if (request !== renderRequest.current) {
         return;
       }
-      setResult({ dataUrl, extension: requestedExtension });
+      setResult({ dataUrl: output.uri, extension: requestedExtension });
       setStatus(
         `Rendered ${requestedExtension.toUpperCase()} data URL entirely in this browser.`
       );
@@ -214,7 +214,7 @@ function App() {
     setIsRendering(true);
     setStatus('Embedding and authenticating an invisible trace in Canvas…');
     try {
-      const dataUrl = await Marker.embedInvisible({
+      const output = await Marker.embedInvisible({
         image: { src: backgroundUri },
         payload,
         key,
@@ -222,7 +222,7 @@ function App() {
         saveFormat: ImageFormat.png,
       });
       const detection = await Marker.detectInvisible({
-        image: { src: dataUrl },
+        image: { src: output.uri },
         key,
         strength: 'robust',
         search: 'fast',
@@ -231,7 +231,7 @@ function App() {
         throw new Error('The embedded trace could not be authenticated.');
       }
       if (request !== renderRequest.current) return;
-      setResult({ dataUrl, extension: 'png' });
+      setResult({ dataUrl: output.uri, extension: 'png' });
       setStatus(
         `Invisible trace verified: ${detection.payload} · ${Math.round(
           detection.confidence * 100

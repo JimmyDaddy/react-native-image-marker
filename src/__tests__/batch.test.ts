@@ -6,8 +6,8 @@ import {
 } from '../recipe';
 
 const textRecipe: WatermarkRecipeOptions = {
-  watermarks: [{ type: 'text', text: 'CONFIDENTIAL' }],
-  saveFormat: ImageFormat.jpg,
+  layers: [{ type: 'text', text: 'CONFIDENTIAL' }],
+  output: { saveFormat: ImageFormat.jpg },
 };
 
 describe('watermark recipe batches', () => {

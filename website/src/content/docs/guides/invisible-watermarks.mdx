@@ -29,7 +29,7 @@ const output = await Marker.embedInvisible({
 });
 
 const result = await Marker.detectInvisible({
-  image: { src: { uri: output } },
+  image: { src: { uri: output.uri } },
   key,
   strength: 'robust',
   search: 'robust',
@@ -40,7 +40,9 @@ if (result.detected) {
 }
 ```
 
-Native embedding returns a cache-file path; Web returns a data URL. Detection does not create a file.
+Embedding returns a Core 2 `MarkerResult`: `output.uri` is a native cache-file
+path or Web data URL. Detection returns its own structured detection result and
+does not create a file.
 
 When `robust` recovers a resized image, `result.scale` reports the successful
 0.9, 0.95, 1.05, or 1.1 hypothesis. It is a detector estimate, not a precise
@@ -73,14 +75,14 @@ const outputs = await Marker.embedInvisibleMany(
 const verified = await Marker.detectInvisibleMany(
   outputs.flatMap((output) =>
     output.status === 'fulfilled'
-      ? [{ image: { src: output.value }, key, search: 'robust' }]
+      ? [{ image: { src: output.value.uri }, key, search: 'robust' }]
       : []
   )
 );
 ```
 
-Calling `abort()` stops new items from starting. Work already handed to Canvas
-or a native decoder finishes normally and still reports its result.
+Calling `abort()` stops new items and cancels the active native job when
+supported. Cancellation is idempotent.
 
 ## Run Web detection in a Worker
 

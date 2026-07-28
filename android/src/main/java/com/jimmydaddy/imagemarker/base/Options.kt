@@ -3,6 +3,7 @@ package com.jimmydaddy.imagemarker.base
 import android.graphics.Color
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReadableMap
+import java.util.UUID
 
 open class Options(val options: ReadableMap) {
   var backgroundImage: ImageOptions
@@ -18,6 +19,8 @@ open class Options(val options: ReadableMap) {
   var matteColor: Int
 
   var rotationCanvasMode: RotationCanvasMode
+
+  var jobId: String
 
   init {
     val backgroundImageOptions = options.getMap("backgroundImage")
@@ -41,6 +44,15 @@ open class Options(val options: ReadableMap) {
     rotationCanvasMode = RotationCanvasMode.fromValue(
       if (options.hasKey("rotationCanvasMode")) options.getString("rotationCanvasMode") else null
     )
+    jobId = if (options.hasKey("jobId") && !options.isNull("jobId")) {
+      options.getString("jobId")
+        ?: throw MarkerError(ErrorCode.INVALID_PARAMS, "jobId must be a string")
+    } else {
+      UUID.randomUUID().toString()
+    }
+    if (jobId.isBlank()) {
+      throw MarkerError(ErrorCode.INVALID_PARAMS, "jobId must not be empty")
+    }
   }
 
   companion object {

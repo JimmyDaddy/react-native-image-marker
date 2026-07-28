@@ -1,0 +1,84 @@
+---
+import versions from '../../versions.json';
+
+const pathname = Astro.url.pathname;
+const channel =
+  process.env.DOCS_CHANNEL ||
+  (versions.releaseStage === 'ga' ? 'current' : 'preview');
+const selected =
+  channel === 'preview' || channel === 'current'
+    ? 'v2'
+    : channel === 'editor'
+      ? 'editor'
+      : channel === 'archive'
+        ? 'v1.0.0'
+        : 'v1';
+const label = pathname.includes('/zh-cn/')
+  ? '文档版本'
+  : 'Documentation version';
+const v2Base = channel === 'current' ? '/v2/' : '/next/';
+const v2Label = channel === 'current' ? 'v2 Current' : 'v2 Preview';
+---
+
+<label class="version-select print:hidden">
+  <span class="sr-only">{label}</span>
+  <select aria-label={label} data-version-select>
+    <option value={v2Base} selected={selected === 'v2'}>{v2Label}</option>
+    <option value="/v1/" selected={selected === 'v1'}>v1 LTS</option>
+    <option value="/versions/1.0.0/" selected={selected === 'v1.0.0'}>
+      v1.0.0 Archive
+    </option>
+    <option value="/editor/" selected={selected === 'editor'}>
+      Editor 0.0.x
+    </option>
+  </select>
+</label>
+
+<script>
+  const select = document.querySelector('[data-version-select]');
+  if (select instanceof HTMLSelectElement) {
+    select.addEventListener('change', () => {
+      const destination = select.value;
+      if (destination) window.location.assign(destination);
+    });
+  }
+</script>
+
+<style>
+  .version-select {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .version-select select {
+    max-width: 8.8rem;
+    min-height: 2rem;
+    padding: 0.25rem 1.65rem 0.25rem 0.55rem;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.5rem;
+    color: var(--sl-color-gray-2);
+    background: var(--sl-color-bg-nav);
+    font: inherit;
+    font-size: 0.75rem;
+    font-weight: 650;
+    cursor: pointer;
+  }
+
+  .version-select select:hover,
+  .version-select select:focus-visible {
+    border-color: var(--sl-color-accent);
+    color: var(--sl-color-white);
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+</style>

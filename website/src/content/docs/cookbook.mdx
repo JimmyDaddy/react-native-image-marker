@@ -155,8 +155,8 @@ await Marker.mark({
 
 ```ts
 const recipe = Marker.createRecipe({
-  schemaVersion: 1,
-  watermarks: [
+  schemaVersion: 2,
+  layers: [
     {
       type: 'text',
       text: '© {{studio}} · {{filename}} · #{{index}}',
@@ -171,8 +171,10 @@ const recipe = Marker.createRecipe({
       scale: 0.25,
     },
   ],
-  saveFormat: ImageFormat.jpg,
-  quality: 90,
+  output: {
+    saveFormat: ImageFormat.jpg,
+    quality: 90,
+  },
 });
 
 const controller = new AbortController();

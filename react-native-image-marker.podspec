@@ -15,6 +15,10 @@ Pod::Spec.new do |s|
   s.source       = { :git => "https://github.com/JimmyDaddy/react-native-image-marker.git", :tag => "#{s.version}" }
 
   s.source_files = "ios/**/*.{h,m,mm,swift}"
+  s.preserve_paths = "cpp/**/*.{h,hpp}"
+  s.pod_target_xcconfig = {
+    "CLANG_CXX_LANGUAGE_STANDARD" => "c++17"
+  }
 
   if ENV['RCT_NEW_ARCH_ENABLED'] == '1' && respond_to?(:install_modules_dependencies, true) then
     install_modules_dependencies(s)

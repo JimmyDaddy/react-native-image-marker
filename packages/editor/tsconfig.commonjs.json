@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.module.json",
+  "compilerOptions": {
+    "declaration": false,
+    "declarationMap": false,
+    "outDir": "lib/commonjs",
+    "module": "commonjs",
+    "verbatimModuleSyntax": false
+  }
+}

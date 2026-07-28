@@ -6,6 +6,7 @@ import SiteTitle from '@astrojs/starlight/components/SiteTitle.astro';
 import SocialIcons from '@astrojs/starlight/components/SocialIcons.astro';
 import LanguageSelect from './LanguageSelect.astro';
 import ThemeSelect from './ThemeSelect.astro';
+import VersionSelect from './VersionSelect.astro';
 
 const shouldRenderSearch =
   config.pagefind ||
@@ -72,6 +73,7 @@ const isActive = (href: string) => {
   </details>
 
   <div class="sl-hidden md:sl-flex print:hidden right-group">
+    <VersionSelect />
     <div class="sl-flex social-icons">
       <SocialIcons />
     </div>

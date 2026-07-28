@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "releaseStage": "pre-ga",
+  "current": "v1",
+  "versions": [
+    {
+      "id": "v2",
+      "label": "v2 Preview",
+      "status": "preview",
+      "basePath": "/next/",
+      "source": "master",
+      "packageRange": "2.0.0 prerelease"
+    },
+    {
+      "id": "v1",
+      "label": "v1 LTS",
+      "status": "lts",
+      "basePath": "/v1/",
+      "source": "release/1.x",
+      "packageRange": "1.12.x",
+      "minimumSupportMonthsAfterV2Ga": 12
+    },
+    {
+      "id": "v1.0.0",
+      "label": "v1.0.0 Archive",
+      "status": "archived",
+      "basePath": "/versions/1.0.0/",
+      "source": "v1.0.0",
+      "packageRange": "1.0.0"
+    },
+    {
+      "id": "editor",
+      "label": "Editor 0.0.x",
+      "status": "experimental",
+      "basePath": "/editor/",
+      "source": "master",
+      "packageRange": "0.0.x",
+      "peerCoreRange": "^2.0.0"
+    }
+  ]
+}

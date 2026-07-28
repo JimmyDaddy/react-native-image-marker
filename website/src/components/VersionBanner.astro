@@ -1,0 +1,61 @@
+---
+import versions from '../../versions.json';
+
+const { banner } = Astro.locals.starlightRoute.entry.data;
+const channel =
+  process.env.DOCS_CHANNEL ||
+  (versions.releaseStage === 'ga' ? 'current' : 'preview');
+const isZh = Astro.url.pathname.includes('/zh-cn/');
+const v2Base = versions.releaseStage === 'ga' ? '/v2/' : '/next/';
+
+const versionNotice =
+  channel === 'preview'
+    ? isZh
+      ? '这是 v2 预览文档，API 在正式发布前仍可能调整。查看 <a href="/v1/">v1 LTS 文档</a>。'
+      : 'These are the v2 preview docs. APIs may still change before release. See the <a href="/v1/">v1 LTS docs</a>.'
+    : channel === 'v1'
+      ? isZh
+        ? `v1 处于长期维护状态，将继续接收兼容性、安全和严重错误修复。查看 <a href="${v2Base}">${versions.releaseStage === 'ga' ? '当前 v2 文档' : 'v2 预览'}</a>。`
+        : `v1 is in long-term maintenance and continues to receive compatibility, security, and critical bug fixes. See the <a href="${v2Base}">${versions.releaseStage === 'ga' ? 'current v2 docs' : 'v2 preview'}</a>.`
+      : channel === 'current'
+        ? isZh
+          ? '这是当前 v2 文档。需要兼容旧接口？查看 <a href="/v1/">v1 LTS 文档</a>。'
+          : 'These are the current v2 docs. Need the compatible API? See the <a href="/v1/">v1 LTS docs</a>.'
+      : undefined;
+---
+
+{
+  (versionNotice || banner) && (
+    <div class="sl-banner" data-pagefind-ignore>
+      {versionNotice && <span set:html={versionNotice} />}
+      {banner && <span set:html={banner.content} />}
+    </div>
+  )
+}
+
+<style>
+  @layer starlight.core {
+    .sl-banner {
+      --__sl-banner-text: var(
+        --sl-color-banner-text,
+        var(--sl-color-text-invert)
+      );
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.45rem 1rem;
+      padding: 0.65rem var(--sl-nav-pad-x);
+      background-color: var(--sl-color-banner-bg, var(--sl-color-bg-accent));
+      color: var(--__sl-banner-text);
+      line-height: var(--sl-line-height-headings);
+      text-align: center;
+      text-wrap: balance;
+      box-shadow: var(--sl-shadow-sm);
+    }
+
+    .sl-banner :global(a) {
+      color: var(--__sl-banner-text);
+      font-weight: 700;
+    }
+  }
+</style>

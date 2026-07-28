@@ -28,7 +28,7 @@ const output = await Marker.embedInvisible({
 });
 
 const result = await Marker.detectInvisible({
-  image: { src: { uri: output } },
+  image: { src: { uri: output.uri } },
   key,
   strength: 'robust',
   search: 'robust',
@@ -39,7 +39,8 @@ if (result.detected) {
 }
 ```
 
-原生端嵌入后返回缓存文件路径，Web 返回 data URL；检测不会创建新文件。
+嵌入会返回 Core 2 `MarkerResult`：`output.uri` 是原生缓存文件路径或 Web
+data URL。检测返回独立的结构化检测结果，不会创建文件。
 
 当 `robust` 从缩放图片中恢复水印时，`result.scale` 会返回命中的
 0.9、0.95、1.05 或 1.1 假设。它是检测器采用的比例，不是精密测量结果。
@@ -69,13 +70,13 @@ const outputs = await Marker.embedInvisibleMany(
 const verified = await Marker.detectInvisibleMany(
   outputs.flatMap((output) =>
     output.status === 'fulfilled'
-      ? [{ image: { src: output.value }, key, search: 'robust' }]
+      ? [{ image: { src: output.value.uri }, key, search: 'robust' }]
       : []
   )
 );
 ```
 
-调用 `abort()` 只会阻止尚未开始的项目。已经交给 Canvas 或原生解码器的任务会正常完成并报告结果。
+调用 `abort()` 会阻止尚未开始的项目，并在支持时取消活动的原生任务；取消是幂等的。
 
 ## 在 Web Worker 中检测
 

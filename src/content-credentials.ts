@@ -1,11 +1,12 @@
 import type { EmbedInvisibleWatermarkOptions } from './invisible-watermark';
 import { INVISIBLE_WATERMARK_ALGORITHM } from './invisible-watermark';
+import type { MarkerResult } from './result';
 
 export interface ContentCredentialsClaim {
   /** Human-readable asset title included in the signed manifest. */
   title: string;
-  /** Encoded image type. The v1.11 workflow supports JPEG and PNG. */
-  format?: 'image/jpeg' | 'image/png';
+  /** Encoded image type. WebP is supported when the selected adapter accepts it. */
+  format?: 'image/jpeg' | 'image/png' | 'image/webp';
   /** Claim generator name shown by Content Credentials readers. */
   generator?: string;
   /** Adapter-specific public metadata. Never include signing secrets. */
@@ -49,7 +50,7 @@ export interface EmbedInvisibleWithCredentialsOptions {
 }
 
 export interface EmbedInvisibleWithCredentialsResult {
-  watermarkedImage: string;
+  watermarkedImage: MarkerResult;
   signedImage: string;
   manifestId?: string;
 }
@@ -83,10 +84,11 @@ function snapshotClaim(
   if (
     claim.format !== undefined &&
     claim.format !== 'image/jpeg' &&
-    claim.format !== 'image/png'
+    claim.format !== 'image/png' &&
+    claim.format !== 'image/webp'
   ) {
     throw new Error(
-      'Content Credentials claim format must be image/jpeg or image/png.'
+      'Content Credentials claim format must be image/jpeg, image/png, or image/webp.'
     );
   }
   if (
@@ -161,7 +163,7 @@ function validateVerificationResult(
 }
 
 export async function embedInvisibleWithCredentials(
-  embed: (options: EmbedInvisibleWatermarkOptions) => Promise<string>,
+  embed: (options: EmbedInvisibleWatermarkOptions) => Promise<MarkerResult>,
   options: EmbedInvisibleWithCredentialsOptions
 ): Promise<EmbedInvisibleWithCredentialsResult> {
   const adapter = validateAdapter(options?.adapter);
@@ -174,7 +176,7 @@ export async function embedInvisibleWithCredentials(
   const watermarkedImage = await embed(watermark);
   const signed = validateSignResult(
     await adapter.sign({
-      image: watermarkedImage,
+      image: watermarkedImage.uri,
       locator,
       algorithm: INVISIBLE_WATERMARK_ALGORITHM,
       claim,

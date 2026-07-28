@@ -16,6 +16,27 @@ import React
 public final class ImageMarker: NSObject, RCTBridgeModule {
     public var bridge: RCTBridge!
     private let operationLimiter = ImageMarkerAsyncLimiter(limit: 1)
+    private let jobsLock = NSLock()
+    private var markerJobs: [String: Task<Void, Never>] = [:]
+
+    private func storeJob(_ task: Task<Void, Never>, id: String) {
+        jobsLock.lock()
+        markerJobs[id] = task
+        jobsLock.unlock()
+    }
+
+    private func removeJob(id: String) {
+        jobsLock.lock()
+        markerJobs.removeValue(forKey: id)
+        jobsLock.unlock()
+    }
+
+    private func takeJob(id: String) -> Task<Void, Never>? {
+        jobsLock.lock()
+        let task = markerJobs.removeValue(forKey: id)
+        jobsLock.unlock()
+        return task
+    }
     
     func loadImages(with imageOptions: [ImageOptions], maxSize: Int) async throws -> [UIImage] {
         let className = "RCTImageLoader"
@@ -86,6 +107,13 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
     }
 
     func saveImageForMarker(_ image: UIImage, with opts: Options) throws -> String {
+        if opts.saveFormat?.caseInsensitiveCompare("webp") == .orderedSame {
+            throw NSError(
+                domain: ErrorDomainEnum.PARAMS_INVALID.rawValue,
+                code: 0,
+                userInfo: [NSLocalizedDescriptionKey: "WebP output is not available on iOS; use PNG or JPEG."]
+            )
+        }
         let fullPath = try generateCacheFilePathForMarker(Utils.getExt(opts.saveFormat), opts.filename)
         if let saveFormat = opts.saveFormat, saveFormat == "base64" {
             guard let imageData = image.pngData() else {
@@ -298,7 +326,8 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         guard let invisibleOpts = InvisibleWatermarkOptions.checkEmbed(opts, rejecter: reject) else {
             return
         }
-        Task(priority: .userInitiated) {
+        let task = Task(priority: .userInitiated) {
+            defer { self.removeJob(id: invisibleOpts.jobId) }
             do {
                 let result = try await self.operationLimiter.withPermit {
                     var images = try await self.loadImages(
@@ -317,10 +346,13 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
                     return try self.saveImageForMarker(markedImage, with: invisibleOpts)
                 }
                 resolve(result)
+            } catch is CancellationError {
+                reject("ABORTED", "Image marker operation was aborted", nil)
             } catch {
                 reject("error", error.localizedDescription, error)
             }
         }
+        storeJob(task, id: invisibleOpts.jobId)
     }
 
     @objc(detectInvisible:resolve:reject:)
@@ -332,7 +364,8 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         guard let invisibleOpts = InvisibleWatermarkOptions.checkDetect(opts, rejecter: reject) else {
             return
         }
-        Task(priority: .userInitiated) {
+        let task = Task(priority: .userInitiated) {
+            defer { self.removeJob(id: invisibleOpts.jobId) }
             do {
                 let result = try await self.operationLimiter.withPermit {
                     var images = try await self.loadImages(
@@ -350,10 +383,13 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
                     return try detection.json()
                 }
                 resolve(result)
+            } catch is CancellationError {
+                reject("ABORTED", "Image marker operation was aborted", nil)
             } catch {
                 reject("error", error.localizedDescription, error)
             }
         }
+        storeJob(task, id: invisibleOpts.jobId)
     }
 
     func markImgWithText(_ image: UIImage, _ opts: MarkTextOptions) throws -> UIImage? {
@@ -446,7 +482,8 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         guard let markOpts = MarkTextOptions.checkTextParams(opts, rejecter: reject) else {
             return
         }
-        Task(priority: .userInitiated) {
+        let task = Task(priority: .userInitiated) {
+            defer { self.removeJob(id: markOpts.jobId) }
             do {
                 let result = try await self.operationLimiter.withPermit {
                     var images = try await self.loadImages(with: [markOpts.backgroundImage], maxSize: markOpts.maxSize)
@@ -460,10 +497,13 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
                     return try self.saveImageForMarker(renderedImage, with: markOpts)
                 }
                 resolve(result)
+            } catch is CancellationError {
+                reject("ABORTED", "Image marker operation was aborted", nil)
             } catch {
                 reject("error", error.localizedDescription, error)
             }
         }
+        storeJob(task, id: markOpts.jobId)
     }
     
     @objc(markWithImage:resolve:reject:)
@@ -471,7 +511,8 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         guard let markOpts = MarkImageOptions.checkImageParams(opts, rejecter: reject) else {
             return
         }
-        Task(priority: .userInitiated) {
+        let task = Task(priority: .userInitiated) {
+            defer { self.removeJob(id: markOpts.jobId) }
             do {
                 let result = try await self.operationLimiter.withPermit {
                     let waterImages = markOpts.watermarkImages.map { $0.imageOption }
@@ -490,10 +531,13 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
                     return try self.saveImageForMarker(renderedImage, with: markOpts)
                 }
                 resolve(result)
+            } catch is CancellationError {
+                reject("ABORTED", "Image marker operation was aborted", nil)
             } catch {
                 reject("error", error.localizedDescription, error)
             }
         }
+        storeJob(task, id: markOpts.jobId)
     }
 
     @objc(markWithWatermarks:resolve:reject:)
@@ -501,7 +545,8 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         guard let markOpts = MarkWatermarkOptions.checkWatermarkParams(opts, rejecter: reject) else {
             return
         }
-        Task(priority: .userInitiated) {
+        let task = Task(priority: .userInitiated) {
+            defer { self.removeJob(id: markOpts.jobId) }
             do {
                 let result = try await self.operationLimiter.withPermit {
                     let waterImages = markOpts.imageLayers.map { $0.imageOption }
@@ -520,9 +565,30 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
                     return try self.saveImageForMarker(renderedImage, with: markOpts)
                 }
                 resolve(result)
+            } catch is CancellationError {
+                reject("ABORTED", "Image marker operation was aborted", nil)
             } catch {
                 reject("error", error.localizedDescription, error)
             }
         }
+        storeJob(task, id: markOpts.jobId)
+    }
+
+    @objc(cancel:resolve:reject:)
+    func cancel(
+        _ jobId: String,
+        resolve: @escaping RCTPromiseResolveBlock,
+        reject: @escaping RCTPromiseRejectBlock
+    ) -> Void {
+        guard !jobId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            reject(ErrorDomainEnum.PARAMS_INVALID.rawValue, "jobId must not be empty", nil)
+            return
+        }
+        guard let task = takeJob(id: jobId) else {
+            resolve(false)
+            return
+        }
+        task.cancel()
+        resolve(true)
     }
 }

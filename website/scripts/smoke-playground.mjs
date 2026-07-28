@@ -96,11 +96,12 @@ try {
   await assertInvisibleTrace(page, playground);
   await assertBatchRecipe(page, playground);
   await selectWorkspaceTab(playground, 'visible');
+  await assertEditorPlayground(page);
 
   const code = await playground.locator('[data-web-code]').textContent();
   assert.match(
     code ?? '',
-    /export async function createMarkedImage\(\): Promise<string>/
+    /export async function createMarkedImage\(\): Promise<MarkerResult>/
   );
   assert.doesNotMatch(
     code ?? '',
@@ -123,6 +124,9 @@ try {
   await page.goto(`${origin}/zh-cn/playground/`, { waitUntil: 'networkidle' });
   const chinesePlayground = page.locator('[data-marker-playground]');
   await waitForRendered(chinesePlayground);
+  await page
+    .locator('[data-editor-playground][data-initialized="true"]')
+    .waitFor();
   await page.getByText('试着给图片加上水印。').waitFor();
   await assertWorkbenchLayout(page);
   await assertLanguageMenu(page);
@@ -185,7 +189,7 @@ try {
   }
 
   console.log(
-    'Verified navigation, responsive layout, watermark controls, Worker detection (plus Firefox and WebKit in CI), preview-to-code parity, batch Blob results, cancellation, both playground routes, downloads, and the HTML sitemap.'
+    'Verified navigation, responsive layout, watermark controls, interactive Editor controller and Core render, Worker detection (plus Firefox and WebKit in CI), preview-to-code parity, batch Blob results, cancellation, both playground routes, downloads, and the HTML sitemap.'
   );
 } finally {
   await browser?.close();
@@ -257,7 +261,7 @@ async function assertInvisibleTrace(page, playground) {
   assert.match(webCode ?? '', /strength: 'robust'/);
   assert.match(webCode ?? '', /worker: \{/);
   assert.match(webCode ?? '', /invisible-watermark\.js/);
-  assert.match(nativeCode ?? '', /image: \{ src: \{ uri: marked \} \}/);
+  assert.match(nativeCode ?? '', /image: \{ src: \{ uri: marked\.uri \} \}/);
   assert.doesNotMatch(nativeCode ?? '', /worker: \{/);
   await playground.locator('[data-invisible-embed]').click();
   await page.waitForFunction(() =>
@@ -300,6 +304,10 @@ async function assertBatchRecipe(page, playground) {
   const webCode = await playground.locator('[data-web-code]').textContent();
   const nativeCode = await playground.locator('[data-native-code]').textContent();
   assert.match(webCode ?? '', /Marker\.createRecipe/);
+  assert.match(webCode ?? '', /schemaVersion: 2/);
+  assert.match(webCode ?? '', /layers:/);
+  assert.match(webCode ?? '', /output: \{/);
+  assert.doesNotMatch(webCode ?? '', /schemaVersion: 1/);
   assert.match(webCode ?? '', /resultType: 'blob'/);
   assert.match(webCode ?? '', /recipe\.applyMany/);
   assert.match(webCode ?? '', /\{\{sourceName\}\}/);
@@ -358,6 +366,97 @@ async function assertBatchRecipe(page, playground) {
   assert(
     (await playground.locator('[data-batch-result="aborted"]').count()) > 0,
     'Cancelling should leave at least one not-yet-dispatched image aborted.'
+  );
+}
+
+async function assertEditorPlayground(page) {
+  const editor = page.locator(
+    '[data-editor-playground][data-initialized="true"]'
+  );
+  await editor.waitFor();
+  assert.equal(
+    await editor.locator('[data-editor-layer]').count(),
+    2,
+    'Editor playground should start with text and image layers.'
+  );
+  assert.match(
+    (await editor.locator('[data-editor-recipe]').textContent()) ?? '',
+    /"schemaVersion": 2/
+  );
+
+  const title = editor.locator('[data-editor-layer="web-title"]');
+  await title.scrollIntoViewIfNeeded();
+  const before = JSON.parse(
+    (await editor.locator('[data-editor-recipe]').textContent()) ?? '{}'
+  );
+  const beforeTitle = before.layers.find((layer) => layer.id === 'web-title');
+  const bounds = await title.boundingBox();
+  assert(bounds, 'Editor title layer should be visible.');
+  const canvasBounds = await editor.locator('[data-editor-canvas]').boundingBox();
+  assert(canvasBounds, 'Editor canvas should be visible.');
+  const dragStart = {
+    x: Math.max(bounds.x, canvasBounds.x) + 20,
+    y: Math.max(bounds.y, canvasBounds.y) + 20,
+  };
+  const hitTarget = await page.evaluate(
+    ({ x, y }) => {
+      const hit = document.elementFromPoint(x, y);
+      return {
+        tag: hit?.tagName,
+        layer: hit?.closest('[data-editor-layer]')?.getAttribute(
+          'data-editor-layer'
+        ),
+        classes: hit?.getAttribute('class'),
+        action: hit?.getAttribute('data-editor-action'),
+        text: hit?.textContent,
+      };
+    },
+    dragStart
+  );
+  await page.mouse.move(dragStart.x, dragStart.y);
+  await page.mouse.down();
+  await page.mouse.move(dragStart.x + 42, dragStart.y + 24, { steps: 4 });
+  await page.mouse.up();
+  const after = JSON.parse(
+    (await editor.locator('[data-editor-recipe]').textContent()) ?? '{}'
+  );
+  const afterTitle = after.layers.find((layer) => layer.id === 'web-title');
+  assert(
+    afterTitle.position.X > beforeTitle.position.X,
+    `Dragging should update the Editor controller recipe: ${JSON.stringify({
+      bounds,
+      canvasBounds,
+      hitTarget,
+      before: beforeTitle.position,
+      after: afterTitle.position,
+    })}`
+  );
+
+  await editor.locator('[data-editor-action="add-text"]').click();
+  assert.equal(await editor.locator('[data-editor-layer]').count(), 3);
+  await editor.locator('[data-editor-action="undo"]').click();
+  assert.equal(await editor.locator('[data-editor-layer]').count(), 2);
+
+  await editor.locator('[data-editor-layer="web-logo"]').click();
+  await editor.locator('[data-editor-action="lock"]').click();
+  assert.equal(await editor.locator('[data-editor-scale]').isDisabled(), true);
+  await editor.locator('[data-editor-action="lock"]').click();
+  assert.equal(await editor.locator('[data-editor-scale]').isEnabled(), true);
+
+  await editor.locator('[data-editor-action="preview"]').click();
+  await editor
+    .locator('[data-editor-result]:not([hidden]) [data-editor-result-image]')
+    .waitFor();
+  await page.waitForFunction(() => {
+    const root = document.querySelector('[data-editor-playground]');
+    return root?.getAttribute('data-editor-render-state') === 'rendered';
+  });
+  const output = await editor
+    .locator('[data-editor-result-image]')
+    .getAttribute('src');
+  assert(
+    output?.startsWith('data:image/png;base64,'),
+    'Editor preview should render a real PNG through Core.'
   );
 }
 

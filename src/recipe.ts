@@ -9,6 +9,8 @@ import type {
   TextWatermarkLayer,
   WatermarkLayout,
 } from './index';
+import type { MarkerResult } from './result';
+import type { MarkerJobOptions } from './job';
 import { validateMarkOptions } from './validate';
 import { runWatermarkBatch } from './batch';
 import type { WatermarkBatchOptions, WatermarkBatchResult } from './batch';
@@ -22,7 +24,7 @@ export type {
   WatermarkBatchResult,
 } from './batch';
 
-export const WATERMARK_RECIPE_SCHEMA_VERSION = 1 as const;
+export const WATERMARK_RECIPE_SCHEMA_VERSION = 2 as const;
 
 export type WatermarkRecipeSchemaVersion =
   typeof WATERMARK_RECIPE_SCHEMA_VERSION;
@@ -35,6 +37,14 @@ export interface WatermarkRecipeCondition {
 }
 
 interface WatermarkRecipeLayerFields {
+  /** Stable layer ID used by editors, patches, and serialized recipes. */
+  id?: string;
+  /** Optional human-readable layer name. */
+  name?: string;
+  /** Hidden layers remain serialized but are not rendered. @defaultValue true */
+  visible?: boolean;
+  /** Editors should prevent direct manipulation of locked layers. */
+  locked?: boolean;
   /** Draw the layer only when the named variable strictly equals this value. */
   visibleWhen?: WatermarkRecipeCondition;
 }
@@ -43,33 +53,46 @@ export type WatermarkRecipeLayer =
   | (TextWatermarkLayer & WatermarkRecipeLayerFields)
   | (ImageWatermarkLayer & WatermarkRecipeLayerFields);
 
-export type WatermarkRecipeOptions = Omit<
-  MarkOptions,
-  | 'backgroundImage'
-  | 'filename'
-  | 'watermarks'
-  | 'watermarkTexts'
-  | 'watermarkImage'
-  | 'watermarkPositions'
-  | 'watermarkImages'
-> & {
+export type WatermarkRecipeDefinitionLayer = WatermarkRecipeLayer & {
+  id: string;
+};
+
+export interface WatermarkRecipeOutputOptions {
+  quality?: MarkOptions['quality'];
+  saveFormat?: MarkOptions['saveFormat'];
+  matteColor?: MarkOptions['matteColor'];
+  rotationCanvasMode?: MarkOptions['rotationCanvasMode'];
+  maxSize?: MarkOptions['maxSize'];
+}
+
+export interface WatermarkRecipeOptions {
   /** Recipe document version. Omitted definitions use the current version. */
   schemaVersion?: WatermarkRecipeSchemaVersion;
   /** Ordered layers reused for every input image. */
-  watermarks: readonly WatermarkRecipeLayer[];
-};
+  layers: readonly WatermarkRecipeLayer[];
+  /** Output encoding and decode policy, separate from editable layers. */
+  output?: WatermarkRecipeOutputOptions;
+}
 
-export type WatermarkRecipeDefinition = Omit<
-  WatermarkRecipeOptions,
-  'schemaVersion' | 'watermarks'
-> & {
+export interface WatermarkRecipeDefinition {
   schemaVersion: WatermarkRecipeSchemaVersion;
-  watermarks: WatermarkRecipeLayer[];
-};
+  layers: WatermarkRecipeDefinitionLayer[];
+  output: WatermarkRecipeOutputOptions;
+}
 
-/** Keep the existing string result used by native paths and Web data URLs. */
-export interface WatermarkStringRecipeResultOptions {
-  resultType?: 'string';
+export interface LegacyWatermarkRecipeDefinition
+  extends WatermarkRecipeOutputOptions {
+  schemaVersion: 1;
+  watermarks: WatermarkRecipeLayer[];
+}
+
+export type WatermarkRecipeDocument =
+  | WatermarkRecipeDefinition
+  | LegacyWatermarkRecipeDefinition;
+
+/** Return the Core 2 structured result. */
+export interface WatermarkMarkerResultRecipeOptions {
+  resultType?: 'result';
 }
 
 /** Return encoded browser bytes without creating an object URL. Web only. */
@@ -78,7 +101,7 @@ export interface WatermarkBlobRecipeResultOptions {
 }
 
 export type WatermarkRecipeResultOptions =
-  | WatermarkStringRecipeResultOptions
+  | WatermarkMarkerResultRecipeOptions
   | WatermarkBlobRecipeResultOptions;
 
 export interface WatermarkRecipeInput {
@@ -90,13 +113,16 @@ export interface WatermarkRecipeInput {
   variables?: Readonly<Record<string, WatermarkRecipeVariable>>;
 }
 
-export interface WatermarkRecipe<Result = string> {
+export interface WatermarkRecipe<Result = MarkerResult> {
   /** Version of the serializable recipe definition. */
   readonly schemaVersion: WatermarkRecipeSchemaVersion;
   /** Return a detached definition suitable for JSON persistence. */
   toJSON(): WatermarkRecipeDefinition;
   /** Apply the saved layers and output settings to one source image. */
-  apply(input: WatermarkRecipeInput): Promise<Result>;
+  apply(
+    input: WatermarkRecipeInput,
+    control?: MarkerJobOptions
+  ): Promise<Result>;
   /** Apply the recipe to many images while preserving input result order. */
   applyMany(
     inputs: readonly WatermarkRecipeInput[],
@@ -104,7 +130,10 @@ export interface WatermarkRecipe<Result = string> {
   ): Promise<Array<WatermarkBatchResult<Result>>>;
 }
 
-type RecipeRenderer<Result> = (options: MarkOptions) => Promise<Result>;
+type RecipeRenderer<Result> = (
+  options: MarkOptions,
+  control?: MarkerJobOptions
+) => Promise<Result>;
 
 function clonePosition(
   position: PositionOptions | undefined
@@ -155,6 +184,7 @@ function cloneTextStyle(style: TextStyle | undefined): TextStyle | undefined {
   }
   return {
     ...style,
+    fontFallbacks: style.fontFallbacks ? [...style.fontFallbacks] : undefined,
     shadowStyle: style.shadowStyle
       ? { ...style.shadowStyle }
       : style.shadowStyle,
@@ -189,13 +219,14 @@ function cloneCondition(
 function cloneLayers(
   layers: readonly WatermarkRecipeLayer[],
   cloneImageSources = false
-): WatermarkRecipeLayer[] {
-  return layers.map((layer) => {
+): WatermarkRecipeDefinitionLayer[] {
+  return layers.map((layer, index) => {
+    const id = layer.id ?? `layer-${index + 1}`;
     if (layer.type === 'text') {
       return {
         ...layer,
+        id,
         position: clonePosition(layer.position),
-        positionOptions: clonePosition(layer.positionOptions),
         layout: cloneLayout(layer.layout),
         style: cloneTextStyle(layer.style),
         visibleWhen: cloneCondition(layer.visibleWhen),
@@ -203,6 +234,7 @@ function cloneLayers(
     }
     return {
       ...layer,
+      id,
       src: cloneImageSources ? cloneSource(layer.src) : layer.src,
       position: clonePosition(layer.position),
       layout: cloneLayout(layer.layout),
@@ -212,6 +244,7 @@ function cloneLayers(
 }
 
 const VARIABLE_NAME_PATTERN = /^[A-Za-z_][A-Za-z0-9_.-]*$/;
+const LAYER_ID_PATTERN = /^[A-Za-z][A-Za-z0-9._-]{0,127}$/;
 const RESERVED_VARIABLES = new Set(['filename', 'index']);
 const ESCAPED_TEMPLATE_OPEN = '\u0000recipe-template-open\u0000';
 const TEMPLATE_PATTERN = /\{\{\s*([A-Za-z_][A-Za-z0-9_.-]*)\s*\}\}/g;
@@ -262,8 +295,8 @@ function validateCondition(
 function snapshotRecipeOptions(
   options: WatermarkRecipeOptions
 ): WatermarkRecipeDefinition {
-  if (!options || !Array.isArray(options.watermarks)) {
-    throw new Error('createRecipe requires an ordered watermarks array.');
+  if (!options || !Array.isArray(options.layers)) {
+    throw new Error('createRecipe requires an ordered layers array.');
   }
   if (
     options.schemaVersion !== undefined &&
@@ -282,55 +315,131 @@ function snapshotRecipeOptions(
     'watermarkImage',
     'watermarkPositions',
     'watermarkImages',
+    'watermarks',
+    'quality',
+    'saveFormat',
+    'matteColor',
+    'rotationCanvasMode',
+    'maxSize',
   ].find((key) => Object.prototype.hasOwnProperty.call(runtimeOptions, key));
   if (unsupportedKey) {
     throw new Error(
-      `createRecipe does not accept "${unsupportedKey}"; use ordered watermarks and pass per-image fields to apply().`
+      `createRecipe does not accept "${unsupportedKey}" in Recipe v2; use ordered layers, put encoding options under output, and pass per-image fields to apply().`
     );
   }
-  if (options.watermarks.length === 0) {
-    throw new Error('createRecipe requires at least one watermark layer.');
+  if (options.layers.length === 0) {
+    throw new Error('createRecipe requires at least one layer.');
   }
-  for (const [index, layer] of options.watermarks.entries()) {
+  const layerIds = new Set<string>();
+  for (const [index, layer] of options.layers.entries()) {
+    const path = `layers[${index}]`;
     if (
       !layer ||
       typeof layer !== 'object' ||
       (layer.type !== 'text' && layer.type !== 'image')
     ) {
-      throw new Error('watermark type must be either "text" or "image".');
+      throw new Error(`${path}.type must be either "text" or "image".`);
+    }
+    const id = layer.id ?? `layer-${index + 1}`;
+    if (!LAYER_ID_PATTERN.test(id)) {
+      throw new Error(
+        `${path}.id must start with a letter and contain only letters, numbers, ".", "_", or "-".`
+      );
+    }
+    if (layerIds.has(id)) {
+      throw new Error(`Duplicate layer id "${id}".`);
+    }
+    layerIds.add(id);
+    if (
+      layer.name !== undefined &&
+      (typeof layer.name !== 'string' || layer.name.trim() === '')
+    ) {
+      throw new Error(`${path}.name must be a non-empty string.`);
+    }
+    if (layer.visible !== undefined && typeof layer.visible !== 'boolean') {
+      throw new Error(`${path}.visible must be a boolean.`);
+    }
+    if (layer.locked !== undefined && typeof layer.locked !== 'boolean') {
+      throw new Error(`${path}.locked must be a boolean.`);
     }
     if (layer.type === 'text' && typeof layer.text !== 'string') {
-      throw new Error('text is required.');
+      throw new Error(`${path}.text is required.`);
     }
     if (layer.type === 'text') {
-      validateTemplateSyntax(layer.text, `watermarks[${index}].text`);
+      validateTemplateSyntax(layer.text, `${path}.text`);
     }
     if (layer.type === 'image' && !layer.src) {
-      throw new Error('please set mark image!');
+      throw new Error(`${path}.src is required.`);
     }
-    validateCondition(layer.visibleWhen, `watermarks[${index}].visibleWhen`);
+    validateCondition(layer.visibleWhen, `${path}.visibleWhen`);
   }
 
   const definition: WatermarkRecipeDefinition = {
     schemaVersion: WATERMARK_RECIPE_SCHEMA_VERSION,
-    watermarks: cloneLayers(options.watermarks),
+    layers: cloneLayers(options.layers),
+    output: { ...options.output },
   };
-  if (options.quality !== undefined) definition.quality = options.quality;
-  if (options.saveFormat !== undefined)
-    definition.saveFormat = options.saveFormat;
-  if (options.matteColor !== undefined)
-    definition.matteColor = options.matteColor;
-  if (options.rotationCanvasMode !== undefined) {
-    definition.rotationCanvasMode = options.rotationCanvasMode;
-  }
-  if (options.maxSize !== undefined) definition.maxSize = options.maxSize;
 
   validateMarkOptions({
-    ...definition,
     backgroundImage: { src: 'recipe-validation-placeholder' },
-    watermarks: cloneLayers(definition.watermarks),
+    watermarks: definition.layers.map(toRenderLayer),
+    ...definition.output,
   });
   return definition;
+}
+
+function toRenderLayer(
+  layer: WatermarkRecipeDefinitionLayer
+): TextWatermarkLayer | ImageWatermarkLayer {
+  const renderLayer: WatermarkRecipeLayer = { ...layer };
+  delete renderLayer.id;
+  delete renderLayer.name;
+  delete renderLayer.visible;
+  delete renderLayer.locked;
+  delete renderLayer.visibleWhen;
+  return renderLayer;
+}
+
+function readLegacyOutput(
+  document: LegacyWatermarkRecipeDefinition
+): WatermarkRecipeOutputOptions {
+  const { quality, saveFormat, matteColor, rotationCanvasMode, maxSize } =
+    document;
+  return { quality, saveFormat, matteColor, rotationCanvasMode, maxSize };
+}
+
+/**
+ * Upgrade a serialized Recipe v1 document to the v2 layer/output structure.
+ *
+ * Runtime creation is deliberately v2-only. Persisted v1 documents must flow
+ * through this explicit migration boundary so editors and services can store
+ * the upgraded document before rendering it.
+ */
+export function migrateWatermarkRecipe(
+  document: WatermarkRecipeDocument
+): WatermarkRecipeDefinition {
+  if (!document || typeof document !== 'object' || Array.isArray(document)) {
+    throw new Error('Recipe document must be an object.');
+  }
+  if (document.schemaVersion === WATERMARK_RECIPE_SCHEMA_VERSION) {
+    return snapshotRecipeOptions({
+      schemaVersion: WATERMARK_RECIPE_SCHEMA_VERSION,
+      layers: document.layers,
+      output: document.output,
+    });
+  }
+  if (document.schemaVersion === 1) {
+    return snapshotRecipeOptions({
+      schemaVersion: WATERMARK_RECIPE_SCHEMA_VERSION,
+      layers: document.watermarks,
+      output: readLegacyOutput(document),
+    });
+  }
+  throw new Error(
+    `Unsupported recipe schemaVersion: ${String(
+      (document as { schemaVersion?: unknown }).schemaVersion
+    )}.`
+  );
 }
 
 function snapshotInput(input: WatermarkRecipeInput): WatermarkRecipeInput {
@@ -405,8 +514,11 @@ function createMarkOptions(
   index: number
 ): MarkOptions {
   const variables = createVariableContext(input, index);
-  const watermarks = cloneLayers(recipe.watermarks)
+  const watermarks = cloneLayers(recipe.layers)
     .filter((layer) => {
+      if (layer.visible === false) {
+        return false;
+      }
       if (!layer.visibleWhen) {
         return true;
       }
@@ -416,8 +528,7 @@ function createMarkOptions(
       );
     })
     .map((layer) => {
-      const renderLayer = { ...layer };
-      delete renderLayer.visibleWhen;
+      const renderLayer = toRenderLayer(layer);
       if (renderLayer.type === 'text') {
         return {
           ...renderLayer,
@@ -430,14 +541,8 @@ function createMarkOptions(
     backgroundImage: { ...input.backgroundImage },
     watermarks,
     filename: input.filename,
+    ...recipe.output,
   };
-  if (recipe.quality !== undefined) options.quality = recipe.quality;
-  if (recipe.saveFormat !== undefined) options.saveFormat = recipe.saveFormat;
-  if (recipe.matteColor !== undefined) options.matteColor = recipe.matteColor;
-  if (recipe.rotationCanvasMode !== undefined) {
-    options.rotationCanvasMode = recipe.rotationCanvasMode;
-  }
-  if (recipe.maxSize !== undefined) options.maxSize = recipe.maxSize;
   return options;
 }
 
@@ -449,13 +554,14 @@ function canonicalOutputFilename(
   if (!trimmed) {
     return undefined;
   }
-  const knownExtension = ['.jpeg', '.jpg', '.png'].find((extension) =>
+  const knownExtension = ['.jpeg', '.jpg', '.png', '.webp'].find((extension) =>
     trimmed.toLowerCase().endsWith(extension)
   );
   const stem = knownExtension
     ? trimmed.slice(0, -knownExtension.length)
     : trimmed;
-  const extension = saveFormat === 'png' ? '.png' : '.jpg';
+  const extension =
+    saveFormat === 'png' ? '.png' : saveFormat === 'webp' ? '.webp' : '.jpg';
   return `${stem}${extension}`.toLowerCase();
 }
 
@@ -494,13 +600,14 @@ export function createWatermarkRecipe<Result>(
 
   const applySnapshot = (
     input: WatermarkRecipeInput,
-    index: number
+    index: number,
+    control?: MarkerJobOptions
   ): Promise<Result> => {
     if (!input?.backgroundImage?.src) {
       return Promise.reject(new Error('please set image!'));
     }
     try {
-      return renderer(createMarkOptions(recipe, input, index));
+      return renderer(createMarkOptions(recipe, input, index), control);
     } catch (error) {
       return Promise.reject(error);
     }
@@ -511,13 +618,14 @@ export function createWatermarkRecipe<Result>(
 
     toJSON() {
       return {
-        ...recipe,
-        watermarks: cloneLayers(recipe.watermarks, true),
+        schemaVersion: recipe.schemaVersion,
+        layers: cloneLayers(recipe.layers, true),
+        output: { ...recipe.output },
       };
     },
 
-    apply(input) {
-      return applySnapshot(snapshotInput(input), 0);
+    apply(input, control) {
+      return applySnapshot(snapshotInput(input), 0, control);
     },
 
     async applyMany(inputs, batchOptions = {}) {
@@ -525,14 +633,24 @@ export function createWatermarkRecipe<Result>(
         throw new Error('applyMany inputs must be an array.');
       }
       const queuedInputs = inputs.map(snapshotInput);
-      validateUniqueFilenames(queuedInputs, recipe.saveFormat);
+      validateUniqueFilenames(queuedInputs, recipe.output.saveFormat);
       return runWatermarkBatch(
         queuedInputs,
-        applySnapshot,
+        (input, index) =>
+          applySnapshot(input, index, { signal: batchOptions.signal }),
         batchOptions,
         maximumConcurrency,
         'applyMany'
       );
     },
   };
+}
+
+export function importWatermarkRecipe<Result>(
+  document: WatermarkRecipeDocument,
+  renderer: RecipeRenderer<Result>,
+  maximumConcurrency = 1
+): WatermarkRecipe<Result> {
+  const definition = migrateWatermarkRecipe(document);
+  return createWatermarkRecipe(definition, renderer, maximumConcurrency);
 }

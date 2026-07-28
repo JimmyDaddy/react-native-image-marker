@@ -22,6 +22,7 @@ jobs:
       trace: ${{ steps.filter.outputs.trace }}
       native: ${{ steps.filter.outputs.native }}
       security: ${{ steps.filter.outputs.security }}
+      editor: ${{ steps.filter.outputs.editor }}
     steps:
       - name: Checkout the code
         uses: actions/checkout@v7
@@ -79,6 +80,7 @@ jobs:
           android = any_changed(
               [
                   "android/**",
+                  "cpp/**",
                   "src/**",
                   "package.json",
                   "package-lock.json",
@@ -101,6 +103,7 @@ jobs:
           ios = any_changed(
               [
                   "ios/**",
+                  "cpp/**",
                   "src/**",
                   "package.json",
                   "package-lock.json",
@@ -123,6 +126,8 @@ jobs:
           js = any_changed(
               [
                   "src/**",
+                  "cpp/**",
+                  "packages/editor/**",
                   "package.json",
                   "package-lock.json",
                   "app.plugin.js",
@@ -203,6 +208,18 @@ jobs:
                   "example/ios/Podfile",
               ]
           )
+          editor = any_changed(
+              [
+                  "packages/editor/**",
+                  "src/**",
+                  "scripts/fix-esm-imports.mjs",
+                  "scripts/verify-package-consumer.mjs",
+                  "package.json",
+                  "package-lock.json",
+                  "tsconfig*.json",
+                  ".github/workflows/ci.yml",
+              ]
+          )
           results = {
               "android": android,
               "ios": ios,
@@ -213,6 +230,7 @@ jobs:
               "trace": trace,
               "native": android or ios,
               "security": security,
+              "editor": editor,
           }
 
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
@@ -234,6 +252,12 @@ jobs:
         if: github.event_name == 'pull_request'
         with:
           fail-on-severity: moderate
+          # ESLint 8 still requires minimatch 3's CommonJS brace-expansion API,
+          # and the RN 0.73 CLI still pulls ip and fast-xml-parser without
+          # compatible patched releases. These advisories are accepted only
+          # for the dev graph; the packed Core and Editor production graphs
+          # are audited below.
+          allow-ghsas: GHSA-mh99-v99m-4gvg,GHSA-2p57-rm9w-gvfp,GHSA-gh4j-gqv2-49f6
 
       - name: Setup node
         uses: actions/setup-node@v7
@@ -247,7 +271,7 @@ jobs:
 
       - name: Enforce production dependency audit
         run: |
-          npm audit --omit=dev --audit-level=moderate
+          npm run verify:consumer
           npm audit --prefix website --omit=dev --audit-level=moderate
 
       - name: Report development-tooling audit
@@ -296,10 +320,41 @@ jobs:
         run: npm run check:release-notes
 
       - name: Test
-        run: npm test -- --coverage --runInBand
+        run: |
+          npm test -- --coverage --runInBand
+          npm run test:cpp
+          npm run test:release-routing
 
       - name: Build package
         run: npm run prepack
+
+  editor-check:
+    runs-on: ubuntu-latest
+    name: Editor Package and Consumer
+    needs: changes
+    if: needs.changes.outputs.editor == 'true'
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v7
+
+      - name: Setup node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.22.0'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test and build Editor independently
+        run: |
+          npm run prepack
+          npm run test:editor
+          npm run build:editor
+
+      - name: Verify packed Core and Editor consumers
+        run: node scripts/verify-package-consumer.mjs
 
   c2pa-service:
     runs-on: ubuntu-latest
@@ -405,7 +460,7 @@ jobs:
             'trace-runtime.js',
             'trace-runtime.d.ts',
             'lib/commonjs/trace-runtime.js',
-            'lib/typescript/trace-runtime.d.ts',
+            'lib/typescript/module/trace-runtime.d.ts',
             'lib/worker/invisible-watermark.js',
           ]) {
             if (!names.includes(required)) {
@@ -946,6 +1001,10 @@ jobs:
           cd example
           npm install
 
+      - name: Compile shared C++ Swift bridge
+        if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
+        run: npm run test:cpp:ios-bridge
+
       - name: Install Pods
         if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
         run: |
@@ -1018,6 +1077,8 @@ jobs:
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testTrimsTransparentWatermarkPaddingBeforeAnchoredPositioning \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testOptionsPreferFilenameAndProvideRenderingDefaults \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testMaxSizeDefaultsValidatesAndBuildsBoundedLoadRequests \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testSharedCppCoreFitsPixelBounds \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testLargeImageDownsamplePerformanceAndMemory \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testImageIODownsamplesDataAndBase64BeforeRendering \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testRejectsInvalidQualityAlphaAndUnsafeFilenames \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testParsesShadowHexColorAndRejectsInvalidValues \
@@ -1062,6 +1123,7 @@ jobs:
         changes,
         security,
         js-check,
+        editor-check,
         c2pa-service,
         trace-service,
         docs-site,

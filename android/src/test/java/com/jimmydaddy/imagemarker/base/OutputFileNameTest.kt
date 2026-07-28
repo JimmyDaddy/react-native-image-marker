@@ -19,13 +19,17 @@ class OutputFileNameTest {
       "watermark.jpg",
       OutputFileName.resolve("watermark.PNG", SaveFormat.JPG, "generated")
     )
+    assertEquals(
+      "watermark.webp",
+      OutputFileName.resolve("watermark.jpeg", SaveFormat.WEBP, "generated")
+    )
   }
 
   @Test
   fun unknownExtensionIsPreservedBeforeTheSaveFormatExtension() {
     assertEquals(
-      "watermark.webp.png",
-      OutputFileName.resolve("watermark.webp", SaveFormat.PNG, "generated")
+      "watermark.gif.png",
+      OutputFileName.resolve("watermark.gif", SaveFormat.PNG, "generated")
     )
   }
 
@@ -38,6 +42,10 @@ class OutputFileNameTest {
     assertEquals(
       "generated.jpg",
       OutputFileName.resolve(null, null, "generated")
+    )
+    assertEquals(
+      "generated.webp",
+      OutputFileName.resolve(null, SaveFormat.WEBP, "generated")
     )
   }
 

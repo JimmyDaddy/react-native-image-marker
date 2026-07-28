@@ -710,6 +710,34 @@ final class ImageMarkerExampleUITests: XCTestCase {
     XCTAssertEqual(unknown.resizeMode, .contain)
   }
 
+  func testSharedCppCoreFitsPixelBounds() {
+    let landscape = IMImageMarkerFitWithinMax(4000, 2000, 1000)
+    XCTAssertEqual(landscape.width, 1000)
+    XCTAssertEqual(landscape.height, 500)
+
+    let narrow = IMImageMarkerFitWithinMax(1000, 1, 10)
+    XCTAssertEqual(narrow.width, 10)
+    XCTAssertEqual(narrow.height, 1)
+  }
+
+  func testLargeImageDownsamplePerformanceAndMemory() throws {
+    let source = makeSolidImage(
+      size: CGSize(width: 1600, height: 1200),
+      color: .green
+    )
+    let data = try XCTUnwrap(source.pngData())
+
+    measure(metrics: [XCTClockMetric(), XCTMemoryMetric()]) {
+      for _ in 0..<12 {
+        autoreleasepool {
+          let image = Utils.downsampleImageData(data, maxSize: 400)
+          XCTAssertEqual(image?.cgImage?.width, 400)
+          XCTAssertEqual(image?.cgImage?.height, 300)
+        }
+      }
+    }
+  }
+
   func testImageIODownsamplesDataAndBase64BeforeRendering() throws {
     let source = makeSolidImage(size: CGSize(width: 400, height: 200), color: .blue)
     let data = try XCTUnwrap(source.pngData())

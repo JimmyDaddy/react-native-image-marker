@@ -30,7 +30,9 @@ description: 浏览 React Native Image Marker 网站中的全部指南、示例�
 - [选择 API](/zh-cn/guides/choose-an-api/) — 在 `markText`、`markImage` 和 `mark` 之间选择。
 - [定位与样式](/zh-cn/guides/position-and-style/) — 放置文字和 Logo，并调整外观。
 - [输出与图像质量](/zh-cn/guides/output-and-quality/) — 选择格式、质量和背景色。
+- [性能与任务控制](/zh-cn/guides/performance-and-jobs/) — 限制内存、观察、取消并测量任务。
 - [隐形追踪水印](/zh-cn/guides/invisible-watermarks/) — 嵌入并验证短分发 locator。
+- [可选交互编辑器](/zh-cn/guides/editor/) — 接入独立发布的 Editor 0.0.1 包。
 - [可视化示例](/zh-cn/cookbook/) — 从完整示例开始使用。
 
 ## 参考与帮助
@@ -38,6 +40,7 @@ description: 浏览 React Native Image Marker 网站中的全部指南、示例�
 - [API 参考](/zh-cn/api/) — 查看方法、参数和类型。
 - [故障排查](/zh-cn/troubleshooting/) — 解决常见的安装与输出问题。
 - [版本与迁移](/zh-cn/migration/) — 更新已有集成。
+- [版本与支持政策](/zh-cn/support-policy/) — 选择 v1 LTS、Core 2、归档或 Editor。
 - [English sitemap](/sitemap/) — 浏览英文文档。
 
 搜索引擎也可以读取 [XML 网站地图](/sitemap-index.xml)。

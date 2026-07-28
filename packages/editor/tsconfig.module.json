@@ -1,0 +1,20 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "declaration": true,
+    "declarationMap": true,
+    "outDir": "lib/module",
+    "rootDir": "src",
+    "module": "esnext",
+    "noEmit": false,
+    "types": ["react", "react-native"],
+    "paths": {
+      "react-native-image-marker": [
+        "../../lib/typescript/module/index.d.ts"
+      ]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["src/__tests__/**/*"]
+}

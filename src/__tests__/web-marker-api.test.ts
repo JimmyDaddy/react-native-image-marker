@@ -27,6 +27,10 @@ jest.mock('../web/invisible-worker-client', () => ({
 
 const WebMarker = require('../web').default as typeof import('../web').default;
 
+function markerResult(uri: string) {
+  return expect.objectContaining({ uri });
+}
+
 describe('WebMarker public API', () => {
   let pixels: Uint8ClampedArray;
   let pixelContext: {
@@ -60,7 +64,9 @@ describe('WebMarker public API', () => {
       width: 256,
       height: 176,
       getContext: jest.fn(() => pixelContext),
-      toDataURL: jest.fn(() => 'data:image/png;base64,invisible'),
+      toDataURL: jest.fn(
+        (type = 'image/png') => `data:${type};base64,invisible`
+      ),
       toBlob: jest.fn((callback, type = 'image/png') =>
         callback(new Blob(['blob-result'], { type }))
       ),
@@ -75,8 +81,8 @@ describe('WebMarker public API', () => {
       saveFormat: 'png' as const,
     };
 
-    await expect(WebMarker.embedInvisible(options)).resolves.toBe(
-      'data:image/png;base64,invisible'
+    await expect(WebMarker.embedInvisible(options)).resolves.toEqual(
+      markerResult('data:image/png;base64,invisible')
     );
     expect(pixelContext.putImageData).toHaveBeenCalledTimes(1);
     expect(mockRenderWebCompositionToCanvas).toHaveBeenCalledWith(
@@ -131,7 +137,10 @@ describe('WebMarker public API', () => {
     expect(mockDetectInvisibleWatermarkInWorker).toHaveBeenCalledWith(
       { data: pixels, width: 256, height: 176 },
       options,
-      worker
+      expect.objectContaining({
+        ...worker,
+        signal: expect.any(AbortSignal),
+      })
     );
   });
 
@@ -145,8 +154,8 @@ describe('WebMarker public API', () => {
       quality: 91,
     };
 
-    await expect(WebMarker.markText(options)).resolves.toBe(
-      'data:image/png;base64,result'
+    await expect(WebMarker.markText(options)).resolves.toEqual(
+      markerResult('data:image/png;base64,result')
     );
     expect(mockRenderWebComposition).toHaveBeenCalledWith(
       options.backgroundImage,
@@ -160,13 +169,13 @@ describe('WebMarker public API', () => {
 
   it('creates reusable Web recipes through the public Marker API', async () => {
     const recipe = WebMarker.createRecipe({
-      watermarks: [{ type: 'text', text: 'Reusable' }],
-      saveFormat: 'png' as ImageMarkOptions['saveFormat'],
+      layers: [{ type: 'text', text: 'Reusable' }],
+      output: { saveFormat: 'png' as ImageMarkOptions['saveFormat'] },
     });
 
     await expect(
       recipe.apply({ backgroundImage: { src: '/background.jpg' } })
-    ).resolves.toBe('data:image/png;base64,result');
+    ).resolves.toEqual(markerResult('data:image/png;base64,result'));
     expect(mockRenderWebComposition).toHaveBeenCalledTimes(1);
     expect(mockRenderWebComposition.mock.calls[0]?.[1]).toEqual([
       {
@@ -179,9 +188,11 @@ describe('WebMarker public API', () => {
   it('returns encoded bytes only for explicitly requested Blob recipes', async () => {
     const recipe = WebMarker.createRecipe(
       {
-        watermarks: [{ type: 'text', text: 'Reusable' }],
-        saveFormat: 'jpg' as ImageMarkOptions['saveFormat'],
-        quality: 84,
+        layers: [{ type: 'text', text: 'Reusable' }],
+        output: {
+          saveFormat: 'jpg' as ImageMarkOptions['saveFormat'],
+          quality: 84,
+        },
       },
       { resultType: 'blob' }
     );
@@ -216,7 +227,7 @@ describe('WebMarker public API', () => {
       return 'data:image/png;base64,result';
     });
     const recipe = WebMarker.createRecipe({
-      watermarks: [{ type: 'text', text: 'Reusable' }],
+      layers: [{ type: 'text', text: 'Reusable' }],
     });
 
     await recipe.applyMany(
@@ -250,7 +261,9 @@ describe('WebMarker public API', () => {
         width: 256,
         height: 176,
         getContext: jest.fn(() => context),
-        toDataURL: jest.fn(() => 'data:image/png;base64,invisible'),
+        toDataURL: jest.fn(
+          (type = 'image/png') => `data:${type};base64,invisible`
+        ),
         toBlob: jest.fn(),
       };
     });
@@ -268,12 +281,10 @@ describe('WebMarker public API', () => {
     expect(results.every((result) => result.status === 'fulfilled')).toBe(true);
   });
 
-  it('keeps image arrays before the legacy image compatibility layer', async () => {
+  it('preserves image array order', async () => {
     const options: ImageMarkOptions = {
       backgroundImage: { src: '/background.jpg' },
       watermarkImages: [{ src: '/logo-a.png' }, { src: '/logo-b.png' }],
-      watermarkImage: { src: '/legacy.png', position: { X: 99, Y: 98 } },
-      watermarkPositions: { X: 12, Y: 16 },
     };
 
     await WebMarker.markImage(options);
@@ -281,13 +292,6 @@ describe('WebMarker public API', () => {
     expect(mockRenderWebComposition.mock.calls[0]?.[1]).toEqual([
       { type: 'image', options: options.watermarkImages?.[0] },
       { type: 'image', options: options.watermarkImages?.[1] },
-      {
-        type: 'image',
-        options: {
-          ...options.watermarkImage,
-          position: options.watermarkPositions,
-        },
-      },
     ]);
   });
 

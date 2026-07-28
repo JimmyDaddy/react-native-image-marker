@@ -22,6 +22,8 @@ abstract class NativeImageMarkerSpec(
 
   abstract fun detectInvisible(options: ReadableMap, promise: Promise)
 
+  abstract fun cancel(jobId: String, promise: Promise)
+
   companion object {
     const val NAME = "ImageMarker"
   }

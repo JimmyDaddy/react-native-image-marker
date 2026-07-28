@@ -19,8 +19,11 @@ const requiredFiles = [
   'tools/content-credentials/index.html',
   'compatibility/index.html',
   'guides/invisible-watermarks/index.html',
+  'guides/performance-and-jobs/index.html',
+  'guides/editor/index.html',
   'cookbook/index.html',
   'troubleshooting/index.html',
+  'support-policy/index.html',
   'sitemap/index.html',
   'api/index.html',
   'zh-cn/index.html',
@@ -41,8 +44,11 @@ const requiredFiles = [
   'zh-cn/guides/position-and-style/index.html',
   'zh-cn/guides/output-and-quality/index.html',
   'zh-cn/guides/invisible-watermarks/index.html',
+  'zh-cn/guides/performance-and-jobs/index.html',
+  'zh-cn/guides/editor/index.html',
   'zh-cn/cookbook/index.html',
   'zh-cn/troubleshooting/index.html',
+  'zh-cn/support-policy/index.html',
   'zh-cn/sitemap/index.html',
   'zh-cn/migration/index.html',
   'zh-cn/api/index.html',
@@ -120,6 +126,15 @@ for (const file of await collectHtml(outputRoot)) {
     }
 
     const urlPath = reference.split(/[?#]/, 1)[0];
+    if (
+      ['/v1/', '/v2/', '/next/', '/editor/', '/versions/'].some((prefix) =>
+        urlPath.startsWith(prefix)
+      )
+    ) {
+      // These namespaces are assembled from their authoritative branches by
+      // the Pages workflow after each individual documentation build passes.
+      continue;
+    }
     try {
       await access(outputPathForUrl(urlPath));
     } catch {

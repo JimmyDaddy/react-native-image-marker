@@ -17,6 +17,7 @@ class Options: NSObject {
     var filename: String?
     var matteColor: UIColor = .white
     var rotationCanvasMode: ImageMarkerRotationCanvasMode = .expand
+    var jobId: String = UUID().uuidString
 
     init(dicOpts opts: [AnyHashable: Any]) throws {
         guard let backgroundImageOpts = opts["backgroundImage"] as? [AnyHashable: Any], !Utils.isNULL(backgroundImageOpts) else {
@@ -37,6 +38,14 @@ class Options: NSObject {
             self.quality = Int(qualityValue)
         }
         self.saveFormat = opts["saveFormat"] as? String
+        if let saveFormat = self.saveFormat?.lowercased(),
+           !["jpg", "jpeg", "png", "webp", "base64"].contains(saveFormat) {
+            throw NSError(
+                domain: ErrorDomainEnum.PARAMS_INVALID.rawValue,
+                code: 0,
+                userInfo: [NSLocalizedDescriptionKey: "Unsupported saveFormat: \(saveFormat)"]
+            )
+        }
         if let rawMaxSize = opts["maxSize"], !Utils.isNULL(rawMaxSize) {
             guard let maxSizeNumber = rawMaxSize as? NSNumber,
                   CFGetTypeID(maxSizeNumber) != CFBooleanGetTypeID() else {
@@ -68,6 +77,13 @@ class Options: NSObject {
                 throw NSError(domain: ErrorDomainEnum.PARAMS_INVALID.rawValue, code: 0, userInfo: [NSLocalizedDescriptionKey: "rotationCanvasMode is invalid"])
             }
             self.rotationCanvasMode = rotationCanvasMode
+        }
+
+        if let jobIdValue = opts["jobId"] as? String {
+            guard !jobIdValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                throw NSError(domain: ErrorDomainEnum.PARAMS_INVALID.rawValue, code: 0, userInfo: [NSLocalizedDescriptionKey: "jobId must not be empty"])
+            }
+            self.jobId = jobIdValue
         }
     }
 

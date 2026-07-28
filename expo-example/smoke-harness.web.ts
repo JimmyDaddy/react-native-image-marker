@@ -258,23 +258,26 @@ function createHarness(assets: SmokeHarnessAssets): WebSmokeHarness {
       const backgroundFile = new File([backgroundBlob], 'background.png', {
         type: backgroundBlob.type || 'image/png',
       });
-      const dataUrl = await Marker.markImage({
+      const output = await Marker.markImage({
         backgroundImage: { src: backgroundFile },
-        watermarkImage: {
-          src: logoBlob,
-          position: { position: Position.center },
-          scale: 0.18,
-          alpha: 0.55,
-          rotate: 17,
-        },
+        watermarkImages: [
+          {
+            src: logoBlob,
+            position: { position: Position.center },
+            scale: 0.18,
+            alpha: 0.55,
+            rotate: 17,
+          },
+        ],
         saveFormat: ImageFormat.png,
       });
-      return getDimensions(dataUrl);
+      return getDimensions(output.uri);
     },
 
     async renderRecipeBlobs() {
       const commonOptions = {
-        watermarks: [
+        schemaVersion: 2 as const,
+        layers: [
           {
             type: 'text' as const,
             text: 'BLOB RECIPE',
@@ -289,11 +292,17 @@ function createHarness(assets: SmokeHarnessAssets): WebSmokeHarness {
         ],
       };
       const pngRecipe = Marker.createRecipe(
-        { ...commonOptions, saveFormat: ImageFormat.png },
+        {
+          ...commonOptions,
+          output: { saveFormat: ImageFormat.png },
+        },
         { resultType: 'blob' }
       );
       const jpegRecipe = Marker.createRecipe(
-        { ...commonOptions, saveFormat: ImageFormat.jpg, quality: 86 },
+        {
+          ...commonOptions,
+          output: { saveFormat: ImageFormat.jpg, quality: 86 },
+        },
         { resultType: 'blob' }
       );
       const [png, jpeg] = await Promise.all([
@@ -309,7 +318,7 @@ function createHarness(assets: SmokeHarnessAssets): WebSmokeHarness {
     },
 
     async renderLargeCropped() {
-      const dataUrl = await Marker.markText({
+      const output = await Marker.markText({
         backgroundImage: {
           src: await createLargeImage(),
           rotate: 90,
@@ -334,11 +343,11 @@ function createHarness(assets: SmokeHarnessAssets): WebSmokeHarness {
         rotationCanvasMode: RotationCanvasMode.crop,
         saveFormat: ImageFormat.png,
       });
-      return getDimensions(dataUrl);
+      return getDimensions(output.uri);
     },
 
     async renderTiledLayers() {
-      const dataUrl = await Marker.mark({
+      const output = await Marker.mark({
         backgroundImage: { src: assets.backgroundUri },
         watermarks: [
           {
@@ -376,7 +385,7 @@ function createHarness(assets: SmokeHarnessAssets): WebSmokeHarness {
         ],
         saveFormat: ImageFormat.png,
       });
-      return getDimensions(dataUrl);
+      return getDimensions(output.uri);
     },
 
     async verifyInvisibleWatermark() {
@@ -390,10 +399,10 @@ function createHarness(assets: SmokeHarnessAssets): WebSmokeHarness {
         saveFormat: ImageFormat.png,
       });
       const [jpeg90, jpeg75, jpeg60, adjusted] = await Promise.all([
-        transformDataUrl(marked, 'image/jpeg', 0.9),
-        transformDataUrl(marked, 'image/jpeg', 0.75),
-        transformDataUrl(marked, 'image/jpeg', 0.6),
-        transformDataUrl(marked, 'image/png', undefined, true),
+        transformDataUrl(marked.uri, 'image/jpeg', 0.9),
+        transformDataUrl(marked.uri, 'image/jpeg', 0.75),
+        transformDataUrl(marked.uri, 'image/jpeg', 0.6),
+        transformDataUrl(marked.uri, 'image/png', undefined, true),
       ]);
       const detect = (image: string, detectKey = key) =>
         Marker.detectInvisible({
@@ -403,12 +412,12 @@ function createHarness(assets: SmokeHarnessAssets): WebSmokeHarness {
           search: 'fast',
         });
       const [png, q90, q75, q60, adjustedResult, wrongKey] = await Promise.all([
-        detect(marked),
+        detect(marked.uri),
         detect(jpeg90),
         detect(jpeg75),
         detect(jpeg60),
         detect(adjusted),
-        detect(marked, 'different-smoke-key'),
+        detect(marked.uri, 'different-smoke-key'),
       ]);
       return {
         payload: png.payload ?? '',
@@ -458,7 +467,7 @@ function createHarness(assets: SmokeHarnessAssets): WebSmokeHarness {
           maxSize: 512,
         });
         const detected = await Marker.detectInvisible({
-          image: { src: marked },
+          image: { src: marked.uri },
           key,
           strength: 'balanced',
           search: 'fast',
@@ -467,7 +476,7 @@ function createHarness(assets: SmokeHarnessAssets): WebSmokeHarness {
         if (detected.detected && detected.payload === payload) {
           detectedCount += 1;
         }
-        const quality = await compareImageQuality(source, marked);
+        const quality = await compareImageQuality(source, marked.uri);
         minimumPsnr = Math.min(minimumPsnr, quality.psnr);
         minimumSsim = Math.min(minimumSsim, quality.ssim);
 
@@ -480,9 +489,15 @@ function createHarness(assets: SmokeHarnessAssets): WebSmokeHarness {
           saveFormat: ImageFormat.png,
           maxSize: 512,
         });
-        const jpeg75 = await transformDataUrl(resizeMarked, 'image/jpeg', 0.75);
+        const jpeg75 = await transformDataUrl(
+          resizeMarked.uri,
+          'image/jpeg',
+          0.75
+        );
         const resized = await Promise.all([
-          ...resizeScales.map((scale) => resizeDataUrl(resizeMarked, scale)),
+          ...resizeScales.map((scale) =>
+            resizeDataUrl(resizeMarked.uri, scale)
+          ),
           resizeDataUrl(jpeg75, 1.05),
         ]);
         let heartbeat = 0;

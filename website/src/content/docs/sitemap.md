@@ -30,7 +30,9 @@ Use this page to find the shortest path to the documentation you need.
 - [Choose an API](/guides/choose-an-api/) — decide between `markText`, `markImage`, and `mark`.
 - [Position and style](/guides/position-and-style/) — place text and logos and adjust their appearance.
 - [Output and image quality](/guides/output-and-quality/) — choose a format, quality, and background color.
+- [Performance and job control](/guides/performance-and-jobs/) — bound memory, observe, cancel, and benchmark work.
 - [Invisible trace watermarks](/guides/invisible-watermarks/) — embed and authenticate a short distribution locator.
+- [Optional interaction editor](/guides/editor/) — integrate the separately versioned Editor 0.0.1 package.
 - [Visual cookbook](/cookbook/) — start from complete examples.
 
 ## Reference and help
@@ -38,6 +40,7 @@ Use this page to find the shortest path to the documentation you need.
 - [API reference](/api/) — browse methods, options, and types.
 - [Troubleshooting](/troubleshooting/) — solve common setup and output problems.
 - [Versions and migration](/migration/) — update an existing integration.
+- [Versions and support](/support-policy/) — choose v1 LTS, Core 2, the archive, or Editor.
 - [简体中文网站地图](/zh-cn/sitemap/) — browse the Chinese documentation.
 
 Search engines can also read the [XML sitemap](/sitemap-index.xml).

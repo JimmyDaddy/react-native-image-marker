@@ -1,5 +1,57 @@
 # Changelog
 
+## 2.0.0 (2026-07-28)
+
+### Breaking changes
+
+- Rendering and invisible-embed methods now return a structured
+  `MarkerResult`; existing consumers must read `result.uri`.
+- Recipe v2 replaces `watermarks` plus top-level encoding options with stable
+  `layers` and nested `output`. Use `migrateWatermarkRecipe()` for persisted v1
+  documents.
+- Removed `positionOptions`, `watermarkImage`, and `watermarkPositions`.
+- Raised the supported application baseline to React Native 0.73+, React 18+,
+  iOS 13+, and Android API 24+.
+- Replaced loosely typed native option objects with complete generated
+  TurboModule structures.
+- Newly encoded output normalizes pixel orientation and strips copied source
+  EXIF/GPS metadata.
+
+### Features
+
+- Added job IDs, stable error codes, progress phases, abort signals, native
+  cancellation, and timeouts for single operations.
+- Added Recipe v2 layer IDs, names, visibility, locks, conditions, explicit
+  import migration, validation, and serialization.
+- Added font fallback chains across TypeScript, Android, iOS, and Web.
+- Added WebP output on Android and Web with an explicit unsupported error on
+  iOS.
+- Productized invisible trace detection results, batch control, Web Worker
+  execution, and optional Content Credentials composition.
+- Added a portable shared C++ size-fit core plus Android JNI and iOS
+  Objective-C++/Swift bridges.
+- Added the separately versioned
+  `react-native-image-marker-editor@0.0.1` workspace and optional Core adapter.
+
+### Performance and reliability
+
+- Kept native queues serial, capped Web queues at four, and made cancellation
+  idempotent to bound decode memory.
+- Added repeated Android and iOS large-image downsample gates, shared-core
+  bridge tests, four-ABI Android native builds, and browser stress coverage.
+- Added real packed-package CommonJS, ESM, TypeScript, peer-dependency, and
+  production-audit consumer verification.
+
+### Documentation and release infrastructure
+
+- Added complete English and Chinese v1-to-v2 migration, compatibility,
+  performance, output, task-control, and Editor documentation.
+- Migrated the bare, Expo, Playground, and online-tool examples to
+  `MarkerResult` and Recipe v2.
+- Added protected v1 LTS and immutable v1.0.0 archive lines, a combined
+  versioned documentation deployment, and strict Core/Editor tag routing with
+  post-publish registry consumer checks.
+
 ## [1.12.0](https://github.com/JimmyDaddy/react-native-image-marker/compare/v1.11.0...v1.12.0) (2026-07-20)
 
 ### Features

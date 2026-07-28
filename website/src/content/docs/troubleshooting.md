@@ -25,7 +25,9 @@ This is expected. React Native Image Marker includes native iOS and Android code
 - On Android, make sure the font is linked into the Android assets.
 - On Web, load the font before calling Marker and confirm it is available to Canvas.
 
-An unresolved font falls back to the platform default.
+Add `fontFallbacks: ['Noto Sans', 'Arial']` after the preferred `fontName` when
+the primary family may not contain every glyph. If none resolve, the platform
+default remains the final fallback.
 
 ## Web cannot load or export a remote image
 
@@ -50,11 +52,32 @@ Named positions use a compatibility inset when an axis is omitted. Set `edgeInse
 
 ## The result is not in the photo library
 
-On native targets, JPEG and PNG results are cache files. The marker does not request media-library permission or save to the camera roll. Use a media-library package such as [React Native CameraRoll](https://github.com/react-native-cameraroll/react-native-cameraroll) with the returned path. On Web, use the returned data URL as a download link.
+On native targets, JPEG, PNG, and supported WebP results are cache files. The
+marker does not request media-library permission or save to the camera roll.
+Use a media-library package such as [React Native CameraRoll](https://github.com/react-native-cameraroll/react-native-cameraroll)
+with `result.uri`. On Web, use `result.uri` as a download link.
 
 ## Large images use too much memory
 
-Image composition and data URL encoding both require memory proportional to the decoded bitmap. Prefer native file output, scale inputs before composition when full resolution is not required, and process large batches sequentially. Every Web output is a data URL, so source-size discipline is especially important there.
+Image composition and data URL encoding both require memory proportional to the
+decoded bitmap. Set an explicit `maxSize`, prefer native file output, and keep
+native batch concurrency at 1. Every Web output is a data URL, so source-size
+discipline is especially important there. See [Performance and job control](/guides/performance-and-jobs/).
+
+## Handle a structured Core 2 failure
+
+Catch `ImageMarkerError` and log `code`, `jobId`, and `operation`. Report the
+message too, but do not parse it to make application decisions.
+
+```ts
+try {
+  await Marker.mark(options, { timeoutMs: 15_000 });
+} catch (error) {
+  if (error instanceof ImageMarkerError) {
+    console.error(error.code, error.jobId, error.operation, error.message);
+  }
+}
+```
 
 ## Still blocked?
 

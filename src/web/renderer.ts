@@ -122,9 +122,10 @@ function escapeFontFamily(fontFamily: string): string {
 function createFont(style: TextStyle | undefined, fontSize: number): string {
   const italic = style?.italic ? 'italic ' : '';
   const weight = style?.bold ? '700 ' : '400 ';
-  const family = style?.fontName
-    ? `"${escapeFontFamily(style.fontName)}", sans-serif`
-    : 'sans-serif';
+  const families = [style?.fontName, ...(style?.fontFallbacks ?? [])]
+    .filter((family): family is string => Boolean(family))
+    .map((family) => `"${escapeFontFamily(family)}"`);
+  const family = [...families, 'sans-serif'].join(', ');
   return `${italic}${weight}${fontSize}px ${family}`;
 }
 
@@ -614,7 +615,7 @@ function drawTextLayerContent(
   }
 
   const position = resolveAnchoredPosition(
-    options.position ?? options.positionOptions,
+    options.position,
     canvas,
     visualSize,
     20

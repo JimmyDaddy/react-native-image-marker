@@ -74,6 +74,16 @@ function validateCommonOptions(options: MarkRequestOptions): void {
   validateQuality(options);
   validateMaxSize(options);
   validateAlpha(options.backgroundImage, 'backgroundImage');
+  const saveFormat = options.saveFormat;
+  if (
+    saveFormat !== undefined &&
+    saveFormat !== 'jpg' &&
+    saveFormat !== 'png' &&
+    saveFormat !== 'webp' &&
+    saveFormat !== 'base64'
+  ) {
+    throw new Error(`saveFormat is not supported: ${String(saveFormat)}.`);
+  }
 }
 
 function validateLayoutValue(
@@ -135,8 +145,30 @@ function validateWatermarkLayout(
 }
 
 function validateTextOptions(options: TextOptions, path: string): void {
+  if (
+    Object.prototype.hasOwnProperty.call(
+      options as TextOptions & Record<string, unknown>,
+      'positionOptions'
+    )
+  ) {
+    throw new Error(
+      `${path}.positionOptions was removed in v2; use position instead.`
+    );
+  }
   validateAlpha(options, path);
   validateBlendMode(options.blendMode, path);
+  const fontFallbacks = options.style?.fontFallbacks;
+  if (
+    fontFallbacks !== undefined &&
+    (!Array.isArray(fontFallbacks) ||
+      fontFallbacks.some(
+        (font) => typeof font !== 'string' || font.trim().length === 0
+      ))
+  ) {
+    throw new Error(
+      `${path}.style.fontFallbacks must contain non-empty font family names.`
+    );
+  }
   const strokeStyle = options.style?.strokeStyle;
   if (strokeStyle) {
     if (!Number.isFinite(strokeStyle.width) || strokeStyle.width < 0) {
@@ -152,7 +184,7 @@ function validateTextOptions(options: TextOptions, path: string): void {
   }
   validateWatermarkLayout(
     options.layout,
-    options.position !== undefined || options.positionOptions !== undefined,
+    options.position !== undefined,
     `${path}.layout`
   );
 }
@@ -179,11 +211,12 @@ export function validateTextMarkOptions(options: TextMarkOptions): void {
 
 export function validateImageMarkOptions(options: ImageMarkOptions): void {
   validateCommonOptions(options);
-  if (options.watermarkImage) {
-    validateImageOptions(
-      options.watermarkImage,
-      'watermarkImage',
-      options.watermarkPositions !== undefined
+  if (
+    Object.prototype.hasOwnProperty.call(options, 'watermarkImage') ||
+    Object.prototype.hasOwnProperty.call(options, 'watermarkPositions')
+  ) {
+    throw new Error(
+      'watermarkImage and watermarkPositions were removed in v2; use watermarkImages[].position.'
     );
   }
   options.watermarkImages?.forEach((imageOptions, index) => {
@@ -193,11 +226,12 @@ export function validateImageMarkOptions(options: ImageMarkOptions): void {
 
 export function validateMarkOptions(options: MarkOptions): void {
   validateCommonOptions(options);
-  if (options.watermarkImage) {
-    validateImageOptions(
-      options.watermarkImage,
-      'watermarkImage',
-      options.watermarkPositions !== undefined
+  if (
+    Object.prototype.hasOwnProperty.call(options, 'watermarkImage') ||
+    Object.prototype.hasOwnProperty.call(options, 'watermarkPositions')
+  ) {
+    throw new Error(
+      'watermarkImage and watermarkPositions were removed in v2; use watermarks with an image layer.'
     );
   }
   options.watermarkImages?.forEach((imageOptions, index) => {

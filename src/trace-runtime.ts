@@ -9,7 +9,7 @@ import {
 import type {
   DetectInvisibleWatermarkOptions,
   EmbedInvisibleWatermarkOptions,
-  InvisibleWatermarkDetectionResult,
+  InvisibleWatermarkDetectionData,
   InvisibleWatermarkPixelBuffer,
 } from './invisible-watermark';
 
@@ -62,15 +62,15 @@ export interface InvisibleWatermarkRuntime<Source, Output> {
   ): Promise<Output>;
   detectInvisible(
     options: RuntimeDetectInvisibleWatermarkOptions<Source>
-  ): Promise<InvisibleWatermarkDetectionResult>;
+  ): Promise<InvisibleWatermarkDetectionData>;
   embedInvisibleMany(
     inputs: readonly RuntimeEmbedInvisibleWatermarkOptions<Source>[],
     options?: WatermarkBatchOptions<Output>
   ): Promise<Array<WatermarkBatchResult<Output>>>;
   detectInvisibleMany(
     inputs: readonly RuntimeDetectInvisibleWatermarkOptions<Source>[],
-    options?: WatermarkBatchOptions<InvisibleWatermarkDetectionResult>
-  ): Promise<Array<WatermarkBatchResult<InvisibleWatermarkDetectionResult>>>;
+    options?: WatermarkBatchOptions<InvisibleWatermarkDetectionData>
+  ): Promise<Array<WatermarkBatchResult<InvisibleWatermarkDetectionData>>>;
 }
 
 function validatePositiveInteger(value: number, label: string): void {
@@ -161,7 +161,7 @@ export function createInvisibleWatermarkRuntime<Source, Output>(
 
   const detectInvisible = async (
     input: RuntimeDetectInvisibleWatermarkOptions<Source>
-  ): Promise<InvisibleWatermarkDetectionResult> => {
+  ): Promise<InvisibleWatermarkDetectionData> => {
     const snapshot = snapshotDetectOptions(input);
     validateDetectInvisibleOptions(snapshot as DetectInvisibleWatermarkOptions);
     const maxSize = snapshot.maxSize ?? DEFAULT_RUNTIME_MAX_SIZE;
