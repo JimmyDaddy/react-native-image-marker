@@ -31,7 +31,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout v2 preview
+      - name: Checkout v2 documentation
         uses: actions/checkout@v7
         with:
           ref: master
@@ -70,11 +70,15 @@ jobs:
           npm ci --prefix v1
           npm ci --prefix v1/website
 
-      - name: Build v2 preview
-        env:
-          DOCS_CHANNEL: preview
-          DOCS_GIT_REF: master
-        run: npm --prefix current run docs
+      - name: Build v2 documentation
+        run: |
+          if [ "$(node -p "require('./current/website/versions.json').releaseStage")" = "ga" ]; then
+            docs_channel=current
+          else
+            docs_channel=preview
+          fi
+          DOCS_CHANNEL="$docs_channel" DOCS_GIT_REF=master \
+            npm --prefix current run docs
 
       - name: Build v1 LTS
         env:
