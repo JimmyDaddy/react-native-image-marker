@@ -127,7 +127,7 @@ for (const file of await collectHtml(outputRoot)) {
 
     const urlPath = reference.split(/[?#]/, 1)[0];
     if (
-      ['/v1/', '/next/', '/editor/', '/versions/'].some((prefix) =>
+      ['/v1/', '/v2/', '/next/', '/editor/', '/versions/'].some((prefix) =>
         urlPath.startsWith(prefix)
       )
     ) {

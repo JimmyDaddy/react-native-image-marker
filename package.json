@@ -76,7 +76,7 @@
     "typecheck:expo-example": "npm --prefix expo-example run typecheck",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "build:worker": "node scripts/build-invisible-worker.mjs",
-    "prepack": "bob build && node scripts/fix-esm-imports.mjs && npm run build:worker",
+    "prepack": "bob build && node scripts/fix-esm-imports.mjs lib/module lib/typescript/module && npm run build:worker",
     "build:editor": "npm run build --workspace react-native-image-marker-editor",
     "verify:consumer": "npm run prepack && npm run build:editor && node scripts/verify-package-consumer.mjs",
     "check:release-notes": "node scripts/check-release-notes.mjs",

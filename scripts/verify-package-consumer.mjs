@@ -144,6 +144,7 @@ import {
   ImageMarkerEditorController,
   type EditorRenderRequest,
 } from 'react-native-image-marker-editor';
+import { createInvisibleWatermarkRuntime } from 'react-native-image-marker/trace-runtime';
 
 const definition: WatermarkRecipeDefinition = {
   schemaVersion: 2,
@@ -161,6 +162,7 @@ const request: EditorRenderRequest = {
 };
 void result;
 void request;
+void createInvisibleWatermarkRuntime;
 `
   );
   await writeFile(

@@ -1,6 +1,10 @@
 ---
+import versions from '../../versions.json';
+
 const pathname = Astro.url.pathname;
-const channel = process.env.DOCS_CHANNEL || 'v1';
+const channel =
+  process.env.DOCS_CHANNEL ||
+  (versions.releaseStage === 'ga' ? 'current' : 'preview');
 const selected =
   channel === 'preview' || channel === 'current'
     ? 'v2'
