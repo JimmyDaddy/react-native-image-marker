@@ -141,7 +141,7 @@ export default function EditorExample() {
     >
       <View style={styles.heading}>
         <View>
-          <Text style={styles.eyebrow}>OPTIONAL PACKAGE · 0.0.1</Text>
+          <Text style={styles.eyebrow}>OPTIONAL PACKAGE · 0.0.2</Text>
           <Text style={styles.title}>Interactive Recipe v2 editor</Text>
         </View>
         <Text style={styles.subtitle}>

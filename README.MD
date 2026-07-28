@@ -269,17 +269,20 @@ Browser Canvas and native graphics stacks share the API and positioning model bu
 ## Optional interaction editor
 
 The independently versioned
-`react-native-image-marker-editor@0.0.1` package provides Recipe v2 layer
+`react-native-image-marker-editor@0.0.2` package provides Recipe v2 layer
 selection, drag/scale/rotate/reorder, visibility and locking, snapping,
 undo/redo, accessible keyboard controls, preview rendering, and final export.
 It requires Core `^2.0.0` and delegates image processing back to Core.
 
 ```sh
-npm install react-native-image-marker-editor@0.0.1
+npm install react-native-image-marker-editor@0.0.2
 ```
 
 Import `react-native-image-marker-editor/core-adapter` only when the editor
 should invoke Core directly; a custom adapter can render on a server instead.
+See the [Editor integration guide](https://image-marker.corerobin.com/guides/editor/),
+[generated API reference](https://image-marker.corerobin.com/guides/editor/reference/),
+or [open the Editor workflow](https://image-marker.corerobin.com/playground/?workflow=editor#editor-playground).
 
 ## Choose an API
 
@@ -312,11 +315,14 @@ See the full [compatibility guide](https://image-marker.corerobin.com/compatibil
 
 - [简体中文文档](https://image-marker.corerobin.com/zh-cn/)
 - [Installation](https://image-marker.corerobin.com/getting-started/)
+- [What’s new in Core 2](https://image-marker.corerobin.com/whats-new-2/)
 - [Live playground](https://image-marker.corerobin.com/playground/)
 - [Free online image tools](https://image-marker.corerobin.com/tools/)
 - [Guides](https://image-marker.corerobin.com/guides/choose-an-api/)
 - [Visual cookbook](https://image-marker.corerobin.com/cookbook/)
 - [Invisible trace watermarks](https://image-marker.corerobin.com/guides/invisible-watermarks/)
+- [Optional interaction editor](https://image-marker.corerobin.com/guides/editor/)
+- [Editor API reference](https://image-marker.corerobin.com/guides/editor/reference/)
 - [Troubleshooting](https://image-marker.corerobin.com/troubleshooting/)
 - [API reference](https://image-marker.corerobin.com/api/)
 

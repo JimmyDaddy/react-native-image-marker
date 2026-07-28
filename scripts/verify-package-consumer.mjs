@@ -1,19 +1,10 @@
 import { execFileSync } from 'node:child_process';
-import {
-  mkdtemp,
-  readFile,
-  rm,
-  symlink,
-  writeFile,
-} from 'node:fs/promises';
+import { mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const repositoryRoot = resolve(
-  dirname(fileURLToPath(import.meta.url)),
-  '..'
-);
+const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const consumerDirectory = await mkdtemp(
   join(tmpdir(), 'image-marker-consumer-')
 );
@@ -49,6 +40,9 @@ function pack(packagePath) {
 }
 
 try {
+  const expectedEditorManifest = JSON.parse(
+    await readFile(join(repositoryRoot, 'packages/editor/package.json'), 'utf8')
+  );
   const coreTarball = pack('.');
   const editorTarball = pack('./packages/editor');
   await writeFile(
@@ -98,10 +92,12 @@ try {
     )
   );
   if (
-    editorManifest.version !== '0.0.1' ||
+    editorManifest.version !== expectedEditorManifest.version ||
     editorManifest.peerDependencies?.['react-native-image-marker'] !== '^2.0.0'
   ) {
-    throw new Error('The packed Editor manifest has an invalid version or Core peer range.');
+    throw new Error(
+      'The packed Editor manifest has an invalid version or Core peer range.'
+    );
   }
 
   run('node', [
@@ -114,7 +110,7 @@ try {
       'const { ImageMarkerEditorController } = await import(url);',
       "const editor = new ImageMarkerEditorController({schemaVersion:2,layers:[{id:'title',type:'text',text:'Hello'}],output:{}});",
       "if (editor.exportRecipe().layers[0]?.id !== 'title') process.exit(1);",
-    ].join('')
+    ].join(''),
   ]);
   run('node', [
     '-e',
