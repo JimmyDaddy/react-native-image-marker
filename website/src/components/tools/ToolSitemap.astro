@@ -1,0 +1,26 @@
+---
+import { toolGroups, toolHref } from '../../data/tools.mjs';
+
+interface Props {
+  locale?: 'en' | 'zh-CN';
+}
+
+const { locale = 'en' } = Astro.props;
+const zh = locale === 'zh-CN';
+const language = zh ? 'zh' : 'en';
+---
+
+{toolGroups.map((group) => (
+  <section class="tool-sitemap-group" aria-labelledby={`sitemap-${group.id}`}>
+    <h3 id={`sitemap-${group.id}`}>{group.label[language]}</h3>
+    <ul>
+      {group.tools.map((tool) => (
+        <li>
+          <a href={toolHref(tool, language)}>{tool.label[language]}</a>
+          {' — '}
+          {tool.description[language]}
+        </li>
+      ))}
+    </ul>
+  </section>
+))}

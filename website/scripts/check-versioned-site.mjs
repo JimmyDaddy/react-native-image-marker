@@ -52,6 +52,13 @@ const editorZh = await readFile(
 const versions = JSON.parse(
   await readFile(join(outputRoot, 'versions.json'), 'utf8')
 );
+const editorManifest = JSON.parse(
+  await readFile(
+    new URL('../../packages/editor/package.json', import.meta.url),
+    'utf8'
+  )
+);
+const editorVersion = editorManifest.version;
 const isGa = versions.releaseStage === 'ga';
 const v2DocsBase = isGa ? '/' : '/next/';
 const v2DocsRoot = isGa ? outputRoot : join(outputRoot, 'next');
@@ -108,10 +115,10 @@ if (!archive.includes(buildManifest.sources.archive.sha)) {
   );
 }
 if (
-  !editor.includes('react-native-image-marker-editor@0.0.1') ||
+  !editor.includes(`react-native-image-marker-editor@${editorVersion}`) ||
   !editor.includes('react-native-image-marker@^2.0.0')
 ) {
-  throw new Error('Editor page does not expose the initial version contract.');
+  throw new Error('Editor page does not expose the current version contract.');
 }
 if (
   !editor.includes(`${v2DocsBase}guides/editor/`) ||
@@ -142,6 +149,16 @@ if (
   )
 ) {
   throw new Error('Version manifest does not expose v2 at its canonical path.');
+}
+if (
+  !versions.versions.some(
+    (version) =>
+      version.id === 'editor' &&
+      version.currentVersion === editorVersion &&
+      version.peerCoreRange === '^2.0.0'
+  )
+) {
+  throw new Error('Version manifest does not match the Editor package contract.');
 }
 
 if (isGa) {

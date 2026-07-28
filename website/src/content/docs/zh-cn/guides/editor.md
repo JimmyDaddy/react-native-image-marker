@@ -1,15 +1,16 @@
 ---
 title: 可选交互编辑器
-description: 在 Core 2 上安装并接入 react-native-image-marker-editor 0.0.1。
+description: 在 Core 2 上安装并接入 react-native-image-marker-editor 0.0.2。
 ---
 
 `react-native-image-marker-editor` 是独立、可选的 JS/TS 包。首个版本是
-`0.0.1`，依赖 `react-native-image-marker@^2.0.0`。解码、合成、隐形水印和
+`0.0.1`，当前文档补丁版本为 `0.0.2`，依赖
+`react-native-image-marker@^2.0.0`。解码、合成、隐形水印和
 最终原生编码仍由 Core 负责。
 
 ```sh
 npm install react-native-image-marker@^2 \
-  react-native-image-marker-editor@0.0.1
+  react-native-image-marker-editor@0.0.2
 ```
 
 ## 创建编辑器
@@ -52,16 +53,16 @@ console.log(result.final.uri);
 
 ## 运行完整示例
 
-[在线 Playground](/zh-cn/playground/#editor-playground) 在浏览器中直接使用真实
+[在线 Playground](/zh-cn/playground/?workflow=editor#editor-playground) 在浏览器中直接使用真实
 Editor controller 和 Core adapter，可免安装体验拖动、缩放、旋转、排序、锁定、
 undo/redo 与 Core 渲染。
 
 原生端可运行仓库中的
 [React Native example](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/example)，
-选择 **Editor 0.0.1**。该页面会渲染 `ImageMarkerEditor` 与
+选择 **Editor 0.0.2**。该页面会渲染 `ImageMarkerEditor` 与
 `ImageMarkerEditorToolbar`，并验证预览和原分辨率 Core 导出。
 
-## 0.0.1 范围
+## 0.0.x 范围
 
 - 图片和文字图层，以及选择、拖动、双指缩放、旋转和排序。
 - 显隐与锁定；锁定图层不能修改、删除或排序。
@@ -72,7 +73,14 @@ undo/redo 与 Core 渲染。
 - 可见、隐形水印和可选 C2PA 导出选项。
 - 按需引入 Core adapter，主入口不强制带入较重 renderer。
 
-视频、通用滤镜、云端协作以及重复的原生编码逻辑不进入 `0.0.1`。
+视频、通用滤镜、云端协作以及重复的原生编码逻辑不进入 `0.0.x`。
+
+## API 参考
+
+可先阅读中文 [Editor API 导航](/zh-cn/guides/editor/reference/)，再进入自动生成的
+[详细参考](/guides/editor/reference/)查询
+`ImageMarkerEditorController`、组件 props、render adapter、状态、安全区域与
+吸附类型、导出选项以及 `createCoreEditorAdapter`。
 
 ## 状态与持久化
 

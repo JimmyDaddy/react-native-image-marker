@@ -48,6 +48,7 @@ const chineseHref = isNotFound ? '/zh-cn/' : isZh ? pathname : `/zh-cn${pathname
     });
     menu.addEventListener('keydown', (event) => {
       if (event.key === 'Escape') {
+        event.stopPropagation();
         menu.open = false;
         menu.querySelector('summary')?.focus();
       }

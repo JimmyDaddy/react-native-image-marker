@@ -1,0 +1,13 @@
+{
+  "extends": "../tsconfig.json",
+  "include": [
+    "./src/typedoc/editor.ts",
+    "../packages/editor/src/**/*.ts",
+    "../packages/editor/src/**/*.tsx"
+  ],
+  "exclude": [
+    "../packages/editor/src/__tests__",
+    "../packages/editor/src/**/*.test.ts",
+    "../packages/editor/src/**/*.test.tsx"
+  ]
+}

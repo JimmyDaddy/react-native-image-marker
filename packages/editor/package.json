@@ -1,8 +1,20 @@
 {
   "name": "react-native-image-marker-editor",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Optional interactive Recipe v2 editor for react-native-image-marker",
   "license": "MIT",
+  "homepage": "https://image-marker.corerobin.com/guides/editor/",
+  "bugs": {
+    "url": "https://github.com/JimmyDaddy/react-native-image-marker/issues"
+  },
+  "keywords": [
+    "react-native",
+    "image",
+    "watermark",
+    "editor",
+    "recipe",
+    "layers"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/JimmyDaddy/react-native-image-marker.git",
@@ -15,6 +27,7 @@
   "source": "src/index.ts",
   "files": [
     "src",
+    "!src/__tests__",
     "lib",
     "README.md",
     "CHANGELOG.md"

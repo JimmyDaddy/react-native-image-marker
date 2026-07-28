@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.0.2 (2026-07-28)
+
+- Added canonical package metadata and direct links to the integration guide,
+  generated API reference, and Editor workflow in the browser Playground.
+- Aligned the npm README and site version labels with the current root-hosted
+  Core 2 documentation.
+- Added site-level mobile discovery, categorized Tools placement, and
+  deep-link regression coverage without changing the Editor runtime API.
+
 ## 0.0.1 (2026-07-28)
 
 - Added the headless Recipe v2 controller with stable layer IDs, selection,

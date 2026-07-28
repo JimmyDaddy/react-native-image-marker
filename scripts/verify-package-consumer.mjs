@@ -49,6 +49,12 @@ function pack(packagePath) {
 }
 
 try {
+  const expectedEditorManifest = JSON.parse(
+    await readFile(
+      join(repositoryRoot, 'packages/editor/package.json'),
+      'utf8'
+    )
+  );
   const coreTarball = pack('.');
   const editorTarball = pack('./packages/editor');
   await writeFile(
@@ -98,7 +104,7 @@ try {
     )
   );
   if (
-    editorManifest.version !== '0.0.1' ||
+    editorManifest.version !== expectedEditorManifest.version ||
     editorManifest.peerDependencies?.['react-native-image-marker'] !== '^2.0.0'
   ) {
     throw new Error('The packed Editor manifest has an invalid version or Core peer range.');

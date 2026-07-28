@@ -18,6 +18,7 @@ const contentTypes = new Map([
   ['.png', 'image/png'],
   ['.jpg', 'image/jpeg'],
   ['.jpeg', 'image/jpeg'],
+  ['.webp', 'image/webp'],
   ['.svg', 'image/svg+xml'],
   ['.wasm', 'application/wasm'],
   ['.woff', 'font/woff'],
@@ -86,8 +87,16 @@ try {
     .locator('.tool-hub')
     .getByRole('link', { name: /Watermark an image/ })
     .waitFor();
+  await page.getByRole('heading', { name: 'Create and batch' }).waitFor();
+  const developerGroup = page
+    .locator('.tool-hub-group')
+    .filter({ has: page.getByRole('heading', { name: 'Developer workflows' }) });
+  await developerGroup
+    .getByRole('link', { name: /Recipe builder/ })
+    .waitFor();
   const editorLink = page
-    .locator('.tool-hub')
+    .locator('.tool-hub-group')
+    .filter({ has: page.getByRole('heading', { name: 'Developer workflows' }) })
     .getByRole('link', { name: /Interactive layer editor/ });
   await editorLink.waitFor();
   assert.equal(

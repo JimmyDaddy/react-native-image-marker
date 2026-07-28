@@ -1,59 +1,77 @@
 ---
+import { toolGroups, toolHref } from '../../data/tools.mjs';
+
 interface Props { locale?: 'en' | 'zh-CN' }
 const { locale = 'en' } = Astro.props;
 const zh = locale === 'zh-CN';
-const prefix = zh ? '/zh-cn' : '';
-const tools = zh
-  ? [
-      ['watermark', '图片加水印', '文字、Logo、单个或平铺，一张图马上导出。', '常用'],
-      ['batch-watermark', '批量加水印', '同一个 Recipe 处理多张图片，打包下载 ZIP。', '批处理'],
-      ['confidential-watermark', '保密水印', '用“仅供内部”、DRAFT 等模板快速覆盖整张图。', '模板'],
-      ['invisible-watermark', '嵌入隐形水印', '在像素中写入经过认证的短追踪 locator。', '追踪'],
-      ['trace-checker', '检查追踪水印', '上传一张疑似图片，恢复 Image Marker locator。', '检测'],
-      ['recipe-builder', 'Recipe 构建器', '编辑、验证、预览并导出可复用的 Recipe JSON。', '开发者'],
-      ['editor', '交互式图层编辑器', '拖动、缩放、旋转和排序图层，再通过 Core 渲染 Recipe v2。', 'Editor 0.0.1'],
-      ['recipient-trace-package', '收件人追踪包', '为每个收件人生成不同 locator 和本地映射表。', '分发'],
-      ['trace-lab', '追踪稳健性实验室', '在 JPEG、缩放与裁剪后检查 locator 是否可恢复。', '实验'],
-      ['content-credentials', 'Content Credentials 检查器', '读取图片中已有的 C2PA manifest，不上传文件。', 'C2PA'],
-    ]
-  : [
-      ['watermark', 'Watermark an image', 'Add text, a logo, or a tiled pattern and export one image.', 'Popular'],
-      ['batch-watermark', 'Batch watermark', 'Apply one recipe to several images and download a ZIP.', 'Batch'],
-      ['confidential-watermark', 'Confidential watermark', 'Cover a document image with CONFIDENTIAL, DRAFT, or your own label.', 'Preset'],
-      ['invisible-watermark', 'Embed an invisible trace', 'Write an authenticated short locator into the image pixels.', 'Trace'],
-      ['trace-checker', 'Check a trace watermark', 'Upload a suspect image and recover its Image Marker locator.', 'Detect'],
-      ['recipe-builder', 'Recipe builder', 'Edit, validate, preview, and export reusable Recipe JSON.', 'Developer'],
-      ['editor', 'Interactive layer editor', 'Drag, scale, rotate, and reorder layers, then render Recipe v2 through Core.', 'Editor 0.0.1'],
-      ['recipient-trace-package', 'Recipient trace package', 'Give each recipient a random locator and keep the mapping locally.', 'Distribution'],
-      ['trace-lab', 'Trace robustness lab', 'Check recovery after JPEG recompression, resizing, and a limited crop.', 'Experiment'],
-      ['content-credentials', 'Content Credentials inspector', 'Read an existing C2PA manifest locally without signing the file.', 'C2PA'],
-    ];
+const language = zh ? 'zh' : 'en';
+let toolIndex = 0;
 ---
 
 <div class="tool-hub">
-  {tools.map(([slug, title, description, badge], index) => (
-    <a
-      class:list={['tool-hub-card', index === 0 && 'tool-hub-card-featured']}
-      href={slug === 'editor'
-        ? `${prefix}/playground/?workflow=editor#editor-playground`
-        : `${prefix}/tools/${slug}/`}
-    >
-      <span class="tool-hub-index">{String(index + 1).padStart(2, '0')}</span>
-      <span class="tool-hub-badge">{badge}</span>
-      <h2>{title}</h2>
-      <p>{description}</p>
-      <strong>{zh ? '打开工具' : 'Open tool'} <span aria-hidden="true">→</span></strong>
-    </a>
+  {toolGroups.map((group) => (
+    <section class="tool-hub-group" aria-labelledby={`tool-group-${group.id}`}>
+      <header>
+        <h2 id={`tool-group-${group.id}`}>{group.label[language]}</h2>
+        <p>{group.description[language]}</p>
+      </header>
+      <div class="tool-hub-grid">
+        {group.tools.map((tool) => {
+          const index = toolIndex++;
+          return (
+            <a
+              class:list={[
+                'tool-hub-card',
+                index === 0 && 'tool-hub-card-featured',
+              ]}
+              href={toolHref(tool, language)}
+              data-tool-id={tool.id}
+            >
+              <span class="tool-hub-index">{String(index + 1).padStart(2, '0')}</span>
+              <span class="tool-hub-badge">{tool.badge[language]}</span>
+              <h3>{tool.label[language]}</h3>
+              <p>{tool.description[language]}</p>
+              <strong>{zh ? '打开工具' : 'Open tool'} <span aria-hidden="true">→</span></strong>
+            </a>
+          );
+        })}
+      </div>
+    </section>
   ))}
 </div>
 
 <style>
   .tool-hub {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.9rem;
+    gap: 2.4rem;
     width: min(100%, 88rem);
     margin: 1.5rem auto 3.5rem;
+  }
+  .tool-hub-group {
+    margin: 0;
+  }
+  .tool-hub-group > header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(16rem, 0.8fr);
+    align-items: end;
+    gap: 1rem;
+    margin-bottom: 0.85rem;
+  }
+  .tool-hub-group > header h2 {
+    margin: 0;
+    color: var(--marker-ink);
+    font-size: clamp(1.15rem, 2.4vw, 1.55rem);
+  }
+  .tool-hub-group > header p {
+    margin: 0;
+    color: var(--marker-muted);
+    font-size: 0.82rem;
+    line-height: 1.55;
+  }
+  .tool-hub-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.9rem;
   }
   .tool-hub-card {
     position: relative;
@@ -89,7 +107,7 @@ const tools = zh
     font-size: 0.65rem;
     font-weight: 700;
   }
-  .tool-hub-card h2 {
+  .tool-hub-card h3 {
     margin: 2.1rem 0 0.55rem;
     color: var(--marker-ink);
     font-size: clamp(1.25rem, 2.5vw, 1.7rem);
@@ -113,9 +131,12 @@ const tools = zh
       radial-gradient(circle at 90% 10%, color-mix(in srgb, var(--marker-blue) 24%, transparent), transparent 38%),
       var(--marker-panel);
   }
-  @media (max-width: 58rem) { .tool-hub { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 58rem) {
+    .tool-hub-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
   @media (max-width: 36rem) {
-    .tool-hub { grid-template-columns: 1fr; }
+    .tool-hub-group > header { grid-template-columns: 1fr; }
+    .tool-hub-grid { grid-template-columns: 1fr; }
     .tool-hub-card-featured { grid-column: auto; }
     .tool-hub-card { min-height: 13rem; }
   }

@@ -18,6 +18,7 @@ const contentTypes = new Map([
   ['.png', 'image/png'],
   ['.jpg', 'image/jpeg'],
   ['.jpeg', 'image/jpeg'],
+  ['.webp', 'image/webp'],
   ['.svg', 'image/svg+xml'],
   ['.ico', 'image/x-icon'],
   ['.woff', 'font/woff'],
@@ -84,6 +85,20 @@ try {
   await primaryNav.getByRole('link', { name: 'Playground' }).waitFor();
   await assertWideHomepageLayout(page, origin);
 
+  await page.goto(`${origin}/guides/editor/`, { waitUntil: 'networkidle' });
+  const editorGuideLink = page.getByRole('link', {
+    name: 'live Playground',
+    exact: true,
+  });
+  assert.equal(
+    await editorGuideLink.getAttribute('href'),
+    '/playground/?workflow=editor#editor-playground'
+  );
+  await editorGuideLink.click();
+  await page
+    .locator('[data-workspace-tab="editor"][aria-selected="true"]')
+    .waitFor();
+
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto(`${origin}/playground/`, { waitUntil: 'networkidle' });
   const playground = page.locator('[data-marker-playground]');
@@ -141,6 +156,7 @@ try {
   await page.goto(`${origin}/zh-cn/playground/`, { waitUntil: 'networkidle' });
   await page.getByText('菜单', { exact: true }).click();
   await page.getByRole('link', { name: '使用指南', exact: true }).waitFor();
+  await assertMobileUtilities(page);
   const mobileWidth = await page.evaluate(() => ({
     page: document.documentElement.scrollWidth,
     viewport: window.innerWidth,
@@ -789,7 +805,7 @@ async function assertWideWorkbenchLayout(page, origin) {
 }
 
 async function assertLanguageMenu(page) {
-  const menu = page.locator('[data-language-menu]').first();
+  const menu = page.locator('[data-language-menu]:visible').first();
   await menu.locator('summary').click();
   const popover = menu.locator('.preference-popover');
   await popover.waitFor();
@@ -812,7 +828,7 @@ async function assertLanguageMenu(page) {
 }
 
 async function assertThemeMenu(page) {
-  const menu = page.locator('[data-theme-menu]').first();
+  const menu = page.locator('[data-theme-menu]:visible').first();
   await menu.locator('summary').click();
   const popover = menu.locator('.preference-popover');
   await popover.waitFor();
@@ -835,6 +851,35 @@ async function assertThemeMenu(page) {
     await page.evaluate(() => localStorage.getItem('starlight-theme')),
     ''
   );
+}
+
+async function assertMobileUtilities(page) {
+  const menu = page.locator('.mobile-nav-menu');
+  const version = menu.getByRole('combobox', { name: '文档版本' });
+  await version.waitFor();
+  assert.deepEqual(await version.locator('option').evaluateAll((options) =>
+    options.map((option) => option.value)
+  ), [
+    '/zh-cn/',
+    '/v1/zh-cn/',
+    '/versions/1.0.0/',
+    '/editor/zh-cn/',
+  ]);
+  await menu.getByRole('link', { name: /GitHub/ }).waitFor();
+
+  const themeSummary = menu.locator('[data-theme-menu] summary');
+  assert.equal(await themeSummary.getAttribute('aria-label'), '切换主题');
+  await themeSummary.focus();
+  await themeSummary.press('Enter');
+  await menu.getByRole('menuitemradio', { name: /深色/ }).waitFor();
+  await themeSummary.press('Escape');
+
+  const languageSummary = menu.locator('[data-language-menu] summary');
+  assert.equal(await languageSummary.getAttribute('aria-label'), '切换语言');
+  await languageSummary.focus();
+  await languageSummary.press('Enter');
+  await menu.getByRole('menuitem', { name: /English/ }).waitFor();
+  await languageSummary.press('Escape');
 }
 
 async function assertCustomSelects(playground) {
