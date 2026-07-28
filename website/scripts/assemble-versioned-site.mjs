@@ -40,7 +40,9 @@ const archiveManifest = JSON.parse(
 );
 if (archiveManifest.version !== '1.0.0') {
   throw new Error(
-    `The archive source must be v1.0.0, received ${String(archiveManifest.version)}.`
+    `The archive source must be v1.0.0, received ${String(
+      archiveManifest.version
+    )}.`
   );
 }
 
@@ -55,7 +57,9 @@ if (!['pre-ga', 'ga'].includes(versions.releaseStage)) {
 }
 if (versions.current !== (isGa ? 'v2' : 'v1')) {
   throw new Error(
-    `${versions.releaseStage} documentation must declare ${isGa ? 'v2' : 'v1'} as current.`
+    `${versions.releaseStage} documentation must declare ${
+      isGa ? 'v2' : 'v1'
+    } as current.`
   );
 }
 
@@ -89,7 +93,8 @@ async function prefixStaticSite(source, destination, basePath) {
       );
     if (isGa && prefix === '/v1') {
       content = content
-        .replaceAll('/next/', '/v2/')
+        .replaceAll('/next/', '/')
+        .replaceAll('/v2/', '/')
         .replaceAll('v2 Preview', 'v2 Current')
         .replaceAll('v2 preview', 'v2')
         .replaceAll('v2 预览', 'v2 当前版本');
@@ -98,16 +103,13 @@ async function prefixStaticSite(source, destination, basePath) {
   }
 }
 
-// Before v2 GA, existing unversioned routes remain the v1 documentation. At
-// GA, v2 assets seed the root while every HTML route becomes either the neutral
-// entry point or a compatibility redirect.
+// Before v2 GA, existing unversioned routes remain the v1 documentation and
+// the preview lives under /next/. At GA, v2 owns every unversioned route.
 await cp(isGa ? nextRoot : v1Root, outputRoot, { recursive: true });
 await prefixStaticSite(v1Root, join(outputRoot, 'v1'), '/v1/');
-await prefixStaticSite(
-  nextRoot,
-  join(outputRoot, isGa ? 'v2' : 'next'),
-  isGa ? '/v2/' : '/next/'
-);
+if (!isGa) {
+  await prefixStaticSite(nextRoot, join(outputRoot, 'next'), '/next/');
+}
 
 function escapeHtml(value) {
   return String(value)
@@ -153,80 +155,26 @@ async function writeRedirect(relativePath, target, title, root = outputRoot) {
   await writeFile(path, redirectPage(target, title), 'utf8');
 }
 
-const v2DocsBase = isGa ? '/v2/' : '/next/';
+const v2DocsBase = isGa ? '/' : '/next/';
 
 if (isGa) {
-  const v1Html = new Set(
-    (await collectFiles(v1Root))
-      .filter((file) => extname(file) === '.html')
-      .map((file) => relative(v1Root, file))
-  );
-  const rootHtml = new Set([
-    ...v1Html,
-    ...(await collectFiles(nextRoot))
-      .filter((file) => extname(file) === '.html')
-      .map((file) => relative(nextRoot, file)),
-  ]);
-
-  for (const relativePath of rootHtml) {
-    if (relativePath === 'index.html') continue;
-    const route = routeFromHtmlPath(relativePath);
-    const base = v1Html.has(relativePath) ? '/v1' : '/v2';
-    await writeRedirect(
-      relativePath,
-      `${base}${route}`,
-      `Documentation moved to ${base}${route}`
-    );
-  }
-
   for (const file of await collectFiles(nextRoot)) {
     if (extname(file) !== '.html') continue;
     const relativePath = relative(nextRoot, file);
     const route = routeFromHtmlPath(relativePath);
     await writeRedirect(
       relativePath,
-      `/v2${route}`,
-      `v2 preview moved to /v2${route}`,
+      route,
+      `v2 documentation moved to ${route}`,
+      join(outputRoot, 'v2')
+    );
+    await writeRedirect(
+      relativePath,
+      route,
+      `v2 preview moved to ${route}`,
       join(outputRoot, 'next')
     );
   }
-}
-
-const neutralPage = `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="robots" content="index,follow">
-    <link rel="canonical" href="${siteOrigin}/">
-    <title>React Native Image Marker</title>
-    <style>
-      :root { color-scheme: light dark; font-family: ui-sans-serif, system-ui, sans-serif; }
-      body { max-width: 62rem; margin: 0 auto; padding: 4rem 1.5rem; line-height: 1.65; }
-      .eyebrow { color: #5271ff; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
-      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1rem; margin: 2rem 0; }
-      .card { display: block; padding: 1.25rem; border: 1px solid color-mix(in srgb, currentColor 18%, transparent); border-radius: .9rem; color: inherit; text-decoration: none; }
-      .card:hover { border-color: #5271ff; transform: translateY(-1px); }
-      .card strong { display: block; font-size: 1.1rem; }
-      .card span { color: color-mix(in srgb, currentColor 70%, transparent); }
-    </style>
-  </head>
-  <body>
-    <p class="eyebrow">React Native · iOS · Android · Web</p>
-    <h1>React Native Image Marker</h1>
-    <p>Add visible and invisible watermarks with a typed, cancellable pipeline. Choose the release line that matches your application.</p>
-    <div class="grid">
-      <a class="card" href="/v2/"><strong>Core v2</strong><span>Current release · structured results and Recipe v2</span></a>
-      <a class="card" href="/v1/"><strong>Core v1 LTS</strong><span>Compatibility and critical bug fixes</span></a>
-      <a class="card" href="/editor/"><strong>Editor 0.0.x</strong><span>Optional interactive recipe editor</span></a>
-      <a class="card" href="/versions/1.0.0/"><strong>v1.0.0 archive</strong><span>Immutable historical documentation</span></a>
-    </div>
-    <p lang="zh-CN">请选择版本：<a href="/v2/zh-cn/">Core v2</a>、<a href="/v1/zh-cn/">Core v1 LTS</a>、<a href="/editor/zh-cn/">可选编辑器</a>。</p>
-  </body>
-</html>`;
-
-if (isGa) {
-  await writeFile(join(outputRoot, 'index.html'), neutralPage, 'utf8');
 }
 
 const archivePage = `<!doctype html>
@@ -248,7 +196,9 @@ const archivePage = `<!doctype html>
   <body>
     <span class="badge">Immutable archive</span>
     <h1>React Native Image Marker v1.0.0</h1>
-    <p>This page preserves the original v1.0.0 release. It does not receive fixes and its source is locked to commit <code>${escapeHtml(archiveSha)}</code>.</p>
+    <p>This page preserves the original v1.0.0 release. It does not receive fixes and its source is locked to commit <code>${escapeHtml(
+      archiveSha
+    )}</code>.</p>
     <p>For a compatible v1 release that continues to receive critical fixes, use <code>npm install react-native-image-marker@1</code> and read the v1 LTS documentation.</p>
     <nav>
       <a href="/v1/">v1 LTS documentation</a>

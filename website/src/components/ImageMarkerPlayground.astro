@@ -1,5 +1,6 @@
 ---
 import CustomSelect from './CustomSelect.astro';
+import ImageMarkerEditorPlayground from './ImageMarkerEditorPlayground.astro';
 
 interface Props {
   locale?: 'en' | 'zh-CN';
@@ -25,6 +26,8 @@ const strings = isZh
       batchTabMeta: 'Recipe、进度与 Blob',
       invisibleTab: '隐形追踪',
       invisibleTabMeta: '短 ID、缩放验证与 Worker',
+      editorTab: '交互编辑器',
+      editorTabMeta: '图层、拖拽、撤销与 Recipe v2',
       capabilitiesTitle: '主要功能都可以直接试',
       capabilities: [
         '文字水印',
@@ -36,6 +39,7 @@ const strings = isZh
         '位置与旋转',
         '变量与条件 Recipe',
         '隐形追踪水印',
+        '交互式图层编辑器',
         'Content Credentials 适配器',
         'PNG、JPEG 与 Web Blob',
       ],
@@ -202,6 +206,8 @@ const strings = isZh
       batchTabMeta: 'Variables, progress, and Blob',
       invisibleTab: 'Invisible trace',
       invisibleTabMeta: 'Short IDs, resize checks, and Worker',
+      editorTab: 'Interaction editor',
+      editorTabMeta: 'Layers, gestures, undo, and Recipe v2',
       capabilitiesTitle: 'Try every core workflow',
       capabilities: [
         'Text watermark',
@@ -213,6 +219,7 @@ const strings = isZh
         'Position and rotation',
         'Variable and conditional Recipe',
         'Invisible trace watermark',
+        'Interactive layer editor',
         'Content Credentials adapter',
         'PNG, JPEG, and Web Blob',
       ],
@@ -498,6 +505,18 @@ const invisibleExecutors = ['main', 'worker'].map((value, index) => ({
     >
       <span>{strings.invisibleTab} <em>v1.12</em></span>
       <small>{strings.invisibleTabMeta}</small>
+    </button>
+    <button
+      id={`${idPrefix}-workspace-editor-tab`}
+      type="button"
+      role="tab"
+      aria-selected="false"
+      aria-controls={`${idPrefix}-workspace-editor`}
+      tabindex="-1"
+      data-workspace-tab="editor"
+    >
+      <span>{strings.editorTab} <em>0.0.1</em></span>
+      <small>{strings.editorTabMeta}</small>
     </button>
   </div>
 
@@ -1020,6 +1039,17 @@ const credentials = await Marker.verifyContentCredentials({
         </a>
       </details>
     </section>
+    <section
+      id={`${idPrefix}-workspace-editor`}
+      class="editor-workspace-panel"
+      role="tabpanel"
+      aria-labelledby={`${idPrefix}-workspace-editor-tab`}
+      data-workspace-panel="editor"
+      tabindex="0"
+      hidden
+    >
+      <ImageMarkerEditorPlayground locale={locale} embedded />
+    </section>
     </div>
   </div>
 
@@ -1100,7 +1130,7 @@ const credentials = await Marker.verifyContentCredentials({
   type PlaygroundMode = 'text' | 'image' | 'mixed';
   type LayoutMode = 'single' | 'tile';
   type CodeTarget = 'web' | 'native';
-  type WorkspaceTab = 'visible' | 'batch' | 'invisible';
+  type WorkspaceTab = 'visible' | 'batch' | 'invisible' | 'editor';
   type MarkerSdk = typeof import('../../../src/index');
   type PositionEnum = MarkerSdk['Position'];
 
@@ -1167,6 +1197,17 @@ const credentials = await Marker.verifyContentCredentials({
 
     const defaultBackground = root.dataset.backgroundUrl ?? '';
     const defaultLogo = root.dataset.logoUrl ?? '';
+    const requestedWorkspace = new URLSearchParams(window.location.search).get(
+      'workflow'
+    );
+    const initialWorkspace: WorkspaceTab = [
+      'visible',
+      'batch',
+      'invisible',
+      'editor',
+    ].includes(requestedWorkspace ?? '')
+      ? (requestedWorkspace as WorkspaceTab)
+      : 'visible';
     const state: PlaygroundState = {
       mode: 'mixed',
       textLayout: 'single',
@@ -1175,7 +1216,7 @@ const credentials = await Marker.verifyContentCredentials({
       logoSrc: defaultLogo,
       result: '',
       codeTarget: 'web',
-      workspace: 'visible',
+      workspace: initialWorkspace,
       renderSequence: 0,
     };
 
@@ -1573,6 +1614,7 @@ ${transformNote}  const detection = await Marker.detectInvisible({
     };
 
     const updateCode = () => {
+      if (state.workspace === 'editor') return;
       const createCode = state.workspace === 'batch'
         ? createBatchCode
         : state.workspace === 'invisible'
@@ -1632,6 +1674,14 @@ ${transformNote}  const detection = await Marker.detectInvisible({
       updateCode();
     };
     updateWorkspace(state.workspace);
+    if (
+      state.workspace === 'editor' &&
+      window.location.hash === '#editor-playground'
+    ) {
+      window.requestAnimationFrame(() =>
+        document.getElementById('editor-playground')?.scrollIntoView()
+      );
+    }
 
     const updateMode = (mode: PlaygroundMode) => {
       state.mode = mode;
@@ -2581,7 +2631,7 @@ ${transformNote}  const detection = await Marker.detectInvisible({
 
   .workspace-tabs {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0.4rem;
     margin: 0 0 0.75rem;
     padding: 0.35rem;
@@ -2670,6 +2720,17 @@ ${transformNote}  const detection = await Marker.detectInvisible({
     grid-template-columns: minmax(25rem, 32rem) minmax(0, 1fr);
   }
 
+  .marker-playground[data-workspace='editor'] .playground-shell {
+    grid-template-areas: 'controls';
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .marker-playground[data-workspace='editor'] .preview-panel,
+  .marker-playground[data-workspace='editor'] > .code-panel,
+  .marker-playground[data-workspace='editor'] > .differences {
+    display: none;
+  }
+
   .preview-panel,
   .controls-panel,
   .invisible-panel,
@@ -2706,6 +2767,16 @@ ${transformNote}  const detection = await Marker.detectInvisible({
 
   .workspace-panel-stack > [data-workspace-panel][hidden] {
     display: none;
+  }
+
+  .marker-playground[data-workspace='editor'] .workspace-panel-stack,
+  .marker-playground[data-workspace='editor']
+    .workspace-panel-stack
+    > [data-workspace-panel] {
+    position: static;
+    max-height: none;
+    overflow: visible;
+    scrollbar-gutter: auto;
   }
 
   .panel-heading,

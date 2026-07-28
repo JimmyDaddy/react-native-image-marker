@@ -1,9 +1,10 @@
 ---
 interface Props {
   locale?: 'en' | 'zh-CN';
+  embedded?: boolean;
 }
 
-const { locale = 'en' } = Astro.props;
+const { locale = 'en', embedded = false } = Astro.props;
 const zh = locale === 'zh-CN';
 const base = import.meta.env.BASE_URL;
 const copy = zh
@@ -73,7 +74,7 @@ const copy = zh
 
 <section
   id="editor-playground"
-  class="editor-playground not-content"
+  class:list={['editor-playground', 'not-content', embedded && 'is-embedded']}
   data-editor-playground
   data-background-url={`${base}media/playground-background.jpg`}
   data-copy={JSON.stringify(copy)}
@@ -531,6 +532,12 @@ const copy = zh
       radial-gradient(circle at top right, rgb(82 113 255 / 14%), transparent 30rem),
       var(--sl-color-bg);
     box-shadow: 0 1.5rem 4rem rgb(15 23 42 / 10%);
+  }
+
+  .editor-playground.is-embedded {
+    width: 100%;
+    max-width: none;
+    margin: 0;
   }
 
   .editor-playground,

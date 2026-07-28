@@ -13,10 +13,18 @@ const selected =
       : channel === 'archive'
         ? 'v1.0.0'
         : 'v1';
-const label = pathname.includes('/zh-cn/')
-  ? '文档版本'
-  : 'Documentation version';
-const v2Base = channel === 'current' ? '/v2/' : '/next/';
+const isZh = pathname.includes('/zh-cn/');
+const label = isZh ? '文档版本' : 'Documentation version';
+const v2Base =
+  channel === 'current'
+    ? isZh
+      ? '/zh-cn/'
+      : '/'
+    : isZh
+      ? '/next/zh-cn/'
+      : '/next/';
+const v1Base = isZh ? '/v1/zh-cn/' : '/v1/';
+const editorBase = isZh ? '/editor/zh-cn/' : '/editor/';
 const v2Label = channel === 'current' ? 'v2 Current' : 'v2 Preview';
 ---
 
@@ -24,11 +32,11 @@ const v2Label = channel === 'current' ? 'v2 Current' : 'v2 Preview';
   <span class="sr-only">{label}</span>
   <select aria-label={label} data-version-select>
     <option value={v2Base} selected={selected === 'v2'}>{v2Label}</option>
-    <option value="/v1/" selected={selected === 'v1'}>v1 LTS</option>
+    <option value={v1Base} selected={selected === 'v1'}>v1 LTS</option>
     <option value="/versions/1.0.0/" selected={selected === 'v1.0.0'}>
       v1.0.0 Archive
     </option>
-    <option value="/editor/" selected={selected === 'editor'}>
+    <option value={editorBase} selected={selected === 'editor'}>
       Editor 0.0.x
     </option>
   </select>

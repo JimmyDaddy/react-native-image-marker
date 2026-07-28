@@ -246,6 +246,11 @@ export default defineConfig({
               slug: 'tools/recipe-builder',
             },
             {
+              label: 'Interaction editor',
+              translations: { 'zh-CN': '交互式图层编辑器' },
+              link: '/playground/?workflow=editor#editor-playground',
+            },
+            {
               label: 'Recipient trace package',
               translations: { 'zh-CN': '收件人追踪包' },
               slug: 'tools/recipient-trace-package',
