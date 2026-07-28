@@ -7,7 +7,7 @@
       "id": "v2",
       "label": "v2 Current",
       "status": "current",
-      "basePath": "/v2/",
+      "basePath": "/",
       "source": "master",
       "packageRange": "2.0.x"
     },

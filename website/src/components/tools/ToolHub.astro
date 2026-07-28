@@ -11,6 +11,7 @@ const tools = zh
       ['invisible-watermark', '嵌入隐形水印', '在像素中写入经过认证的短追踪 locator。', '追踪'],
       ['trace-checker', '检查追踪水印', '上传一张疑似图片，恢复 Image Marker locator。', '检测'],
       ['recipe-builder', 'Recipe 构建器', '编辑、验证、预览并导出可复用的 Recipe JSON。', '开发者'],
+      ['editor', '交互式图层编辑器', '拖动、缩放、旋转和排序图层，再通过 Core 渲染 Recipe v2。', 'Editor 0.0.1'],
       ['recipient-trace-package', '收件人追踪包', '为每个收件人生成不同 locator 和本地映射表。', '分发'],
       ['trace-lab', '追踪稳健性实验室', '在 JPEG、缩放与裁剪后检查 locator 是否可恢复。', '实验'],
       ['content-credentials', 'Content Credentials 检查器', '读取图片中已有的 C2PA manifest，不上传文件。', 'C2PA'],
@@ -22,6 +23,7 @@ const tools = zh
       ['invisible-watermark', 'Embed an invisible trace', 'Write an authenticated short locator into the image pixels.', 'Trace'],
       ['trace-checker', 'Check a trace watermark', 'Upload a suspect image and recover its Image Marker locator.', 'Detect'],
       ['recipe-builder', 'Recipe builder', 'Edit, validate, preview, and export reusable Recipe JSON.', 'Developer'],
+      ['editor', 'Interactive layer editor', 'Drag, scale, rotate, and reorder layers, then render Recipe v2 through Core.', 'Editor 0.0.1'],
       ['recipient-trace-package', 'Recipient trace package', 'Give each recipient a random locator and keep the mapping locally.', 'Distribution'],
       ['trace-lab', 'Trace robustness lab', 'Check recovery after JPEG recompression, resizing, and a limited crop.', 'Experiment'],
       ['content-credentials', 'Content Credentials inspector', 'Read an existing C2PA manifest locally without signing the file.', 'C2PA'],
@@ -30,7 +32,12 @@ const tools = zh
 
 <div class="tool-hub">
   {tools.map(([slug, title, description, badge], index) => (
-    <a class:list={['tool-hub-card', index === 0 && 'tool-hub-card-featured']} href={`${prefix}/tools/${slug}/`}>
+    <a
+      class:list={['tool-hub-card', index === 0 && 'tool-hub-card-featured']}
+      href={slug === 'editor'
+        ? `${prefix}/playground/?workflow=editor#editor-playground`
+        : `${prefix}/tools/${slug}/`}
+    >
       <span class="tool-hub-index">{String(index + 1).padStart(2, '0')}</span>
       <span class="tool-hub-badge">{badge}</span>
       <h2>{title}</h2>

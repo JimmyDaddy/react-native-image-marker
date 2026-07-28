@@ -95,8 +95,9 @@ try {
   await assertLayoutControlsAndCode(page, playground);
   await assertInvisibleTrace(page, playground);
   await assertBatchRecipe(page, playground);
-  await selectWorkspaceTab(playground, 'visible');
+  await selectWorkspaceTab(playground, 'editor');
   await assertEditorPlayground(page);
+  await selectWorkspaceTab(playground, 'visible');
 
   const code = await playground.locator('[data-web-code]').textContent();
   assert.match(
@@ -126,7 +127,7 @@ try {
   await waitForRendered(chinesePlayground);
   await page
     .locator('[data-editor-playground][data-initialized="true"]')
-    .waitFor();
+    .waitFor({ state: 'attached' });
   await page.getByText('试着给图片加上水印。').waitFor();
   await assertWorkbenchLayout(page);
   await assertLanguageMenu(page);
@@ -302,7 +303,9 @@ async function assertBatchRecipe(page, playground) {
     'Batch processing code'
   );
   const webCode = await playground.locator('[data-web-code]').textContent();
-  const nativeCode = await playground.locator('[data-native-code]').textContent();
+  const nativeCode = await playground
+    .locator('[data-native-code]')
+    .textContent();
   assert.match(webCode ?? '', /Marker\.createRecipe/);
   assert.match(webCode ?? '', /schemaVersion: 2/);
   assert.match(webCode ?? '', /layers:/);
@@ -392,27 +395,26 @@ async function assertEditorPlayground(page) {
   const beforeTitle = before.layers.find((layer) => layer.id === 'web-title');
   const bounds = await title.boundingBox();
   assert(bounds, 'Editor title layer should be visible.');
-  const canvasBounds = await editor.locator('[data-editor-canvas]').boundingBox();
+  const canvasBounds = await editor
+    .locator('[data-editor-canvas]')
+    .boundingBox();
   assert(canvasBounds, 'Editor canvas should be visible.');
   const dragStart = {
     x: Math.max(bounds.x, canvasBounds.x) + 20,
     y: Math.max(bounds.y, canvasBounds.y) + 20,
   };
-  const hitTarget = await page.evaluate(
-    ({ x, y }) => {
-      const hit = document.elementFromPoint(x, y);
-      return {
-        tag: hit?.tagName,
-        layer: hit?.closest('[data-editor-layer]')?.getAttribute(
-          'data-editor-layer'
-        ),
-        classes: hit?.getAttribute('class'),
-        action: hit?.getAttribute('data-editor-action'),
-        text: hit?.textContent,
-      };
-    },
-    dragStart
-  );
+  const hitTarget = await page.evaluate(({ x, y }) => {
+    const hit = document.elementFromPoint(x, y);
+    return {
+      tag: hit?.tagName,
+      layer: hit
+        ?.closest('[data-editor-layer]')
+        ?.getAttribute('data-editor-layer'),
+      classes: hit?.getAttribute('class'),
+      action: hit?.getAttribute('data-editor-action'),
+      text: hit?.textContent,
+    };
+  }, dragStart);
   await page.mouse.move(dragStart.x, dragStart.y);
   await page.mouse.down();
   await page.mouse.move(dragStart.x + 42, dragStart.y + 24, { steps: 4 });
@@ -476,7 +478,7 @@ async function assertLayoutControlsAndCode(page, playground) {
   const preview = playground.locator('[data-preview]');
 
   const workspaceTabs = playground.locator('[data-workspace-tab]');
-  assert.equal(await workspaceTabs.count(), 3);
+  assert.equal(await workspaceTabs.count(), 4);
   assert.equal(
     await playground
       .locator('[data-workspace-tab="visible"]')
@@ -488,7 +490,7 @@ async function assertLayoutControlsAndCode(page, playground) {
     'Visible watermark controls should be the initial workspace.'
   );
   assert.equal(await playground.locator('[data-example]').count(), 6);
-  assert.equal(await playground.locator('.capability-index li').count(), 11);
+  assert.equal(await playground.locator('.capability-index li').count(), 12);
   assert(
     await textSingle.isVisible(),
     'Text layout switch should be visible without opening advanced controls.'
@@ -583,10 +585,14 @@ async function selectWorkspaceTab(playground, workspace) {
   await tab.click();
   assert.equal(await tab.getAttribute('aria-selected'), 'true');
   assert.equal(await panel.getAttribute('hidden'), null);
-  assert.equal(
-    await playground.locator('.code-panel').getAttribute('data-code-workspace'),
-    workspace
-  );
+  if (workspace !== 'editor') {
+    assert.equal(
+      await playground
+        .locator('.code-panel')
+        .getAttribute('data-code-workspace'),
+      workspace
+    );
+  }
   assert(
     await panel.isVisible(),
     `${workspace} workspace panel should be visible.`
