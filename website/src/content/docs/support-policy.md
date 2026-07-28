@@ -1,18 +1,18 @@
 ---
 title: Versions and support
-description: Choose between v1 LTS, the v2 preview, and immutable historical documentation.
+description: Choose between current Core v2, v1 LTS, and immutable historical documentation.
 ---
 
 React Native Image Marker maintains independent documentation and release
-lines so existing v1 applications can keep receiving critical fixes while v2
-is developed.
+lines so Core v2 can evolve while existing v1 applications continue receiving
+critical fixes.
 
 | Version | Status | Documentation | Install |
 | --- | --- | --- | --- |
 | v1 LTS (`1.12.x`) | Current maintenance line | [v1 documentation](/v1/) | `npm install react-native-image-marker@1` |
-| v2 | Preview | [v2 preview](/next/) | Published prereleases use the `next` npm tag |
+| Core v2 (`2.0.x`) | Current release | [v2 documentation](/v2/) | `npm install react-native-image-marker@latest` |
 | v1.0.0 | Immutable archive | [v1.0.0 archive](/versions/1.0.0/) | `npm install react-native-image-marker@1.0.0` |
-| Editor `0.0.x` | Experimental | [Editor status](/editor/) | Requires Core `^2.0.0` |
+| Editor `0.0.x` | Experimental | [Editor status](/editor/) | `npm install react-native-image-marker-editor@0.0.1` |
 
 ## v1 LTS commitment
 

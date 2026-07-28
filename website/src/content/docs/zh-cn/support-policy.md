@@ -1,17 +1,17 @@
 ---
 title: 版本与支持政策
-description: 在 v1 LTS、v2 预览版和不可变历史文档之间进行选择。
+description: 在当前 Core v2、v1 LTS 和不可变历史文档之间进行选择。
 ---
 
 React Native Image Marker 使用彼此独立的发布和文档线路，让现有 v1
-应用在 v2 开发期间仍能继续获得关键修复。
+应用继续获得关键修复，同时允许 Core v2 独立演进。
 
 | 版本 | 状态 | 文档 | 安装方式 |
 | --- | --- | --- | --- |
 | v1 LTS（`1.12.x`） | 当前维护线 | [v1 文档](/v1/) | `npm install react-native-image-marker@1` |
-| v2 | 预览版 | [v2 预览文档](/next/) | 预发布版本使用 npm `next` 标签 |
+| Core v2（`2.0.x`） | 当前正式版本 | [v2 文档](/v2/) | `npm install react-native-image-marker@latest` |
 | v1.0.0 | 不可变归档 | [v1.0.0 归档](/versions/1.0.0/) | `npm install react-native-image-marker@1.0.0` |
-| Editor `0.0.x` | 实验性 | [Editor 状态](/editor/) | 依赖 Core `^2.0.0` |
+| Editor `0.0.x` | 实验性 | [Editor 状态](/editor/) | `npm install react-native-image-marker-editor@0.0.1` |
 
 ## v1 LTS 承诺
 
