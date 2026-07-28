@@ -47,6 +47,14 @@ jobs:
       - name: Build Core type dependency
         run: npm run prepack
 
+      - name: Restore Editor repository metadata for provenance
+        working-directory: packages/editor
+        run: >-
+          npm pkg set
+          repository.type=git
+          repository.url=git+https://github.com/JimmyDaddy/react-native-image-marker.git
+          repository.directory=packages/editor
+
       - name: Build and inspect Editor package
         working-directory: packages/editor
         run: |
