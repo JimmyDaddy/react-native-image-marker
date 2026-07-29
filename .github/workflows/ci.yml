@@ -25,9 +25,40 @@ jobs:
       editor: ${{ steps.filter.outputs.editor }}
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
+
+      - name: Verify immutable GitHub Actions references
+        run: |
+          python3 <<'PY'
+          import pathlib
+          import re
+
+          action_ref = re.compile(r"^\s*uses:\s*([^\s#]+)", re.MULTILINE)
+          immutable_ref = re.compile(r"^[^@]+@[0-9a-f]{40}$")
+          failures = []
+
+          for path in pathlib.Path(".github").rglob("*"):
+              if path.suffix not in {".yml", ".yaml"}:
+                  continue
+              content = path.read_text(encoding="utf-8")
+              for match in action_ref.finditer(content):
+                  value = match.group(1)
+                  if value.startswith("./") or value.startswith("docker://"):
+                      continue
+                  if not immutable_ref.fullmatch(value):
+                      line = content.count("\n", 0, match.start()) + 1
+                      failures.append(f"{path}:{line}: {value}")
+
+          if failures:
+              raise SystemExit(
+                  "Remote GitHub Actions must use a full commit SHA:\n"
+                  + "\n".join(failures)
+              )
+
+          print("Verified immutable GitHub Actions references.")
+          PY
 
       - name: Classify changed files
         id: filter
@@ -247,10 +278,10 @@ jobs:
     if: needs.changes.outputs.security == 'true'
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Dependency Review
-        uses: actions/dependency-review-action@v5
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5
         if: github.event_name == 'pull_request'
         with:
           fail-on-severity: moderate
@@ -262,7 +293,7 @@ jobs:
           allow-ghsas: GHSA-mh99-v99m-4gvg,GHSA-2p57-rm9w-gvfp,GHSA-gh4j-gqv2-49f6
 
       - name: Setup node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: '22.22.0'
 
@@ -289,10 +320,10 @@ jobs:
     if: needs.changes.outputs.js == 'true'
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Setup node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: '22.22.0'
 
@@ -337,10 +368,10 @@ jobs:
     if: needs.changes.outputs.editor == 'true'
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Setup node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: '22.22.0'
           cache: npm
@@ -366,10 +397,10 @@ jobs:
     if: needs.changes.outputs.c2pa == 'true'
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Setup node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: '22.22.0'
           cache: npm
@@ -402,10 +433,10 @@ jobs:
         node: ['22.22.0', '24']
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Setup node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: ${{ matrix.node }}
           cache: npm
@@ -482,10 +513,10 @@ jobs:
     if: needs.changes.outputs.docs == 'true'
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Setup node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: '22.22.0'
           cache: npm
@@ -514,10 +545,10 @@ jobs:
     if: needs.changes.outputs.web == 'true'
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Setup node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: '22.22.0'
           cache: npm
@@ -535,7 +566,7 @@ jobs:
         run: npm run test:web -- --coverage
 
       - name: Upload Web coverage report
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: web-coverage-${{ github.sha }}
           path: coverage
@@ -565,24 +596,24 @@ jobs:
     timeout-minutes: 45
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Setup node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: '22.22.0'
           cache: npm
           cache-dependency-path: expo-example/package-lock.json
 
       - name: Set up JDK
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5
         with:
           distribution: temurin
           java-version: '17'
           cache: gradle
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v4
+        uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4
 
       - name: Install dependencies
         run: npm ci --prefix expo-example --ignore-scripts --no-audit --no-fund
@@ -612,24 +643,24 @@ jobs:
     timeout-minutes: 45
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Setup node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: '22.22.0'
           cache: npm
           cache-dependency-path: package-lock.json
 
       - name: Set up JDK
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5
         with:
           distribution: temurin
           java-version: '17'
           cache: gradle
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v4
+        uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4
 
       - name: Install and build current React Native fixture
         run: |
@@ -645,10 +676,10 @@ jobs:
     if: needs.changes.outputs.native == 'true'
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Verify Dev Changed files
-        uses: tj-actions/changed-files@v47
+        uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v47
         id: verify-dev-changed-files
         with:
           files: |
@@ -670,14 +701,14 @@ jobs:
 
       - name: Set up Ruby
         if: steps.verify-dev-changed-files.outputs.any_changed == 'true'
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1
         with:
           ruby-version: '3.2'
           bundler-cache: true
 
       - name: Setup node
         if: steps.verify-dev-changed-files.outputs.any_changed == 'true'
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: '22.22.0'
 
@@ -703,10 +734,10 @@ jobs:
     if: needs.changes.outputs.android == 'true'
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Verify Android Changed files
-        uses: tj-actions/changed-files@v47
+        uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v47
         id: verify-android-changed-files
         with:
           files: |
@@ -754,13 +785,13 @@ jobs:
             ${{ runner.os }}-gradle-
 
       - name: Setup node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         if: steps.verify-android-changed-files.outputs.any_changed == 'true'
         with:
           node-version: '22.22.0'
 
       - name: Set up JDK
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5
         if: steps.verify-android-changed-files.outputs.any_changed == 'true'
         with:
           distribution: 'zulu'
@@ -795,7 +826,7 @@ jobs:
 
       - name: Upload APK
         if: steps.verify-android-changed-files.outputs.any_changed == 'true'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: app-release-${{ github.sha }}.apk
           path: ${{ github.workspace }}/example/android/app-release-${{ github.sha }}.apk
@@ -825,10 +856,10 @@ jobs:
         target: [default]
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Verify Android Changed files
-        uses: tj-actions/changed-files@v47
+        uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v47
         id: verify-android-changed-files
         with:
           files: |
@@ -876,13 +907,13 @@ jobs:
             ${{ runner.os }}-gradle-
 
       - name: Setup node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         if: steps.verify-android-changed-files.outputs.any_changed == 'true'
         with:
           node-version: '22.22.0'
 
       - name: Set up JDK
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5
         if: steps.verify-android-changed-files.outputs.any_changed == 'true'
         with:
           distribution: 'zulu'
@@ -903,7 +934,7 @@ jobs:
           sudo udevadm trigger --name-match=kvm
 
       - name: Instrumentation Tests
-        uses: reactivecircus/android-emulator-runner@v2
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
         if: steps.verify-android-changed-files.outputs.any_changed == 'true'
         with:
           api-level: ${{ matrix.api-level }}
@@ -913,7 +944,7 @@ jobs:
           script: bash scripts/run-android-instrumentation.sh
 
       - name: Upload Reports
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         if: steps.verify-android-changed-files.outputs.any_changed == 'true'
         with:
           name: Test-Reports-api-${{ matrix.api-level }}
@@ -931,10 +962,10 @@ jobs:
         cocoapods: ['1.15.2']
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Verify iOS Changed files
-        uses: tj-actions/changed-files@v47
+        uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v47
         id: verify-iOS-changed-files
         with:
           files: |
@@ -971,7 +1002,7 @@ jobs:
 
       - name: Cache Pods
         id: cache-pods
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
         with:
           path: example/ios/Pods
@@ -981,7 +1012,7 @@ jobs:
             ${{ runner.os }}-pods-
 
       - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1
         if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
         with:
           ruby-version: '3.2'
@@ -993,7 +1024,7 @@ jobs:
 
       - name: Setup node
         if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: '22.22.0'
 
