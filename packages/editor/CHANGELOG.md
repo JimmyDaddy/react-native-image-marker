@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.1.0 (2026-07-29)
+
+- Stabilized the public Editor and `core-adapter` export contract while keeping
+  `react-native-image-marker@^2.0.0` as the rendering peer.
+- Added optional `testID` props with stable canvas, layer, toolbar, and action
+  identifiers for application tests and native automation.
+- Kept individual layers exposed to assistive technology instead of grouping
+  them behind one parent canvas accessibility element.
+- Added React component coverage plus iOS and Android end-to-end workflows for
+  layer creation, undo, Core preview, and original-resolution export.
+- Added a checked API contract, packed-consumer type coverage, and migration
+  notes for applications upgrading from `0.0.x`.
+- Kept the Recipe v2, controller, projection, and adapter APIs backward
+  compatible with `0.0.3`; no application code change is required.
+
 ## 0.0.3 (2026-07-29)
 
 - Added an explicit `sourceSize` coordinate space so the interactive surface,

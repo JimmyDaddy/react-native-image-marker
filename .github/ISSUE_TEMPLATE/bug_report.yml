@@ -1,5 +1,5 @@
 name: Bug report
-description: Report a reproducible problem on iOS, Android, Expo, or Web.
+description: Report a reproducible Core 2 or optional Editor problem.
 title: '[Bug]: '
 labels: [bug]
 body:
@@ -7,6 +7,17 @@ body:
     attributes:
       value: |
         Please include a minimal reproduction. Image rendering bugs are difficult to diagnose from screenshots alone.
+  - type: dropdown
+    id: package
+    attributes:
+      label: Affected package
+      options:
+        - react-native-image-marker (Core)
+        - react-native-image-marker-editor (optional Editor)
+        - Both Core and Editor
+        - Not sure
+    validations:
+      required: true
   - type: dropdown
     id: platform
     attributes:
@@ -23,8 +34,8 @@ body:
     id: versions
     attributes:
       label: Versions
-      description: Include react-native-image-marker, React Native, Expo (if used), and browser versions.
-      placeholder: react-native-image-marker 1.5.0; React Native 0.86.0; Expo 57.0.7
+      description: Include Core, optional Editor, React Native, Expo (if used), and browser versions.
+      placeholder: react-native-image-marker 2.0.0; react-native-image-marker-editor 0.1.0; React Native 0.86.0
     validations:
       required: true
   - type: dropdown
@@ -64,6 +75,11 @@ body:
     attributes:
       label: Image details
       description: Source type, dimensions, format, orientation, transparency, and whether the URL permits CORS.
+  - type: textarea
+    id: recipe_details
+    attributes:
+      label: Recipe / Editor details
+      description: If applicable, include the minimal Recipe v2, sourceSize, preview maxSize, custom renderLayer behavior, and whether the issue appears in the editor canvas, Core preview, original export, or all three.
   - type: textarea
     id: invisible_details
     attributes:

@@ -202,6 +202,43 @@ final class ImageMarkerExampleUITests: XCTestCase {
     XCTAssertTrue(featureButton(in: app, identifier: "feature-watermark-orientation", label: "Watermark orientation").exists)
   }
 
+  func testEditorUndoPreviewAndOriginalExportRunThroughCore() throws {
+    let app = XCUIApplication()
+    app.launch()
+
+    XCTAssertTrue(app.staticTexts["Image Marker Lab"].waitForExistence(timeout: 45))
+    let editorTab = app.descendants(matching: .any)["surface-editor"]
+    XCTAssertTrue(editorTab.waitForExistence(timeout: 5))
+    editorTab.tap()
+
+    XCTAssertTrue(app.descendants(matching: .any)["editor-canvas"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.descendants(matching: .any)["editor-layer-editor-title"].exists)
+    XCTAssertTrue(app.descendants(matching: .any)["editor-layer-editor-logo"].exists)
+
+    app.descendants(matching: .any)["editor-add-text"].tap()
+    let addedLayer = app.descendants(matching: .any)["editor-layer-layer-editor-3"]
+    XCTAssertTrue(addedLayer.waitForExistence(timeout: 5))
+    app.descendants(matching: .any)["editor-toolbar-undo"].tap()
+    XCTAssertFalse(addedLayer.waitForExistence(timeout: 1))
+
+    app.descendants(matching: .any)["editor-preview"].tap()
+    XCTAssertTrue(app.descendants(matching: .any)["editor-result-image"].waitForExistence(timeout: 30))
+    let previewReady = app.descendants(matching: .any).matching(
+      NSPredicate(format: "identifier == %@ AND label BEGINSWITH %@", "editor-status", "Preview ready")
+    ).firstMatch
+    XCTAssertTrue(previewReady.waitForExistence(timeout: 5))
+
+    let export = app.descendants(matching: .any)["editor-export"]
+    if !export.isHittable {
+      app.scrollViews.firstMatch.swipeDown()
+    }
+    export.tap()
+    let exportReady = app.descendants(matching: .any).matching(
+      NSPredicate(format: "identifier == %@ AND label BEGINSWITH %@", "editor-status", "Export ready")
+    ).firstMatch
+    XCTAssertTrue(exportReady.waitForExistence(timeout: 30))
+  }
+
   func testTextAnchorOffsetFeatureProducesPreview() throws {
     let app = XCUIApplication()
     app.launch()
