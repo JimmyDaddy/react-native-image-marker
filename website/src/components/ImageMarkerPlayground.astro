@@ -70,8 +70,8 @@ const strings = isZh
         { id: 'outline', title: '高对比文字描边', meta: '明暗底图都清楚', version: '' },
         { id: 'tiled-text', title: '平铺文字', meta: '错行、间距、旋转', version: '' },
         { id: 'tiled-logo', title: '平铺 Logo', meta: '一次解码，多处绘制', version: '' },
-        { id: 'opacity', title: '半透明文字', meta: '整个文字图层 40%', version: 'v1.8' },
-        { id: 'blend', title: '自然融合', meta: 'Screen 文字 + Multiply Logo', version: 'v1.9' },
+        { id: 'opacity', title: '半透明文字', meta: '整个文字图层 40%', version: '' },
+        { id: 'blend', title: '自然融合', meta: 'Screen 文字 + Multiply Logo', version: '' },
       ],
       textLayer: '文字设置',
       text: '文字内容',
@@ -126,7 +126,7 @@ const strings = isZh
       dimensions: '尺寸',
       elapsed: '耗时',
       localNote: '本地图片不会离开你的设备。刷新页面后，选择的文件会被清除。',
-      batchEyebrow: 'v1.9 · 变量 Recipe 与 Web Blob',
+      batchEyebrow: 'Core 2 · 变量 Recipe 与 Web Blob',
       batchTitle: '一次选择多张图片，自动写入各自文件名。',
       batchDescription:
         '当前文字、Logo 和导出设置会保存成一个 Recipe，文字会追加每张源文件的名称。Web 最多同时处理 4 张；结果仍按选择顺序排列。',
@@ -142,7 +142,7 @@ const strings = isZh
       batchFailed: '批量处理失败',
       batchResults: '处理结果',
       downloadResult: '保存',
-      invisibleEyebrow: 'v1.12 · 跨端隐形追踪',
+      invisibleEyebrow: 'Core 2 · 跨端隐形追踪',
       invisibleTitle: '画面看不出变化，也能找回短 ID。',
       invisibleDescription:
         '把短 locator 写入图片像素，再用相同密钥验证。适合素材分发追踪；它不是 DRM，也不能证明图片从未被修改。',
@@ -250,8 +250,8 @@ const strings = isZh
         { id: 'outline', title: 'High-contrast outline', meta: 'Readable on light or dark', version: '' },
         { id: 'tiled-text', title: 'Tiled text', meta: 'Stagger, gaps, rotation', version: '' },
         { id: 'tiled-logo', title: 'Tiled logo', meta: 'Decode once, draw many', version: '' },
-        { id: 'opacity', title: 'Translucent text', meta: 'Whole text layer at 40%', version: 'v1.8' },
-        { id: 'blend', title: 'Natural compositing', meta: 'Screen text + Multiply logo', version: 'v1.9' },
+        { id: 'opacity', title: 'Translucent text', meta: 'Whole text layer at 40%', version: '' },
+        { id: 'blend', title: 'Natural compositing', meta: 'Screen text + Multiply logo', version: '' },
       ],
       textLayer: 'Text settings',
       text: 'Watermark text',
@@ -307,7 +307,7 @@ const strings = isZh
       dimensions: 'Dimensions',
       elapsed: 'Time',
       localNote: 'Local images never leave your device. Selected files are cleared when you refresh.',
-      batchEyebrow: 'v1.9 · Variable Recipe and Web Blob',
+      batchEyebrow: 'Core 2 · Variable Recipe and Web Blob',
       batchTitle: 'Choose several images. Add each filename automatically.',
       batchDescription:
         'Your current text, logo, and output settings become one reusable Recipe, and each text mark includes its source filename. Web runs up to four jobs at once and keeps results in selection order.',
@@ -323,7 +323,7 @@ const strings = isZh
       batchFailed: 'Batch failed',
       batchResults: 'Batch results',
       downloadResult: 'Save',
-      invisibleEyebrow: 'v1.12 · Cross-runtime invisible traces',
+      invisibleEyebrow: 'Core 2 · Cross-runtime invisible traces',
       invisibleTitle: 'Keep the image clean. Recover a short ID later.',
       invisibleDescription:
         'Write a short locator into the pixels, then authenticate it with the same key. Use it for distribution tracing—not as DRM or proof that an image was never edited.',
@@ -491,7 +491,7 @@ const invisibleExecutors = ['main', 'worker'].map((value, index) => ({
       tabindex="-1"
       data-workspace-tab="batch"
     >
-      <span>{strings.batchTab} <em>v1.9</em></span>
+      <span>{strings.batchTab} <em>Core 2</em></span>
       <small>{strings.batchTabMeta}</small>
     </button>
     <button
@@ -503,7 +503,7 @@ const invisibleExecutors = ['main', 'worker'].map((value, index) => ({
       tabindex="-1"
       data-workspace-tab="invisible"
     >
-      <span>{strings.invisibleTab} <em>v1.12</em></span>
+      <span>{strings.invisibleTab} <em>Core 2</em></span>
       <small>{strings.invisibleTabMeta}</small>
     </button>
     <button
