@@ -17,6 +17,7 @@ import {
 import type { WatermarkRecipeDefinitionLayer } from 'react-native-image-marker';
 import { angle, distance } from './geometry';
 import { ImageMarkerEditorController } from './controller';
+import { createEditorViewportProjection } from './projection';
 import type {
   EditorKeyCommand,
   EditorPoint,
@@ -25,17 +26,30 @@ import type {
   EditorState,
 } from './types';
 
+export interface EditorLayerRenderContext {
+  sourceSize: EditorSize;
+  viewportSize: EditorSize;
+  scale: number;
+}
+
 export interface ImageMarkerEditorProps {
   controller: ImageMarkerEditorController;
   width: number;
   height: number;
+  /**
+   * Original background dimensions used by Recipe pixel coordinates. When
+   * omitted, the viewport dimensions remain the coordinate space for backward
+   * compatibility.
+   */
+  sourceSize?: EditorSize;
   background?: React.ReactNode;
   style?: StyleProp<ViewStyle>;
   snapThreshold?: number;
   getLayerSize?: (layer: WatermarkRecipeDefinitionLayer) => EditorSize;
   renderLayer?: (
     layer: WatermarkRecipeDefinitionLayer,
-    selected: boolean
+    selected: boolean,
+    context: EditorLayerRenderContext
   ) => React.ReactNode;
   onStateChange?: (state: EditorState) => void;
 }
@@ -85,60 +99,98 @@ function defaultLayerSize(layer: WatermarkRecipeDefinitionLayer): EditorSize {
       height: Math.max(fontSize * 1.4, 32),
     };
   }
+  const resolved = Image.resolveAssetSource(layer.src as ImageSourcePropType);
+  if (resolved?.width && resolved?.height) {
+    return { width: resolved.width, height: resolved.height };
+  }
   return { width: 120, height: 80 };
 }
 
 function defaultTextStyle(
-  layer: Extract<WatermarkRecipeDefinitionLayer, { type: 'text' }>
+  layer: Extract<WatermarkRecipeDefinitionLayer, { type: 'text' }>,
+  viewportScale: number
 ): TextStyle {
   return {
     color: layer.style?.color ?? '#FFFFFF',
-    fontSize: layer.style?.fontSize ?? 14,
+    fontSize: (layer.style?.fontSize ?? 14) * viewportScale,
     fontWeight: layer.style?.bold ? '700' : '400',
     fontStyle: layer.style?.italic ? 'italic' : 'normal',
+    textAlign: layer.style?.textAlign ?? 'left',
+    textShadowColor: layer.style?.shadowStyle?.color,
+    textShadowOffset: layer.style?.shadowStyle
+      ? {
+          width: layer.style.shadowStyle.dx * viewportScale,
+          height: layer.style.shadowStyle.dy * viewportScale,
+        }
+      : undefined,
+    textShadowRadius: (layer.style?.shadowStyle?.radius ?? 0) * viewportScale,
   };
 }
 
-function defaultImageStyle(size: EditorSize): ImageStyle {
-  return { width: size.width, height: size.height };
+function defaultImageStyle(
+  size: EditorSize,
+  viewportScale: number
+): ImageStyle {
+  return {
+    width: size.width * viewportScale,
+    height: size.height * viewportScale,
+  };
 }
 
 function positionedLayerStyle(
   layer: WatermarkRecipeDefinitionLayer,
   start: EditorPoint,
-  size: EditorSize
+  size: EditorSize,
+  viewportScale: number
 ): ViewStyle {
+  const transformScale = layer.type === 'image' ? layer.scale ?? 1 : 1;
   return {
-    left: start.x,
-    top: start.y,
-    width: size.width,
-    height: size.height,
-    opacity: layer.locked ? 0.72 : 1,
+    left: start.x * viewportScale,
+    top: start.y * viewportScale,
+    width: size.width * viewportScale,
+    height: size.height * viewportScale,
+    opacity: layer.alpha ?? 1,
     transform: [
-      { scale: layerScale(layer) },
+      { scale: transformScale },
       { rotate: `${layerRotation(layer)}deg` },
     ],
   };
 }
 
-function snapGuideStyle(guide: EditorSnapGuide, canvas: EditorSize): ViewStyle {
+function snapGuideStyle(
+  guide: EditorSnapGuide,
+  canvas: EditorSize,
+  viewportScale: number
+): ViewStyle {
   return guide.axis === 'x'
-    ? { left: guide.position, top: 0, width: 1, height: canvas.height }
-    : { top: guide.position, left: 0, height: 1, width: canvas.width };
+    ? {
+        left: guide.position * viewportScale,
+        top: 0,
+        width: 1,
+        height: canvas.height * viewportScale,
+      }
+    : {
+        top: guide.position * viewportScale,
+        left: 0,
+        height: 1,
+        width: canvas.width * viewportScale,
+      };
 }
 
 function DefaultLayer({
   layer,
   size,
+  viewportScale,
 }: {
   layer: WatermarkRecipeDefinitionLayer;
   size: EditorSize;
+  viewportScale: number;
 }) {
   if (layer.type === 'text') {
     return (
       <Text
         numberOfLines={3}
-        style={[styles.defaultText, defaultTextStyle(layer)]}
+        style={[styles.defaultText, defaultTextStyle(layer, viewportScale)]}
       >
         {layer.text}
       </Text>
@@ -148,13 +200,15 @@ function DefaultLayer({
     <Image
       resizeMode="contain"
       source={layer.src as ImageSourcePropType}
-      style={defaultImageStyle(size)}
+      style={defaultImageStyle(size, viewportScale)}
     />
   );
 }
 
 interface EditorLayerProps {
-  canvas: EditorSize;
+  sourceCanvas: EditorSize;
+  viewportSize: EditorSize;
+  viewportScale: number;
   controller: ImageMarkerEditorController;
   layer: WatermarkRecipeDefinitionLayer;
   selected: boolean;
@@ -164,7 +218,9 @@ interface EditorLayerProps {
 }
 
 function EditorLayer({
-  canvas,
+  sourceCanvas,
+  viewportSize,
+  viewportScale,
   controller,
   layer,
   selected,
@@ -175,10 +231,15 @@ function EditorLayer({
   const baseline = React.useRef<LayerGestureBaseline>();
   const start = React.useMemo(
     () => ({
-      x: coordinate(layer.position?.X, canvas.width),
-      y: coordinate(layer.position?.Y, canvas.height),
+      x: coordinate(layer.position?.X, sourceCanvas.width),
+      y: coordinate(layer.position?.Y, sourceCanvas.height),
     }),
-    [canvas.height, canvas.width, layer.position?.X, layer.position?.Y]
+    [
+      layer.position?.X,
+      layer.position?.Y,
+      sourceCanvas.height,
+      sourceCanvas.width,
+    ]
   );
 
   const responder = React.useMemo(
@@ -231,11 +292,11 @@ function EditorLayer({
           controller.moveLayer(
             layer.id,
             {
-              x: initial.position.x + gesture.dx,
-              y: initial.position.y + gesture.dy,
+              x: initial.position.x + gesture.dx / viewportScale,
+              y: initial.position.y + gesture.dy / viewportScale,
             },
             {
-              canvas,
+              canvas: sourceCanvas,
               layer: size,
               threshold: snapThreshold,
             }
@@ -252,7 +313,7 @@ function EditorLayer({
           controller.endHistoryGroup();
         },
       }),
-    [canvas, controller, layer, size, snapThreshold, start]
+    [controller, layer, size, snapThreshold, sourceCanvas, start, viewportScale]
   );
 
   if (layer.visible === false) return null;
@@ -282,12 +343,16 @@ function EditorLayer({
       }}
       style={[
         styles.layer,
-        positionedLayerStyle(layer, start, size),
+        positionedLayerStyle(layer, start, size, viewportScale),
         selected && styles.selectedLayer,
       ]}
     >
-      {renderLayer?.(layer, selected) ?? (
-        <DefaultLayer layer={layer} size={size} />
+      {renderLayer?.(layer, selected, {
+        sourceSize: sourceCanvas,
+        viewportSize,
+        scale: viewportScale,
+      }) ?? (
+        <DefaultLayer layer={layer} size={size} viewportScale={viewportScale} />
       )}
     </View>
   );
@@ -296,14 +361,16 @@ function EditorLayer({
 function Guide({
   guide,
   canvas,
+  viewportScale,
 }: {
   guide: EditorSnapGuide;
   canvas: EditorSize;
+  viewportScale: number;
 }) {
   return (
     <View
       pointerEvents="none"
-      style={[styles.guide, snapGuideStyle(guide, canvas)]}
+      style={[styles.guide, snapGuideStyle(guide, canvas, viewportScale)]}
     />
   );
 }
@@ -329,6 +396,7 @@ export function ImageMarkerEditor({
   controller,
   width,
   height,
+  sourceSize,
   background,
   style,
   snapThreshold,
@@ -337,7 +405,12 @@ export function ImageMarkerEditor({
   onStateChange,
 }: ImageMarkerEditorProps) {
   const state = useEditorState(controller, onStateChange);
-  const canvas = React.useMemo(() => ({ width, height }), [height, width]);
+  const viewport = React.useMemo(() => ({ width, height }), [height, width]);
+  const sourceCanvas = sourceSize ?? viewport;
+  const projection = React.useMemo(
+    () => createEditorViewportProjection(sourceCanvas, viewport),
+    [sourceCanvas, viewport]
+  );
   const handleKeyDown = React.useCallback(
     (event: { nativeEvent?: EditorKeyCommand } | EditorKeyCommand) => {
       const command =
@@ -356,26 +429,41 @@ export function ImageMarkerEditor({
       style={[styles.canvas, { width, height }, style]}
       {...({ onKeyDown: handleKeyDown } as object)}
     >
-      {background}
-      {state.recipe.layers.map((layer) => (
-        <EditorLayer
-          key={layer.id}
-          canvas={canvas}
-          controller={controller}
-          layer={layer}
-          selected={state.selectedLayerId === layer.id}
-          size={getLayerSize(layer)}
-          snapThreshold={snapThreshold}
-          renderLayer={renderLayer}
-        />
-      ))}
-      {state.snapGuides.map((guide, index) => (
-        <Guide
-          key={`${guide.axis}-${guide.position}-${index}`}
-          guide={guide}
-          canvas={canvas}
-        />
-      ))}
+      <View
+        style={[
+          styles.content,
+          {
+            left: projection.content.x,
+            top: projection.content.y,
+            width: projection.content.width,
+            height: projection.content.height,
+          },
+        ]}
+      >
+        {background}
+        {state.recipe.layers.map((layer) => (
+          <EditorLayer
+            key={layer.id}
+            controller={controller}
+            layer={layer}
+            renderLayer={renderLayer}
+            selected={state.selectedLayerId === layer.id}
+            size={getLayerSize(layer)}
+            snapThreshold={snapThreshold}
+            sourceCanvas={sourceCanvas}
+            viewportScale={projection.scale}
+            viewportSize={projection.content}
+          />
+        ))}
+        {state.snapGuides.map((guide, index) => (
+          <Guide
+            key={`${guide.axis}-${guide.position}-${index}`}
+            canvas={sourceCanvas}
+            guide={guide}
+            viewportScale={projection.scale}
+          />
+        ))}
+      </View>
     </View>
   );
 }
@@ -450,6 +538,10 @@ const styles = StyleSheet.create({
   canvas: {
     overflow: 'hidden',
     position: 'relative',
+  },
+  content: {
+    overflow: 'hidden',
+    position: 'absolute',
   },
   layer: {
     alignItems: 'center',

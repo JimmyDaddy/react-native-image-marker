@@ -2,6 +2,7 @@ export { ImageMarkerEditorController } from './controller';
 export {
   ImageMarkerEditor,
   ImageMarkerEditorToolbar,
+  type EditorLayerRenderContext,
   type ImageMarkerEditorProps,
   type ImageMarkerEditorToolbarProps,
 } from './EditorSurface';
@@ -11,6 +12,14 @@ export {
   normalizeSafeArea,
   snapLayerPosition,
 } from './geometry';
+export {
+  createEditorViewportProjection,
+  fitEditorSizeWithinMax,
+  projectEditorPoint,
+  projectEditorRecipe,
+  unprojectEditorPoint,
+  type EditorViewportProjection,
+} from './projection';
 export type {
   EditorContentCredentialsExport,
   EditorExportOptions,

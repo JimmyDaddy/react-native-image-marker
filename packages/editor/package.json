@@ -1,6 +1,6 @@
 {
   "name": "react-native-image-marker-editor",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Optional interactive Recipe v2 editor for react-native-image-marker",
   "license": "MIT",
   "homepage": "https://image-marker.corerobin.com/guides/editor/",
