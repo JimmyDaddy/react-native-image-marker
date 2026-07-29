@@ -78,6 +78,7 @@
     "build:worker": "node scripts/build-invisible-worker.mjs",
     "prepack": "bob build && node scripts/fix-esm-imports.mjs lib/module lib/typescript/module && npm run build:worker",
     "build:editor": "npm run build --workspace react-native-image-marker-editor",
+    "check:editor-api": "npm run check:api --workspace react-native-image-marker-editor",
     "verify:consumer": "npm run prepack && npm run build:editor && node scripts/verify-package-consumer.mjs",
     "check:release-notes": "node scripts/check-release-notes.mjs",
     "release": "release-it",
@@ -129,6 +130,7 @@
     "@types/jest": "^28.1.2",
     "@types/react": "~18.2.45",
     "@types/react-native": "0.70.0",
+    "@types/react-test-renderer": "^18.0.7",
     "commitlint": "^21.2.1",
     "conventional-changelog-conventionalcommits": "9.3.1",
     "del-cli": "^5.0.0",
@@ -146,6 +148,7 @@
     "react": "18.2.0",
     "react-native": "0.73.3",
     "react-native-builder-bob": "^0.43.0",
+    "react-test-renderer": "^18.2.0",
     "release-it": "^20.2.1",
     "typescript": "^5.9.3"
   },

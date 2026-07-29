@@ -1,17 +1,17 @@
 ---
 title: Optional interaction editor
-description: Install and integrate react-native-image-marker-editor 0.0.3 on top of Core 2.
+description: Install and integrate react-native-image-marker-editor 0.1.0 on top of Core 2.
 ---
 
 `react-native-image-marker-editor` is a separate, optional JS/TS package. Its
-first release was `0.0.1`; the current documentation patch is `0.0.3`, and it
+first release was `0.0.1`; the current stabilization release is `0.1.0`, and it
 requires `react-native-image-marker@^2.0.0`.
 Core remains responsible for decode, composition, invisible watermarking, and
 final native encoding.
 
 ```sh
 npm install react-native-image-marker@^2 \
-  react-native-image-marker-editor@0.0.3
+  react-native-image-marker-editor@0.1.0
 ```
 
 ## Create an editor
@@ -67,7 +67,7 @@ dimensions once, then pass that same `sourceSize` to both
 source into its viewport, while bounded previews scale positions, fonts,
 shadows, strokes, backgrounds, tiles, and image layers together.
 
-If `sourceSize` is omitted, Editor 0.0.3 preserves the earlier behavior and
+If `sourceSize` is omitted, Editor 0.1.0 preserves the earlier behavior and
 uses the viewport as the Recipe coordinate space. That is useful for recipes
 created specifically for a fixed viewport, but not for original-resolution
 WYSIWYG export.
@@ -80,11 +80,23 @@ undo, and render without installing anything.
 
 For the native surface, run the repository
 [React Native example](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/example)
-and choose **Editor 0.0.3**. It renders `ImageMarkerEditor` and
+and choose **Editor 0.1.0**. It renders `ImageMarkerEditor` and
 `ImageMarkerEditorToolbar`, then exercises both preview and original-resolution
 Core exports.
 
-## 0.0.x scope
+## Migrating from 0.0.x
+
+`0.1.0` is backward compatible with `0.0.3`: no public export was removed or
+renamed. Keep the same `sourceSize` on the surface and adapter request, and keep
+the Core adapter import on its explicit `/core-adapter` subpath. The new
+optional `testID` props expose stable native test identifiers for the canvas,
+layers, toolbar, and toolbar actions.
+
+The package now checks its public runtime/type export list and peer dependency
+ranges in CI. A public API change therefore requires an intentional contract
+update instead of appearing accidentally in a patch.
+
+## 0.1.x scope
 
 - Image and text layers with selection, dragging, pinch scaling, rotation, and
   ordering.
@@ -98,7 +110,7 @@ Core exports.
 - Opt-in Core adapter, so the main editor entry does not force a heavy renderer.
 
 Video, general filters, cloud collaboration, and duplicate native encoding are
-intentionally outside `0.0.x`.
+intentionally outside `0.1.x`.
 
 ## API reference
 

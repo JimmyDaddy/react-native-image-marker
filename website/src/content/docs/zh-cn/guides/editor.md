@@ -1,16 +1,16 @@
 ---
 title: 可选交互编辑器
-description: 在 Core 2 上安装并接入 react-native-image-marker-editor 0.0.3。
+description: 在 Core 2 上安装并接入 react-native-image-marker-editor 0.1.0。
 ---
 
 `react-native-image-marker-editor` 是独立、可选的 JS/TS 包。首个版本是
-`0.0.1`，当前文档补丁版本为 `0.0.3`，依赖
+`0.0.1`，当前稳定化版本为 `0.1.0`，依赖
 `react-native-image-marker@^2.0.0`。解码、合成、隐形水印和
 最终原生编码仍由 Core 负责。
 
 ```sh
 npm install react-native-image-marker@^2 \
-  react-native-image-marker-editor@0.0.3
+  react-native-image-marker-editor@0.1.0
 ```
 
 ## 创建编辑器
@@ -65,7 +65,7 @@ Recipe 的数值坐标使用原图像素。图片解码后读取一次尺寸，�
 原图等比投影到 viewport；受限尺寸预览则会一起缩放位置、字体、阴影、描边、
 文字背景、平铺参数和图片图层。
 
-省略 `sourceSize` 时，Editor 0.0.3 会保留旧行为：直接把 viewport 当作 Recipe
+省略 `sourceSize` 时，Editor 0.1.0 会保留旧行为：直接把 viewport 当作 Recipe
 坐标空间。这适合只面向固定 viewport 的 Recipe，但不适合需要原分辨率
 WYSIWYG 导出的场景。
 
@@ -77,10 +77,20 @@ undo/redo 与 Core 渲染。
 
 原生端可运行仓库中的
 [React Native example](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/example)，
-选择 **Editor 0.0.3**。该页面会渲染 `ImageMarkerEditor` 与
+选择 **Editor 0.1.0**。该页面会渲染 `ImageMarkerEditor` 与
 `ImageMarkerEditorToolbar`，并验证预览和原分辨率 Core 导出。
 
-## 0.0.x 范围
+## 从 0.0.x 迁移
+
+`0.1.0` 与 `0.0.3` 保持向后兼容，没有移除或重命名公共导出。继续给交互画布
+和 adapter 请求传入同一个 `sourceSize`，并从独立的 `/core-adapter` 子路径导入
+Core adapter 即可。新增的可选 `testID` props 会为画布、图层、工具栏及其操作
+暴露稳定的原生测试标识。
+
+包内现在会在 CI 中校验公共运行时/类型导出列表和 peer dependency 范围，因此
+公共 API 变化必须显式更新契约，不会意外混入补丁版本。
+
+## 0.1.x 范围
 
 - 图片和文字图层，以及选择、拖动、双指缩放、旋转和排序。
 - 显隐与锁定；锁定图层不能修改、删除或排序。
@@ -91,7 +101,7 @@ undo/redo 与 Core 渲染。
 - 可见、隐形水印和可选 C2PA 导出选项。
 - 按需引入 Core adapter，主入口不强制带入较重 renderer。
 
-视频、通用滤镜、云端协作以及重复的原生编码逻辑不进入 `0.0.x`。
+视频、通用滤镜、云端协作以及重复的原生编码逻辑不进入 `0.1.x`。
 
 ## API 参考
 

@@ -1,6 +1,6 @@
 {
   "name": "react-native-image-marker-editor",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "description": "Optional interactive Recipe v2 editor for react-native-image-marker",
   "license": "MIT",
   "homepage": "https://image-marker.corerobin.com/guides/editor/",
@@ -28,6 +28,7 @@
   "files": [
     "src",
     "!src/__tests__",
+    "api-contract.json",
     "lib",
     "README.md",
     "CHANGELOG.md"
@@ -59,6 +60,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.module.json && node ../../scripts/fix-esm-imports.mjs lib/module && tsc -p tsconfig.commonjs.json",
+    "check:api": "node ../../scripts/verify-editor-api-contract.mjs",
     "test": "jest --config jest.config.js --runInBand",
     "prepack": "npm run build"
   },

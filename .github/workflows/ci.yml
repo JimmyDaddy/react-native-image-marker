@@ -82,6 +82,7 @@ jobs:
                   "android/**",
                   "cpp/**",
                   "src/**",
+                  "packages/editor/**",
                   "package.json",
                   "package-lock.json",
                   "app.plugin.js",
@@ -105,6 +106,7 @@ jobs:
                   "ios/**",
                   "cpp/**",
                   "src/**",
+                  "packages/editor/**",
                   "package.json",
                   "package-lock.json",
                   "app.plugin.js",
@@ -352,6 +354,7 @@ jobs:
           npm run prepack
           npm run test:editor
           npm run build:editor
+          npm run check:editor-api
 
       - name: Verify packed Core and Editor consumers
         run: node scripts/verify-package-consumer.mjs
@@ -1056,6 +1059,7 @@ jobs:
             -destination 'id=${{ steps.ios-simulator.outputs.id }}' \
             -parallel-testing-enabled NO \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testApp \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testEditorUndoPreviewAndOriginalExportRunThroughCore \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testTextAnchorOffsetFeatureProducesPreview \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testMixedWatermarkFeatureProducesPreview \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testTiledTextFeatureProducesPreview \

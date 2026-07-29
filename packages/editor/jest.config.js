@@ -1,7 +1,7 @@
 module.exports = {
   preset: 'react-native',
   rootDir: '../..',
-  testMatch: ['<rootDir>/packages/editor/src/__tests__/**/*.test.ts'],
+  testMatch: ['<rootDir>/packages/editor/src/__tests__/**/*.test.(ts|tsx)'],
   moduleNameMapper: {
     '^react-native-image-marker$': '<rootDir>/src/index.ts',
   },

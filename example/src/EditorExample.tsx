@@ -145,7 +145,7 @@ export default function EditorExample() {
     >
       <View style={styles.heading}>
         <View>
-          <Text style={styles.eyebrow}>OPTIONAL PACKAGE · 0.0.3</Text>
+          <Text style={styles.eyebrow}>OPTIONAL PACKAGE · 0.1.0</Text>
           <Text style={styles.title}>Interactive Recipe v2 editor</Text>
         </View>
         <Text style={styles.subtitle}>
@@ -159,6 +159,7 @@ export default function EditorExample() {
           accessibilityRole="button"
           onPress={addText}
           style={({ pressed }) => actionStyle(pressed)}
+          testID="editor-add-text"
         >
           <Text style={styles.actionText}>Add text</Text>
         </Pressable>
@@ -166,6 +167,7 @@ export default function EditorExample() {
           accessibilityRole="button"
           onPress={addLogo}
           style={({ pressed }) => actionStyle(pressed)}
+          testID="editor-add-image"
         >
           <Text style={styles.actionText}>Add image</Text>
         </Pressable>
@@ -174,6 +176,7 @@ export default function EditorExample() {
           disabled={busy}
           onPress={() => render(false)}
           style={({ pressed }) => actionStyle(pressed)}
+          testID="editor-preview"
         >
           <Text style={styles.actionText}>Preview</Text>
         </Pressable>
@@ -182,12 +185,16 @@ export default function EditorExample() {
           disabled={busy}
           onPress={() => render(true)}
           style={({ pressed }) => actionStyle(pressed)}
+          testID="editor-export"
         >
           <Text style={styles.actionText}>Export original</Text>
         </Pressable>
       </View>
 
-      <ImageMarkerEditorToolbar controller={controller} />
+      <ImageMarkerEditorToolbar
+        controller={controller}
+        testID="editor-toolbar"
+      />
       <View style={styles.canvasFrame}>
         <ImageMarkerEditor
           background={
@@ -203,13 +210,18 @@ export default function EditorExample() {
           snapThreshold={8}
           sourceSize={backgroundSize}
           style={styles.canvas}
+          testID="editor"
           width={canvasWidth}
         />
       </View>
 
       <View style={styles.statusRow}>
         {busy && <ActivityIndicator color="#5271FF" />}
-        <Text accessibilityLiveRegion="polite" style={styles.status}>
+        <Text
+          accessibilityLiveRegion="polite"
+          style={styles.status}
+          testID="editor-status"
+        >
           {status}
         </Text>
       </View>
@@ -225,13 +237,14 @@ export default function EditorExample() {
               styles.result,
               { width: canvasWidth, height: canvasHeight },
             ]}
+            testID="editor-result-image"
           />
         </View>
       )}
 
       <View style={styles.recipeCard}>
         <Text style={styles.sectionTitle}>Live Recipe v2</Text>
-        <Text selectable style={styles.recipe}>
+        <Text selectable style={styles.recipe} testID="editor-recipe">
           {JSON.stringify(state.recipe, null, 2)}
         </Text>
       </View>
