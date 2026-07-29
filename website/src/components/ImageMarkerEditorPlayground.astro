@@ -32,10 +32,17 @@ const copy = zh
       down: '下移',
       recipe: '实时 Recipe v2',
       copyRecipe: '复制 Recipe',
+      usage: 'React Native 使用代码',
+      usageIntro:
+        '下面的完整组件使用同一份 sourceSize 驱动交互画布、Core 预览和原图导出。',
+      copyCode: '复制代码',
+      repoGuide: '仓库使用指南',
+      apiReference: 'Editor API 参考',
       canvas: 'Editor 可交互画布',
       output: 'Core 渲染结果',
       idle: '拖动任意图层开始编辑。',
       copied: 'Recipe 已复制。',
+      codeCopied: '示例代码已复制。',
       rendering: '正在通过 Core 2.0 渲染…',
       ready: '渲染完成',
     }
@@ -63,13 +70,109 @@ const copy = zh
       down: 'Move down',
       recipe: 'Live Recipe v2',
       copyRecipe: 'Copy Recipe',
+      usage: 'React Native usage',
+      usageIntro:
+        'This complete component uses the same sourceSize for the interactive surface, Core preview, and original export.',
+      copyCode: 'Copy code',
+      repoGuide: 'Repository usage guide',
+      apiReference: 'Editor API reference',
       canvas: 'Interactive Editor canvas',
       output: 'Core render result',
       idle: 'Drag any layer to start editing.',
       copied: 'Recipe copied.',
+      codeCopied: 'Example code copied.',
       rendering: 'Rendering through Core 2.0…',
       ready: 'Render ready',
     };
+
+const usageCode = `import * as React from 'react';
+import { Button, Image, StyleSheet, View } from 'react-native';
+import {
+  ImageMarkerEditor,
+  ImageMarkerEditorController,
+  ImageMarkerEditorToolbar,
+} from 'react-native-image-marker-editor';
+import { createCoreEditorAdapter } from 'react-native-image-marker-editor/core-adapter';
+import { ImageFormat } from 'react-native-image-marker';
+
+const background = require('./background.jpg');
+const logo = require('./logo.png');
+const sourceSize = { width: 1920, height: 1080 };
+const adapter = createCoreEditorAdapter(1024);
+
+export function WatermarkEditor() {
+  const controller = React.useMemo(
+    () =>
+      new ImageMarkerEditorController({
+        schemaVersion: 2,
+        layers: [
+          {
+            id: 'title',
+            type: 'text',
+            text: 'IMAGE MARKER 2.0',
+            position: { X: 160, Y: 120 },
+            style: { color: '#FFFFFF', fontSize: 64, bold: true },
+          },
+          {
+            id: 'logo',
+            type: 'image',
+            src: logo,
+            position: { X: 1280, Y: 720 },
+            scale: 0.4,
+          },
+        ],
+        output: { saveFormat: ImageFormat.png },
+      }),
+    []
+  );
+  const [resultUri, setResultUri] = React.useState<string>();
+
+  const preview = async () => {
+    const result = await adapter.renderPreview({
+      recipe: controller.exportRecipe(),
+      input: { backgroundImage: { src: background } },
+      sourceSize,
+    });
+    setResultUri(result.uri);
+  };
+
+  const exportOriginal = async () => {
+    const result = await adapter.exportOriginal({
+      recipe: controller.exportRecipe(),
+      input: { backgroundImage: { src: background } },
+      sourceSize,
+    });
+    setResultUri(result.final.uri);
+  };
+
+  return (
+    <View>
+      <ImageMarkerEditorToolbar controller={controller} />
+      <ImageMarkerEditor
+        background={
+          <Image
+            resizeMode="contain"
+            source={background}
+            style={StyleSheet.absoluteFill}
+          />
+        }
+        controller={controller}
+        sourceSize={sourceSize}
+        width={360}
+        height={203}
+      />
+      <Button title="Render Core preview" onPress={preview} />
+      <Button title="Export original" onPress={exportOriginal} />
+      {resultUri && (
+        <Image
+          resizeMode="contain"
+          source={{ uri: resultUri }}
+          style={{ width: 360, height: 203 }}
+        />
+      )}
+    </View>
+  );
+}`;
 ---
 
 <section
@@ -125,32 +228,99 @@ const copy = zh
     </aside>
 
     <div class="editor-stage">
-      <div
-        aria-label={copy.canvas}
-        class="editor-canvas"
-        data-editor-canvas
-        role="application"
-        tabindex="0"
-      >
-        <img alt="" data-editor-background />
-        <div class="safe-area" aria-hidden="true"></div>
-        <div data-editor-layer-host></div>
-        <div data-editor-guides aria-hidden="true"></div>
+      <div class="editor-view-tabs" role="tablist" aria-label={copy.title}>
+        <button
+          aria-selected="true"
+          class="is-selected"
+          data-editor-view-tab="canvas"
+          role="tab"
+          type="button"
+        >
+          {copy.canvas}
+        </button>
+        <button
+          aria-selected="false"
+          data-editor-view-tab="result"
+          disabled
+          role="tab"
+          type="button"
+        >
+          {copy.output}
+        </button>
       </div>
-      <p aria-live="polite" class="editor-status" data-editor-status>{copy.idle}</p>
-      <figure data-editor-result hidden>
-        <figcaption>{copy.output}</figcaption>
+
+      <div data-editor-view-panel="canvas" role="tabpanel">
+        <div
+          aria-label={copy.canvas}
+          class="editor-canvas"
+          data-editor-canvas
+          role="application"
+          tabindex="0"
+        >
+          <img alt="" data-editor-background />
+          <div class="safe-area" aria-hidden="true"></div>
+          <div data-editor-layer-host></div>
+          <div data-editor-guides aria-hidden="true"></div>
+        </div>
+      </div>
+      <figure
+        class="editor-result-panel"
+        data-editor-result
+        data-editor-view-panel="result"
+        hidden
+        role="tabpanel"
+      >
         <img alt={copy.output} data-editor-result-image />
+        <figcaption>{copy.output}</figcaption>
       </figure>
+      <p aria-live="polite" class="editor-status" data-editor-status>{copy.idle}</p>
     </div>
   </div>
 
-  <section class="recipe-panel">
-    <div>
-      <h3>{copy.recipe}</h3>
-      <button type="button" data-editor-action="copy">{copy.copyRecipe}</button>
+  <section class="developer-panel">
+    <div class="developer-tabs" role="tablist" aria-label={copy.usage}>
+      <button
+        aria-selected="true"
+        class="is-selected"
+        data-editor-detail-tab="usage"
+        role="tab"
+        type="button"
+      >
+        {copy.usage}
+      </button>
+      <button
+        aria-selected="false"
+        data-editor-detail-tab="recipe"
+        role="tab"
+        type="button"
+      >
+        {copy.recipe}
+      </button>
     </div>
-    <pre><code data-editor-recipe></code></pre>
+
+    <div data-editor-detail-panel="usage" role="tabpanel">
+      <div class="developer-panel-heading">
+        <p>{copy.usageIntro}</p>
+        <button type="button" data-editor-action="copy-code">{copy.copyCode}</button>
+      </div>
+      <pre><code data-editor-usage-code>{usageCode}</code></pre>
+      <p class="developer-links">
+        <a href="https://github.com/JimmyDaddy/react-native-image-marker/blob/master/docs/editor.md">
+          {copy.repoGuide}
+        </a>
+        <a href={zh ? '/zh-cn/guides/editor/reference/' : '/guides/editor/reference/'}>
+          {copy.apiReference}
+        </a>
+      </p>
+    </div>
+
+    <div data-editor-detail-panel="recipe" hidden role="tabpanel">
+      <div class="developer-panel-heading">
+        <p>{copy.recipe}</p>
+        <button type="button" data-editor-action="copy">{copy.copyRecipe}</button>
+      </div>
+      <pre><code data-editor-recipe></code></pre>
+    </div>
   </section>
 </section>
 
@@ -176,6 +346,7 @@ const copy = zh
     down: string;
     idle: string;
     copied: string;
+    codeCopied: string;
     rendering: string;
     ready: string;
   };
@@ -256,9 +427,27 @@ const copy = zh
     const rotate = element<HTMLInputElement>(root, '[data-editor-rotate]');
     const rotateOutput = element<HTMLOutputElement>(root, '[data-editor-rotate-output]');
     const recipe = element<HTMLElement>(root, '[data-editor-recipe]');
+    const usageCode = element<HTMLElement>(root, '[data-editor-usage-code]');
     const status = element<HTMLElement>(root, '[data-editor-status]');
     const result = element<HTMLElement>(root, '[data-editor-result]');
     const resultImage = element<HTMLImageElement>(root, '[data-editor-result-image]');
+    const canvasPanel = element<HTMLElement>(
+      root,
+      '[data-editor-view-panel="canvas"]'
+    );
+    const resultTab = element<HTMLButtonElement>(
+      root,
+      '[data-editor-view-tab="result"]'
+    );
+    const viewTabs = Array.from(
+      root.querySelectorAll<HTMLButtonElement>('[data-editor-view-tab]')
+    );
+    const detailTabs = Array.from(
+      root.querySelectorAll<HTMLButtonElement>('[data-editor-detail-tab]')
+    );
+    const detailPanels = Array.from(
+      root.querySelectorAll<HTMLElement>('[data-editor-detail-panel]')
+    );
     const action = (name: string) =>
       element<HTMLButtonElement>(root, `[data-editor-action="${name}"]`);
     background.src = backgroundUrl;
@@ -276,6 +465,45 @@ const copy = zh
           layer: { width: number; height: number };
         }
       | undefined;
+
+    const selectStageView = (view: 'canvas' | 'result') => {
+      if (view === 'result' && !resultImage.src) return;
+      canvasPanel.hidden = view !== 'canvas';
+      result.hidden = view !== 'result';
+      root.dataset.editorView = view;
+      viewTabs.forEach((tab) => {
+        const selected = tab.dataset.editorViewTab === view;
+        tab.classList.toggle('is-selected', selected);
+        tab.setAttribute('aria-selected', String(selected));
+      });
+      if (view === 'canvas') {
+        requestAnimationFrame(() => renderState(state));
+      }
+    };
+
+    const selectDetailView = (view: 'usage' | 'recipe') => {
+      detailTabs.forEach((tab) => {
+        const selected = tab.dataset.editorDetailTab === view;
+        tab.classList.toggle('is-selected', selected);
+        tab.setAttribute('aria-selected', String(selected));
+      });
+      detailPanels.forEach((panel) => {
+        panel.hidden = panel.dataset.editorDetailPanel !== view;
+      });
+    };
+
+    viewTabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const view = tab.dataset.editorViewTab;
+        if (view === 'canvas' || view === 'result') selectStageView(view);
+      });
+    });
+    detailTabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const view = tab.dataset.editorDetailTab;
+        if (view === 'usage' || view === 'recipe') selectDetailView(view);
+      });
+    });
 
     const viewportScale = () =>
       canvas.getBoundingClientRect().width / SOURCE_SIZE.width;
@@ -506,6 +734,7 @@ const copy = zh
       if (selected) controller.rotateLayer(selected.id, Number(rotate.value));
     });
     action('add-text').addEventListener('click', () => {
+      selectStageView('canvas');
       addSequence += 1;
       controller.addLayer({
         type: 'text',
@@ -516,6 +745,7 @@ const copy = zh
       });
     });
     action('add-image').addEventListener('click', () => {
+      selectStageView('canvas');
       addSequence += 1;
       controller.addLayer({
         type: 'image',
@@ -544,6 +774,10 @@ const copy = zh
       );
       status.textContent = copy.copied;
     });
+    action('copy-code').addEventListener('click', async () => {
+      await navigator.clipboard.writeText(usageCode.textContent ?? '');
+      status.textContent = copy.codeCopied;
+    });
 
     const renderThroughCore = async (original: boolean) => {
       status.textContent = copy.rendering;
@@ -562,7 +796,8 @@ const copy = zh
           ? (await adapter.exportOriginal(request)).final
           : await adapter.renderPreview(request);
         resultImage.src = rendered.uri;
-        result.hidden = false;
+        resultTab.disabled = false;
+        selectStageView('result');
         status.textContent = `${copy.ready} · ${rendered.format.toUpperCase()} · ${rendered.durationMs} ms`;
         root.dataset.editorRenderState = 'rendered';
       } catch (error) {
@@ -674,7 +909,7 @@ const copy = zh
 
   .editor-inspector,
   .editor-stage,
-  .recipe-panel {
+  .developer-panel {
     border: 1px solid var(--sl-color-gray-5);
     border-radius: 0.85rem;
     background: color-mix(in srgb, var(--sl-color-bg) 90%, var(--sl-color-gray-6));
@@ -766,11 +1001,40 @@ const copy = zh
     padding: 1rem;
   }
 
+  .editor-view-tabs,
+  .developer-tabs {
+    display: flex;
+    gap: 0.35rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .editor-view-tabs button,
+  .developer-tabs button {
+    min-height: 2rem;
+    padding: 0.32rem 0.65rem;
+    border-color: transparent;
+    color: var(--sl-color-gray-2);
+    background: transparent;
+    font-size: 0.76rem;
+  }
+
+  .editor-view-tabs button.is-selected,
+  .developer-tabs button.is-selected {
+    border-color: var(--sl-color-accent);
+    color: var(--sl-color-text-accent);
+    background: var(--sl-color-accent-low);
+  }
+
+  [data-editor-view-panel='canvas'],
+  .editor-result-panel {
+    width: 100%;
+    max-width: 720px;
+  }
+
   .editor-canvas {
     position: relative;
     aspect-ratio: 1586 / 992;
     width: 100%;
-    max-width: 720px;
     overflow: hidden;
     border-radius: 0.7rem;
     background: #0f172a;
@@ -857,42 +1121,56 @@ const copy = zh
     font-size: 0.78rem;
   }
 
-  figure {
-    margin: 1rem 0 0;
+  .editor-result-panel {
+    position: relative;
+    display: grid;
+    aspect-ratio: 1586 / 992;
+    place-items: center;
+    margin: 0;
+    overflow: hidden;
+    border-radius: 0.7rem;
+    background: #0f172a;
   }
 
-  figcaption {
-    margin-bottom: 0.5rem;
+  .editor-result-panel figcaption {
+    position: absolute;
+    right: 0.55rem;
+    bottom: 0.55rem;
+    padding: 0.25rem 0.45rem;
+    border-radius: 0.4rem;
+    color: #e2e8f0;
+    background: rgb(15 23 42 / 76%);
     font-size: 0.8rem;
     font-weight: 750;
   }
 
   [data-editor-result-image] {
     display: block;
-    width: min(100%, 36rem);
-    max-height: 22rem;
-    border-radius: 0.65rem;
+    width: 100%;
+    height: 100%;
     object-fit: contain;
   }
 
-  .recipe-panel {
+  .developer-panel {
     padding: 1rem;
     margin-top: 1rem;
   }
 
-  .recipe-panel > div {
+  .developer-panel-heading {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
   }
 
-  .recipe-panel h3 {
+  .developer-panel-heading p {
     margin: 0;
+    color: var(--sl-color-gray-2);
+    font-size: 0.8rem;
   }
 
-  .recipe-panel pre {
-    max-height: 22rem;
+  .developer-panel pre {
+    max-height: 28rem;
     padding: 1rem;
     margin: 0.8rem 0 0;
     overflow: auto;
@@ -902,9 +1180,32 @@ const copy = zh
     font-size: 0.75rem;
   }
 
+  .developer-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    margin: 0.75rem 0 0;
+    font-size: 0.78rem;
+  }
+
+  .developer-links a {
+    color: var(--sl-color-text-accent);
+    font-weight: 700;
+  }
+
+  .editor-stage [hidden],
+  .developer-panel [hidden] {
+    display: none;
+  }
+
   @media (max-width: 52rem) {
     .editor-workbench {
       grid-template-columns: 1fr;
+    }
+
+    .developer-panel-heading {
+      align-items: flex-start;
+      flex-direction: column;
     }
   }
 </style>

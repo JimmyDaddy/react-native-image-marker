@@ -80,6 +80,9 @@ undo/redo 与 Core 渲染。
 选择 **Editor 0.1.0**。该页面会渲染 `ImageMarkerEditor` 与
 `ImageMarkerEditorToolbar`，并验证预览和原分辨率 Core 导出。
 
+仓库还提供一份可与示例源码配套阅读的
+[完整组件与坐标指南](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/docs/editor.md)。
+
 ## 从 0.0.x 迁移
 
 `0.1.0` 与 `0.0.3` 保持向后兼容，没有移除或重命名公共导出。继续给交互画布

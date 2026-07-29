@@ -280,7 +280,9 @@ npm install react-native-image-marker-editor@0.1.0
 
 Import `react-native-image-marker-editor/core-adapter` only when the editor
 should invoke Core directly; a custom adapter can render on a server instead.
-See the [Editor integration guide](https://image-marker.corerobin.com/guides/editor/),
+Start with the repository's
+[complete Editor component and coordinate guide](docs/editor.md), then see the
+[Editor integration guide](https://image-marker.corerobin.com/guides/editor/),
 [generated API reference](https://image-marker.corerobin.com/guides/editor/reference/),
 or [open the Editor workflow](https://image-marker.corerobin.com/playground/?workflow=editor#editor-playground).
 
@@ -321,6 +323,7 @@ See the full [compatibility guide](https://image-marker.corerobin.com/compatibil
 - [Guides](https://image-marker.corerobin.com/guides/choose-an-api/)
 - [Visual cookbook](https://image-marker.corerobin.com/cookbook/)
 - [Invisible trace watermarks](https://image-marker.corerobin.com/guides/invisible-watermarks/)
+- [Editor usage guide](docs/editor.md)
 - [Optional interaction editor](https://image-marker.corerobin.com/guides/editor/)
 - [Editor API reference](https://image-marker.corerobin.com/guides/editor/reference/)
 - [Troubleshooting](https://image-marker.corerobin.com/troubleshooting/)
