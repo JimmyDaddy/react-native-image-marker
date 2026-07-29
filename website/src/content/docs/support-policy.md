@@ -12,7 +12,7 @@ critical fixes.
 | Core v2 (`2.0.x`) | Current release          | [v2 documentation](/)              | `npm install react-native-image-marker@latest`       |
 | v1 LTS (`1.12.x`) | Current maintenance line | [v1 documentation](/v1/)           | `npm install react-native-image-marker@1`            |
 | v1.0.0            | Immutable archive        | [v1.0.0 archive](/versions/1.0.0/) | `npm install react-native-image-marker@1.0.0`        |
-| Editor `0.0.x`    | Experimental             | [Editor status](/editor/)          | `npm install react-native-image-marker-editor@0.0.2` |
+| Editor `0.0.x`    | Experimental             | [Editor status](/editor/)          | `npm install react-native-image-marker-editor@0.0.3` |
 
 ## v1 LTS commitment
 

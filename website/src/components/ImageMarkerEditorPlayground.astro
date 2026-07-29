@@ -9,7 +9,7 @@ const zh = locale === 'zh-CN';
 const base = import.meta.env.BASE_URL;
 const copy = zh
   ? {
-      eyebrow: '可选包 · Editor 0.0.2',
+      eyebrow: '可选包 · Editor 0.0.3',
       title: '直接操作 Recipe v2',
       intro:
         '这个演示由 Editor controller 驱动：拖动图层、调整缩放和旋转、排序、锁定、撤销，再通过 Core 2.0 渲染真实结果。',
@@ -40,7 +40,7 @@ const copy = zh
       ready: '渲染完成',
     }
   : {
-      eyebrow: 'Optional package · Editor 0.0.2',
+      eyebrow: 'Optional package · Editor 0.0.3',
       title: 'Manipulate Recipe v2 directly',
       intro:
         'This demo is driven by the Editor controller: drag, scale, rotate, reorder, lock, and undo layers, then render a real result through Core 2.0.',
@@ -107,7 +107,7 @@ const copy = zh
         <div class="selection-controls">
           <label>
             <span>{copy.scale}</span>
-            <input data-editor-scale type="range" min="0.25" max="2.5" step="0.05" value="1" />
+            <input data-editor-scale type="range" min="0.05" max="8" step="0.05" value="1" />
             <output data-editor-scale-output>1.00×</output>
           </label>
           <label>
@@ -182,10 +182,18 @@ const copy = zh
 
   type RecipeLayer = EditorState['recipe']['layers'][number];
 
-  const coordinate = (value: number | string | undefined): number => {
+  const SOURCE_SIZE = { width: 1586, height: 992 } as const;
+  const LOGO_SIZE = { width: 220, height: 220 } as const;
+
+  const coordinate = (
+    value: number | string | undefined,
+    relativeTo: number
+  ): number => {
     if (typeof value === 'number') return value;
-    const parsed = Number.parseFloat(value ?? '');
-    return Number.isFinite(parsed) ? parsed : 0;
+    const normalized = value?.trim() ?? '';
+    const parsed = Number.parseFloat(normalized);
+    if (!Number.isFinite(parsed)) return 0;
+    return normalized.endsWith('%') ? (relativeTo * parsed) / 100 : parsed;
   };
 
   const layerScale = (layer: RecipeLayer): number =>
@@ -217,12 +225,12 @@ const copy = zh
           name: 'Campaign title',
           type: 'text',
           text: 'IMAGE MARKER 2.0',
-          position: { X: 54, Y: 56 },
+          position: { X: 119, Y: 132 },
           style: {
             color: '#FFFFFF',
-            fontSize: 28,
+            fontSize: 62,
             bold: true,
-            shadowStyle: { color: '#0F172A', dx: 1, dy: 2, radius: 3 },
+            shadowStyle: { color: '#0F172A', dx: 2, dy: 4, radius: 7 },
           },
         },
         {
@@ -230,13 +238,13 @@ const copy = zh
           name: 'Brand mark',
           type: 'image',
           src: logoUrl,
-          position: { X: 500, Y: 250 },
+          position: { X: 1101, Y: 590 },
           scale: 0.68,
         },
       ],
       output: { saveFormat: ImageFormat.png },
     });
-    controller.setSafeArea({ top: 24, right: 24, bottom: 24, left: 24 });
+    controller.setSafeArea({ top: 53, right: 53, bottom: 53, left: 53 });
     const adapter = createCoreEditorAdapter(960);
     const canvas = element<HTMLElement>(root, '[data-editor-canvas]');
     const background = element<HTMLImageElement>(root, '[data-editor-background]');
@@ -265,8 +273,27 @@ const copy = zh
           clientY: number;
           x: number;
           y: number;
+          layer: { width: number; height: number };
         }
       | undefined;
+
+    const viewportScale = () =>
+      canvas.getBoundingClientRect().width / SOURCE_SIZE.width;
+
+    const layerSourceSize = (layer: RecipeLayer) => {
+      if (layer.type === 'image') {
+        const imageScale = layer.scale ?? 1;
+        return {
+          width: LOGO_SIZE.width * imageScale,
+          height: LOGO_SIZE.height * imageScale,
+        };
+      }
+      const fontSize = layer.style?.fontSize ?? 14;
+      return {
+        width: Math.max(layer.text.length * fontSize * 0.62, 44),
+        height: Math.max(fontSize * 1.4, 32),
+      };
+    };
 
     const selectedLayer = () =>
       state.recipe.layers.find(
@@ -284,20 +311,43 @@ const copy = zh
         'aria-pressed',
         state.selectedLayerId === layer.id ? 'true' : 'false'
       );
-      item.style.left = `${coordinate(layer.position?.X)}px`;
-      item.style.top = `${coordinate(layer.position?.Y)}px`;
-      item.style.opacity = layer.locked ? '0.68' : '1';
-      item.style.transform = `scale(${layerScale(layer)}) rotate(${layerRotation(layer)}deg)`;
+      const projectionScale = viewportScale();
+      item.style.left = `${
+        coordinate(layer.position?.X, SOURCE_SIZE.width) * projectionScale
+      }px`;
+      item.style.top = `${
+        coordinate(layer.position?.Y, SOURCE_SIZE.height) * projectionScale
+      }px`;
+      item.style.opacity = String(layer.alpha ?? 1);
+      item.style.transform = `rotate(${layerRotation(layer)}deg)`;
       if (layer.type === 'text') {
         item.textContent = layer.text;
         item.style.color = layer.style?.color ?? '#FFFFFF';
-        item.style.fontSize = `${layer.style?.fontSize ?? 14}px`;
+        item.style.fontSize = `${
+          (layer.style?.fontSize ?? 14) * projectionScale
+        }px`;
         item.style.fontWeight = layer.style?.bold ? '800' : '500';
+        item.style.fontStyle = layer.style?.italic ? 'italic' : 'normal';
+        item.style.textAlign = layer.style?.textAlign ?? 'left';
+        if (layer.style?.shadowStyle) {
+          const shadow = layer.style.shadowStyle;
+          item.style.textShadow = `${
+            shadow.dx * projectionScale
+          }px ${shadow.dy * projectionScale}px ${
+            shadow.radius * projectionScale
+          }px ${shadow.color}`;
+        }
       } else {
         const image = document.createElement('img');
         image.alt = layer.name ?? layer.id;
         image.draggable = false;
         image.src = typeof layer.src === 'string' ? layer.src : logoUrl;
+        image.style.width = `${
+          LOGO_SIZE.width * (layer.scale ?? 1) * projectionScale
+        }px`;
+        image.style.height = `${
+          LOGO_SIZE.height * (layer.scale ?? 1) * projectionScale
+        }px`;
         item.append(image);
       }
       layerHost.append(item);
@@ -349,8 +399,11 @@ const copy = zh
       state.snapGuides.forEach((guide) => {
         const line = document.createElement('i');
         line.className = `snap-guide snap-guide-${guide.axis}`;
-        if (guide.axis === 'x') line.style.left = `${guide.position}px`;
-        else line.style.top = `${guide.position}px`;
+        if (guide.axis === 'x') {
+          line.style.left = `${guide.position * viewportScale()}px`;
+        } else {
+          line.style.top = `${guide.position * viewportScale()}px`;
+        }
         guides.append(line);
       });
       bindLayerList();
@@ -396,8 +449,9 @@ const copy = zh
         pointerId: event.pointerId,
         clientX: event.clientX,
         clientY: event.clientY,
-        x: coordinate(layer.position?.X),
-        y: coordinate(layer.position?.Y),
+        x: coordinate(layer.position?.X, SOURCE_SIZE.width),
+        y: coordinate(layer.position?.Y, SOURCE_SIZE.height),
+        layer: layerSourceSize(layer),
       };
       controller.beginHistoryGroup();
       canvas.setPointerCapture(event.pointerId);
@@ -406,17 +460,17 @@ const copy = zh
 
     canvas.addEventListener('pointermove', (event) => {
       if (!drag || drag.pointerId !== event.pointerId) return;
-      const bounds = canvas.getBoundingClientRect();
+      const projectionScale = viewportScale();
       controller.moveLayer(
         drag.id,
         {
-          x: drag.x + ((event.clientX - drag.clientX) * 720) / bounds.width,
-          y: drag.y + ((event.clientY - drag.clientY) * 420) / bounds.height,
+          x: drag.x + (event.clientX - drag.clientX) / projectionScale,
+          y: drag.y + (event.clientY - drag.clientY) / projectionScale,
         },
         {
-          canvas: { width: 720, height: 420 },
-          layer: { width: 120, height: 72 },
-          threshold: 7,
+          canvas: SOURCE_SIZE,
+          layer: drag.layer,
+          threshold: 7 / projectionScale,
         }
       );
     });
@@ -457,8 +511,8 @@ const copy = zh
         type: 'text',
         text: `Text ${addSequence}`,
         name: `Text ${addSequence}`,
-        position: { X: 80 + addSequence * 12, Y: 90 + addSequence * 10 },
-        style: { color: '#FFFFFF', fontSize: 22, bold: true },
+        position: { X: 176 + addSequence * 26, Y: 198 + addSequence * 22 },
+        style: { color: '#FFFFFF', fontSize: 48, bold: true },
       });
     });
     action('add-image').addEventListener('click', () => {
@@ -467,7 +521,7 @@ const copy = zh
         type: 'image',
         src: logoUrl,
         name: `Image ${addSequence}`,
-        position: { X: 260 + addSequence * 10, Y: 160 + addSequence * 8 },
+        position: { X: 573 + addSequence * 22, Y: 353 + addSequence * 18 },
         scale: 0.55,
       });
     });
@@ -493,12 +547,15 @@ const copy = zh
 
     const renderThroughCore = async (original: boolean) => {
       status.textContent = copy.rendering;
+      root.dataset.editorRenderState = 'rendering';
+      root.dataset.editorRenderKind = original ? 'export' : 'preview';
       action('preview').disabled = true;
       action('export').disabled = true;
       try {
         const request = {
           recipe: controller.exportRecipe(),
           input: { backgroundImage: { src: backgroundUrl } },
+          sourceSize: SOURCE_SIZE,
           control: { timeoutMs: 20_000 },
         };
         const rendered = original
@@ -518,6 +575,7 @@ const copy = zh
     };
     action('preview').addEventListener('click', () => void renderThroughCore(false));
     action('export').addEventListener('click', () => void renderThroughCore(true));
+    new ResizeObserver(() => renderState(state)).observe(canvas);
   });
 </script>
 
@@ -710,7 +768,7 @@ const copy = zh
 
   .editor-canvas {
     position: relative;
-    aspect-ratio: 12 / 7;
+    aspect-ratio: 1586 / 992;
     width: 100%;
     max-width: 720px;
     overflow: hidden;
@@ -723,14 +781,16 @@ const copy = zh
     position: absolute;
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     inset: 0;
   }
 
   .safe-area {
     position: absolute;
     border: 1px dashed rgb(255 255 255 / 58%);
-    inset: calc(24 / 420 * 100%) calc(24 / 720 * 100%);
+    inset:
+      calc(53 / 992 * 100%)
+      calc(53 / 1586 * 100%);
     pointer-events: none;
   }
 
@@ -744,47 +804,31 @@ const copy = zh
     pointer-events: none;
   }
 
-  [data-editor-layer-host] {
-    width: 720px;
-    height: 420px;
-    transform: scale(var(--editor-canvas-scale, 1));
-    transform-origin: top left;
-  }
-
-  .editor-canvas:has([data-editor-layer-host]) {
-    container-type: inline-size;
-  }
-
-  @supports (width: 1cqw) {
-    [data-editor-layer-host],
-    [data-editor-guides] {
-      --editor-canvas-scale: calc(100cqw / 720);
-    }
-  }
-
   [data-editor-layer-host] :global(.editor-layer) {
     position: absolute;
     display: grid;
     place-items: center;
-    min-width: 7.5rem;
-    min-height: 4.5rem;
-    padding: 0.5rem;
-    border: 1px solid transparent;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
     color: white;
     background: transparent;
+    line-height: 1.2;
     touch-action: none;
     transform-origin: center;
     user-select: none;
+    white-space: pre;
   }
 
   [data-editor-layer-host] :global(.editor-layer[aria-pressed='true']) {
-    border-color: #38bdf8;
-    border-style: dashed;
+    outline: 1px dashed #38bdf8;
+    outline-offset: 3px;
   }
 
   [data-editor-layer-host] :global(.editor-layer img) {
-    width: 7rem;
-    height: 7rem;
+    display: block;
     object-fit: contain;
     pointer-events: none;
   }

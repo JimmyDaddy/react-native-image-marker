@@ -5,7 +5,7 @@ prev: false
 title: "ImageMarkerEditorRenderAdapter"
 ---
 
-Defined in: [packages/editor/src/types.ts:91](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L91)
+Defined in: [packages/editor/src/types.ts:97](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L97)
 
 Rendering remains injectable. The editor package owns interaction state,
 while Core or an application adapter owns image decoding and encoding.
@@ -16,7 +16,7 @@ while Core or an application adapter owns image decoding and encoding.
 
 > **exportOriginal**(`request`): `Promise`\<[`EditorExportResult`](/guides/editor/reference/interfaces/editorexportresult/)\>
 
-Defined in: [packages/editor/src/types.ts:95](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L95)
+Defined in: [packages/editor/src/types.ts:101](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L101)
 
 #### Parameters
 
@@ -34,7 +34,7 @@ Defined in: [packages/editor/src/types.ts:95](https://github.com/JimmyDaddy/reac
 
 > **renderPreview**(`request`): `Promise`\<`MarkerResult`\>
 
-Defined in: [packages/editor/src/types.ts:92](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L92)
+Defined in: [packages/editor/src/types.ts:98](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L98)
 
 #### Parameters
 

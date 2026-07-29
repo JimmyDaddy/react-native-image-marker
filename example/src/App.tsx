@@ -78,7 +78,7 @@ function App() {
                 surface === value && styles.surfaceTabTextSelected,
               ]}
             >
-              {value === 'core' ? 'Core lab' : 'Editor 0.0.2'}
+              {value === 'core' ? 'Core lab' : 'Editor 0.0.3'}
             </Text>
           </Pressable>
         ))}
