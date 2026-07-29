@@ -2,6 +2,11 @@
 
 Optional interactive Recipe v2 editor for `react-native-image-marker@2`.
 
+```sh
+npm install react-native-image-marker@^2 \
+  react-native-image-marker-editor@0.1.0
+```
+
 ```tsx
 import {
   ImageMarkerEditor,
@@ -50,8 +55,9 @@ the [browser playground](https://image-marker.corerobin.com/playground/?workflow
 to exercise drag, scale, rotation, ordering, locks, undo/redo, and a real Core
 render.
 
-Read the [integration guide](https://image-marker.corerobin.com/guides/editor/)
-or browse the
+Read the
+[complete repository usage guide](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/docs/editor.md),
+the [integration guide](https://image-marker.corerobin.com/guides/editor/), or browse the
 [generated API reference](https://image-marker.corerobin.com/guides/editor/reference/)
 for controller methods, component props, adapters, state, and export types.
 

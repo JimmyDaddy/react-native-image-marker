@@ -84,6 +84,10 @@ and choose **Editor 0.1.0**. It renders `ImageMarkerEditor` and
 `ImageMarkerEditorToolbar`, then exercises both preview and original-resolution
 Core exports.
 
+The repository also includes a
+[complete component and coordinate guide](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/docs/editor.md)
+that can be read alongside the example source.
+
 ## Migrating from 0.0.x
 
 `0.1.0` is backward compatible with `0.0.3`: no public export was removed or

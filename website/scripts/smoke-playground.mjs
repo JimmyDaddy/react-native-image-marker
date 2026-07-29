@@ -83,6 +83,16 @@ try {
   const primaryNav = page.locator('[data-primary-nav]');
   await primaryNav.waitFor();
   await primaryNav.getByRole('link', { name: 'Playground' }).waitFor();
+  assert.equal(
+    await page.locator('.sl-banner').count(),
+    0,
+    'Current v2 pages should use the compact version selector instead of a site-wide banner.'
+  );
+  assert.equal(
+    await page.locator('[data-version-select]').first().inputValue(),
+    '/',
+    'The header version selector should identify the current v2 documentation.'
+  );
   await assertWideHomepageLayout(page, origin);
 
   await page.goto(`${origin}/guides/editor/`, { waitUntil: 'networkidle' });
@@ -222,7 +232,9 @@ async function waitForRendered(playground) {
 }
 
 async function assertCurrentPlaygroundLabels(playground) {
-  const workspaceLabels = await playground.locator('.workspace-tabs').innerText();
+  const workspaceLabels = await playground
+    .locator('.workspace-tabs')
+    .innerText();
   assert.doesNotMatch(
     workspaceLabels,
     /\bv1\.\d+\b/,
@@ -234,7 +246,9 @@ async function assertCurrentPlaygroundLabels(playground) {
     'Batch and invisible workflows should be labeled as Core 2.'
   );
 
-  const exampleLabels = await playground.locator('.example-presets').innerText();
+  const exampleLabels = await playground
+    .locator('.example-presets')
+    .innerText();
   assert.doesNotMatch(
     exampleLabels,
     /\bv1\.\d+\b/,
@@ -425,6 +439,19 @@ async function assertEditorPlayground(page) {
     (await editor.locator('[data-editor-recipe]').textContent()) ?? '',
     /"schemaVersion": 2/
   );
+  await editor
+    .locator('[data-editor-detail-panel="usage"]:not([hidden])')
+    .waitFor();
+  assert.match(
+    (await editor.locator('[data-editor-usage-code]').textContent()) ?? '',
+    /createCoreEditorAdapter[\s\S]*sourceSize[\s\S]*renderPreview/,
+    'Editor playground should expose a complete Core-backed usage example.'
+  );
+  await editor.locator('[data-editor-detail-tab="recipe"]').click();
+  await editor
+    .locator('[data-editor-detail-panel="recipe"]:not([hidden])')
+    .waitFor();
+  await editor.locator('[data-editor-detail-tab="usage"]').click();
 
   const title = editor.locator('[data-editor-layer="web-title"]');
   await title.scrollIntoViewIfNeeded();
@@ -606,6 +633,18 @@ async function assertEditorPlayground(page) {
   await editor
     .locator('[data-editor-result]:not([hidden]) [data-editor-result-image]')
     .waitFor();
+  assert.equal(
+    await editor
+      .locator('[data-editor-view-tab="result"]')
+      .getAttribute('aria-selected'),
+    'true',
+    'Core renders should open in the in-place result view.'
+  );
+  assert.equal(
+    await editor.locator('[data-editor-view-panel="canvas"]').isHidden(),
+    true,
+    'The result should replace the canvas instead of appearing below it.'
+  );
   await page.waitForFunction(() => {
     const root = document.querySelector('[data-editor-playground]');
     return root?.getAttribute('data-editor-render-state') === 'rendered';
@@ -625,6 +664,8 @@ async function assertEditorPlayground(page) {
   );
   assertLogoParity(previewLogo, 'Preview');
 
+  await editor.locator('[data-editor-view-tab="canvas"]').click();
+  await editor.locator('[data-editor-view-panel="canvas"]').waitFor();
   await editor.locator('[data-editor-action="export"]').click();
   await page.waitForFunction(() => {
     const root = document.querySelector('[data-editor-playground]');
