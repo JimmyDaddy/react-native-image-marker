@@ -461,6 +461,124 @@ async function assertEditorPlayground(page) {
   await editor.locator('[data-editor-action="lock"]').click();
   assert.equal(await editor.locator('[data-editor-scale]').isEnabled(), true);
 
+  const editorLogo = await editor
+    .locator('[data-editor-layer="web-logo"]')
+    .evaluate((node) => {
+      const canvas = node.closest('[data-editor-canvas]');
+      const image = node.querySelector('img');
+      if (!(canvas instanceof HTMLElement) || !(image instanceof HTMLElement)) {
+        throw new Error('Editor logo geometry is unavailable.');
+      }
+      const canvasBounds = canvas.getBoundingClientRect();
+      const imageBounds = image.getBoundingClientRect();
+      return {
+        x: (imageBounds.left - canvasBounds.left) / canvasBounds.width,
+        y: (imageBounds.top - canvasBounds.top) / canvasBounds.height,
+        width: imageBounds.width / canvasBounds.width,
+        height: imageBounds.height / canvasBounds.height,
+      };
+    });
+
+  const readRenderedLogo = () =>
+    editor
+      .locator('[data-editor-result-image]')
+      .evaluate(async (image, editorLogo) => {
+        if (!(image instanceof HTMLImageElement)) {
+          throw new Error('Core result image is unavailable.');
+        }
+        await image.decode();
+        const canvas = document.createElement('canvas');
+        canvas.width = image.naturalWidth;
+        canvas.height = image.naturalHeight;
+        const context = canvas.getContext('2d', { willReadFrequently: true });
+        if (!context) throw new Error('Unable to inspect the Core result.');
+        context.drawImage(image, 0, 0);
+        const pixels = context.getImageData(
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        ).data;
+        const left = Math.max(
+          0,
+          Math.floor((editorLogo.x - 0.03) * canvas.width)
+        );
+        const right = Math.min(
+          canvas.width,
+          Math.ceil((editorLogo.x + editorLogo.width + 0.03) * canvas.width)
+        );
+        const top = Math.max(
+          0,
+          Math.floor((editorLogo.y - 0.03) * canvas.height)
+        );
+        const bottom = Math.min(
+          canvas.height,
+          Math.ceil((editorLogo.y + editorLogo.height + 0.03) * canvas.height)
+        );
+        let minX = canvas.width;
+        let minY = canvas.height;
+        let maxX = -1;
+        let maxY = -1;
+        for (let y = top; y < bottom; y += 1) {
+          for (let x = left; x < right; x += 1) {
+            const offset = (y * canvas.width + x) * 4;
+            const red = pixels[offset];
+            const green = pixels[offset + 1];
+            const blue = pixels[offset + 2];
+            const alpha = pixels[offset + 3];
+            if (
+              red > 245 &&
+              green > 50 &&
+              green < 125 &&
+              blue > 20 &&
+              blue < 105 &&
+              red - green > 125 &&
+              alpha > 220
+            ) {
+              minX = Math.min(minX, x);
+              minY = Math.min(minY, y);
+              maxX = Math.max(maxX, x);
+              maxY = Math.max(maxY, y);
+            }
+          }
+        }
+        if (maxX < minX || maxY < minY) {
+          throw new Error('Unable to find the rendered orange logo pixels.');
+        }
+        return {
+          naturalWidth: image.naturalWidth,
+          naturalHeight: image.naturalHeight,
+          x: minX / canvas.width,
+          y: minY / canvas.height,
+          width: (maxX - minX + 1) / canvas.width,
+          height: (maxY - minY + 1) / canvas.height,
+        };
+      }, editorLogo);
+
+  const assertLogoParity = (rendered, kind) => {
+    const editorCenter = {
+      x: editorLogo.x + editorLogo.width / 2,
+      y: editorLogo.y + editorLogo.height / 2,
+    };
+    const renderedCenter = {
+      x: rendered.x + rendered.width / 2,
+      y: rendered.y + rendered.height / 2,
+    };
+    const widthRatio = rendered.width / editorLogo.width;
+    const heightRatio = rendered.height / editorLogo.height;
+    assert(
+      Math.abs(renderedCenter.x - editorCenter.x) < 0.012 &&
+        Math.abs(renderedCenter.y - editorCenter.y) < 0.012 &&
+        widthRatio > 0.75 &&
+        widthRatio < 0.9 &&
+        Math.abs(widthRatio - heightRatio) < 0.03,
+      `${kind} logo geometry should match the Editor canvas: ${JSON.stringify({
+        editor: editorLogo,
+        rendered,
+      })}`
+    );
+  };
+
   await editor.locator('[data-editor-action="preview"]').click();
   await editor
     .locator('[data-editor-result]:not([hidden]) [data-editor-result-image]')
@@ -476,6 +594,32 @@ async function assertEditorPlayground(page) {
     output?.startsWith('data:image/png;base64,'),
     'Editor preview should render a real PNG through Core.'
   );
+  const previewLogo = await readRenderedLogo();
+  assert.deepEqual(
+    [previewLogo.naturalWidth, previewLogo.naturalHeight],
+    [960, 600],
+    'Editor preview should use the bounded Core dimensions.'
+  );
+  assertLogoParity(previewLogo, 'Preview');
+
+  await editor.locator('[data-editor-action="export"]').click();
+  await page.waitForFunction(() => {
+    const root = document.querySelector('[data-editor-playground]');
+    const image = root?.querySelector('[data-editor-result-image]');
+    return (
+      root?.getAttribute('data-editor-render-state') === 'rendered' &&
+      root?.getAttribute('data-editor-render-kind') === 'export' &&
+      image instanceof HTMLImageElement &&
+      image.naturalWidth === 1586
+    );
+  });
+  const exportedLogo = await readRenderedLogo();
+  assert.deepEqual(
+    [exportedLogo.naturalWidth, exportedLogo.naturalHeight],
+    [1586, 992],
+    'Editor export should preserve the original dimensions.'
+  );
+  assertLogoParity(exportedLogo, 'Export');
 }
 
 async function assertLayoutControlsAndCode(page, playground) {
@@ -857,14 +1001,12 @@ async function assertMobileUtilities(page) {
   const menu = page.locator('.mobile-nav-menu');
   const version = menu.getByRole('combobox', { name: '文档版本' });
   await version.waitFor();
-  assert.deepEqual(await version.locator('option').evaluateAll((options) =>
-    options.map((option) => option.value)
-  ), [
-    '/zh-cn/',
-    '/v1/zh-cn/',
-    '/versions/1.0.0/',
-    '/editor/zh-cn/',
-  ]);
+  assert.deepEqual(
+    await version
+      .locator('option')
+      .evaluateAll((options) => options.map((option) => option.value)),
+    ['/zh-cn/', '/v1/zh-cn/', '/versions/1.0.0/', '/editor/zh-cn/']
+  );
   await menu.getByRole('link', { name: /GitHub/ }).waitFor();
 
   const themeSummary = menu.locator('[data-theme-menu] summary');

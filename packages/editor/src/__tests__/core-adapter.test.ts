@@ -62,6 +62,52 @@ describe('Core editor adapter', () => {
     expect(mockApply).toHaveBeenCalledWith(request.input, request.control);
   });
 
+  it('projects source-space geometry into the bounded Core preview', async () => {
+    mockApply.mockResolvedValue(result('/preview.png'));
+    const adapter = createCoreEditorAdapter(960);
+    const sourceRecipe = {
+      ...request.recipe,
+      layers: [
+        {
+          id: 'title',
+          type: 'text' as const,
+          text: 'Hello',
+          position: { X: 119, Y: 132 },
+          style: { fontSize: 62 },
+        },
+        {
+          id: 'logo',
+          type: 'image' as const,
+          src: '/logo.png',
+          position: { X: 1101, Y: 590 },
+          scale: 0.68,
+        },
+      ],
+    };
+
+    await adapter.renderPreview({
+      ...request,
+      recipe: sourceRecipe,
+      sourceSize: { width: 1586, height: 992 },
+    });
+
+    const previewRecipe = mockCreateRecipe.mock.calls.at(-1)?.[0];
+    expect(previewRecipe.output.maxSize).toBe(960);
+    expect(previewRecipe.layers[0].position.X).toBeCloseTo(119 * (960 / 1586));
+    expect(previewRecipe.layers[0].style.fontSize).toBeCloseTo(
+      62 * (600 / 992)
+    );
+    expect(previewRecipe.layers[1].position.X).toBeCloseTo(1101 * (960 / 1586));
+    expect(previewRecipe.layers[1].position.Y).toBeCloseTo(590 * (600 / 992));
+    expect(previewRecipe.layers[1].scale).toBeCloseTo(0.68 * (600 / 992));
+    expect(sourceRecipe.layers[1]).toEqual(
+      expect.objectContaining({
+        position: { X: 1101, Y: 590 },
+        scale: 0.68,
+      })
+    );
+  });
+
   it('exports visible pixels and optionally adds an invisible locator', async () => {
     mockApply.mockResolvedValue(result('/visible.png'));
     mockEmbedInvisible.mockResolvedValue({

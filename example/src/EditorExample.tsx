@@ -21,6 +21,7 @@ import { ImageFormat } from 'react-native-image-marker';
 const background = require('./bg.png');
 const logo = require('./icon.jpeg');
 const adapter = createCoreEditorAdapter(960);
+const backgroundSize = { width: 1920, height: 1080 };
 
 function actionStyle(pressed: boolean) {
   return [styles.action, pressed && styles.actionPressed];
@@ -29,7 +30,9 @@ function actionStyle(pressed: boolean) {
 export default function EditorExample() {
   const { width } = useWindowDimensions();
   const canvasWidth = Math.min(Math.max(width - 32, 280), 720);
-  const canvasHeight = Math.round(canvasWidth * 0.62);
+  const canvasHeight = Math.round(
+    canvasWidth * (backgroundSize.height / backgroundSize.width)
+  );
   const controller = React.useMemo(
     () =>
       new ImageMarkerEditorController({
@@ -40,16 +43,16 @@ export default function EditorExample() {
             name: 'Campaign title',
             type: 'text',
             text: 'IMAGE MARKER 2.0',
-            position: { X: 32, Y: 40 },
+            position: { X: 86, Y: 104 },
             style: {
               color: '#FFFFFF',
-              fontSize: 24,
+              fontSize: 64,
               bold: true,
               shadowStyle: {
                 color: '#0F172A',
-                dx: 1,
-                dy: 2,
-                radius: 3,
+                dx: 3,
+                dy: 5,
+                radius: 8,
               },
             },
           },
@@ -58,8 +61,8 @@ export default function EditorExample() {
             name: 'Brand mark',
             type: 'image',
             src: logo,
-            position: { X: 190, Y: 130 },
-            scale: 0.65,
+            position: { X: 1120, Y: 620 },
+            scale: 0.32,
           },
         ],
         output: {
@@ -87,6 +90,7 @@ export default function EditorExample() {
         const request = {
           recipe: controller.exportRecipe(),
           input: { backgroundImage: { src: background } },
+          sourceSize: backgroundSize,
           control: {
             timeoutMs: 20_000,
             onProgress: ({
@@ -120,8 +124,8 @@ export default function EditorExample() {
     controller.addLayer({
       type: 'text',
       text: 'New text',
-      position: { X: 80, Y: 90 },
-      style: { color: '#F8FAFC', fontSize: 20, bold: true },
+      position: { X: 214, Y: 240 },
+      style: { color: '#F8FAFC', fontSize: 54, bold: true },
     });
   }, [controller]);
 
@@ -129,8 +133,8 @@ export default function EditorExample() {
     controller.addLayer({
       type: 'image',
       src: logo,
-      position: { X: 120, Y: 120 },
-      scale: 0.5,
+      position: { X: 640, Y: 320 },
+      scale: 0.28,
     });
   }, [controller]);
 
@@ -141,7 +145,7 @@ export default function EditorExample() {
     >
       <View style={styles.heading}>
         <View>
-          <Text style={styles.eyebrow}>OPTIONAL PACKAGE · 0.0.2</Text>
+          <Text style={styles.eyebrow}>OPTIONAL PACKAGE · 0.0.3</Text>
           <Text style={styles.title}>Interactive Recipe v2 editor</Text>
         </View>
         <Text style={styles.subtitle}>
@@ -188,7 +192,7 @@ export default function EditorExample() {
         <ImageMarkerEditor
           background={
             <Image
-              resizeMode="cover"
+              resizeMode="contain"
               source={background}
               style={StyleSheet.absoluteFill}
             />
@@ -197,6 +201,7 @@ export default function EditorExample() {
           height={canvasHeight}
           onStateChange={setState}
           snapThreshold={8}
+          sourceSize={backgroundSize}
           style={styles.canvas}
           width={canvasWidth}
         />
@@ -216,7 +221,10 @@ export default function EditorExample() {
             accessibilityLabel="Exported editor result"
             resizeMode="contain"
             source={{ uri: resultUri }}
-            style={[styles.result, { width: canvasWidth }]}
+            style={[
+              styles.result,
+              { width: canvasWidth, height: canvasHeight },
+            ]}
           />
         </View>
       )}
@@ -314,7 +322,6 @@ const styles = StyleSheet.create({
   result: {
     backgroundColor: '#E2E8F0',
     borderRadius: 10,
-    height: 280,
   },
   recipeCard: {
     backgroundColor: '#0F172A',

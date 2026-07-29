@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.0.3 (2026-07-29)
+
+- Added an explicit `sourceSize` coordinate space so the interactive surface,
+  bounded Core preview, and original export preserve the same normalized layer
+  geometry.
+- Added reusable viewport and Recipe projection helpers, including scaling for
+  text metrics, image layers, shadows, strokes, backgrounds, tiles, and
+  numeric positioning values.
+- Fixed the default Editor surface and Web/React Native examples so font and
+  image scale are applied exactly once and source images are not cropped.
+- Added projection and Core-adapter regression coverage for preview parity.
+
 ## 0.0.2 (2026-07-28)
 
 - Added canonical package metadata and direct links to the integration guide,

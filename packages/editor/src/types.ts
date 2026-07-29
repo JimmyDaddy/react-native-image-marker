@@ -76,6 +76,12 @@ export interface EditorKeyCommand {
 export interface EditorRenderRequest {
   recipe: WatermarkRecipeDefinition;
   input: WatermarkRecipeInput;
+  /**
+   * Pixel dimensions of the background before Core applies output.maxSize.
+   * Providing this keeps numeric Recipe coordinates visually stable between
+   * the interactive surface, bounded previews, and original export.
+   */
+  sourceSize?: EditorSize;
   control?: MarkerJobOptions;
 }
 

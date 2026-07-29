@@ -1,17 +1,17 @@
 ---
 title: Optional interaction editor
-description: Install and integrate react-native-image-marker-editor 0.0.2 on top of Core 2.
+description: Install and integrate react-native-image-marker-editor 0.0.3 on top of Core 2.
 ---
 
 `react-native-image-marker-editor` is a separate, optional JS/TS package. Its
-first release was `0.0.1`; the current documentation patch is `0.0.2`, and it
+first release was `0.0.1`; the current documentation patch is `0.0.3`, and it
 requires `react-native-image-marker@^2.0.0`.
 Core remains responsible for decode, composition, invisible watermarking, and
 final native encoding.
 
 ```sh
 npm install react-native-image-marker@^2 \
-  react-native-image-marker-editor@0.0.2
+  react-native-image-marker-editor@0.0.3
 ```
 
 ## Create an editor
@@ -33,17 +33,19 @@ const controller = new ImageMarkerEditorController({
       name: 'Title',
       type: 'text',
       text: 'Draft',
-      position: { X: 80, Y: 60 },
+      position: { X: 320, Y: 180 },
     },
   ],
   output: { saveFormat: ImageFormat.png },
 });
 const adapter = createCoreEditorAdapter(1024);
+const sourceSize = { width: 1920, height: 1080 };
 
 <ImageMarkerEditor
   controller={controller}
+  sourceSize={sourceSize}
   width={360}
-  height={240}
+  height={203}
 />;
 <ImageMarkerEditorToolbar controller={controller} />;
 
@@ -51,10 +53,24 @@ const recipe = controller.exportRecipe();
 const result = await adapter.exportOriginal({
   recipe,
   input: { backgroundImage: { src: imageSource } },
+  sourceSize,
 });
 
 console.log(result.final.uri);
 ```
+
+## Keep the canvas and Core render aligned
+
+Numeric Recipe coordinates use original-image pixels. Read the decoded image
+dimensions once, then pass that same `sourceSize` to both
+`ImageMarkerEditor` and the Core adapter request. The surface letterboxes the
+source into its viewport, while bounded previews scale positions, fonts,
+shadows, strokes, backgrounds, tiles, and image layers together.
+
+If `sourceSize` is omitted, Editor 0.0.3 preserves the earlier behavior and
+uses the viewport as the Recipe coordinate space. That is useful for recipes
+created specifically for a fixed viewport, but not for original-resolution
+WYSIWYG export.
 
 ## Try the complete example
 
@@ -64,7 +80,7 @@ undo, and render without installing anything.
 
 For the native surface, run the repository
 [React Native example](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/example)
-and choose **Editor 0.0.2**. It renders `ImageMarkerEditor` and
+and choose **Editor 0.0.3**. It renders `ImageMarkerEditor` and
 `ImageMarkerEditorToolbar`, then exercises both preview and original-resolution
 Core exports.
 
