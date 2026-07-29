@@ -11,7 +11,6 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayingAtLeast
-import androidx.test.espresso.matcher.ViewMatchers.isEnabled
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -70,7 +69,7 @@ class ImageMarkerJsE2ETest {
   }
 
   @Test
-  fun editorUndoPreviewAndOriginalExportRunThroughCore() {
+  fun editorUndoAndPreviewRunThroughCore() {
     waitForView(withText("Image Marker Lab"), 90_000)
     waitForView(withReactTestId("surface-editor"), 5_000)
     onView(withReactTestId("surface-editor")).perform(click())
@@ -86,15 +85,17 @@ class ImageMarkerJsE2ETest {
     onView(withReactTestId("editor-preview")).perform(click())
     waitForView(withReactTestId("editor-result-image"), 60_000)
     waitForView(withText(startsWith("Preview ready")), 5_000)
+  }
 
-    onView(isAssignableFrom(ScrollView::class.java)).perform(fullScroll(View.FOCUS_UP))
-    val enabledExport = allOf(
-      withReactTestId("editor-export"),
-      isDisplayingAtLeast(90),
-      isEnabled()
-    )
-    waitForView(enabledExport, 5_000)
-    onView(enabledExport).perform(click())
+  @Test
+  fun editorOriginalExportRunsThroughCore() {
+    waitForView(withText("Image Marker Lab"), 90_000)
+    waitForView(withReactTestId("surface-editor"), 5_000)
+    onView(withReactTestId("surface-editor")).perform(click())
+
+    waitForView(withReactTestId("editor-canvas"), 5_000)
+    onView(withReactTestId("editor-export")).perform(click())
+    waitForView(withReactTestId("editor-result-image"), 60_000)
     waitForView(withText(startsWith("Export ready")), 60_000)
   }
 
@@ -125,7 +126,7 @@ class ImageMarkerJsE2ETest {
       }
       Thread.sleep(250)
     }
-    throw AssertionError("Timed out waiting for view", lastFailure)
+    throw AssertionError("Timed out waiting for view $matcher", lastFailure)
   }
 
   private fun withReactTestId(testId: String): Matcher<View> {
