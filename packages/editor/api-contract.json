@@ -1,0 +1,56 @@
+{
+  "packageExports": [".", "./core-adapter", "./package.json"],
+  "peerDependencies": {
+    "react": ">=18",
+    "react-native": ">=0.73",
+    "react-native-image-marker": "^2.0.0"
+  },
+  "entries": {
+    ".": {
+      "source": "src/index.ts",
+      "values": [
+        "ImageMarkerEditor",
+        "ImageMarkerEditorController",
+        "ImageMarkerEditorToolbar",
+        "angle",
+        "createEditorViewportProjection",
+        "distance",
+        "fitEditorSizeWithinMax",
+        "normalizeSafeArea",
+        "projectEditorPoint",
+        "projectEditorRecipe",
+        "snapLayerPosition",
+        "unprojectEditorPoint"
+      ],
+      "types": [
+        "EditorContentCredentialsExport",
+        "EditorExportOptions",
+        "EditorExportResult",
+        "EditorInvisibleExport",
+        "EditorKeyCommand",
+        "EditorLayerRenderContext",
+        "EditorPoint",
+        "EditorRect",
+        "EditorRenderRequest",
+        "EditorSafeArea",
+        "EditorSize",
+        "EditorSnapContext",
+        "EditorSnapGuide",
+        "EditorState",
+        "EditorViewportProjection",
+        "ImageMarkerEditorProps",
+        "ImageMarkerEditorRenderAdapter",
+        "ImageMarkerEditorToolbarProps",
+        "WatermarkRecipeDefinition",
+        "WatermarkRecipeDefinitionLayer",
+        "WatermarkRecipeDocument",
+        "WatermarkRecipeInput"
+      ]
+    },
+    "./core-adapter": {
+      "source": "src/core-adapter.ts",
+      "values": ["createCoreEditorAdapter"],
+      "types": []
+    }
+  }
+}

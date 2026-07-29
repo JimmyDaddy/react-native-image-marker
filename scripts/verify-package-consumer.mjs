@@ -137,9 +137,14 @@ try {
   type WatermarkRecipeDefinition,
 } from 'react-native-image-marker';
 import {
+  ImageMarkerEditor,
   ImageMarkerEditorController,
+  ImageMarkerEditorToolbar,
+  type ImageMarkerEditorProps,
+  type ImageMarkerEditorToolbarProps,
   type EditorRenderRequest,
 } from 'react-native-image-marker-editor';
+import { createCoreEditorAdapter } from 'react-native-image-marker-editor/core-adapter';
 import { createInvisibleWatermarkRuntime } from 'react-native-image-marker/trace-runtime';
 
 const definition: WatermarkRecipeDefinition = {
@@ -152,11 +157,27 @@ const result: Promise<MarkerResult> = Marker.createRecipe(definition).apply(
   { timeoutMs: 5_000 }
 );
 const editor = new ImageMarkerEditorController(definition);
+const editorProps: ImageMarkerEditorProps = {
+  controller: editor,
+  sourceSize: { width: 1920, height: 1080 },
+  testID: 'consumer-editor',
+  width: 360,
+  height: 240,
+};
+const toolbarProps: ImageMarkerEditorToolbarProps = {
+  controller: editor,
+  testID: 'consumer-toolbar',
+};
 const request: EditorRenderRequest = {
   recipe: editor.exportRecipe(),
   input: { backgroundImage: { src: '/source.png' } },
 };
 void result;
+void ImageMarkerEditor;
+void ImageMarkerEditorToolbar;
+void createCoreEditorAdapter;
+void editorProps;
+void toolbarProps;
 void request;
 void createInvisibleWatermarkRuntime;
 `

@@ -36,6 +36,8 @@ export interface ImageMarkerEditorProps {
   controller: ImageMarkerEditorController;
   width: number;
   height: number;
+  /** Stable identifier for native E2E and application component tests. */
+  testID?: string;
   /**
    * Original background dimensions used by Recipe pixel coordinates. When
    * omitted, the viewport dimensions remain the coordinate space for backward
@@ -215,6 +217,7 @@ interface EditorLayerProps {
   snapThreshold?: number;
   size: EditorSize;
   renderLayer?: ImageMarkerEditorProps['renderLayer'];
+  testID: string;
 }
 
 function EditorLayer({
@@ -227,6 +230,7 @@ function EditorLayer({
   snapThreshold,
   size,
   renderLayer,
+  testID,
 }: EditorLayerProps) {
   const baseline = React.useRef<LayerGestureBaseline>();
   const start = React.useMemo(
@@ -331,6 +335,7 @@ function EditorLayer({
         { name: 'increment', label: 'Increase layer size' },
         { name: 'decrement', label: 'Decrease layer size' },
       ]}
+      testID={`${testID}-layer-${layer.id}`}
       onAccessibilityAction={(event) => {
         if (layer.locked) return;
         if (event.nativeEvent.actionName === 'activate') {
@@ -396,6 +401,7 @@ export function ImageMarkerEditor({
   controller,
   width,
   height,
+  testID = 'image-marker-editor',
   sourceSize,
   background,
   style,
@@ -424,8 +430,8 @@ export function ImageMarkerEditor({
 
   return (
     <View
-      accessible
-      accessibilityLabel="Image marker editor canvas"
+      accessible={false}
+      testID={`${testID}-canvas`}
       style={[styles.canvas, { width, height }, style]}
       {...({ onKeyDown: handleKeyDown } as object)}
     >
@@ -453,6 +459,7 @@ export function ImageMarkerEditor({
             sourceCanvas={sourceCanvas}
             viewportScale={projection.scale}
             viewportSize={projection.content}
+            testID={testID}
           />
         ))}
         {state.snapGuides.map((guide, index) => (
@@ -471,12 +478,15 @@ export function ImageMarkerEditor({
 export interface ImageMarkerEditorToolbarProps {
   controller: ImageMarkerEditorController;
   style?: StyleProp<ViewStyle>;
+  /** Stable identifier for native E2E and application component tests. */
+  testID?: string;
 }
 
 /** Minimal accessible toolbar; applications may replace it with their design system. */
 export function ImageMarkerEditorToolbar({
   controller,
   style,
+  testID = 'image-marker-editor-toolbar',
 }: ImageMarkerEditorToolbarProps) {
   const state = useEditorState(controller);
   const selected = state.recipe.layers.find(
@@ -484,16 +494,19 @@ export function ImageMarkerEditorToolbar({
   );
   const actions = [
     {
+      key: 'undo',
       label: 'Undo',
       disabled: !state.canUndo,
       action: () => controller.undo(),
     },
     {
+      key: 'redo',
       label: 'Redo',
       disabled: !state.canRedo,
       action: () => controller.redo(),
     },
     {
+      key: 'visibility',
       label: selected?.visible === false ? 'Show' : 'Hide',
       disabled: !selected || selected.locked,
       action: () =>
@@ -501,26 +514,33 @@ export function ImageMarkerEditorToolbar({
         controller.setLayerVisible(selected.id, selected.visible === false),
     },
     {
+      key: 'lock',
       label: selected?.locked ? 'Unlock' : 'Lock',
       disabled: !selected,
       action: () =>
         selected && controller.setLayerLocked(selected.id, !selected.locked),
     },
     {
+      key: 'delete',
       label: 'Delete',
       disabled: !selected || selected.locked,
       action: () => selected && controller.removeLayer(selected.id),
     },
   ];
   return (
-    <View accessibilityLabel="Editor actions" style={[styles.toolbar, style]}>
+    <View
+      accessibilityLabel="Editor actions"
+      style={[styles.toolbar, style]}
+      testID={testID}
+    >
       {actions.map((action) => (
         <Pressable
           accessibilityRole="button"
           accessibilityState={{ disabled: Boolean(action.disabled) }}
           disabled={Boolean(action.disabled)}
-          key={action.label}
+          key={action.key}
           onPress={action.action}
+          testID={`${testID}-${action.key}`}
           style={({ pressed }) => [
             styles.toolButton,
             pressed && styles.toolButtonPressed,
