@@ -11,6 +11,7 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayingAtLeast
+import androidx.test.espresso.matcher.ViewMatchers.isEnabled
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -87,8 +88,13 @@ class ImageMarkerJsE2ETest {
     waitForView(withText(startsWith("Preview ready")), 5_000)
 
     onView(isAssignableFrom(ScrollView::class.java)).perform(fullScroll(View.FOCUS_UP))
-    waitForView(withReactTestId("editor-export"), 5_000)
-    onView(withReactTestId("editor-export")).perform(click())
+    val enabledExport = allOf(
+      withReactTestId("editor-export"),
+      isDisplayingAtLeast(90),
+      isEnabled()
+    )
+    waitForView(enabledExport, 5_000)
+    onView(enabledExport).perform(click())
     waitForView(withText(startsWith("Export ready")), 60_000)
   }
 
