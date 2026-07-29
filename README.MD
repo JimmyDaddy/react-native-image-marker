@@ -269,13 +269,13 @@ Browser Canvas and native graphics stacks share the API and positioning model bu
 ## Optional interaction editor
 
 The independently versioned
-`react-native-image-marker-editor@0.0.2` package provides Recipe v2 layer
+`react-native-image-marker-editor@0.0.3` package provides Recipe v2 layer
 selection, drag/scale/rotate/reorder, visibility and locking, snapping,
 undo/redo, accessible keyboard controls, preview rendering, and final export.
 It requires Core `^2.0.0` and delegates image processing back to Core.
 
 ```sh
-npm install react-native-image-marker-editor@0.0.2
+npm install react-native-image-marker-editor@0.0.3
 ```
 
 Import `react-native-image-marker-editor/core-adapter` only when the editor

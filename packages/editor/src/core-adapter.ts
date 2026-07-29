@@ -7,6 +7,7 @@ import type {
   EditorRenderRequest,
   ImageMarkerEditorRenderAdapter,
 } from './types';
+import { fitEditorSizeWithinMax, projectEditorRecipe } from './projection';
 
 function withMaxSize(
   recipe: WatermarkRecipeDefinition,
@@ -41,11 +42,23 @@ function signedResult(
 export function createCoreEditorAdapter(
   previewMaxSize = 1024
 ): ImageMarkerEditorRenderAdapter {
-  const renderVisible = (request: EditorRenderRequest, maxSize?: number) =>
-    Marker.createRecipe(withMaxSize(request.recipe, maxSize)).apply(
+  const renderVisible = (request: EditorRenderRequest, maxSize?: number) => {
+    const targetSize =
+      request.sourceSize && maxSize
+        ? fitEditorSizeWithinMax(request.sourceSize, maxSize)
+        : undefined;
+    const recipe =
+      request.sourceSize &&
+      targetSize &&
+      (targetSize.width !== request.sourceSize.width ||
+        targetSize.height !== request.sourceSize.height)
+        ? projectEditorRecipe(request.recipe, request.sourceSize, targetSize)
+        : request.recipe;
+    return Marker.createRecipe(withMaxSize(recipe, maxSize)).apply(
       request.input,
       request.control
     );
+  };
 
   return {
     renderPreview(request) {
@@ -53,7 +66,10 @@ export function createCoreEditorAdapter(
     },
 
     async exportOriginal(request): Promise<EditorExportResult> {
-      const visible = await renderVisible(request);
+      const visible = await renderVisible(
+        request,
+        request.recipe.output.maxSize
+      );
       const invisible = request.options?.invisible;
       const credentials = request.options?.contentCredentials;
 
