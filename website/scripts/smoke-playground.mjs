@@ -103,6 +103,7 @@ try {
   await page.goto(`${origin}/playground/`, { waitUntil: 'networkidle' });
   const playground = page.locator('[data-marker-playground]');
   await playground.waitFor();
+  await assertCurrentPlaygroundLabels(playground);
   await waitForRendered(playground);
   await assertPreviewMime(playground, 'image/png');
   await assertVisibleLogo(playground);
@@ -139,6 +140,7 @@ try {
   await page.setViewportSize({ width: 1000, height: 900 });
   await page.goto(`${origin}/zh-cn/playground/`, { waitUntil: 'networkidle' });
   const chinesePlayground = page.locator('[data-marker-playground]');
+  await assertCurrentPlaygroundLabels(chinesePlayground);
   await waitForRendered(chinesePlayground);
   await page
     .locator('[data-editor-playground][data-initialized="true"]')
@@ -217,6 +219,27 @@ async function waitForRendered(playground) {
   await playground
     .locator('[data-render-state][data-state="rendered"]')
     .waitFor();
+}
+
+async function assertCurrentPlaygroundLabels(playground) {
+  const workspaceLabels = await playground.locator('.workspace-tabs').innerText();
+  assert.doesNotMatch(
+    workspaceLabels,
+    /\bv1\.\d+\b/,
+    'Core 2 Playground workflow tabs should not display legacy release badges.'
+  );
+  assert.equal(
+    (workspaceLabels.match(/Core 2/g) ?? []).length,
+    2,
+    'Batch and invisible workflows should be labeled as Core 2.'
+  );
+
+  const exampleLabels = await playground.locator('.example-presets').innerText();
+  assert.doesNotMatch(
+    exampleLabels,
+    /\bv1\.\d+\b/,
+    'Core 2 Playground presets should not display legacy release badges.'
+  );
 }
 
 async function assertPreviewMime(playground, mimeType) {
