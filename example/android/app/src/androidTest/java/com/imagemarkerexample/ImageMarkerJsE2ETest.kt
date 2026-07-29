@@ -18,6 +18,7 @@ import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.anything
+import org.hamcrest.Matchers.startsWith
 import org.hamcrest.TypeSafeMatcher
 import org.junit.Rule
 import org.junit.Test
@@ -65,6 +66,30 @@ class ImageMarkerJsE2ETest {
     onView(isAssignableFrom(ScrollView::class.java)).perform(fullScroll(View.FOCUS_UP))
     waitForView(withReactTestId("result-preview-ready"), 60_000)
     waitForView(withReactTestId("watermark-orientation-validated"), 5_000)
+  }
+
+  @Test
+  fun editorUndoPreviewAndOriginalExportRunThroughCore() {
+    waitForView(withText("Image Marker Lab"), 90_000)
+    waitForView(withReactTestId("surface-editor"), 5_000)
+    onView(withReactTestId("surface-editor")).perform(click())
+
+    waitForView(withReactTestId("editor-canvas"), 5_000)
+    waitForView(withReactTestId("editor-layer-editor-title"), 5_000)
+    waitForView(withReactTestId("editor-layer-editor-logo"), 5_000)
+
+    onView(withReactTestId("editor-add-text")).perform(click())
+    waitForView(withReactTestId("editor-layer-layer-editor-3"), 5_000)
+    onView(withReactTestId("editor-toolbar-undo")).perform(click())
+
+    onView(withReactTestId("editor-preview")).perform(click())
+    waitForView(withReactTestId("editor-result-image"), 60_000)
+    waitForView(withText(startsWith("Preview ready")), 5_000)
+
+    onView(isAssignableFrom(ScrollView::class.java)).perform(fullScroll(View.FOCUS_UP))
+    waitForView(withReactTestId("editor-export"), 5_000)
+    onView(withReactTestId("editor-export")).perform(click())
+    waitForView(withText(startsWith("Export ready")), 60_000)
   }
 
   private fun fullScroll(direction: Int): ViewAction {

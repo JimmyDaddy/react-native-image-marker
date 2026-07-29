@@ -7,7 +7,7 @@ title: "projectEditorRecipe"
 
 > **projectEditorRecipe**(`recipe`, `source`, `target`): [`WatermarkRecipeDefinition`](/guides/editor/reference/interfaces/watermarkrecipedefinition/)
 
-Defined in: packages/editor/src/projection.ts:244
+Defined in: [packages/editor/src/projection.ts:244](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/projection.ts#L244)
 
 ## Parameters
 

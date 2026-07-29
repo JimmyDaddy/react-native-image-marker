@@ -7,7 +7,7 @@ title: "ImageMarkerEditorToolbar"
 
 > **ImageMarkerEditorToolbar**(`__namedParameters`): `Element`
 
-Defined in: [packages/editor/src/EditorSurface.tsx:477](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/EditorSurface.tsx#L477)
+Defined in: [packages/editor/src/EditorSurface.tsx:486](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/EditorSurface.tsx#L486)
 
 Minimal accessible toolbar; applications may replace it with their design system.
 

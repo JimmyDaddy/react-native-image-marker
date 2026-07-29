@@ -67,6 +67,7 @@ function App() {
             accessibilityState={{ selected: surface === value }}
             key={value}
             onPress={() => setSurface(value)}
+            testID={`surface-${value}`}
             style={[
               styles.surfaceTab,
               surface === value && styles.surfaceTabSelected,
@@ -78,7 +79,7 @@ function App() {
                 surface === value && styles.surfaceTabTextSelected,
               ]}
             >
-              {value === 'core' ? 'Core lab' : 'Editor 0.0.3'}
+              {value === 'core' ? 'Core lab' : 'Editor 0.1.0'}
             </Text>
           </Pressable>
         ))}
