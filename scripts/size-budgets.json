@@ -1,0 +1,43 @@
+{
+  "website": {
+    "sourceDirectory": "website/public",
+    "distDirectory": "website/dist",
+    "maxSourceBytes": 6000000,
+    "maxSourceFileBytes": 700000,
+    "maxDistBytes": 56000000,
+    "maxJavaScriptFileBytes": 200000,
+    "maxWasmFileBytes": 8500000
+  },
+  "packages": {
+    "core": {
+      "directory": ".",
+      "name": "react-native-image-marker",
+      "maxPackedBytes": 350000,
+      "maxUnpackedBytes": 1800000
+    },
+    "cli": {
+      "directory": "packages/cli",
+      "name": "@image-marker/cli",
+      "maxPackedBytes": 100000,
+      "maxUnpackedBytes": 500000
+    },
+    "editor": {
+      "directory": "packages/editor",
+      "name": "react-native-image-marker-editor",
+      "maxPackedBytes": 80000,
+      "maxUnpackedBytes": 500000
+    },
+    "node": {
+      "directory": "packages/node",
+      "name": "@image-marker/node",
+      "maxPackedBytes": 120000,
+      "maxUnpackedBytes": 600000
+    },
+    "recipe": {
+      "directory": "packages/recipe",
+      "name": "@image-marker/recipe",
+      "maxPackedBytes": 60000,
+      "maxUnpackedBytes": 300000
+    }
+  }
+}

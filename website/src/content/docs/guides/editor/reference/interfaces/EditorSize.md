@@ -5,7 +5,7 @@ prev: false
 title: "EditorSize"
 ---
 
-Defined in: [packages/editor/src/types.ts:17](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L17)
+Defined in: [packages/editor/src/types.ts:22](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L22)
 
 ## Extended by
 
@@ -17,7 +17,7 @@ Defined in: [packages/editor/src/types.ts:17](https://github.com/JimmyDaddy/reac
 
 > **height**: `number`
 
-Defined in: [packages/editor/src/types.ts:19](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L19)
+Defined in: [packages/editor/src/types.ts:24](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L24)
 
 ***
 
@@ -25,4 +25,4 @@ Defined in: [packages/editor/src/types.ts:19](https://github.com/JimmyDaddy/reac
 
 > **width**: `number`
 
-Defined in: [packages/editor/src/types.ts:18](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L18)
+Defined in: [packages/editor/src/types.ts:23](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L23)

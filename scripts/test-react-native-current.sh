@@ -15,8 +15,12 @@ trap cleanup EXIT
 
 package_version="$(node -p "require('$repo_root/package.json').version")"
 package_tarball="$fixture_root/react-native-image-marker-$package_version.tgz"
+recipe_version="$(node -p "require('$repo_root/packages/recipe/package.json').version")"
+recipe_tarball="$fixture_root/image-marker-recipe-$recipe_version.tgz"
 
 cd "$repo_root"
+npm run build:recipe
+npm pack --ignore-scripts --pack-destination "$fixture_root" ./packages/recipe >/dev/null
 npm pack --ignore-scripts --pack-destination "$fixture_root" >/dev/null
 
 cd "$fixture_root"
@@ -27,7 +31,7 @@ npx --yes @react-native-community/cli@20.2.0 init ImageMarkerCurrent \
   --skip-git-init
 
 cd "$fixture_root/ImageMarkerCurrent"
-npm install --no-audit --no-fund "$package_tarball"
+npm install --no-audit --no-fund "$recipe_tarball" "$package_tarball"
 node - <<'NODE'
 const packageJson = require('react-native-image-marker/package.json');
 const reactNative = require('react-native/package.json');
@@ -47,4 +51,3 @@ cd android
   -PreactNativeArchitectures=arm64-v8a \
   --stacktrace \
   --no-daemon
-

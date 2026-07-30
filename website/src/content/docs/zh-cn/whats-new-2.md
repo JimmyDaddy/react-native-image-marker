@@ -6,16 +6,30 @@ description: Core 2 版本亮点、breaking changes、Editor 接入方式与 v1 
 Core 2 把 Image Marker 从一组渲染调用升级为可控制、可移植的图片工作流。它是
 文档根路径上的当前版本；v1 继续保留在受保护的维护线上。
 
+## Core 2.1 与共享工具链
+
+Core 2.1 新增跨平台 `Marker.getImageInfo()`、一致的富文本布局控制与直接 Recipe
+包集成。同一份 Recipe v2 文档现在可以流经五个边界清晰的包：
+
+| 包 | 职责 |
+| --- | --- |
+| [`@image-marker/recipe`](/zh-cn/recipe/) | Schema、验证、迁移、模板与图层操作 |
+| `react-native-image-marker` | iOS、Android 与浏览器渲染 |
+| [`react-native-image-marker-editor`](/zh-cn/guides/editor/) | 可选 React Native 与 Web 交互 UI |
+| [`@image-marker/node`](/zh-cn/node/) | 基于 Sharp 的纯 Node.js 服务端渲染 |
+| [`@image-marker/cli`](/zh-cn/cli/) | 终端与 CI 自动化 |
+
 ## 主要变化
 
 - `MarkerResult` 提供任务 ID、耗时、格式、MIME 类型和元数据策略。
 - Recipe v2 提供稳定图层 ID、有序混合图层、条件、显隐、锁定、验证与显式迁移。
 - 支持进度、超时、取消、稳定错误码和有上限的批处理并发。
 - 支持字体 fallback、Android/Web WebP、方向归一化，并移除源 EXIF/GPS。
+- Core 2.1 提供跨平台图片检查，以及富文本宽度、行高、字距、行数限制、溢出与
+  对齐控制。
 - 提供隐形追踪批次、Worker、稳健性工具和可选 Content Credentials 组合。
-- 独立版本的
-  [`react-native-image-marker-editor`](/zh-cn/guides/editor/) 可用于可视化编辑
-  Recipe v2。
+- Editor 0.3 提供正式面板、多选、分组、对齐、操作 handles、viewport、
+  autosave、模板、品牌配置与插件。
 
 ## Breaking changes 概览
 

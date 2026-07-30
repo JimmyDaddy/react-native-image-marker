@@ -7,7 +7,7 @@ title: "createCoreEditorAdapter"
 
 > **createCoreEditorAdapter**(`previewMaxSize?`): [`ImageMarkerEditorRenderAdapter`](/guides/editor/reference/interfaces/imagemarkereditorrenderadapter/)
 
-Defined in: [packages/editor/src/core-adapter.ts:42](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/core-adapter.ts#L42)
+Defined in: [packages/editor/src/core-adapter.ts:68](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/core-adapter.ts#L68)
 
 Lightweight default adapter. Import this opt-in entry only when the editor
 should invoke Core directly; applications can inject a server or custom

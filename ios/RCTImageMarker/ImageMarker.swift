@@ -106,6 +106,21 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         return NSError(domain: ErrorDomainEnum.BASE.rawValue, code: 1, userInfo: [NSLocalizedDescriptionKey: message])
     }
 
+    @objc(getImageInfo:resolve:reject:)
+    func getImageInfo(
+        _ source: [AnyHashable: Any],
+        resolve: @escaping RCTPromiseResolveBlock,
+        reject: @escaping RCTPromiseRejectBlock
+    ) -> Void {
+        Task(priority: .userInitiated) {
+            do {
+                resolve(try ImageInfoReader.read(source))
+            } catch {
+                reject("error", error.localizedDescription, error)
+            }
+        }
+    }
+
     func saveImageForMarker(_ image: UIImage, with opts: Options) throws -> String {
         if opts.saveFormat?.caseInsensitiveCompare("webp") == .orderedSame {
             throw NSError(
@@ -202,17 +217,30 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         if textOpts.style.strikeThrough {
             attributes[.strikethroughStyle] = NSUnderlineStyle.single.rawValue
         }
-        if let textAlign = textOpts.style.textAlign {
-            let paragraphStyle = NSMutableParagraphStyle()
-            switch textAlign {
-            case "right":
-                paragraphStyle.alignment = .right
-            case "center":
-                paragraphStyle.alignment = .center
-            default:
-                paragraphStyle.alignment = .left
-            }
-            attributes[.paragraphStyle] = paragraphStyle
+        let paragraphStyle = NSMutableParagraphStyle()
+        switch textOpts.style.textAlign {
+        case "right":
+            paragraphStyle.alignment = .right
+        case "center":
+            paragraphStyle.alignment = .center
+        default:
+            paragraphStyle.alignment = .left
+        }
+        switch textOpts.style.direction {
+        case "ltr":
+            paragraphStyle.baseWritingDirection = .leftToRight
+        case "rtl":
+            paragraphStyle.baseWritingDirection = .rightToLeft
+        default:
+            paragraphStyle.baseWritingDirection = .natural
+        }
+        if let lineHeight = textOpts.style.lineHeight {
+            paragraphStyle.minimumLineHeight = lineHeight
+            paragraphStyle.maximumLineHeight = lineHeight
+        }
+        attributes[.paragraphStyle] = paragraphStyle
+        if textOpts.style.letterSpacing != 0 {
+            attributes[.kern] = textOpts.style.letterSpacing
         }
         if textOpts.style.skewX != 0 {
             attributes[.obliqueness] = textOpts.style.skewX
@@ -225,8 +253,13 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
         }
 
         let attributedText = NSAttributedString(string: textOpts.text, attributes: attributes)
-        let textRect = attributedText.boundingRect(with: canvasSize, options: .usesLineFragmentOrigin, context: nil)
-        let size = textRect.size
+        let maxTextWidth = try textOpts.style.resolvedMaxWidth(backgroundWidth: w)
+        let textLayout = ImageMarkerTextLayout(
+            text: attributedText,
+            maxWidth: maxTextWidth,
+            style: textOpts.style
+        )
+        let size = textLayout.size
         let visualSize = CGSize(
             width: size.width + strokeWidth,
             height: size.height + strokeWidth
@@ -311,8 +344,7 @@ public final class ImageMarker: NSObject, RCTBridgeModule {
                 }
             }
 
-            let rect = CGRect(origin: CGPoint(x: posX, y: posY), size: size)
-            attributedText.draw(in: rect)
+            textLayout.draw(at: CGPoint(x: posX, y: posY))
             context.restoreGState()
         }
     }

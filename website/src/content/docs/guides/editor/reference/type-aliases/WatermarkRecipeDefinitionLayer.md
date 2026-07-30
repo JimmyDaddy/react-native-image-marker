@@ -5,12 +5,18 @@ prev: false
 title: "WatermarkRecipeDefinitionLayer"
 ---
 
-> **WatermarkRecipeDefinitionLayer** = `WatermarkRecipeLayer` & `object`
+> **WatermarkRecipeDefinitionLayer**\<`Source`\> = `WatermarkRecipeLayer`\<`Source`\> & `object`
 
-Defined in: [src/recipe.ts:56](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/src/recipe.ts#L56)
+Defined in: packages/recipe/lib/module/types.d.ts:118
 
 ## Type Declaration
 
 ### id
 
 > **id**: `string`
+
+## Type Parameters
+
+### Source
+
+`Source` = `unknown`

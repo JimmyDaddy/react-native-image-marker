@@ -13,6 +13,10 @@ on:
       - 'packages/editor/src/**'
       - 'packages/editor/package.json'
       - 'packages/editor/README.md'
+      - 'packages/recipe/**'
+      - 'packages/node/**'
+      - 'packages/cli/**'
+      - 'docs/**'
       - 'website/**'
       - 'README.MD'
       - 'package.json'
@@ -75,6 +79,7 @@ jobs:
 
       - name: Build v2 documentation
         run: |
+          npm --prefix current run build:recipe
           if [ "$(node -p "require('./current/website/versions.json').releaseStage")" = "ga" ]; then
             docs_channel=current
           else

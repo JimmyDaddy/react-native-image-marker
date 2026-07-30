@@ -12,6 +12,8 @@ abstract class NativeImageMarkerSpec(
     return NAME
   }
 
+  abstract fun getImageInfo(source: ReadableMap, promise: Promise)
+
   abstract fun markWithText(options: ReadableMap, promise: Promise)
 
   abstract fun markWithImage(options: ReadableMap, promise: Promise)

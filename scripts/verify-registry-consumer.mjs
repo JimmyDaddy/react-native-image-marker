@@ -39,14 +39,24 @@ try {
       2
     )
   );
-  const dependencies = [
-    `${packageName}@${version}`,
-    'typescript@5.9.3',
-    'react@18.2.0',
-    'react-native@0.73.3',
-  ];
+  const dependencies = [`${packageName}@${version}`, 'typescript@5.9.3'];
+  if (
+    packageName === 'react-native-image-marker' ||
+    packageName === 'react-native-image-marker-editor'
+  ) {
+    dependencies.push('react@18.2.0', 'react-native@0.73.3');
+  }
   if (packageName === 'react-native-image-marker-editor') {
-    dependencies.push('react-native-image-marker@^2.0.0');
+    dependencies.push('react-native-image-marker@^2.1.0');
+  }
+  if (
+    packageName === '@image-marker/node' ||
+    packageName === '@image-marker/cli'
+  ) {
+    dependencies.push('@types/node@22.15.0');
+  }
+  if (packageName === '@image-marker/node') {
+    dependencies.push('sharp@^0.35.3');
   }
   run('npm', [
     'install',
@@ -121,8 +131,10 @@ void output;
 `;
   } else if (packageName === 'react-native-image-marker-editor') {
     const peerRange = manifest.peerDependencies?.['react-native-image-marker'];
-    if (peerRange !== '^2.0.0') {
-      throw new Error(`Editor published an invalid Core peer range: ${peerRange}.`);
+    if (peerRange !== '^2.1.0') {
+      throw new Error(
+        `Editor published an invalid Core peer range: ${peerRange}.`
+      );
     }
     run('node', [
       '-e',
@@ -150,6 +162,110 @@ const request: EditorRenderRequest = {
   input: { backgroundImage: { src: '/source.png' } },
 };
 void request;
+`;
+  } else if (packageName === '@image-marker/recipe') {
+    run('node', [
+      '-e',
+      "const recipe=require('@image-marker/recipe'); if(recipe.WATERMARK_RECIPE_SCHEMA_VERSION!==2) process.exit(1)",
+    ]);
+    run('node', [
+      '--input-type=module',
+      '-e',
+      "const recipe=await import('@image-marker/recipe'); if(recipe.WATERMARK_RECIPE_SCHEMA_VERSION!==2) process.exit(1)",
+    ]);
+    consumerSource = `import {
+  createWatermarkRecipeDefinition,
+  materializeWatermarkRecipe,
+  type WatermarkRecipeDefinition,
+} from '@image-marker/recipe';
+
+const definition: WatermarkRecipeDefinition =
+  createWatermarkRecipeDefinition({
+    layers: [{ id: 'title', type: 'text', text: 'Hello {{name}}' }],
+    output: { saveFormat: 'png' },
+  });
+const materialized = materializeWatermarkRecipe(definition, {
+  variables: { name: 'Alice' },
+});
+void materialized;
+`;
+  } else if (packageName === '@image-marker/node') {
+    if (
+      manifest.dependencies?.['@image-marker/recipe'] !== '^0.1.0' ||
+      manifest.peerDependencies?.sharp !== '>=0.35.0' ||
+      manifest.dependencies?.react ||
+      manifest.dependencies?.['react-native'] ||
+      manifest.peerDependencies?.react ||
+      manifest.peerDependencies?.['react-native']
+    ) {
+      throw new Error('Node published an invalid dependency graph.');
+    }
+    run('node', [
+      '-e',
+      "const node=require('@image-marker/node'); if(typeof node.createNodeImageMarker!=='function') process.exit(1)",
+    ]);
+    run('node', [
+      '--input-type=module',
+      '-e',
+      "const node=await import('@image-marker/node'); if(typeof node.createNodeImageMarker!=='function') process.exit(1)",
+    ]);
+    consumerSource = `import {
+  createNodeImageMarker,
+  type NodeRenderResult,
+} from '@image-marker/node';
+
+const renderer = createNodeImageMarker();
+const result: Promise<NodeRenderResult> = renderer.render(
+  {
+    schemaVersion: 2,
+    layers: [{ id: 'title', type: 'text', text: 'Server' }],
+    output: { saveFormat: 'png' },
+  },
+  { backgroundImage: { src: Buffer.from('fixture') } }
+);
+void result;
+`;
+  } else if (packageName === '@image-marker/cli') {
+    if (
+      manifest.dependencies?.['@image-marker/node'] !== '^0.1.0' ||
+      manifest.dependencies?.['@image-marker/recipe'] !== '^0.1.0' ||
+      manifest.dependencies?.sharp !== '^0.35.3' ||
+      manifest.bin?.['image-marker'] !== 'lib/commonjs/bin.js' ||
+      manifest.dependencies?.react ||
+      manifest.dependencies?.['react-native'] ||
+      manifest.peerDependencies?.react ||
+      manifest.peerDependencies?.['react-native']
+    ) {
+      throw new Error('CLI published an invalid dependency graph or binary.');
+    }
+    run('node', [
+      '-e',
+      `const cli=require('@image-marker/cli'); if(typeof cli.runImageMarkerCli!=='function'||cli.IMAGE_MARKER_CLI_VERSION!==${JSON.stringify(
+        version
+      )}) process.exit(1)`,
+    ]);
+    run('node', [
+      '--input-type=module',
+      '-e',
+      `const cli=await import('@image-marker/cli'); if(typeof cli.runImageMarkerCli!=='function'||cli.IMAGE_MARKER_CLI_VERSION!==${JSON.stringify(
+        version
+      )}) process.exit(1)`,
+    ]);
+    run(join(consumerDirectory, 'node_modules/.bin/image-marker'), [
+      '--version',
+    ]);
+    consumerSource = `import {
+  IMAGE_MARKER_CLI_VERSION,
+  runImageMarkerCli,
+  type RunImageMarkerCliOptions,
+} from '@image-marker/cli';
+
+const options: RunImageMarkerCliOptions = {
+  environment: { IMAGE_MARKER_TRACE_KEY: 'fixture' },
+};
+const result: Promise<number> = runImageMarkerCli(['--version'], options);
+void IMAGE_MARKER_CLI_VERSION;
+void result;
 `;
   } else {
     throw new Error(`Unsupported release consumer target: ${packageName}.`);

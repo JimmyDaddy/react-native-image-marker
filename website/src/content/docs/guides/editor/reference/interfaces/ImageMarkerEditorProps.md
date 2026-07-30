@@ -5,15 +5,23 @@ prev: false
 title: "ImageMarkerEditorProps"
 ---
 
-Defined in: [packages/editor/src/EditorSurface.tsx:35](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/EditorSurface.tsx#L35)
+Defined in: [packages/editor/src/EditorSurface.tsx:74](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/EditorSurface.tsx#L74)
 
 ## Properties
+
+### adapter?
+
+> `optional` **adapter?**: [`ImageMarkerEditorRenderAdapter`](/guides/editor/reference/interfaces/imagemarkereditorrenderadapter/)
+
+Defined in: [packages/editor/src/EditorSurface.tsx:89](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/EditorSurface.tsx#L89)
+
+***
 
 ### background?
 
 > `optional` **background?**: `ReactNode`
 
-Defined in: [packages/editor/src/EditorSurface.tsx:47](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/EditorSurface.tsx#L47)
+Defined in: [packages/editor/src/EditorSurface.tsx:90](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/EditorSurface.tsx#L90)
 
 ***
 
@@ -21,7 +29,7 @@ Defined in: [packages/editor/src/EditorSurface.tsx:47](https://github.com/JimmyD
 
 > **controller**: [`ImageMarkerEditorController`](/guides/editor/reference/classes/imagemarkereditorcontroller/)
 
-Defined in: [packages/editor/src/EditorSurface.tsx:36](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/EditorSurface.tsx#L36)
+Defined in: [packages/editor/src/EditorSurface.tsx:75](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/EditorSurface.tsx#L75)
 
 ***
 
@@ -29,13 +37,13 @@ Defined in: [packages/editor/src/EditorSurface.tsx:36](https://github.com/JimmyD
 
 > `optional` **getLayerSize?**: (`layer`) => [`EditorSize`](/guides/editor/reference/interfaces/editorsize/)
 
-Defined in: [packages/editor/src/EditorSurface.tsx:50](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/EditorSurface.tsx#L50)
+Defined in: [packages/editor/src/EditorSurface.tsx:94](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/EditorSurface.tsx#L94)
 
 #### Parameters
 
 ##### layer
 
-[`WatermarkRecipeDefinitionLayer`](/guides/editor/reference/type-aliases/watermarkrecipedefinitionlayer/)
+`WatermarkRecipeDefinitionLayer`
 
 #### Returns
 
@@ -47,7 +55,43 @@ Defined in: [packages/editor/src/EditorSurface.tsx:50](https://github.com/JimmyD
 
 > **height**: `number`
 
-Defined in: [packages/editor/src/EditorSurface.tsx:38](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/EditorSurface.tsx#L38)
+Defined in: [packages/editor/src/EditorSurface.tsx:77](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/EditorSurface.tsx#L77)
+
+***
+
+### onSourceInfo?
+
+> `optional` **onSourceInfo?**: (`info`) => `void`
+
+Defined in: [packages/editor/src/EditorSurface.tsx:102](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/EditorSurface.tsx#L102)
+
+#### Parameters
+
+##### info
+
+[`MarkerImageInfo`](/guides/editor/reference/interfaces/markerimageinfo/)
+
+#### Returns
+
+`void`
+
+***
+
+### onSourceInfoError?
+
+> `optional` **onSourceInfoError?**: (`error`) => `void`
+
+Defined in: [packages/editor/src/EditorSurface.tsx:103](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/EditorSurface.tsx#L103)
+
+#### Parameters
+
+##### error
+
+`Error`
+
+#### Returns
+
+`void`
 
 ***
 
@@ -55,7 +99,7 @@ Defined in: [packages/editor/src/EditorSurface.tsx:38](https://github.com/JimmyD
 
 > `optional` **onStateChange?**: (`state`) => `void`
 
-Defined in: [packages/editor/src/EditorSurface.tsx:56](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/EditorSurface.tsx#L56)
+Defined in: [packages/editor/src/EditorSurface.tsx:104](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/EditorSurface.tsx#L104)
 
 #### Parameters
 
@@ -69,17 +113,25 @@ Defined in: [packages/editor/src/EditorSurface.tsx:56](https://github.com/JimmyD
 
 ***
 
+### plugins?
+
+> `optional` **plugins?**: readonly [`ImageMarkerEditorPlugin`](/guides/editor/reference/interfaces/imagemarkereditorplugin/)[]
+
+Defined in: [packages/editor/src/EditorSurface.tsx:101](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/EditorSurface.tsx#L101)
+
+***
+
 ### renderLayer?
 
 > `optional` **renderLayer?**: (`layer`, `selected`, `context`) => `ReactNode`
 
-Defined in: [packages/editor/src/EditorSurface.tsx:51](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/EditorSurface.tsx#L51)
+Defined in: [packages/editor/src/EditorSurface.tsx:95](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/EditorSurface.tsx#L95)
 
 #### Parameters
 
 ##### layer
 
-[`WatermarkRecipeDefinitionLayer`](/guides/editor/reference/type-aliases/watermarkrecipedefinitionlayer/)
+`WatermarkRecipeDefinitionLayer`
 
 ##### selected
 
@@ -95,11 +147,37 @@ Defined in: [packages/editor/src/EditorSurface.tsx:51](https://github.com/JimmyD
 
 ***
 
+### showSafeArea?
+
+> `optional` **showSafeArea?**: `boolean`
+
+Defined in: [packages/editor/src/EditorSurface.tsx:93](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/EditorSurface.tsx#L93)
+
+***
+
+### slots?
+
+> `optional` **slots?**: [`EditorComponentSlots`](/guides/editor/reference/interfaces/editorcomponentslots/)
+
+Defined in: [packages/editor/src/EditorSurface.tsx:100](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/EditorSurface.tsx#L100)
+
+***
+
 ### snapThreshold?
 
 > `optional` **snapThreshold?**: `number`
 
-Defined in: [packages/editor/src/EditorSurface.tsx:49](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/EditorSurface.tsx#L49)
+Defined in: [packages/editor/src/EditorSurface.tsx:92](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/EditorSurface.tsx#L92)
+
+***
+
+### source?
+
+> `optional` **source?**: `unknown`
+
+Defined in: [packages/editor/src/EditorSurface.tsx:88](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/EditorSurface.tsx#L88)
+
+Background image source used for automatic Core 2.1 dimension lookup.
 
 ***
 
@@ -107,11 +185,20 @@ Defined in: [packages/editor/src/EditorSurface.tsx:49](https://github.com/JimmyD
 
 > `optional` **sourceSize?**: [`EditorSize`](/guides/editor/reference/interfaces/editorsize/)
 
-Defined in: [packages/editor/src/EditorSurface.tsx:46](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/EditorSurface.tsx#L46)
+Defined in: [packages/editor/src/EditorSurface.tsx:86](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/EditorSurface.tsx#L86)
 
-Original background dimensions used by Recipe pixel coordinates. When
-omitted, the viewport dimensions remain the coordinate space for backward
-compatibility.
+Explicit source dimensions. Usually omitted when `source` and an adapter
+with `getSourceInfo` are provided.
+
+***
+
+### state?
+
+> `optional` **state?**: [`EditorState`](/guides/editor/reference/interfaces/editorstate/)
+
+Defined in: [packages/editor/src/EditorSurface.tsx:81](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/EditorSurface.tsx#L81)
+
+Controlled state. Pair with `onStateChange` and controller.replaceState.
 
 ***
 
@@ -119,7 +206,7 @@ compatibility.
 
 > `optional` **style?**: `StyleProp`\<`ViewStyle`\>
 
-Defined in: [packages/editor/src/EditorSurface.tsx:48](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/EditorSurface.tsx#L48)
+Defined in: [packages/editor/src/EditorSurface.tsx:91](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/EditorSurface.tsx#L91)
 
 ***
 
@@ -127,7 +214,7 @@ Defined in: [packages/editor/src/EditorSurface.tsx:48](https://github.com/JimmyD
 
 > `optional` **testID?**: `string`
 
-Defined in: [packages/editor/src/EditorSurface.tsx:40](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/EditorSurface.tsx#L40)
+Defined in: [packages/editor/src/EditorSurface.tsx:79](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/EditorSurface.tsx#L79)
 
 Stable identifier for native E2E and application component tests.
 
@@ -137,4 +224,4 @@ Stable identifier for native E2E and application component tests.
 
 > **width**: `number`
 
-Defined in: [packages/editor/src/EditorSurface.tsx:37](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/EditorSurface.tsx#L37)
+Defined in: [packages/editor/src/EditorSurface.tsx:76](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/EditorSurface.tsx#L76)

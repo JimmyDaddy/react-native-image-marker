@@ -72,16 +72,40 @@ jobs:
       - name: Install release dependencies
         run: npm ci
 
+      - name: Build Recipe workspace dependency
+        if: needs.resolve.outputs.package_path == 'packages/editor' || needs.resolve.outputs.package_path == 'packages/node' || needs.resolve.outputs.package_path == 'packages/cli'
+        run: npm run build:recipe
+
       - name: Build Core type dependency for Editor
         if: needs.resolve.outputs.package_path == 'packages/editor'
         run: npm run prepack
+
+      - name: Build Node dependency for CLI
+        if: needs.resolve.outputs.package_path == 'packages/cli'
+        run: npm run build:node
 
       - name: Build package
         working-directory: ${{ needs.resolve.outputs.package_path }}
         run: npm run prepack
 
+      - name: Check whether the exact version is already published
+        id: registry
+        env:
+          PACKAGE_NAME: ${{ needs.resolve.outputs.package_name }}
+          PACKAGE_VERSION: ${{ needs.resolve.outputs.version }}
+        run: |
+          if npm view "$PACKAGE_NAME@$PACKAGE_VERSION" version --json --prefer-online >/dev/null 2>&1; then
+            echo "published=true" >> "$GITHUB_OUTPUT"
+            echo "$PACKAGE_NAME@$PACKAGE_VERSION is already public; continuing with verification."
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Publish with provenance
+        if: steps.registry.outputs.published != 'true'
         working-directory: ${{ needs.resolve.outputs.package_path }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: >-
           npm publish
           --provenance
@@ -109,20 +133,34 @@ jobs:
           PACKAGE_NAME: ${{ needs.resolve.outputs.package_name }}
           PACKAGE_VERSION: ${{ needs.resolve.outputs.version }}
         run: |
-          for _ in $(seq 1 12); do
-            predicate_type="$(npm view "$PACKAGE_NAME@$PACKAGE_VERSION" dist.attestations.provenance.predicateType 2>/dev/null || true)"
+          for attempt in $(seq 1 36); do
+            predicate_type="$(
+              npm view "$PACKAGE_NAME@$PACKAGE_VERSION" \
+                dist.attestations.provenance.predicateType \
+                --prefer-online \
+                2>/dev/null || true
+            )"
             if [ "$predicate_type" = "https://slsa.dev/provenance/v1" ]; then
               echo "Verified provenance for $PACKAGE_NAME@$PACKAGE_VERSION"
               exit 0
             fi
+            echo "Registry metadata is not public yet (attempt $attempt/36)."
             sleep 5
           done
-          echo "Published package did not expose provenance metadata in time."
+          echo "Published package did not expose provenance metadata within three minutes."
           exit 1
+
+      - name: Checkout the current registry consumer verifier
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ needs.resolve.outputs.branch }}
+          path: .release-verifier
+          sparse-checkout: scripts/verify-registry-consumer.mjs
+          sparse-checkout-cone-mode: false
 
       - name: Verify fresh registry consumer
         run: >-
-          node scripts/verify-registry-consumer.mjs
+          node .release-verifier/scripts/verify-registry-consumer.mjs
           --package-name "${{ needs.resolve.outputs.package_name }}"
           --version "${{ needs.resolve.outputs.version }}"
           --channel "${{ needs.resolve.outputs.channel }}"

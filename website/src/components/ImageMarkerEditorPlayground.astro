@@ -9,12 +9,17 @@ const zh = locale === 'zh-CN';
 const base = import.meta.env.BASE_URL;
 const copy = zh
   ? {
-      eyebrow: '可选包 · Editor 0.1.0',
+      eyebrow: '可选包 · Editor 0.3.0',
       title: '直接操作 Recipe v2',
       intro:
-        '这个演示由 Editor controller 驱动：拖动图层、调整缩放和旋转、排序、锁定、撤销，再通过 Core 2.0 渲染真实结果。',
+        '这个演示由 Editor controller 驱动：多选、复制、分组、对齐、拖动、缩放和旋转，再通过 Core 2.1 渲染真实结果。',
       addText: '添加文字',
       addImage: '添加图片',
+      selectAll: '全选',
+      duplicate: '复制图层',
+      group: '分组',
+      ungroup: '解组',
+      alignCenter: '画布居中',
       undo: '撤销',
       redo: '重做',
       preview: 'Core 预览',
@@ -34,7 +39,7 @@ const copy = zh
       copyRecipe: '复制 Recipe',
       usage: 'React Native 使用代码',
       usageIntro:
-        '下面的完整组件使用同一份 sourceSize 驱动交互画布、Core 预览和原图导出。',
+        '下面的完整组件使用 Core 2.1 自动读取原图尺寸，并展示 Editor 0.3 的正式面板。',
       copyCode: '复制代码',
       repoGuide: '仓库使用指南',
       apiReference: 'Editor API 参考',
@@ -43,16 +48,21 @@ const copy = zh
       idle: '拖动任意图层开始编辑。',
       copied: 'Recipe 已复制。',
       codeCopied: '示例代码已复制。',
-      rendering: '正在通过 Core 2.0 渲染…',
+      rendering: '正在通过 Core 2.1 渲染…',
       ready: '渲染完成',
     }
   : {
-      eyebrow: 'Optional package · Editor 0.1.0',
+      eyebrow: 'Optional package · Editor 0.3.0',
       title: 'Manipulate Recipe v2 directly',
       intro:
-        'This demo is driven by the Editor controller: drag, scale, rotate, reorder, lock, and undo layers, then render a real result through Core 2.0.',
+        'This demo uses the Editor controller for multi-select, duplicate, group, align, drag, scale, and rotate, then renders a real result through Core 2.1.',
       addText: 'Add text',
       addImage: 'Add image',
+      selectAll: 'Select all',
+      duplicate: 'Duplicate',
+      group: 'Group',
+      ungroup: 'Ungroup',
+      alignCenter: 'Center on canvas',
       undo: 'Undo',
       redo: 'Redo',
       preview: 'Core preview',
@@ -72,7 +82,7 @@ const copy = zh
       copyRecipe: 'Copy Recipe',
       usage: 'React Native usage',
       usageIntro:
-        'This complete component uses the same sourceSize for the interactive surface, Core preview, and original export.',
+        'This complete component uses Core 2.1 automatic source inspection and the formal Editor 0.3 panels.',
       copyCode: 'Copy code',
       repoGuide: 'Repository usage guide',
       apiReference: 'Editor API reference',
@@ -81,7 +91,7 @@ const copy = zh
       idle: 'Drag any layer to start editing.',
       copied: 'Recipe copied.',
       codeCopied: 'Example code copied.',
-      rendering: 'Rendering through Core 2.0…',
+      rendering: 'Rendering through Core 2.1…',
       ready: 'Render ready',
     };
 
@@ -89,15 +99,16 @@ const usageCode = `import * as React from 'react';
 import { Button, Image, StyleSheet, View } from 'react-native';
 import {
   ImageMarkerEditor,
+  ImageMarkerEditorAssetPanel,
   ImageMarkerEditorController,
+  ImageMarkerEditorInspector,
+  ImageMarkerEditorLayerPanel,
   ImageMarkerEditorToolbar,
 } from 'react-native-image-marker-editor';
 import { createCoreEditorAdapter } from 'react-native-image-marker-editor/core-adapter';
-import { ImageFormat } from 'react-native-image-marker';
 
 const background = require('./background.jpg');
 const logo = require('./logo.png');
-const sourceSize = { width: 1920, height: 1080 };
 const adapter = createCoreEditorAdapter(1024);
 
 export function WatermarkEditor() {
@@ -109,7 +120,7 @@ export function WatermarkEditor() {
           {
             id: 'title',
             type: 'text',
-            text: 'IMAGE MARKER 2.0',
+            text: 'IMAGE MARKER 2.1',
             position: { X: 160, Y: 120 },
             style: { color: '#FFFFFF', fontSize: 64, bold: true },
           },
@@ -121,7 +132,7 @@ export function WatermarkEditor() {
             scale: 0.4,
           },
         ],
-        output: { saveFormat: ImageFormat.png },
+        output: { saveFormat: 'png' },
       }),
     []
   );
@@ -131,7 +142,6 @@ export function WatermarkEditor() {
     const result = await adapter.renderPreview({
       recipe: controller.exportRecipe(),
       input: { backgroundImage: { src: background } },
-      sourceSize,
     });
     setResultUri(result.uri);
   };
@@ -140,7 +150,6 @@ export function WatermarkEditor() {
     const result = await adapter.exportOriginal({
       recipe: controller.exportRecipe(),
       input: { backgroundImage: { src: background } },
-      sourceSize,
     });
     setResultUri(result.final.uri);
   };
@@ -149,6 +158,7 @@ export function WatermarkEditor() {
     <View>
       <ImageMarkerEditorToolbar controller={controller} />
       <ImageMarkerEditor
+        adapter={adapter}
         background={
           <Image
             resizeMode="contain"
@@ -157,9 +167,15 @@ export function WatermarkEditor() {
           />
         }
         controller={controller}
-        sourceSize={sourceSize}
+        source={background}
         width={360}
         height={203}
+      />
+      <ImageMarkerEditorLayerPanel controller={controller} />
+      <ImageMarkerEditorInspector controller={controller} />
+      <ImageMarkerEditorAssetPanel
+        assets={[{ id: 'logo', name: 'Logo', source: logo }]}
+        controller={controller}
       />
       <Button title="Render Core preview" onPress={preview} />
       <Button title="Export original" onPress={exportOriginal} />
@@ -193,6 +209,11 @@ export function WatermarkEditor() {
   <div class="editor-actions" aria-label={copy.title}>
     <button type="button" data-editor-action="add-text">{copy.addText}</button>
     <button type="button" data-editor-action="add-image">{copy.addImage}</button>
+    <button type="button" data-editor-action="select-all">{copy.selectAll}</button>
+    <button type="button" data-editor-action="duplicate">{copy.duplicate}</button>
+    <button type="button" data-editor-action="group">{copy.group}</button>
+    <button type="button" data-editor-action="ungroup">{copy.ungroup}</button>
+    <button type="button" data-editor-action="align-center">{copy.alignCenter}</button>
     <button type="button" data-editor-action="undo">{copy.undo}</button>
     <button type="button" data-editor-action="redo">{copy.redo}</button>
     <button class="primary" type="button" data-editor-action="preview">{copy.preview}</button>
@@ -333,6 +354,11 @@ export function WatermarkEditor() {
   type PlaygroundCopy = {
     addText: string;
     addImage: string;
+    selectAll: string;
+    duplicate: string;
+    group: string;
+    ungroup: string;
+    alignCenter: string;
     undo: string;
     redo: string;
     preview: string;
@@ -395,7 +421,7 @@ export function WatermarkEditor() {
           id: 'web-title',
           name: 'Campaign title',
           type: 'text',
-          text: 'IMAGE MARKER 2.0',
+          text: 'IMAGE MARKER 2.1',
           position: { X: 119, Y: 132 },
           style: {
             color: '#FFFFFF',
@@ -537,7 +563,7 @@ export function WatermarkEditor() {
       item.setAttribute('aria-label', layer.name ?? layer.id);
       item.setAttribute(
         'aria-pressed',
-        state.selectedLayerId === layer.id ? 'true' : 'false'
+        state.selectedLayerIds.includes(layer.id) ? 'true' : 'false'
       );
       const projectionScale = viewportScale();
       item.style.left = `${
@@ -593,9 +619,16 @@ export function WatermarkEditor() {
         }${layer.name ?? layer.id}`;
         select.setAttribute(
           'aria-current',
-          state.selectedLayerId === layer.id ? 'true' : 'false'
+          state.selectedLayerIds.includes(layer.id) ? 'true' : 'false'
         );
-        select.addEventListener('click', () => controller.selectLayer(layer.id));
+        select.addEventListener('click', (event) =>
+          controller.selectLayer(
+            layer.id,
+            event.metaKey || event.ctrlKey || event.shiftKey
+              ? 'toggle'
+              : 'replace'
+          )
+        );
         const controls = document.createElement('span');
         for (const [label, target] of [
           [copy.down, index - 1],
@@ -654,6 +687,16 @@ export function WatermarkEditor() {
       action('remove').disabled = !selected || Boolean(selected.locked);
       action('undo').disabled = !state.canUndo;
       action('redo').disabled = !state.canRedo;
+      const editableSelection = state.recipe.layers.filter(
+        (layer: RecipeLayer) =>
+          state.selectedLayerIds.includes(layer.id) && !layer.locked
+      );
+      action('duplicate').disabled = editableSelection.length === 0;
+      action('group').disabled = editableSelection.length < 2;
+      action('ungroup').disabled = !editableSelection.some(
+        (layer: RecipeLayer) => Boolean(layer.groupId)
+      );
+      action('align-center').disabled = editableSelection.length === 0;
     };
 
     controller.subscribe(renderState);
@@ -757,6 +800,30 @@ export function WatermarkEditor() {
     });
     action('undo').addEventListener('click', () => controller.undo());
     action('redo').addEventListener('click', () => controller.redo());
+    action('select-all').addEventListener('click', () => controller.selectAll());
+    action('duplicate').addEventListener('click', () =>
+      controller.duplicateLayers()
+    );
+    action('group').addEventListener('click', () => controller.groupLayers());
+    action('ungroup').addEventListener('click', () =>
+      controller.ungroupLayers()
+    );
+    action('align-center').addEventListener('click', () => {
+      const bounds = state.recipe.layers
+        .filter((layer: RecipeLayer) =>
+          state.selectedLayerIds.includes(layer.id)
+        )
+        .map((layer: RecipeLayer) => {
+          const size = layerSourceSize(layer);
+          return {
+            id: layer.id,
+            x: coordinate(layer.position?.X, SOURCE_SIZE.width),
+            y: coordinate(layer.position?.Y, SOURCE_SIZE.height),
+            ...size,
+          };
+        });
+      controller.alignLayers('center', bounds, SOURCE_SIZE);
+    });
     action('visibility').addEventListener('click', () => {
       const selected = selectedLayer();
       if (selected) {
@@ -789,7 +856,6 @@ export function WatermarkEditor() {
         const request = {
           recipe: controller.exportRecipe(),
           input: { backgroundImage: { src: backgroundUrl } },
-          sourceSize: SOURCE_SIZE,
           control: { timeoutMs: 20_000 },
         };
         const rendered = original

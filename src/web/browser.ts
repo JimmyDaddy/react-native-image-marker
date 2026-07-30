@@ -1,3 +1,6 @@
+import { createMarkerImageInfo, parseEncodedImageInfo } from '../image-info';
+import type { MarkerImageFormat, MarkerImageInfo } from '../image-info';
+
 export interface WebCanvas {
   width: number;
   height: number;
@@ -19,6 +22,8 @@ export interface WebCanvasContext {
   font: string;
   textAlign: string;
   textBaseline: string;
+  direction?: string;
+  letterSpacing?: string;
   shadowBlur: number;
   shadowColor: string;
   shadowOffsetX: number;
@@ -188,6 +193,105 @@ function resolveImageUri(source: unknown): string | null {
     return resolveImageUri(candidate.default);
   }
   return null;
+}
+
+function inferImageFormat(
+  uri: string | null,
+  mimeType?: string
+): MarkerImageFormat {
+  const normalizedMimeType = mimeType?.split(';', 1)[0]?.toLowerCase();
+  if (normalizedMimeType === 'image/jpeg') return 'jpeg';
+  if (normalizedMimeType === 'image/png') return 'png';
+  if (normalizedMimeType === 'image/webp') return 'webp';
+  if (normalizedMimeType === 'image/gif') return 'gif';
+  if (
+    normalizedMimeType === 'image/heif' ||
+    normalizedMimeType === 'image/heic' ||
+    normalizedMimeType === 'image/avif'
+  ) {
+    return 'heif';
+  }
+  if (normalizedMimeType === 'image/bmp') return 'bmp';
+
+  const pathname = uri?.split(/[?#]/u, 1)[0]?.toLowerCase() ?? '';
+  if (/\.(?:jpe?g)$/u.test(pathname)) return 'jpeg';
+  if (/\.png$/u.test(pathname)) return 'png';
+  if (/\.webp$/u.test(pathname)) return 'webp';
+  if (/\.gif$/u.test(pathname)) return 'gif';
+  if (/\.(?:heic|heif|avif)$/u.test(pathname)) return 'heif';
+  if (/\.bmp$/u.test(pathname)) return 'bmp';
+  return 'unknown';
+}
+
+async function readEncodedImageSource(
+  source: unknown
+): Promise<{ data: ArrayBuffer; mimeType?: string } | null> {
+  if (isBlobLike(source)) {
+    const blob = source as {
+      arrayBuffer(): Promise<ArrayBuffer>;
+      type?: string;
+    };
+    return { data: await blob.arrayBuffer(), mimeType: blob.type || undefined };
+  }
+
+  const uri = resolveImageUri(source);
+  const fetchImage = (globalThis as { fetch?: typeof fetch }).fetch;
+  if (!uri || !fetchImage) {
+    return null;
+  }
+  try {
+    const response = await fetchImage(uri);
+    if (!response.ok && !uri.startsWith('data:')) {
+      return null;
+    }
+    return {
+      data: await response.arrayBuffer(),
+      mimeType: response.headers.get('content-type') ?? undefined,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Read dimensions, encoded format, and orientation without rendering a
+ * composition. Encoded bytes are preferred so EXIF orientation remains
+ * observable; drawable dimensions are the cross-origin fallback.
+ */
+export async function getWebImageInfo(
+  source: unknown
+): Promise<MarkerImageInfo> {
+  const encoded = await readEncodedImageSource(source);
+  if (encoded) {
+    try {
+      const info = parseEncodedImageInfo(encoded.data);
+      return encoded.mimeType && !info.mimeType
+        ? { ...info, mimeType: encoded.mimeType }
+        : info;
+    } catch {
+      // SVG and browser-specific formats can still be drawable. Continue with
+      // decoded dimensions rather than rejecting a valid browser image.
+    }
+  }
+
+  const loaded = await loadWebImage(source);
+  try {
+    const uri = resolveImageUri(source);
+    const mimeType =
+      encoded?.mimeType ||
+      (isBlobLike(source)
+        ? (source as { type?: string }).type || undefined
+        : undefined);
+    return createMarkerImageInfo({
+      width: Math.round(loaded.width),
+      height: Math.round(loaded.height),
+      format: inferImageFormat(uri, mimeType),
+      mimeType,
+      orientation: 1,
+    });
+  } finally {
+    loaded.cleanup();
+  }
 }
 
 function createImageElement(): WebImageElement {

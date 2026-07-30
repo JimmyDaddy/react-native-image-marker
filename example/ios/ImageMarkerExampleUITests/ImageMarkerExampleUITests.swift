@@ -7,6 +7,7 @@
 
 import XCTest
 import UIKit
+import ImageIO
 
 private actor SequentialLoadProbe {
   private var active = 0
@@ -117,6 +118,99 @@ final class ImageMarkerExampleUITests: XCTestCase {
     // Put teardown code here. This method is called after the invocation of each test method in the class.
   }
 
+  func testCore21SharedRecipeTextConformance() throws {
+    let bundle = Bundle(for: type(of: self))
+    let url = try XCTUnwrap(
+      bundle.url(forResource: "core-2.1-recipe", withExtension: "json")
+    )
+    let root = try XCTUnwrap(
+      JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any]
+    )
+    let layers = try XCTUnwrap(root["layers"] as? [[String: Any]])
+    let styleOptions = try XCTUnwrap(layers.first?["style"] as? [String: Any])
+    let style = try TextStyle(dicOpts: styleOptions)
+
+    XCTAssertEqual(root["schemaVersion"] as? Int, 2)
+    XCTAssertEqual(try style.resolvedMaxWidth(backgroundWidth: 320), 200)
+    XCTAssertEqual(style.lineHeight, 40)
+    XCTAssertEqual(style.letterSpacing, 1)
+    XCTAssertEqual(style.direction, "auto")
+    XCTAssertEqual(style.wrap, "character")
+    XCTAssertEqual(style.maxLines, 2)
+    XCTAssertEqual(style.overflow, "ellipsis")
+
+    let paragraphStyle = NSMutableParagraphStyle()
+    paragraphStyle.baseWritingDirection = .natural
+    paragraphStyle.minimumLineHeight = try XCTUnwrap(style.lineHeight)
+    paragraphStyle.maximumLineHeight = try XCTUnwrap(style.lineHeight)
+    let layout = ImageMarkerTextLayout(
+      text: NSAttributedString(
+        string: layers[0]["text"] as? String ?? "",
+        attributes: [
+          .font: UIFont.systemFont(ofSize: 32),
+          .foregroundColor: UIColor.white,
+          .paragraphStyle: paragraphStyle,
+          .kern: style.letterSpacing,
+        ]
+      ),
+      maxWidth: try style.resolvedMaxWidth(backgroundWidth: 320),
+      style: style
+    )
+    XCTAssertLessThanOrEqual(layout.size.width, 200)
+    XCTAssertGreaterThan(layout.size.height, 40)
+    XCTAssertLessThanOrEqual(layout.size.height, 80)
+
+    let rendered = UIGraphicsImageRenderer(
+      size: CGSize(width: 200, height: 80)
+    ).image { context in
+      UIColor.black.setFill()
+      context.fill(CGRect(x: 0, y: 0, width: 200, height: 80))
+      layout.draw(at: .zero)
+    }
+    let bytes = try XCTUnwrap(rgbaBytes(for: rendered))
+    XCTAssertTrue(
+      stride(from: 0, to: bytes.count, by: 4).contains { index in
+        bytes[index] > 24 || bytes[index + 1] > 24 || bytes[index + 2] > 24
+      }
+    )
+  }
+
+  func testCore21ImageInfoReadsEncodedOrientation() throws {
+    let image = makeSolidImage(
+      size: CGSize(width: 12, height: 8),
+      color: .systemBlue
+    )
+    let data = NSMutableData()
+    let destination = try XCTUnwrap(
+      CGImageDestinationCreateWithData(
+        data,
+        "public.jpeg" as CFString,
+        1,
+        nil
+      )
+    )
+    CGImageDestinationAddImage(
+      destination,
+      try XCTUnwrap(image.cgImage),
+      [kCGImagePropertyOrientation: 6] as CFDictionary
+    )
+    XCTAssertTrue(CGImageDestinationFinalize(destination))
+    let serialized = try ImageInfoReader.read([
+      "uri": "data:image/jpeg;base64,\(data.base64EncodedString())",
+    ])
+    let info = try XCTUnwrap(
+      JSONSerialization.jsonObject(with: Data(serialized.utf8)) as? [String: Any]
+    )
+
+    XCTAssertEqual(info["encodedWidth"] as? Int, 12)
+    XCTAssertEqual(info["encodedHeight"] as? Int, 8)
+    XCTAssertEqual(info["width"] as? Int, 8)
+    XCTAssertEqual(info["height"] as? Int, 12)
+    XCTAssertEqual(info["orientation"] as? Int, 6)
+    XCTAssertEqual(info["rotationDegrees"] as? Int, 90)
+    XCTAssertEqual(info["requiresNormalization"] as? Bool, true)
+  }
+
   func testInvisibleWatermarkMatchesCrossPlatformVectors() throws {
     let key = "0123456789abcdef"
     let frame = try InvisibleWatermark.frameForTesting(
@@ -218,6 +312,11 @@ final class ImageMarkerExampleUITests: XCTestCase {
     app.descendants(matching: .any)["editor-add-text"].tap()
     let addedLayer = app.descendants(matching: .any)["editor-layer-layer-editor-3"]
     XCTAssertTrue(addedLayer.waitForExistence(timeout: 5))
+    XCTAssertTrue(
+      app.descendants(matching: .any)[
+        "editor-layer-layer-editor-3-handle-rotate"
+      ].waitForExistence(timeout: 5)
+    )
     app.descendants(matching: .any)["editor-toolbar-undo"].tap()
     XCTAssertFalse(addedLayer.waitForExistence(timeout: 1))
 

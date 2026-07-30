@@ -5,6 +5,16 @@ description: 根据图层类型和处理方式，在 markText、markImage、mark
 
 import { TabItem, Tabs } from '@astrojs/starlight/components';
 
+先根据任务所在环境选择软件包：
+
+| 需求 | 软件包 |
+| --- | --- |
+| 在 iOS、Android 或浏览器渲染 | `react-native-image-marker` Core 2.1 |
+| 构建 React Native 或 Web 可视化编辑工作区 | [`react-native-image-marker-editor`](/zh-cn/guides/editor/) |
+| 不渲染，只创建、验证或迁移 Recipe JSON | [`@image-marker/recipe`](/zh-cn/recipe/) |
+| 在 Node.js 服务中渲染 | [`@image-marker/node`](/zh-cn/node/) |
+| 在终端或 CI 中渲染、检查 | [`@image-marker/cli`](/zh-cn/cli/) |
+
 三个公开方法共用相同的输出选项。请根据图层类型进行选择：
 
 | 方法 | 适用场景 | 图层顺序 |

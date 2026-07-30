@@ -5,7 +5,7 @@ prev: false
 title: "EditorExportResult"
 ---
 
-Defined in: [packages/editor/src/types.ts:88](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L88)
+Defined in: [packages/editor/src/types.ts:186](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L186)
 
 ## Properties
 
@@ -13,7 +13,7 @@ Defined in: [packages/editor/src/types.ts:88](https://github.com/JimmyDaddy/reac
 
 > **final**: `MarkerResult`
 
-Defined in: [packages/editor/src/types.ts:90](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L90)
+Defined in: [packages/editor/src/types.ts:188](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L188)
 
 ***
 
@@ -21,4 +21,4 @@ Defined in: [packages/editor/src/types.ts:90](https://github.com/JimmyDaddy/reac
 
 > **visible**: `MarkerResult`
 
-Defined in: [packages/editor/src/types.ts:89](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L89)
+Defined in: [packages/editor/src/types.ts:187](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L187)

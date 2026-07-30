@@ -83,6 +83,9 @@ try {
   const primaryNav = page.locator('[data-primary-nav]');
   await primaryNav.waitFor();
   await primaryNav.getByRole('link', { name: 'Playground' }).waitFor();
+  await primaryNav.getByRole('link', { name: 'Node & CLI' }).click();
+  await page.getByRole('heading', { name: 'Node renderer' }).waitFor();
+  await page.goto(`${origin}/`, { waitUntil: 'networkidle' });
   assert.equal(
     await page.locator('.sl-banner').count(),
     0,
@@ -444,7 +447,7 @@ async function assertEditorPlayground(page) {
     .waitFor();
   assert.match(
     (await editor.locator('[data-editor-usage-code]').textContent()) ?? '',
-    /createCoreEditorAdapter[\s\S]*sourceSize[\s\S]*renderPreview/,
+    /createCoreEditorAdapter[\s\S]*renderPreview[\s\S]*source=\{background\}[\s\S]*ImageMarkerEditorLayerPanel/,
     'Editor playground should expose a complete Core-backed usage example.'
   );
   await editor.locator('[data-editor-detail-tab="recipe"]').click();
@@ -502,6 +505,22 @@ async function assertEditorPlayground(page) {
 
   await editor.locator('[data-editor-action="add-text"]').click();
   assert.equal(await editor.locator('[data-editor-layer]').count(), 3);
+  await editor.locator('[data-editor-action="undo"]').click();
+  assert.equal(await editor.locator('[data-editor-layer]').count(), 2);
+
+  await editor.locator('[data-editor-action="select-all"]').click();
+  assert.equal(
+    await editor.locator('[data-editor-layer][aria-pressed="true"]').count(),
+    2
+  );
+  await editor.locator('[data-editor-action="group"]').click();
+  const grouped = JSON.parse(
+    (await editor.locator('[data-editor-recipe]').textContent()) ?? '{}'
+  );
+  assert(grouped.layers.every((layer) => typeof layer.groupId === 'string'));
+  await editor.locator('[data-editor-action="ungroup"]').click();
+  await editor.locator('[data-editor-action="duplicate"]').click();
+  assert.equal(await editor.locator('[data-editor-layer]').count(), 4);
   await editor.locator('[data-editor-action="undo"]').click();
   assert.equal(await editor.locator('[data-editor-layer]').count(), 2);
 

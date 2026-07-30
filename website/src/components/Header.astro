@@ -17,12 +17,14 @@ const links = isZh
   ? [
       { label: '在线工具', href: '/zh-cn/tools/' },
       { label: '在线体验', href: '/zh-cn/playground/' },
+      { label: '服务端与 CLI', href: '/zh-cn/node/' },
       { label: '使用指南', href: '/zh-cn/guides/choose-an-api/' },
       { label: 'API', href: '/zh-cn/api/' },
     ]
   : [
       { label: 'Tools', href: '/tools/' },
       { label: 'Playground', href: '/playground/' },
+      { label: 'Node & CLI', href: '/node/' },
       { label: 'Guides', href: '/guides/choose-an-api/' },
       { label: 'API', href: '/api/' },
     ];
@@ -34,6 +36,10 @@ const isActive = (href: string) => {
 
   if (href.includes('/guides/')) {
     return pathname.startsWith(isZh ? '/zh-cn/guides/' : '/guides/');
+  }
+
+  if (href.endsWith('/node/')) {
+    return pathname.startsWith(isZh ? '/zh-cn/node/' : '/node/');
   }
 
   if (href.endsWith('/api/')) {

@@ -5,7 +5,7 @@ prev: false
 title: "EditorContentCredentialsExport"
 ---
 
-Defined in: [packages/editor/src/types.ts:41](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L41)
+Defined in: [packages/editor/src/types.ts:52](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L52)
 
 ## Properties
 
@@ -13,7 +13,7 @@ Defined in: [packages/editor/src/types.ts:41](https://github.com/JimmyDaddy/reac
 
 > **adapter**: `ContentCredentialsAdapter`
 
-Defined in: [packages/editor/src/types.ts:42](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L42)
+Defined in: [packages/editor/src/types.ts:53](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L53)
 
 ***
 
@@ -21,4 +21,4 @@ Defined in: [packages/editor/src/types.ts:42](https://github.com/JimmyDaddy/reac
 
 > **claim**: `ContentCredentialsClaim`
 
-Defined in: [packages/editor/src/types.ts:43](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L43)
+Defined in: [packages/editor/src/types.ts:54](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L54)

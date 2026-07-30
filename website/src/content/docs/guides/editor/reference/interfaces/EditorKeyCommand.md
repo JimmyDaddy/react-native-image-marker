@@ -5,7 +5,7 @@ prev: false
 title: "EditorKeyCommand"
 ---
 
-Defined in: [packages/editor/src/types.ts:68](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L68)
+Defined in: [packages/editor/src/types.ts:166](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L166)
 
 ## Properties
 
@@ -13,7 +13,7 @@ Defined in: [packages/editor/src/types.ts:68](https://github.com/JimmyDaddy/reac
 
 > `optional` **altKey?**: `boolean`
 
-Defined in: [packages/editor/src/types.ts:73](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L73)
+Defined in: [packages/editor/src/types.ts:171](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L171)
 
 ***
 
@@ -21,7 +21,7 @@ Defined in: [packages/editor/src/types.ts:73](https://github.com/JimmyDaddy/reac
 
 > `optional` **ctrlKey?**: `boolean`
 
-Defined in: [packages/editor/src/types.ts:71](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L71)
+Defined in: [packages/editor/src/types.ts:169](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L169)
 
 ***
 
@@ -29,7 +29,7 @@ Defined in: [packages/editor/src/types.ts:71](https://github.com/JimmyDaddy/reac
 
 > **key**: `string`
 
-Defined in: [packages/editor/src/types.ts:69](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L69)
+Defined in: [packages/editor/src/types.ts:167](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L167)
 
 ***
 
@@ -37,7 +37,7 @@ Defined in: [packages/editor/src/types.ts:69](https://github.com/JimmyDaddy/reac
 
 > `optional` **metaKey?**: `boolean`
 
-Defined in: [packages/editor/src/types.ts:72](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L72)
+Defined in: [packages/editor/src/types.ts:170](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L170)
 
 ***
 
@@ -45,4 +45,4 @@ Defined in: [packages/editor/src/types.ts:72](https://github.com/JimmyDaddy/reac
 
 > `optional` **shiftKey?**: `boolean`
 
-Defined in: [packages/editor/src/types.ts:70](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L70)
+Defined in: [packages/editor/src/types.ts:168](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L168)

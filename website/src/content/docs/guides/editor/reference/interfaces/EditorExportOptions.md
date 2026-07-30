@@ -5,7 +5,7 @@ prev: false
 title: "EditorExportOptions"
 ---
 
-Defined in: [packages/editor/src/types.ts:46](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L46)
+Defined in: [packages/editor/src/types.ts:57](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L57)
 
 ## Properties
 
@@ -13,7 +13,7 @@ Defined in: [packages/editor/src/types.ts:46](https://github.com/JimmyDaddy/reac
 
 > `optional` **contentCredentials?**: [`EditorContentCredentialsExport`](/guides/editor/reference/interfaces/editorcontentcredentialsexport/)
 
-Defined in: [packages/editor/src/types.ts:48](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L48)
+Defined in: [packages/editor/src/types.ts:59](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L59)
 
 ***
 
@@ -21,4 +21,4 @@ Defined in: [packages/editor/src/types.ts:48](https://github.com/JimmyDaddy/reac
 
 > `optional` **invisible?**: [`EditorInvisibleExport`](/guides/editor/reference/interfaces/editorinvisibleexport/)
 
-Defined in: [packages/editor/src/types.ts:47](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L47)
+Defined in: [packages/editor/src/types.ts:58](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L58)

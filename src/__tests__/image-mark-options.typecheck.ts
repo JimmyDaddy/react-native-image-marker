@@ -3,6 +3,7 @@ import Marker, {
   type ContentCredentialsAdapter,
   ImageFormat,
   type ImageMarkOptions,
+  type MarkerImageInfo,
   type MarkerResult,
   type TextMarkOptions,
   type TextStrokeStyle,
@@ -11,6 +12,10 @@ import Marker, {
 } from '../index';
 
 export const photographicBlendMode: BlendMode = 'overlay';
+
+export const imageInfo: Promise<MarkerImageInfo> = Marker.getImageInfo(
+  'file:///tmp/background.jpg'
+);
 
 export const invisibleOutput: Promise<MarkerResult> = Marker.embedInvisible({
   image: { src: 'file:///tmp/background.png' },
@@ -97,6 +102,24 @@ export const outlinedText: TextMarkOptions = {
     {
       text: 'Outlined',
       style: { color: '#FFFFFF', strokeStyle: textStroke },
+    },
+  ],
+};
+
+export const boundedText: TextMarkOptions = {
+  backgroundImage: { src: 'file:///tmp/background.png' },
+  watermarkTexts: [
+    {
+      text: 'A bounded paragraph',
+      style: {
+        maxWidth: '60%',
+        lineHeight: 36,
+        letterSpacing: 1.25,
+        direction: 'auto',
+        wrap: 'word',
+        maxLines: 3,
+        overflow: 'ellipsis',
+      },
     },
   ],
 };

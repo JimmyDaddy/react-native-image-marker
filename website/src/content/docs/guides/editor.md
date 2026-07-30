@@ -1,134 +1,131 @@
 ---
 title: Optional interaction editor
-description: Install and integrate react-native-image-marker-editor 0.1.0 on top of Core 2.
+description: Build a visual Recipe v2 workspace with react-native-image-marker-editor 0.3 and Core 2.1.
 ---
 
-`react-native-image-marker-editor` is a separate, optional JS/TS package. Its
-first release was `0.0.1`; the current stabilization release is `0.1.0`, and it
-requires `react-native-image-marker@^2.0.0`.
-Core remains responsible for decode, composition, invisible watermarking, and
-final native encoding.
+`react-native-image-marker-editor@0.3` is an optional React Native and Web
+interaction package. It owns Recipe state, selection, gestures, history,
+panels, templates, and persistence. Core 2.1 owns image inspection, preview
+rendering, composition, and encoding.
 
 ```sh
-npm install react-native-image-marker@^2 \
-  react-native-image-marker-editor@0.1.0
+npm install react-native-image-marker@^2.1 \
+  react-native-image-marker-editor@^0.3
 ```
 
-## Create an editor
+## Complete workspace
 
 ```tsx
+import { Image, StyleSheet } from 'react-native';
 import {
   ImageMarkerEditor,
+  ImageMarkerEditorAssetPanel,
   ImageMarkerEditorController,
+  ImageMarkerEditorInspector,
+  ImageMarkerEditorLayerPanel,
   ImageMarkerEditorToolbar,
 } from 'react-native-image-marker-editor';
 import { createCoreEditorAdapter } from 'react-native-image-marker-editor/core-adapter';
-import { ImageFormat } from 'react-native-image-marker';
 
+const adapter = createCoreEditorAdapter(1024);
 const controller = new ImageMarkerEditorController({
   schemaVersion: 2,
   layers: [
     {
       id: 'title',
-      name: 'Title',
+      name: 'Campaign title',
       type: 'text',
-      text: 'Draft',
-      position: { X: 320, Y: 180 },
+      text: 'IMAGE MARKER 2.1',
+      position: { X: 160, Y: 120 },
+      style: { color: '#FFFFFF', fontSize: 64, bold: true },
     },
   ],
-  output: { saveFormat: ImageFormat.png },
+  output: { saveFormat: 'png' },
 });
-const adapter = createCoreEditorAdapter(1024);
-const sourceSize = { width: 1920, height: 1080 };
 
-<ImageMarkerEditor
-  controller={controller}
-  sourceSize={sourceSize}
-  width={360}
-  height={203}
-/>;
 <ImageMarkerEditorToolbar controller={controller} />;
-
-const recipe = controller.exportRecipe();
-const result = await adapter.exportOriginal({
-  recipe,
-  input: { backgroundImage: { src: imageSource } },
-  sourceSize,
-});
-
-console.log(result.final.uri);
+<ImageMarkerEditor
+  adapter={adapter}
+  background={
+    <Image source={imageSource} style={StyleSheet.absoluteFill} />
+  }
+  controller={controller}
+  source={imageSource}
+  width={720}
+  height={405}
+/>;
+<ImageMarkerEditorLayerPanel controller={controller} />;
+<ImageMarkerEditorInspector controller={controller} />;
+<ImageMarkerEditorAssetPanel
+  assets={[{ id: 'logo', name: 'Logo', source: logoSource }]}
+  controller={controller}
+/>;
 ```
 
-## Keep the canvas and Core render aligned
+Passing `source` and the Core adapter lets Core 2.1 read decoded dimensions and
+encoded orientation automatically. Numeric Recipe coordinates stay in
+original-image pixels; `sourceSize` is only an override for a custom renderer.
 
-Numeric Recipe coordinates use original-image pixels. Read the decoded image
-dimensions once, then pass that same `sourceSize` to both
-`ImageMarkerEditor` and the Core adapter request. The surface letterboxes the
-source into its viewport, while bounded previews scale positions, fonts,
-shadows, strokes, backgrounds, tiles, and image layers together.
+## Preview and export
 
-If `sourceSize` is omitted, Editor 0.1.0 preserves the earlier behavior and
-uses the viewport as the Recipe coordinate space. That is useful for recipes
-created specifically for a fixed viewport, but not for original-resolution
-WYSIWYG export.
+```ts
+const request = {
+  recipe: controller.exportRecipe(),
+  input: { backgroundImage: { src: imageSource } },
+  control: { timeoutMs: 20_000 },
+};
 
-## Try the complete example
+const preview = await adapter.renderPreview(request);
+const exported = await adapter.exportOriginal(request);
 
-The [live Playground](/playground/?workflow=editor#editor-playground) uses the actual Editor
-controller and Core adapter in the browser. Drag, scale, rotate, reorder, lock,
-undo, and render without installing anything.
+console.log(preview.uri, exported.final.uri);
+```
 
-For the native surface, run the repository
-[React Native example](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/example)
-and choose **Editor 0.1.0**. It renders `ImageMarkerEditor` and
-`ImageMarkerEditorToolbar`, then exercises both preview and original-resolution
-Core exports.
+The bounded preview and original export use the same Recipe coordinate space,
+so text, images, scale, and position remain aligned.
 
-The repository also includes a
-[complete component and coordinate guide](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/docs/editor.md)
-that can be read alongside the example source.
+## Editor 0.3 capabilities
 
-## Migrating from 0.0.x
+- Toolbar, Inspector, Layer Panel, and reusable Asset Panel components.
+- Text typography, color, opacity, stroke and blend-mode editing.
+- Image add/replacement, brand colors, fonts, assets, and Logo presets.
+- Multi-select, duplicate, group, ungroup, align, distribute, copy, and paste.
+- Drag, pinch, resize and rotate handles, zoom, pan, fit, safe area, and snap.
+- Rename, lock, visibility, delete, z-order, keyboard shortcuts, undo, and redo.
+- Optional autosave, controlled state, templates, placeholders, conditions,
+  custom component slots, and plugins.
 
-`0.1.0` is backward compatible with `0.0.3`: no public export was removed or
-renamed. Keep the same `sourceSize` on the surface and adapter request, and keep
-the Core adapter import on its explicit `/core-adapter` subpath. The new
-optional `testID` props expose stable native test identifiers for the canvas,
-layers, toolbar, and toolbar actions.
+Controller operations are atomic and undoable:
 
-The package now checks its public runtime/type export list and peer dependency
-ranges in CI. A public API change therefore requires an intentional contract
-update instead of appearing accidentally in a patch.
+```ts
+controller.selectLayers(['title', 'logo']);
+controller.groupLayers();
+controller.alignLayers('center', measuredBounds);
+controller.distributeLayers('horizontal', measuredBounds);
 
-## 0.1.x scope
+const portableClipboard = controller.copyLayers();
+otherController.pasteLayers(portableClipboard);
+```
 
-- Image and text layers with selection, dragging, pinch scaling, rotation, and
-  ordering.
-- Visibility and lock state; locked layers cannot be mutated, deleted, or
-  reordered.
-- Alignment guides, snapping, and safe-area constraints.
-- Grouped undo/redo and Recipe v2 import/export.
-- Low-resolution interaction preview and original-resolution export.
-- Keyboard commands and baseline accessibility labels/roles.
-- Visible, invisible watermark, and optional C2PA export choices.
-- Opt-in Core adapter, so the main editor entry does not force a heavy renderer.
+## Examples, tests, and API
 
-Video, general filters, cloud collaboration, and duplicate native encoding are
-intentionally outside `0.1.x`.
+The [live Playground](/playground/?workflow=editor#editor-playground) runs the
+real Editor controller and Core adapter. It keeps the rendered result beside
+the canvas as a tab, and exposes the integration code and live Recipe.
 
-## API reference
+The repository also contains the
+[complete native component guide](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/docs/editor.md),
+the [React Native example](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/example),
+unit tests, and native Editor E2E coverage.
 
 Browse the generated [Editor API reference](/guides/editor/reference/) for
-`ImageMarkerEditorController`, component props, render adapters, state,
-safe-area and snapping types, export options, and `createCoreEditorAdapter`.
+controller methods, component props, adapters, templates, persistence, safe
+area, snapping, and plugin types.
 
-## State and persistence
+## Rendering boundaries
 
-The controller is the source of truth. Subscribe to its snapshot, preserve
-stable Recipe layer IDs, and persist `controller.exportRecipe()`. Importing a
-v1 Recipe goes through the Core migration boundary before the controller stores
-the v2 document.
-
-Inject your own adapter when previews or final renders happen on a server. The
-adapter interface keeps the UI independent from the chosen renderer while the
-default Core adapter forwards job cancellation, timeout, and progress options.
+The main Editor entry does not force an image renderer into your bundle. Import
+the explicit `/core-adapter` subpath for on-device rendering, or inject an
+`ImageMarkerEditorRenderAdapter` backed by [`@image-marker/node`](/node/) when
+previews and exports belong on a server. Video, generic filters, cloud asset
+management, and cloud collaboration are intentionally outside Editor 0.3.

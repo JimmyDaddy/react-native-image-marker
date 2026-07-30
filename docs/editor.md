@@ -1,32 +1,32 @@
 # Optional interaction editor
 
-`react-native-image-marker-editor` is the optional interaction layer for
-`react-native-image-marker@2`. It owns Recipe v2 editing state and gestures;
-Core still owns image decoding, composition, preview rendering, and final
-encoding.
+`react-native-image-marker-editor@0.3` is the optional React Native and Web
+interaction layer for `react-native-image-marker@2.1`. It owns Recipe state,
+selection, gestures, history, panels, templates, and persistence. Core owns
+image decoding, composition, preview rendering, and encoding.
 
 ## Install
 
 ```sh
-npm install react-native-image-marker@^2 \
-  react-native-image-marker-editor@0.1.0
+npm install react-native-image-marker@^2.1 \
+  react-native-image-marker-editor@^0.3
 ```
 
-The Editor is a separate package and version line. Import the Core adapter only
-when previews or exports should run on the device:
+The Editor depends on the platform-neutral `@image-marker/recipe` package and
+uses the same Recipe v2 document as Web, Node, and CLI. Import the Core adapter
+only when previews or exports should run on the device:
 
 ```ts
 import { createCoreEditorAdapter } from 'react-native-image-marker-editor/core-adapter';
 ```
 
-Applications that render on a server can inject their own
-`ImageMarkerEditorRenderAdapter` instead.
+Applications can inject another `ImageMarkerEditorRenderAdapter` when rendering
+belongs on a server.
 
 ## Complete component
 
-The same original `sourceSize` must be passed to the interactive surface and
-every Core render request. Numeric Recipe coordinates are measured in those
-original-image pixels.
+Core 2.1 automatically reads the original dimensions and encoded orientation.
+The application no longer needs to maintain a matching `sourceSize`.
 
 ```tsx
 import * as React from 'react';
@@ -39,21 +39,22 @@ import {
 } from 'react-native';
 import {
   ImageMarkerEditor,
+  ImageMarkerEditorAssetPanel,
   ImageMarkerEditorController,
+  ImageMarkerEditorInspector,
+  ImageMarkerEditorLayerPanel,
   ImageMarkerEditorToolbar,
 } from 'react-native-image-marker-editor';
 import { createCoreEditorAdapter } from 'react-native-image-marker-editor/core-adapter';
-import { ImageFormat } from 'react-native-image-marker';
 
 const background = require('../assets/background.jpg');
 const logo = require('../assets/logo.png');
-const sourceSize = { width: 1920, height: 1080 };
 const adapter = createCoreEditorAdapter(1024);
 
 export function WatermarkEditor() {
   const window = useWindowDimensions();
   const width = Math.min(Math.max(window.width - 32, 280), 720);
-  const height = Math.round(width * (sourceSize.height / sourceSize.width));
+  const height = Math.round((width * 9) / 16);
   const controller = React.useMemo(
     () =>
       new ImageMarkerEditorController({
@@ -63,7 +64,7 @@ export function WatermarkEditor() {
             id: 'title',
             name: 'Campaign title',
             type: 'text',
-            text: 'IMAGE MARKER 2.0',
+            text: 'IMAGE MARKER 2.1',
             position: { X: 160, Y: 120 },
             style: {
               color: '#FFFFFF',
@@ -80,29 +81,25 @@ export function WatermarkEditor() {
             scale: 0.4,
           },
         ],
-        output: { saveFormat: ImageFormat.png },
+        output: { saveFormat: 'png' },
       }),
     []
   );
   const [resultUri, setResultUri] = React.useState<string>();
 
+  const request = () => ({
+    recipe: controller.exportRecipe(),
+    input: { backgroundImage: { src: background } },
+    control: { timeoutMs: 20_000 },
+  });
+
   const renderPreview = async () => {
-    const result = await adapter.renderPreview({
-      recipe: controller.exportRecipe(),
-      input: { backgroundImage: { src: background } },
-      sourceSize,
-      control: { timeoutMs: 20_000 },
-    });
+    const result = await adapter.renderPreview(request());
     setResultUri(result.uri);
   };
 
   const exportOriginal = async () => {
-    const result = await adapter.exportOriginal({
-      recipe: controller.exportRecipe(),
-      input: { backgroundImage: { src: background } },
-      sourceSize,
-      control: { timeoutMs: 20_000 },
-    });
+    const result = await adapter.exportOriginal(request());
     setResultUri(result.final.uri);
   };
 
@@ -110,6 +107,7 @@ export function WatermarkEditor() {
     <View>
       <ImageMarkerEditorToolbar controller={controller} />
       <ImageMarkerEditor
+        adapter={adapter}
         background={
           <Image
             resizeMode="contain"
@@ -120,8 +118,20 @@ export function WatermarkEditor() {
         controller={controller}
         height={height}
         snapThreshold={8}
-        sourceSize={sourceSize}
+        source={background}
         width={width}
+      />
+      <ImageMarkerEditorLayerPanel controller={controller} />
+      <ImageMarkerEditorInspector
+        brandKit={{
+          colors: ['#FFFFFF', '#5271FF', '#FF5B45'],
+          fonts: ['Inter', 'Courier'],
+        }}
+        controller={controller}
+      />
+      <ImageMarkerEditorAssetPanel
+        assets={[{ id: 'logo', name: 'Logo', source: logo }]}
+        controller={controller}
       />
       <Button title="Render Core preview" onPress={renderPreview} />
       <Button title="Export original" onPress={exportOriginal} />
@@ -137,50 +147,174 @@ export function WatermarkEditor() {
 }
 ```
 
-Use `adapter.renderPreview()` for a bounded interaction preview.
-`adapter.exportOriginal()` returns both the visible render and the final result;
-read `result.final` when optional invisible watermark or Content Credentials
-processing is enabled.
+`adapter.renderPreview()` creates a bounded render while preserving original
+coordinates. `adapter.exportOriginal()` returns the visible render plus the
+final result after optional invisible-watermark or Content Credentials work.
 
-## Read and persist state
+## Editing API
 
-The controller is the source of truth:
+The controller provides atomic, undoable commands rather than exposing mutable
+state:
 
-```tsx
-const [state, setState] = React.useState(() => controller.getState());
+```ts
+controller.selectLayers(['title', 'logo']);
+controller.groupLayers();
+controller.alignLayers('center', measuredBounds);
+controller.distributeLayers('horizontal', measuredBounds);
+controller.duplicateLayers();
 
-React.useEffect(() => controller.subscribe(setState), [controller]);
-
-const savedRecipe = controller.exportRecipe();
-controller.importRecipe(savedRecipe);
+controller.updateTextLayer('title', {
+  text: 'Launch',
+  alpha: 0.8,
+  blendMode: 'overlay',
+  style: {
+    fontName: 'Inter',
+    fontSize: 64,
+    color: '#FFFFFF',
+    strokeStyle: { color: '#0F172A', width: 2 },
+  },
+});
+controller.replaceImage('logo', replacementLogo);
 ```
 
-Keep stable layer IDs when persisting recipes. Use controller methods such as
-`addLayer`, `moveLayer`, `scaleLayer`, `rotateLayer`, `reorderLayer`,
-`setLayerVisible`, `setLayerLocked`, `undo`, and `redo` rather than mutating a
-snapshot directly.
+The built-in Toolbar, Inspector, Layer Panel, and Asset Panel cover:
+
+- text, typography, color, opacity, stroke, and blend mode;
+- image add and replacement;
+- duplicate, rename, lock, visibility, delete, and ordering;
+- multi-select, group, ungroup, align, distribute, copy, and paste;
+- undo, redo, zoom, pan, fit, safe area, snapping, resize, and rotation.
+
+Long-press a layer row to toggle it into a multi-selection. A copied selection
+can also cross document boundaries:
+
+```ts
+const clipboardJson = controller.copyLayers();
+otherController.pasteLayers(clipboardJson, { x: 20, y: 20 });
+```
+
+## Keyboard shortcuts
+
+- `Cmd/Ctrl+Z`, `Shift+Cmd/Ctrl+Z`, and `Cmd/Ctrl+Y`: undo and redo.
+- `Cmd/Ctrl+A/C/X/V/D`: select all, copy, cut, paste, and duplicate.
+- `Cmd/Ctrl+G` and `Shift+Cmd/Ctrl+G`: group and ungroup.
+- Arrow keys: move by one pixel; add Shift to move by ten.
+- `[` and `]`: move the primary layer through the z-order.
+- `Cmd/Ctrl+0`, `+`, and `-`: fit and zoom.
+- Delete or Backspace: remove the editable selection.
+
+## Autosave, restore, and controlled state
+
+```ts
+const controller = new ImageMarkerEditorController({
+  document: initialRecipe,
+  autosave: {
+    key: 'campaign-draft',
+    debounceMs: 350,
+    storage: {
+      load: (key) => AsyncStorage.getItem(key),
+      save: (key, value) => AsyncStorage.setItem(key, value),
+      remove: (key) => AsyncStorage.removeItem(key),
+    },
+    onError: reportAutosaveError,
+  },
+  onChange: setEditorState,
+});
+
+await controller.restoreAutosave();
+await controller.flushAutosave();
+
+// Parent-controlled synchronization without another undo record.
+controller.replaceState(editorState);
+```
+
+`ImageMarkerEditor`, Inspector, Layer Panel, and Asset Panel also accept a
+controlled `state` prop. Autosave intentionally excludes invisible-watermark
+keys, signing adapters, and export credentials; applications should obtain
+those from protected runtime storage at export time.
+
+## Templates and brand kits
+
+Template text uses the same variables and conditional-layer materializer as
+the shared Recipe package:
+
+```ts
+import {
+  createEditorTemplate,
+  materializeEditorTemplate,
+} from 'react-native-image-marker-editor';
+
+const template = createEditorTemplate({
+  id: 'social-card',
+  name: 'Social card',
+  recipe: {
+    schemaVersion: 2,
+    layers: [
+      { id: 'title', type: 'text', text: 'Hello {{name}}' },
+      {
+        id: 'sale',
+        type: 'text',
+        text: 'Sale',
+        visibleWhen: { variable: 'showSale', equals: true },
+      },
+    ],
+    output: { saveFormat: 'png' },
+  },
+});
+
+const recipe = materializeEditorTemplate(template, {
+  variables: { name: 'Ada', showSale: false },
+});
+```
+
+Use `createEditorBrandKit`, `createBrandTextLayer`, and
+`createBrandLogoLayer` to share approved colors, fonts, and Logo assets.
+
+## Custom components and plugins
+
+- Canvas slots: `canvasOverlay`, `selectionOverlay`, and `sourceLoading`.
+- Layer rendering: `renderLayer` and `getLayerSize`.
+- Panel slots: header, footer, empty state, layer label, and asset renderer.
+- Plugin slots: toolbar actions, inspector sections, and canvas overlays.
+
+Plugins are ordinary objects and do not receive global access:
+
+```tsx
+const campaignPlugin = {
+  id: 'campaign-rules',
+  toolbarActions: [
+    {
+      id: 'approve',
+      label: 'Approve',
+      onPress: ({ state }) => approve(state.recipe),
+    },
+  ],
+  renderInspectorSection: ({ state }) => (
+    <CampaignRules recipe={state.recipe} />
+  ),
+};
+```
 
 ## Coordinate and rendering contract
 
-- Use original decoded-image pixels for numeric positions, font sizes, shadows,
-  strokes, safe areas, and snapping geometry.
-- Pass that original size as `sourceSize` to both `ImageMarkerEditor` and the
-  render adapter.
-- The Editor projects the source coordinate space into its viewport. Core
-  projects the same Recipe into a bounded preview or the original export.
-- Omitting `sourceSize` intentionally makes the viewport the Recipe coordinate
-  space for backward compatibility.
-- Browser and native renderers share the API and geometry model, but fonts,
-  antialiasing, decoding, and encoding can still differ slightly.
+- Numeric Recipe geometry remains in decoded original-image pixels.
+- Core 2.1 obtains display dimensions after applying encoded orientation.
+- The surface projects that coordinate space into the zoomed viewport.
+- The adapter projects the same Recipe into bounded previews and preserves it
+  for original export.
+- Pass `sourceSize` only to override automatic detection or when a custom
+  adapter cannot inspect the source.
+- Fonts, antialiasing, decoding, and encoding may still differ slightly across
+  platform renderers.
 
 ## Examples, API, and tests
 
 - [Native Editor example](../example/src/EditorExample.tsx)
-- [Editor controller and component tests](../packages/editor/src/__tests__)
+- [Controller and component tests](../packages/editor/src/__tests__)
 - [Browser Playground](https://image-marker.corerobin.com/playground/?workflow=editor#editor-playground)
 - [Integration guide](https://image-marker.corerobin.com/guides/editor/)
 - [Generated API reference](https://image-marker.corerobin.com/guides/editor/reference/)
 
-The native example exposes stable `testID` values for add, preview, export,
-canvas, toolbar, status, result, and Recipe assertions. Package tests cover the
-controller, projection, surface, toolbar, Core adapter, and public API contract.
+The native example exposes stable `testID` values for panels, layer controls,
+canvas handles, toolbar actions, preview, export, status, result, and Recipe
+assertions. CI covers unit, component, consumer, iOS, and Android workflows.
