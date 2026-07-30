@@ -40,7 +40,8 @@ class TextStyle(private val options: ReadableMap?) {
               "fontFallbacks must be an array"
             )
           fontFallbacks = List(values.size()) { index ->
-            values.getString(index).takeUnless { it.isBlank() }
+            val fallback: String? = values.getString(index)
+            fallback?.takeUnless { it.isBlank() }
               ?: throw MarkerError(
                 ErrorCode.INVALID_PARAMS,
                 "fontFallbacks must contain non-empty font family names"

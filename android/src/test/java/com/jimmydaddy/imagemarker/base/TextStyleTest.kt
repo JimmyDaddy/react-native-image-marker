@@ -1,9 +1,11 @@
 package com.jimmydaddy.imagemarker.base
 
+import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertThrows
 import org.junit.Test
 import org.mockito.Mockito
 
@@ -105,5 +107,20 @@ class TextStyleTest {
     assertEquals("character", style.wrap)
     assertEquals(2, style.maxLines)
     assertEquals("ellipsis", style.overflow)
+  }
+
+  @Test
+  fun rejectsNullFontFallbacks() {
+    val values = Mockito.mock(ReadableArray::class.java)
+    Mockito.`when`(values.size()).thenReturn(1)
+    Mockito.`when`(values.getString(0)).thenReturn(null)
+    val options = Mockito.mock(ReadableMap::class.java)
+    Mockito.`when`(options.hasKey("fontFallbacks")).thenReturn(true)
+    Mockito.`when`(options.isNull("fontFallbacks")).thenReturn(false)
+    Mockito.`when`(options.getArray("fontFallbacks")).thenReturn(values)
+
+    val error = assertThrows(MarkerError::class.java) { TextStyle(options) }
+
+    assertEquals(ErrorCode.INVALID_PARAMS.value, error.getErrorCode())
   }
 }

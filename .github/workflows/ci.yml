@@ -488,8 +488,8 @@ jobs:
       - name: Test, build, and measure Node renderer
         run: |
           npx eslint "packages/node/**/*.{js,ts,tsx}"
-          npm run test:node
           npm run build:recipe
+          npm run test:node
           npm run build:node
           npm run verify:size:node
 
@@ -741,9 +741,16 @@ jobs:
       - name: Install dependencies
         run: npm ci --prefix expo-example --ignore-scripts --no-audit --no-fund
 
-      - name: Verify Expo versions and bundle
+      - name: Verify Expo versions
+        run: (cd expo-example && npx --yes expo-doctor@1.20.1)
+
+      - name: Build workspace dependencies
         run: |
-          (cd expo-example && npx --yes expo-doctor@1.20.1)
+          npm ci
+          npm run build:recipe
+
+      - name: Typecheck and bundle Expo example
+        run: |
           npm --prefix expo-example run typecheck
           npm --prefix expo-example run bundle:smoke
 
@@ -797,6 +804,7 @@ jobs:
         run: |
           npm ci
           npm --prefix example install
+          npm run build:recipe
 
       - name: Run unit tests
         run: |
@@ -853,6 +861,7 @@ jobs:
         run: |
           npm ci
           npm --prefix example install
+          npm run build:recipe
 
       - name: Enable KVM group perms
         run: |
@@ -911,6 +920,7 @@ jobs:
         run: |
           npm ci
           npm --prefix example install
+          npm run build:recipe
 
       - name: Compile shared C++ Swift bridge
         run: npm run test:cpp:ios-bridge
