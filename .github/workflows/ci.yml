@@ -384,6 +384,7 @@ jobs:
       - name: Verify Expo clean-install bundle
         run: |
           test ! -d example/node_modules
+          npm run build:recipe
           npm --prefix expo-example run bundle:smoke
 
       - name: Install React Native example dependencies
@@ -440,8 +441,8 @@ jobs:
           npm run check:editor-api
           npm run verify:size:editor
 
-      - name: Verify packed Core and Editor consumers
-        run: node scripts/verify-package-consumer.mjs
+      - name: Verify packed toolchain consumers
+        run: npm run verify:consumer
 
   recipe-check:
     runs-on: ubuntu-latest
@@ -486,7 +487,7 @@ jobs:
 
       - name: Test, build, and measure Node renderer
         run: |
-          npm run lint
+          npx eslint "packages/node/**/*.{js,ts,tsx}"
           npm run test:node
           npm run build:recipe
           npm run build:node
@@ -514,7 +515,7 @@ jobs:
 
       - name: Test, build, and measure CLI
         run: |
-          npm run lint
+          npx eslint "packages/cli/**/*.{js,ts,tsx}"
           npm run build:recipe
           npm run build:node
           npm run test:cli
@@ -662,6 +663,7 @@ jobs:
 
       - name: Build and verify documentation
         run: |
+          npm run build:recipe
           npm run docs
           npm run verify:size:website
 
@@ -693,6 +695,7 @@ jobs:
           npm ci
           npm --prefix example install --ignore-scripts --no-audit --no-fund
           npm ci --prefix expo-example --ignore-scripts --no-audit --no-fund
+          npm run build:recipe
 
       - name: Test Web SDK
         run: npm run test:web -- --coverage
@@ -793,7 +796,7 @@ jobs:
       - name: Install npm dependencies
         run: |
           npm ci
-          npm ci --prefix example
+          npm --prefix example install
 
       - name: Run unit tests
         run: |
@@ -849,7 +852,7 @@ jobs:
       - name: Install npm dependencies
         run: |
           npm ci
-          npm ci --prefix example
+          npm --prefix example install
 
       - name: Enable KVM group perms
         run: |
@@ -907,7 +910,7 @@ jobs:
       - name: Install npm dependencies
         run: |
           npm ci
-          npm ci --prefix example
+          npm --prefix example install
 
       - name: Compile shared C++ Swift bridge
         run: npm run test:cpp:ios-bridge
