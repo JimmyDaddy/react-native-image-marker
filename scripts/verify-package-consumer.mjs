@@ -143,10 +143,13 @@ try {
   );
   if (
     editorManifest.version !== expectedEditorManifest.version ||
-    editorManifest.peerDependencies?.['react-native-image-marker'] !== '^2.0.0'
+    editorManifest.peerDependencies?.['react-native-image-marker'] !==
+      expectedEditorManifest.peerDependencies?.['react-native-image-marker'] ||
+    editorManifest.dependencies?.['@image-marker/recipe'] !==
+      expectedEditorManifest.dependencies?.['@image-marker/recipe']
   ) {
     throw new Error(
-      'The packed Editor manifest has an invalid version or Core peer range.'
+      'The packed Editor manifest has an invalid version or dependency graph.'
     );
   }
 
@@ -188,8 +191,12 @@ try {
 } from 'react-native-image-marker';
 import {
   ImageMarkerEditor,
+  ImageMarkerEditorAssetPanel,
   ImageMarkerEditorController,
+  ImageMarkerEditorInspector,
+  ImageMarkerEditorLayerPanel,
   ImageMarkerEditorToolbar,
+  createEditorTemplate,
   type ImageMarkerEditorProps,
   type ImageMarkerEditorToolbarProps,
   type EditorRenderRequest,
@@ -213,9 +220,11 @@ const result: Promise<MarkerResult> = Marker.createRecipe(definition).apply(
   { timeoutMs: 5_000 }
 );
 const editor = new ImageMarkerEditorController(definition);
+const adapter = createCoreEditorAdapter();
 const editorProps: ImageMarkerEditorProps = {
+  adapter,
   controller: editor,
-  sourceSize: { width: 1920, height: 1080 },
+  source: '/source.png',
   testID: 'consumer-editor',
   width: 360,
   height: 240,
@@ -231,8 +240,12 @@ const request: EditorRenderRequest = {
 void result;
 void sharedDefinition;
 void ImageMarkerEditor;
+void ImageMarkerEditorAssetPanel;
+void ImageMarkerEditorInspector;
+void ImageMarkerEditorLayerPanel;
 void ImageMarkerEditorToolbar;
-void createCoreEditorAdapter;
+void createEditorTemplate;
+void adapter;
 void editorProps;
 void toolbarProps;
 void request;

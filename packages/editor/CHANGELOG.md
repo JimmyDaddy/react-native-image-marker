@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.3.0 (2026-07-30)
+
+- Rebuilt the preview API around multi-selection, grouping, alignment,
+  distribution, portable copy/paste, rich text and image property editing.
+- Added production Toolbar, Inspector, Layer Panel, and Asset Panel components
+  with accessible controls, stable test IDs, and custom render slots.
+- Added resize handles, a rotation handle, canvas zoom/pan/fit, safe-area
+  overlays, snap guides, expanded shortcuts, and group-aware transforms.
+- Added templates, placeholders, conditional layers, brand color/font/Logo
+  presets, plugin slots, controlled state, and autosave/restore adapters.
+- Added automatic source dimension and orientation lookup through Core 2.1;
+  callers no longer need to maintain `sourceSize`.
+- Added component, controller, persistence, preset, Core adapter, consumer, and
+  native E2E coverage.
+- Raised the Core peer dependency to `^2.1.0` and added the shared
+  `@image-marker/recipe@^0.1.0` runtime dependency.
+
 ## 0.1.0 (2026-07-29)
 
 - Stabilized the public Editor and `core-adapter` export contract while keeping

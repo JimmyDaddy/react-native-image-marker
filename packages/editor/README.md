@@ -1,79 +1,179 @@
 # react-native-image-marker-editor
 
-Optional interactive Recipe v2 editor for `react-native-image-marker@2`.
+Optional React Native and Web interaction editor for
+`react-native-image-marker@2.1`. Editor state is a portable Recipe v2 document,
+so the same result can be rendered by Core, Node, or the CLI.
 
 ```sh
-npm install react-native-image-marker@^2 \
-  react-native-image-marker-editor@0.1.0
+npm install react-native-image-marker@^2.1 \
+  react-native-image-marker-editor@^0.3
 ```
 
+## Quick start
+
 ```tsx
+import { Image, StyleSheet } from 'react-native';
 import {
   ImageMarkerEditor,
+  ImageMarkerEditorAssetPanel,
   ImageMarkerEditorController,
+  ImageMarkerEditorInspector,
+  ImageMarkerEditorLayerPanel,
   ImageMarkerEditorToolbar,
 } from 'react-native-image-marker-editor';
 import { createCoreEditorAdapter } from 'react-native-image-marker-editor/core-adapter';
-import { ImageFormat } from 'react-native-image-marker';
 
+const adapter = createCoreEditorAdapter(1024);
 const controller = new ImageMarkerEditorController({
   schemaVersion: 2,
-  layers: [{ id: 'title', type: 'text', text: 'Draft' }],
-  output: { saveFormat: ImageFormat.png },
+  layers: [
+    {
+      id: 'title',
+      type: 'text',
+      text: 'Draft',
+      position: { X: 80, Y: 64 },
+      style: { color: '#FFFFFF', fontSize: 52, bold: true },
+    },
+  ],
+  output: { saveFormat: 'png' },
 });
-const adapter = createCoreEditorAdapter(1024);
-const sourceSize = { width: 1920, height: 1080 };
 
-<ImageMarkerEditor
-  controller={controller}
-  sourceSize={sourceSize}
-  width={360}
-  height={240}
-/>;
 <ImageMarkerEditorToolbar controller={controller} />;
+<ImageMarkerEditor
+  adapter={adapter}
+  controller={controller}
+  source={imageSource}
+  width={720}
+  height={405}
+  background={<Image source={imageSource} style={StyleSheet.absoluteFill} />}
+/>;
+<ImageMarkerEditorLayerPanel controller={controller} />;
+<ImageMarkerEditorInspector controller={controller} />;
+<ImageMarkerEditorAssetPanel
+  assets={[{ id: 'logo', name: 'Logo', source: logoSource }]}
+  controller={controller}
+/>;
+```
 
-const recipe = controller.exportRecipe();
-const result = await adapter.exportOriginal({
-  recipe,
+Passing `source` and the Core adapter automatically resolves the decoded
+dimensions and encoded orientation with `Marker.getImageInfo`. Numeric Recipe
+coordinates therefore remain in original-image pixels without a manually
+maintained `sourceSize`. An explicit `sourceSize` still overrides detection for
+custom renderers.
+
+Render a preview or export at original resolution:
+
+```ts
+const request = {
+  recipe: controller.exportRecipe(),
   input: { backgroundImage: { src: imageSource } },
-  sourceSize,
+};
+
+const preview = await adapter.renderPreview(request);
+const exported = await adapter.exportOriginal(request);
+```
+
+## Editor 0.3 capabilities
+
+- Rich text content, font, size, color, opacity, stroke, and blend-mode editing.
+- Image selection, replacement, reusable assets, Logo presets, brand colors,
+  and fonts.
+- Multi-selection, duplicate, group, ungroup, align, distribute, copy, paste,
+  and portable cross-document clipboard JSON.
+- Layer rename, lock, visibility, delete, and z-order controls.
+- Drag, pinch, resize handles, rotation handle, safe area, snap guides, canvas
+  zoom, pan, fit, keyboard shortcuts, undo, and redo.
+- Optional autosave/restore, controlled state, templates, placeholders,
+  conditional layers, custom component slots, and plugin slots.
+- Injectable rendering with a separate opt-in Core adapter.
+
+## Multi-selection and clipboard
+
+```ts
+controller.selectLayers(['title', 'logo']);
+controller.groupLayers();
+controller.alignLayers('center', measuredBounds);
+controller.distributeLayers('horizontal', measuredBounds);
+
+const portableClipboard = controller.copyLayers();
+otherController.pasteLayers(portableClipboard);
+```
+
+Keyboard commands include Undo/Redo, Select all, Copy/Cut/Paste, Duplicate,
+Group/Ungroup, Delete, arrow-key nudging, z-order brackets, zoom, and fit.
+
+## Autosave and controlled state
+
+```ts
+const controller = new ImageMarkerEditorController({
+  document: initialRecipe,
+  autosave: {
+    key: 'campaign-draft',
+    storage: {
+      load: (key) => AsyncStorage.getItem(key),
+      save: (key, value) => AsyncStorage.setItem(key, value),
+      remove: (key) => AsyncStorage.removeItem(key),
+    },
+  },
+  onChange: setEditorState,
+});
+
+await controller.restoreAutosave();
+await controller.flushAutosave();
+
+// Synchronize a parent-controlled state without creating an undo record.
+controller.replaceState(editorState);
+```
+
+## Templates, placeholders, and brand presets
+
+```ts
+import {
+  createEditorTemplate,
+  materializeEditorTemplate,
+} from 'react-native-image-marker-editor';
+
+const template = createEditorTemplate({
+  id: 'social-card',
+  name: 'Social card',
+  recipe: {
+    schemaVersion: 2,
+    layers: [{ id: 'title', type: 'text', text: 'Hello {{name}}' }],
+    output: { saveFormat: 'png' },
+  },
+});
+
+const recipe = materializeEditorTemplate(template, {
+  variables: { name: 'Ada' },
 });
 ```
 
-Use original-image pixels for numeric Recipe positions and sizes, then pass
-the same `sourceSize` to the surface and render adapter. The Editor projects
-that source coordinate space into its viewport, and the Core adapter projects
-it into bounded previews. Omit `sourceSize` only when the viewport itself is
-the intended Recipe coordinate space.
+## Custom UI and plugins
 
-The main entry owns only UI and Recipe state. Import the opt-in `core-adapter`
-entry to render previews or final output through Core, or inject your own
-adapter for a server renderer.
+All panels accept header, footer, and custom render slots. The canvas accepts
+`renderLayer`, `canvasOverlay`, and `selectionOverlay`. A plugin can contribute
+toolbar actions, inspector sections, and canvas overlays:
 
-Run the repository's React Native example and choose **Editor 0.1.0**, or use
-the [browser playground](https://image-marker.corerobin.com/playground/?workflow=editor#editor-playground)
-to exercise drag, scale, rotation, ordering, locks, undo/redo, and a real Core
-render.
+```ts
+const plugin = {
+  id: 'campaign-rules',
+  toolbarActions: [
+    {
+      id: 'approve',
+      label: 'Approve',
+      onPress: ({ state }) => approve(state.recipe),
+    },
+  ],
+  renderInspectorSection: ({ state }) => (
+    <CampaignRules recipe={state.recipe} />
+  ),
+};
+```
 
-Read the
-[complete repository usage guide](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/docs/editor.md),
-the [integration guide](https://image-marker.corerobin.com/guides/editor/), or browse the
-[generated API reference](https://image-marker.corerobin.com/guides/editor/reference/)
-for controller methods, component props, adapters, state, and export types.
+The main entry owns UI and Recipe state only. Import
+`react-native-image-marker-editor/core-adapter` when the editor should invoke
+Core, or inject a custom adapter backed by a server renderer.
 
-## Migrating from 0.0.x
-
-`0.1.0` does not remove or rename any `0.0.3` API. Existing integrations can
-upgrade the package version without changing application code.
-
-- Keep passing the original decoded image dimensions as `sourceSize` to both
-  `ImageMarkerEditor` and the Core adapter for preview/export parity.
-- Custom `renderLayer` implementations continue to receive source dimensions,
-  viewport dimensions, and the projection scale.
-- The Core adapter remains opt-in through
-  `react-native-image-marker-editor/core-adapter`.
-- Optional `testID` props now expose stable canvas, layer, toolbar, and action
-  identifiers for native E2E or application component tests.
-
-The checked `api-contract.json` file records the supported main-entry and
-subpath exports so accidental public API drift fails CI.
+See the [complete repository guide](../../docs/editor.md), run the React Native
+example and choose **Editor 0.3.0**, or open the
+[browser Playground](https://image-marker.corerobin.com/playground/?workflow=editor#editor-playground).

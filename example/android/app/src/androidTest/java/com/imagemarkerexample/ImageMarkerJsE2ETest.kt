@@ -80,6 +80,7 @@ class ImageMarkerJsE2ETest {
 
     onView(withReactTestId("editor-add-text")).perform(click())
     waitForView(withReactTestId("editor-layer-layer-editor-3"), 5_000)
+    waitForView(withReactTestId("editor-layer-layer-editor-3-handle-rotate"), 5_000)
     onView(withReactTestId("editor-toolbar-undo")).perform(click())
 
     onView(withReactTestId("editor-preview")).perform(click())

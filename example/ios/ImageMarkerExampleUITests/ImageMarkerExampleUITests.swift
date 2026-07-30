@@ -312,6 +312,11 @@ final class ImageMarkerExampleUITests: XCTestCase {
     app.descendants(matching: .any)["editor-add-text"].tap()
     let addedLayer = app.descendants(matching: .any)["editor-layer-layer-editor-3"]
     XCTAssertTrue(addedLayer.waitForExistence(timeout: 5))
+    XCTAssertTrue(
+      app.descendants(matching: .any)[
+        "editor-layer-layer-editor-3-handle-rotate"
+      ].waitForExistence(timeout: 5)
+    )
     app.descendants(matching: .any)["editor-toolbar-undo"].tap()
     XCTAssertFalse(addedLayer.waitForExistence(timeout: 1))
 

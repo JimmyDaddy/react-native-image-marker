@@ -2,13 +2,34 @@ const mockApply = jest.fn();
 const mockCreateRecipe = jest.fn(() => ({ apply: mockApply }));
 const mockEmbedInvisible = jest.fn();
 const mockEmbedInvisibleWithCredentials = jest.fn();
+const mockGetImageInfo = jest.fn(() =>
+  Promise.resolve({
+    width: 1920,
+    height: 1080,
+    encodedWidth: 1920,
+    encodedHeight: 1080,
+    format: 'png',
+    mimeType: 'image/png',
+    orientation: 1,
+    rotationDegrees: 0,
+    mirrored: false,
+    requiresNormalization: false,
+  })
+);
 
 jest.mock('react-native-image-marker', () => ({
   __esModule: true,
+  ImageFormat: {
+    jpg: 'jpg',
+    png: 'png',
+    webp: 'webp',
+    base64: 'base64',
+  },
   default: {
     createRecipe: mockCreateRecipe,
     embedInvisible: mockEmbedInvisible,
     embedInvisibleWithCredentials: mockEmbedInvisibleWithCredentials,
+    getImageInfo: mockGetImageInfo,
   },
 }));
 
@@ -44,6 +65,7 @@ describe('Core editor adapter', () => {
     mockCreateRecipe.mockClear();
     mockEmbedInvisible.mockReset();
     mockEmbedInvisibleWithCredentials.mockReset();
+    mockGetImageInfo.mockClear();
   });
 
   it('uses a bounded preview recipe without mutating the source recipe', async () => {
@@ -60,6 +82,7 @@ describe('Core editor adapter', () => {
     );
     expect(request.recipe.output).toEqual({ saveFormat: 'png' });
     expect(mockApply).toHaveBeenCalledWith(request.input, request.control);
+    expect(mockGetImageInfo).toHaveBeenCalledWith('/source.png');
   });
 
   it('projects source-space geometry into the bounded Core preview', async () => {
@@ -106,6 +129,7 @@ describe('Core editor adapter', () => {
         scale: 0.68,
       })
     );
+    expect(mockGetImageInfo).not.toHaveBeenCalled();
   });
 
   it('exports visible pixels and optionally adds an invisible locator', async () => {

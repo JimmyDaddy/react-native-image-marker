@@ -1,6 +1,6 @@
 {
   "name": "react-native-image-marker-editor",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "Optional interactive Recipe v2 editor for react-native-image-marker",
   "license": "MIT",
   "homepage": "https://image-marker.corerobin.com/guides/editor/",
@@ -12,8 +12,11 @@
     "image",
     "watermark",
     "editor",
+    "image-editor",
     "recipe",
-    "layers"
+    "layers",
+    "templates",
+    "branding"
   ],
   "repository": {
     "type": "git",
@@ -67,7 +70,10 @@
   "peerDependencies": {
     "react": ">=18",
     "react-native": ">=0.73",
-    "react-native-image-marker": "^2.0.0"
+    "react-native-image-marker": "^2.1.0"
+  },
+  "dependencies": {
+    "@image-marker/recipe": "^0.1.0"
   },
   "devDependencies": {
     "react-native-image-marker": "file:../.."

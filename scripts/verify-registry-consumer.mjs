@@ -47,7 +47,7 @@ try {
     dependencies.push('react@18.2.0', 'react-native@0.73.3');
   }
   if (packageName === 'react-native-image-marker-editor') {
-    dependencies.push('react-native-image-marker@^2.0.0');
+    dependencies.push('react-native-image-marker@^2.1.0');
   }
   run('npm', [
     'install',
@@ -122,7 +122,7 @@ void output;
 `;
   } else if (packageName === 'react-native-image-marker-editor') {
     const peerRange = manifest.peerDependencies?.['react-native-image-marker'];
-    if (peerRange !== '^2.0.0') {
+    if (peerRange !== '^2.1.0') {
       throw new Error(
         `Editor published an invalid Core peer range: ${peerRange}.`
       );

@@ -123,4 +123,145 @@ describe('ImageMarkerEditorController', () => {
       controller.getState().recipe.layers.some((layer) => layer.id === 'title')
     ).toBe(true);
   });
+
+  it('supports multi-selection, grouping, alignment, copy, and cross-document paste', () => {
+    const controller = createController();
+    controller.selectLayers(['title', 'logo']);
+    expect(controller.getState().selectedLayerIds).toEqual(['title', 'logo']);
+
+    const groupId = controller.groupLayers();
+    expect(
+      controller
+        .getState()
+        .recipe.layers.every((layer) => layer.groupId === groupId)
+    ).toBe(true);
+
+    controller.alignLayers('left', [
+      { id: 'title', x: 10, y: 12, width: 100, height: 40 },
+      { id: 'logo', x: 180, y: 120, width: 60, height: 60 },
+    ]);
+    expect(
+      controller.getState().recipe.layers.map((layer) => layer.position?.X)
+    ).toEqual([10, 10]);
+
+    const clipboard = controller.copyLayers();
+    const target = new ImageMarkerEditorController({
+      schemaVersion: 2,
+      layers: [{ id: 'base', type: 'text', text: 'Base' }],
+      output: {},
+    });
+    const pasted = target.pasteLayers(clipboard, { x: 5, y: 8 });
+    expect(pasted).toHaveLength(2);
+    expect(new Set(pasted).size).toBe(2);
+    expect(target.getState().selectedLayerIds).toEqual(pasted);
+    expect(
+      target
+        .getState()
+        .recipe.layers.slice(1)
+        .every((layer) => layer.groupId?.includes('copy'))
+    ).toBe(true);
+  });
+
+  it('distributes layers and edits rich text and image properties', () => {
+    const controller = createController();
+    const badge = controller.addLayer({
+      id: 'badge',
+      type: 'image',
+      src: '/badge.png',
+      position: { X: 300, Y: 120 },
+    });
+    controller.selectLayers(['title', 'logo', badge]);
+    controller.distributeLayers('horizontal', [
+      { id: 'title', x: 0, y: 0, width: 50, height: 20 },
+      { id: 'logo', x: 100, y: 0, width: 50, height: 20 },
+      { id: 'badge', x: 300, y: 0, width: 50, height: 20 },
+    ]);
+    expect(
+      controller.getState().recipe.layers.map((layer) => layer.position?.X)
+    ).toEqual([0, 150, 300]);
+
+    controller.updateTextLayer('title', {
+      text: 'Campaign',
+      alpha: 0.7,
+      blendMode: 'overlay',
+      style: {
+        fontName: 'Inter',
+        fontSize: 42,
+        color: '#FF3366',
+        strokeStyle: { color: '#FFFFFF', width: 2 },
+      },
+    });
+    controller.replaceImage('logo', '/new-logo.png');
+    expect(controller.getState().recipe.layers[0]).toEqual(
+      expect.objectContaining({
+        text: 'Campaign',
+        alpha: 0.7,
+        blendMode: 'overlay',
+        style: expect.objectContaining({
+          fontName: 'Inter',
+          fontSize: 42,
+          color: '#FF3366',
+        }),
+      })
+    );
+    expect(controller.getState().recipe.layers[1]).toEqual(
+      expect.objectContaining({ src: '/new-logo.png' })
+    );
+  });
+
+  it('serializes, restores, autosaves, and accepts controlled state', async () => {
+    const saved = new Map<string, string>();
+    const storage = {
+      load: jest.fn((key: string) => saved.get(key) ?? null),
+      save: jest.fn((key: string, value: string) => {
+        saved.set(key, value);
+      }),
+      remove: jest.fn((key: string) => {
+        saved.delete(key);
+      }),
+    };
+    const changes = jest.fn();
+    const controller = new ImageMarkerEditorController({
+      document: createController().exportRecipe(),
+      autosave: { key: 'draft', storage, debounceMs: 0 },
+      onChange: changes,
+    });
+    controller.selectLayer('title');
+    controller.updateTextLayer('title', { text: 'Autosaved' });
+    controller.setViewportZoom(1.5);
+    controller.setExportOptions({
+      invisible: {
+        payload: 'asset-42',
+        key: '0123456789abcdef',
+      },
+    });
+    await controller.flushAutosave();
+    expect(storage.save).toHaveBeenCalled();
+    expect(JSON.parse(saved.get('draft')!).exportOptions).toEqual({});
+
+    const restored = new ImageMarkerEditorController({
+      document: createController().exportRecipe(),
+      autosave: { key: 'draft', storage },
+    });
+    await expect(restored.restoreAutosave()).resolves.toBe(true);
+    expect(restored.getState()).toEqual(
+      expect.objectContaining({
+        selectedLayerIds: ['title'],
+        viewport: expect.objectContaining({ zoom: 1.5 }),
+      })
+    );
+    expect(restored.getState().recipe.layers[0]).toEqual(
+      expect.objectContaining({ text: 'Autosaved' })
+    );
+
+    const controlled = restored.getState();
+    controlled.recipe.layers[0]!.name = 'Controlled';
+    controller.replaceState(controlled);
+    expect(controller.getState().recipe.layers[0]?.name).toBe('Controlled');
+    expect(changes).toHaveBeenCalled();
+    await restored.clearAutosave();
+    expect(storage.remove).toHaveBeenCalledWith('draft');
+    controller.dispose();
+    restored.dispose();
+  });
 });
