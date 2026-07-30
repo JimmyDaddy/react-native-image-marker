@@ -240,8 +240,8 @@ class ImageMarkerRendererTest {
 
   @Test
   fun rendersSharedCore21RecipeTextFixtureWithinItsTextBox() {
-    val context = InstrumentationRegistry.getInstrumentation().targetContext
-    val document = context.assets.open("core-2.1-recipe.json")
+    val testContext = InstrumentationRegistry.getInstrumentation().context
+    val document = testContext.assets.open("core-2.1-recipe.json")
       .bufferedReader()
       .use { JSONObject(it.readText()) }
     val layer = document.getJSONArray("layers").getJSONObject(0)
