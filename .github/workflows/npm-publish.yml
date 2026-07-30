@@ -150,9 +150,17 @@ jobs:
           echo "Published package did not expose provenance metadata within three minutes."
           exit 1
 
+      - name: Checkout the current registry consumer verifier
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ needs.resolve.outputs.branch }}
+          path: .release-verifier
+          sparse-checkout: scripts/verify-registry-consumer.mjs
+          sparse-checkout-cone-mode: false
+
       - name: Verify fresh registry consumer
         run: >-
-          node scripts/verify-registry-consumer.mjs
+          node .release-verifier/scripts/verify-registry-consumer.mjs
           --package-name "${{ needs.resolve.outputs.package_name }}"
           --version "${{ needs.resolve.outputs.version }}"
           --channel "${{ needs.resolve.outputs.channel }}"
