@@ -3,6 +3,7 @@ const CORE_V2_TAG = /^v(2\.\d+\.\d+(?:-(alpha|beta|rc)\.\d+)?)$/;
 const EDITOR_TAG = /^editor-v(0\.\d+\.\d+(?:-next\.\d+)?)$/;
 const RECIPE_TAG = /^recipe-v(0\.\d+\.\d+(?:-next\.\d+)?)$/;
 const NODE_TAG = /^node-v(0\.\d+\.\d+(?:-next\.\d+)?)$/;
+const CLI_TAG = /^cli-v(0\.\d+\.\d+(?:-next\.\d+)?)$/;
 
 /**
  * Resolve a release tag into the only package, branch, and npm dist-tag that
@@ -84,7 +85,21 @@ export function resolveReleaseTarget(tag) {
     };
   }
 
+  const cli = normalizedTag.match(CLI_TAG);
+  if (cli) {
+    return {
+      tag: normalizedTag,
+      packageName: '@image-marker/cli',
+      packagePath: 'packages/cli',
+      version: cli[1],
+      branch: 'release/2.0',
+      npmTag: cli[1].includes('-next.') ? 'next' : 'latest',
+      additionalDistTags: [],
+      channel: cli[1].includes('-next.') ? 'cli-prerelease' : 'cli',
+    };
+  }
+
   throw new Error(
-    `Unsupported release tag "${normalizedTag}". Expected v1.x.y, v2.x.y[-alpha|beta|rc.n], editor-v0.x.y[-next.n], recipe-v0.x.y[-next.n], or node-v0.x.y[-next.n].`
+    `Unsupported release tag "${normalizedTag}". Expected v1.x.y, v2.x.y[-alpha|beta|rc.n], editor-v0.x.y[-next.n], recipe-v0.x.y[-next.n], node-v0.x.y[-next.n], or cli-v0.x.y[-next.n].`
   );
 }

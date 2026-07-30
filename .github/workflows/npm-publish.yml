@@ -72,9 +72,17 @@ jobs:
       - name: Install release dependencies
         run: npm ci
 
-      - name: Build workspace package dependencies
-        if: needs.resolve.outputs.package_path == 'packages/editor' || needs.resolve.outputs.package_path == 'packages/node'
+      - name: Build Recipe workspace dependency
+        if: needs.resolve.outputs.package_path == 'packages/editor' || needs.resolve.outputs.package_path == 'packages/node' || needs.resolve.outputs.package_path == 'packages/cli'
+        run: npm run build:recipe
+
+      - name: Build Core type dependency for Editor
+        if: needs.resolve.outputs.package_path == 'packages/editor'
         run: npm run prepack
+
+      - name: Build Node dependency for CLI
+        if: needs.resolve.outputs.package_path == 'packages/cli'
+        run: npm run build:node
 
       - name: Build package
         working-directory: ${{ needs.resolve.outputs.package_path }}

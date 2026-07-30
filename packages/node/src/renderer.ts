@@ -40,7 +40,7 @@ import type {
   NodeRenderResult,
 } from './types';
 
-type SharpFactory = typeof import('sharp');
+type SharpFactory = typeof import('sharp').default;
 type SharpOverlay = import('sharp').OverlayOptions;
 
 const MIME_TYPES: Record<NodeImageFormat, string> = {
@@ -67,11 +67,10 @@ async function loadSharp(injected?: SharpFactory): Promise<SharpFactory> {
   if (injected) return injected;
   try {
     const module = await import('sharp');
-    const candidate = module as unknown as { default?: SharpFactory };
-    return candidate.default ?? (module as unknown as SharpFactory);
+    return module.default;
   } catch (reason) {
     throw new Error(
-      'The optional "sharp" peer is required by @image-marker/node. Install sharp@>=0.33.0 in the application.',
+      'The optional "sharp" peer is required by @image-marker/node. Install sharp@>=0.35.0 in the application.',
       { cause: reason }
     );
   }
@@ -86,9 +85,9 @@ function outputFormat(recipe: ReturnType<typeof migrateWatermarkRecipe>) {
 
 async function applyOpacity(
   sharp: SharpFactory,
-  input: Buffer,
+  input: Buffer<ArrayBuffer>,
   opacity: number
-): Promise<Buffer> {
+): Promise<Buffer<ArrayBuffer>> {
   if (opacity >= 1) return input;
   const decoded = await sharp(input)
     .ensureAlpha()

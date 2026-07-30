@@ -15,6 +15,12 @@
       "maxPackedBytes": 350000,
       "maxUnpackedBytes": 1800000
     },
+    "cli": {
+      "directory": "packages/cli",
+      "name": "@image-marker/cli",
+      "maxPackedBytes": 100000,
+      "maxUnpackedBytes": 500000
+    },
     "editor": {
       "directory": "packages/editor",
       "name": "react-native-image-marker-editor",

@@ -49,9 +49,13 @@ try {
   const expectedNodeManifest = JSON.parse(
     await readFile(join(repositoryRoot, 'packages/node/package.json'), 'utf8')
   );
+  const expectedCliManifest = JSON.parse(
+    await readFile(join(repositoryRoot, 'packages/cli/package.json'), 'utf8')
+  );
   const coreTarball = pack('.');
   const editorTarball = pack('./packages/editor');
   const nodeTarball = pack('./packages/node');
+  const cliTarball = pack('./packages/cli');
   const recipeTarball = pack('./packages/recipe');
   await writeFile(
     join(consumerDirectory, 'package.json'),
@@ -72,6 +76,7 @@ try {
     coreTarball,
     editorTarball,
     nodeTarball,
+    cliTarball,
     recipeTarball,
   ]);
   run('npm', ['audit', '--omit=dev', '--audit-level=moderate']);
@@ -84,6 +89,57 @@ try {
     ].join(''),
   ]);
 
+  const cliManifest = JSON.parse(
+    await readFile(
+      join(consumerDirectory, 'node_modules/@image-marker/cli/package.json'),
+      'utf8'
+    )
+  );
+  if (
+    cliManifest.version !== expectedCliManifest.version ||
+    cliManifest.dependencies?.['@image-marker/node'] !== '^0.1.0' ||
+    cliManifest.dependencies?.['@image-marker/recipe'] !== '^0.1.0' ||
+    cliManifest.dependencies?.sharp !== '^0.35.3' ||
+    cliManifest.bin?.['image-marker'] !== 'lib/commonjs/bin.js' ||
+    cliManifest.dependencies?.react ||
+    cliManifest.dependencies?.['react-native'] ||
+    cliManifest.peerDependencies?.react ||
+    cliManifest.peerDependencies?.['react-native']
+  ) {
+    throw new Error(
+      'The packed CLI manifest has an invalid version, binary, or dependency graph.'
+    );
+  }
+  run('node', [
+    '-e',
+    [
+      "const cli = require('@image-marker/cli');",
+      "if(typeof cli.runImageMarkerCli!=='function') process.exit(1);",
+      `if(cli.IMAGE_MARKER_CLI_VERSION!==${JSON.stringify(
+        expectedCliManifest.version
+      )}) process.exit(1);`,
+    ].join(''),
+  ]);
+  run('node', [
+    '--input-type=module',
+    '-e',
+    [
+      "const cli = await import('@image-marker/cli');",
+      "if(typeof cli.runImageMarkerCli!=='function') process.exit(1);",
+      `if(cli.IMAGE_MARKER_CLI_VERSION!==${JSON.stringify(
+        expectedCliManifest.version
+      )}) process.exit(1);`,
+    ].join(''),
+  ]);
+  const cliOutput = run(
+    join(consumerDirectory, 'node_modules/.bin/image-marker'),
+    ['--version'],
+    { capture: true }
+  );
+  if (cliOutput.trim() !== expectedCliManifest.version) {
+    throw new Error('The packed CLI executable did not report its version.');
+  }
+
   const nodeManifest = JSON.parse(
     await readFile(
       join(consumerDirectory, 'node_modules/@image-marker/node/package.json'),
@@ -93,7 +149,7 @@ try {
   if (
     nodeManifest.version !== expectedNodeManifest.version ||
     nodeManifest.dependencies?.['@image-marker/recipe'] !== '^0.1.0' ||
-    nodeManifest.peerDependencies?.sharp !== '>=0.33.0' ||
+    nodeManifest.peerDependencies?.sharp !== '>=0.35.0' ||
     nodeManifest.dependencies?.react ||
     nodeManifest.dependencies?.['react-native'] ||
     nodeManifest.peerDependencies?.react ||
@@ -250,6 +306,10 @@ import {
   type NodeRenderResult,
 } from '@image-marker/node';
 import {
+  IMAGE_MARKER_CLI_VERSION,
+  runImageMarkerCli,
+} from '@image-marker/cli';
+import {
   createWatermarkRecipeDefinition,
   type WatermarkRecipeDefinition as SharedRecipeDefinition,
 } from '@image-marker/recipe';
@@ -302,6 +362,8 @@ void toolbarProps;
 void request;
 void createInvisibleWatermarkRuntime;
 void nodeResult;
+void IMAGE_MARKER_CLI_VERSION;
+void runImageMarkerCli;
 `
   );
   await writeFile(
@@ -329,7 +391,7 @@ void nodeResult;
   run(join(repositoryRoot, 'node_modules/.bin/tsc'), ['-p', 'tsconfig.json']);
 
   process.stdout.write(
-    'Verified packed Recipe, Core, Editor, and Node CommonJS/ESM, peer metadata, and consumer types.\n'
+    'Verified packed Recipe, Core, Editor, Node, and CLI CommonJS/ESM, peer metadata, executables, and consumer types.\n'
   );
 } finally {
   await rm(consumerDirectory, { recursive: true, force: true });

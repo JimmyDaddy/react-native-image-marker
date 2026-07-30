@@ -2,6 +2,7 @@
 
 ## 0.1.0 (2026-07-30)
 
+- Required Sharp 0.35 or newer to avoid vulnerable libvips builds.
 - Added a pure Node.js Recipe v2 renderer with an optional Sharp peer.
 - Added Buffer, path, Uint8Array, and Stream inputs plus Buffer, file, and
   Stream outputs.

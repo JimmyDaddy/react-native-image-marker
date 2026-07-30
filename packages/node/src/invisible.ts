@@ -9,7 +9,7 @@ import type {
   NodeRenderResult,
 } from './types';
 
-type SharpFactory = typeof import('sharp');
+type SharpFactory = typeof import('sharp').default;
 
 const ALGORITHM = 'lsb-hmac-v1' as const;
 const MAGIC = Buffer.from('IMN1');

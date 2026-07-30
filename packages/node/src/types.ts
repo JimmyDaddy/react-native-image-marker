@@ -131,7 +131,7 @@ export interface NodeImageMarkerOptions {
   /** Hard upper bound used when batch options request more workers. */
   maxConcurrency?: number;
   /** Test/custom injection point. Normal callers should install Sharp. */
-  sharp?: typeof import('sharp');
+  sharp?: typeof import('sharp').default;
 }
 
 export interface NodeImageMarker {

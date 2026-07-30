@@ -5,7 +5,7 @@ React Native dependency. Sharp is an optional peer so applications decide the
 native image runtime and version.
 
 ```sh
-npm install @image-marker/node@^0.1 sharp@^0.34
+npm install @image-marker/node@^0.1 sharp@^0.35
 ```
 
 ## Render a Buffer

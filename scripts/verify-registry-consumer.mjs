@@ -50,7 +50,7 @@ try {
     dependencies.push('react-native-image-marker@^2.1.0');
   }
   if (packageName === '@image-marker/node') {
-    dependencies.push('sharp@^0.34.4');
+    dependencies.push('sharp@^0.35.3');
   }
   run('npm', [
     'install',
@@ -186,7 +186,7 @@ void materialized;
   } else if (packageName === '@image-marker/node') {
     if (
       manifest.dependencies?.['@image-marker/recipe'] !== '^0.1.0' ||
-      manifest.peerDependencies?.sharp !== '>=0.33.0' ||
+      manifest.peerDependencies?.sharp !== '>=0.35.0' ||
       manifest.dependencies?.react ||
       manifest.dependencies?.['react-native'] ||
       manifest.peerDependencies?.react ||
@@ -217,6 +217,48 @@ const result: Promise<NodeRenderResult> = renderer.render(
   },
   { backgroundImage: { src: Buffer.from('fixture') } }
 );
+void result;
+`;
+  } else if (packageName === '@image-marker/cli') {
+    if (
+      manifest.dependencies?.['@image-marker/node'] !== '^0.1.0' ||
+      manifest.dependencies?.['@image-marker/recipe'] !== '^0.1.0' ||
+      manifest.dependencies?.sharp !== '^0.35.3' ||
+      manifest.bin?.['image-marker'] !== 'lib/commonjs/bin.js' ||
+      manifest.dependencies?.react ||
+      manifest.dependencies?.['react-native'] ||
+      manifest.peerDependencies?.react ||
+      manifest.peerDependencies?.['react-native']
+    ) {
+      throw new Error('CLI published an invalid dependency graph or binary.');
+    }
+    run('node', [
+      '-e',
+      `const cli=require('@image-marker/cli'); if(typeof cli.runImageMarkerCli!=='function'||cli.IMAGE_MARKER_CLI_VERSION!==${JSON.stringify(
+        version
+      )}) process.exit(1)`,
+    ]);
+    run('node', [
+      '--input-type=module',
+      '-e',
+      `const cli=await import('@image-marker/cli'); if(typeof cli.runImageMarkerCli!=='function'||cli.IMAGE_MARKER_CLI_VERSION!==${JSON.stringify(
+        version
+      )}) process.exit(1)`,
+    ]);
+    run(join(consumerDirectory, 'node_modules/.bin/image-marker'), [
+      '--version',
+    ]);
+    consumerSource = `import {
+  IMAGE_MARKER_CLI_VERSION,
+  runImageMarkerCli,
+  type RunImageMarkerCliOptions,
+} from '@image-marker/cli';
+
+const options: RunImageMarkerCliOptions = {
+  environment: { IMAGE_MARKER_TRACE_KEY: 'fixture' },
+};
+const result: Promise<number> = runImageMarkerCli(['--version'], options);
+void IMAGE_MARKER_CLI_VERSION;
 void result;
 `;
   } else {

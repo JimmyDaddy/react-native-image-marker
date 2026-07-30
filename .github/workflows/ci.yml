@@ -25,6 +25,7 @@ jobs:
       editor: ${{ steps.filter.outputs.editor }}
       recipe: ${{ steps.filter.outputs.recipe }}
       node: ${{ steps.filter.outputs.node }}
+      cli: ${{ steps.filter.outputs.cli }}
     steps:
       - name: Checkout the code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -207,6 +208,7 @@ jobs:
                   "package-lock.json",
                   "packages/recipe/package.json",
                   "packages/node/package.json",
+                  "packages/cli/package.json",
                   "website/package.json",
                   "website/package-lock.json",
                   "example/package.json",
@@ -273,6 +275,25 @@ jobs:
                   ".github/actions/**",
               ]
           )
+          cli = any_changed(
+              [
+                  "packages/cli/**",
+                  "packages/node/**",
+                  "packages/recipe/**",
+                  "scripts/fix-esm-imports.mjs",
+                  "scripts/release-target.mjs",
+                  "scripts/verify-package-consumer.mjs",
+                  "scripts/verify-registry-consumer.mjs",
+                  "scripts/verify-size-budgets.mjs",
+                  "scripts/size-budgets.json",
+                  "package.json",
+                  "package-lock.json",
+                  "tsconfig*.json",
+                  ".github/workflows/ci.yml",
+                  ".github/workflows/npm-publish.yml",
+                  ".github/actions/**",
+              ]
+          )
           results = {
               "android": android,
               "ios": ios,
@@ -286,6 +307,7 @@ jobs:
               "editor": editor,
               "recipe": recipe,
               "node": node,
+              "cli": cli,
           }
 
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
@@ -311,7 +333,8 @@ jobs:
           # and the RN 0.73 CLI still pulls ip and fast-xml-parser without
           # compatible patched releases. These advisories are accepted only
           # for the dev graph; the packed Core and Editor production graphs
-          # and platform-neutral Recipe production graphs are audited below.
+          # and platform-neutral Recipe, Node, and CLI production graphs are
+          # audited below.
           allow-ghsas: GHSA-mh99-v99m-4gvg,GHSA-2p57-rm9w-gvfp,GHSA-gh4j-gqv2-49f6
 
       - name: Setup Node.js
@@ -464,6 +487,35 @@ jobs:
           npm run build:recipe
           npm run build:node
           npm run verify:size:node
+
+      - name: Verify packed package consumers
+        run: npm run verify:consumer
+
+  cli-check:
+    runs-on: ubuntu-latest
+    name: CLI Package and Consumer
+    needs: changes
+    if: needs.changes.outputs.cli == 'true'
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Setup Node.js
+        uses: ./.github/actions/setup
+        with:
+          node-version: '22.22.0'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test, build, and measure CLI
+        run: |
+          npm run lint
+          npm run build:recipe
+          npm run build:node
+          npm run test:cli
+          npm run build:cli
+          npm run verify:size:cli
 
       - name: Verify packed package consumers
         run: npm run verify:consumer

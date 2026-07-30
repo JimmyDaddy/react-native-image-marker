@@ -1,24 +1,27 @@
 {
-  "name": "@image-marker/node",
+  "name": "@image-marker/cli",
   "version": "0.1.0",
-  "description": "Pure Node.js Recipe renderer for Image Marker, powered by an optional Sharp peer",
+  "description": "Automation-friendly Image Marker CLI for Recipe v2 and Node rendering",
   "license": "MIT",
-  "homepage": "https://image-marker.corerobin.com/node/",
+  "homepage": "https://image-marker.corerobin.com/cli/",
   "bugs": {
     "url": "https://github.com/JimmyDaddy/react-native-image-marker/issues"
   },
   "keywords": [
+    "cli",
     "node",
     "image",
     "watermark",
     "recipe",
-    "sharp",
-    "server"
+    "batch"
   ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/JimmyDaddy/react-native-image-marker.git",
-    "directory": "packages/node"
+    "directory": "packages/cli"
+  },
+  "bin": {
+    "image-marker": "lib/commonjs/bin.js"
   },
   "main": "lib/commonjs/index.js",
   "module": "lib/module/index.js",
@@ -46,24 +49,17 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.module.json && node ../../scripts/fix-esm-imports.mjs lib/module && tsc -p tsconfig.commonjs.json",
+    "build": "node ../../scripts/generate-package-version.mjs package.json src/version.ts IMAGE_MARKER_CLI_VERSION && tsc -p tsconfig.module.json && node ../../scripts/fix-esm-imports.mjs lib/module && tsc -p tsconfig.commonjs.json && chmod +x lib/commonjs/bin.js",
     "test": "jest --config jest.config.js --runInBand",
     "prepack": "npm run build"
   },
   "dependencies": {
-    "@image-marker/recipe": "^0.1.0"
-  },
-  "peerDependencies": {
-    "sharp": ">=0.35.0"
-  },
-  "peerDependenciesMeta": {
-    "sharp": {
-      "optional": true
-    }
+    "@image-marker/node": "^0.1.0",
+    "@image-marker/recipe": "^0.1.0",
+    "sharp": "^0.35.3"
   },
   "devDependencies": {
-    "@types/node": "^22.15.0",
-    "sharp": "^0.35.3"
+    "@types/node": "^22.15.0"
   },
   "engines": {
     "node": ">=20.19.0"
@@ -75,8 +71,8 @@
   },
   "release-it": {
     "git": {
-      "commitMessage": "chore(node): release ${version}",
-      "tagName": "node-v${version}"
+      "commitMessage": "chore(cli): release ${version}",
+      "tagName": "cli-v${version}"
     },
     "npm": {
       "publish": false

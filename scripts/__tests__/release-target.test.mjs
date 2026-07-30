@@ -62,6 +62,21 @@ test('routes the pure Node renderer independently', () => {
   assert.equal(resolveReleaseTarget('node-v0.2.0-next.1').npmTag, 'next');
 });
 
+test('routes the command-line package independently', () => {
+  const target = resolveReleaseTarget('cli-v0.1.0');
+  assert.deepEqual(target, {
+    tag: 'cli-v0.1.0',
+    packageName: '@image-marker/cli',
+    packagePath: 'packages/cli',
+    version: '0.1.0',
+    branch: 'release/2.0',
+    npmTag: 'latest',
+    additionalDistTags: [],
+    channel: 'cli',
+  });
+  assert.equal(resolveReleaseTarget('cli-v0.2.0-next.1').npmTag, 'next');
+});
+
 test('rejects ambiguous or unsupported release tags', () => {
   for (const tag of [
     '',
@@ -72,6 +87,7 @@ test('rejects ambiguous or unsupported release tags', () => {
     'editor-v0.0.1-beta.1',
     'recipe-v1.0.0',
     'node-v1.0.0',
+    'cli-v1.0.0',
   ]) {
     assert.throws(() => resolveReleaseTarget(tag));
   }
