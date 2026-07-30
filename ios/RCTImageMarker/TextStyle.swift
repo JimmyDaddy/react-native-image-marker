@@ -45,6 +45,13 @@ class TextStyle: NSObject {
     var fontFallbacks: [String] = []
     var fontSize: CGFloat = 14.0
     var fontSizeRatio: CGFloat?
+    var maxWidth: String?
+    var lineHeight: CGFloat?
+    var letterSpacing: CGFloat = 0
+    var direction: String = "auto"
+    var wrap: String = "word"
+    var maxLines: Int?
+    var overflow: String = "clip"
     var skewX: CGFloat = 0.0
     var underline: Bool = false
     var strikeThrough: Bool = false
@@ -82,6 +89,36 @@ class TextStyle: NSObject {
         }
         self.fontSize = opts["fontSize"] != nil ? RCTConvert.cgFloat(opts["fontSize"]) : 14.0
         self.fontSizeRatio = opts["fontSizeRatio"] != nil ? RCTConvert.cgFloat(opts["fontSizeRatio"]) : nil
+        if let rawMaxWidth = opts["maxWidth"], !Utils.isNULL(rawMaxWidth) {
+            self.maxWidth = Utils.handleDynamicToString(v: rawMaxWidth)
+        }
+        self.lineHeight = opts["lineHeight"] != nil ? RCTConvert.cgFloat(opts["lineHeight"]) : nil
+        self.letterSpacing = opts["letterSpacing"] != nil ? RCTConvert.cgFloat(opts["letterSpacing"]) : 0
+        self.direction = opts["direction"] as? String ?? "auto"
+        self.wrap = opts["wrap"] as? String ?? "word"
+        if let rawMaxLines = opts["maxLines"], !Utils.isNULL(rawMaxLines) {
+            let value = RCTConvert.cgFloat(rawMaxLines)
+            guard value.isFinite, value >= 1, value.rounded() == value else {
+                throw Self.invalid("maxLines must be a positive integer")
+            }
+            self.maxLines = Int(value)
+        }
+        self.overflow = opts["overflow"] as? String ?? "clip"
+        if let lineHeight, !lineHeight.isFinite || lineHeight <= 0 {
+            throw Self.invalid("lineHeight must be greater than zero")
+        }
+        if !letterSpacing.isFinite {
+            throw Self.invalid("letterSpacing must be finite")
+        }
+        if !["auto", "ltr", "rtl"].contains(direction) {
+            throw Self.invalid("direction is invalid")
+        }
+        if !["word", "character", "none"].contains(wrap) {
+            throw Self.invalid("wrap is invalid")
+        }
+        if !["clip", "ellipsis"].contains(overflow) {
+            throw Self.invalid("overflow is invalid")
+        }
         self.skewX = RCTConvert.cgFloat(opts["skewX"])
         self.underline = RCTConvert.bool(opts["underline"])
         self.strikeThrough = RCTConvert.bool(opts["strikeThrough"])
@@ -101,5 +138,23 @@ class TextStyle: NSObject {
             }
         }
         return UIFont.systemFont(ofSize: resolvedSize)
+    }
+
+    func resolvedMaxWidth(backgroundWidth: CGFloat) throws -> CGFloat {
+        let width = maxWidth.flatMap {
+            Utils.parseSpreadValue(v: $0, relativeTo: backgroundWidth)
+        } ?? backgroundWidth
+        guard width.isFinite, width > 0 else {
+            throw Self.invalid("maxWidth must be greater than zero")
+        }
+        return width
+    }
+
+    private static func invalid(_ message: String) -> NSError {
+        return NSError(
+            domain: ErrorDomainEnum.PARAMS_INVALID.rawValue,
+            code: 0,
+            userInfo: [NSLocalizedDescriptionKey: message]
+        )
     }
 }

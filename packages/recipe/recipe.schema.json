@@ -144,7 +144,15 @@
         },
         "fontSize": { "type": "number", "exclusiveMinimum": 0 },
         "fontSizeRatio": { "type": "number", "exclusiveMinimum": 0 },
-        "maxWidth": { "$ref": "#/$defs/measure" },
+        "maxWidth": {
+          "oneOf": [
+            { "type": "number", "exclusiveMinimum": 0 },
+            {
+              "type": "string",
+              "pattern": "^(?=.*[1-9])(?:\\d+(?:\\.\\d+)?|\\.\\d+)%?$"
+            }
+          ]
+        },
         "lineHeight": { "type": "number", "exclusiveMinimum": 0 },
         "letterSpacing": { "type": "number" },
         "direction": { "enum": ["auto", "ltr", "rtl"] },

@@ -169,6 +169,55 @@ function validateTextOptions(options: TextOptions, path: string): void {
       `${path}.style.fontFallbacks must contain non-empty font family names.`
     );
   }
+  const style = options.style;
+  if (style?.maxWidth !== undefined) {
+    validateLayoutValue(style.maxWidth, `${path}.style.maxWidth`, true);
+    if (Number.parseFloat(String(style.maxWidth)) <= 0) {
+      throw new Error(`${path}.style.maxWidth must be greater than zero.`);
+    }
+  }
+  if (
+    style?.lineHeight !== undefined &&
+    (!Number.isFinite(style.lineHeight) || style.lineHeight <= 0)
+  ) {
+    throw new Error(
+      `${path}.style.lineHeight must be a finite number greater than zero.`
+    );
+  }
+  if (
+    style?.letterSpacing !== undefined &&
+    !Number.isFinite(style.letterSpacing)
+  ) {
+    throw new Error(`${path}.style.letterSpacing must be a finite number.`);
+  }
+  if (
+    style?.maxLines !== undefined &&
+    (!Number.isFinite(style.maxLines) ||
+      !Number.isInteger(style.maxLines) ||
+      style.maxLines < 1)
+  ) {
+    throw new Error(`${path}.style.maxLines must be a positive integer.`);
+  }
+  if (
+    style?.direction !== undefined &&
+    !['auto', 'ltr', 'rtl'].includes(style.direction)
+  ) {
+    throw new Error(`${path}.style.direction must be "auto", "ltr", or "rtl".`);
+  }
+  if (
+    style?.wrap !== undefined &&
+    !['word', 'character', 'none'].includes(style.wrap)
+  ) {
+    throw new Error(
+      `${path}.style.wrap must be "word", "character", or "none".`
+    );
+  }
+  if (
+    style?.overflow !== undefined &&
+    !['clip', 'ellipsis'].includes(style.overflow)
+  ) {
+    throw new Error(`${path}.style.overflow must be "clip" or "ellipsis".`);
+  }
   const strokeStyle = options.style?.strokeStyle;
   if (strokeStyle) {
     if (!Number.isFinite(strokeStyle.width) || strokeStyle.width < 0) {

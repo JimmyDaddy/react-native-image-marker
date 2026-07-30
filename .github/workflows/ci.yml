@@ -852,6 +852,8 @@ jobs:
             -parallel-testing-enabled NO \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testApp \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testEditorUndoPreviewAndOriginalExportRunThroughCore \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testCore21SharedRecipeTextConformance \
+            -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testCore21ImageInfoReadsEncodedOrientation \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testTextAnchorOffsetFeatureProducesPreview \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testMixedWatermarkFeatureProducesPreview \
             -only-testing:ImageMarkerExampleUITests/ImageMarkerExampleUITests/testTiledTextFeatureProducesPreview \

@@ -80,6 +80,60 @@ console.log(result.uri, result.jobId, result.durationMs);
 
 Core 2 returns a structured `MarkerResult`. Use `result.uri` as the native cache-file path or browser-ready data URL. The result also includes the job ID, operation, format, MIME type, duration, and applied metadata policy.
 
+### Inspect an image before editing
+
+Core 2.1 can read the encoded dimensions, upright display dimensions, format,
+and EXIF orientation before you build an Editor viewport or Recipe:
+
+```ts
+const info = await Marker.getImageInfo(
+  require('./images/background.jpg')
+);
+
+console.log(info.width, info.height); // Upright display dimensions
+console.log(info.encodedWidth, info.encodedHeight);
+console.log(info.format, info.orientation, info.rotationDegrees);
+```
+
+`requiresNormalization` is `true` when the encoded orientation is not upright;
+`mirrored` identifies reflected EXIF orientations. The same API accepts native
+image sources and Web URLs, data URLs, `Blob`, `File`, or loaded browser images.
+
+### Constrain multilingual text
+
+Core 2.1 adds cross-platform text-box controls for captions, labels, and
+right-to-left content:
+
+```ts
+const result = await Marker.markText({
+  backgroundImage: { src: require('./images/background.jpg') },
+  watermarkTexts: [
+    {
+      text: 'A long multilingual caption · 多语言说明 · وصف متعدد اللغات',
+      position: { position: Position.bottomCenter, Y: 32 },
+      style: {
+        color: '#FFFFFF',
+        fontSize: 32,
+        maxWidth: '80%',
+        lineHeight: 40,
+        letterSpacing: 0.5,
+        direction: 'auto',
+        wrap: 'word',
+        maxLines: 2,
+        overflow: 'ellipsis',
+        textAlign: 'center',
+      },
+    },
+  ],
+  saveFormat: ImageFormat.png,
+});
+```
+
+`maxWidth` accepts output pixels or a percentage of the background width.
+`lineHeight` and `letterSpacing` are measured in output pixels. Use
+`wrap: 'character'` for scripts or labels that should break at grapheme
+boundaries, or `wrap: 'none'` for a single unwrapped line.
+
 ### Repeat a readable mark across the image
 
 The same `layout` and `strokeStyle` options work on iOS, Android, and Web. Tiled layers can use pixel or percentage gaps and stagger every second row.
@@ -293,6 +347,7 @@ or [open the Editor workflow](https://image-marker.corerobin.com/playground/?wor
 | `Marker.markText`                                   | One or many text layers                          |
 | `Marker.markImage`                                  | One or many logo, icon, or image layers          |
 | `Marker.mark`                                       | Ordered text and image layers in one render pass |
+| `Marker.getImageInfo`                               | Read dimensions, format, and orientation         |
 | `Marker.createRecipe`                               | Reusable, personalized batch workflows           |
 | `Marker.embedInvisible`                             | Write an authenticated short trace ID            |
 | `Marker.detectInvisible`                            | Recover and verify an invisible trace ID         |

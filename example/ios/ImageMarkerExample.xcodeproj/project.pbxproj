@@ -24,6 +24,14 @@
 		D29700110000000000000005 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = D29700010000000000000005 /* Constants.swift */; };
 		D29700110000000000000006 /* UIColorHex.swift in Sources */ = {isa = PBXBuildFile; fileRef = D29700010000000000000006 /* UIColorHex.swift */; };
 		D29700110000000000000007 /* InvisibleWatermark.swift in Sources */ = {isa = PBXBuildFile; fileRef = D29700010000000000000007 /* InvisibleWatermark.swift */; };
+		D29800110000000000000001 /* core-2.1-recipe.json in Resources */ = {isa = PBXBuildFile; fileRef = D29800010000000000000001 /* core-2.1-recipe.json */; };
+		D29900110000000000000001 /* TextStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = D29900010000000000000001 /* TextStyle.swift */; };
+		D29900110000000000000002 /* TextBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = D29900010000000000000002 /* TextBackground.swift */; };
+		D29900110000000000000003 /* Padding.swift in Sources */ = {isa = PBXBuildFile; fileRef = D29900010000000000000003 /* Padding.swift */; };
+		D29900110000000000000004 /* CornerRadius.swift in Sources */ = {isa = PBXBuildFile; fileRef = D29900010000000000000004 /* CornerRadius.swift */; };
+		D29900110000000000000005 /* Radius.swift in Sources */ = {isa = PBXBuildFile; fileRef = D29900010000000000000005 /* Radius.swift */; };
+		D29900110000000000000006 /* ImageInfoReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = D29900010000000000000006 /* ImageInfoReader.swift */; };
+		D29900110000000000000007 /* TextLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = D29900010000000000000007 /* TextLayout.swift */; };
 		F95A8E69C66343EEB9A8D9DC /* RubikBurned-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E3DA1B9696844B35AAE670BD /* RubikBurned-Regular.ttf */; };
 /* End PBXBuildFile section */
 
@@ -63,6 +71,14 @@
 		D29700010000000000000005 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Constants.swift; path = "../../../ios/RCTImageMarker/Constants.swift"; sourceTree = "<group>"; };
 		D29700010000000000000006 /* UIColorHex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = UIColorHex.swift; path = "../../../ios/RCTImageMarker/UIColorHex.swift"; sourceTree = "<group>"; };
 		D29700010000000000000007 /* InvisibleWatermark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = InvisibleWatermark.swift; path = "../../../ios/RCTImageMarker/InvisibleWatermark.swift"; sourceTree = "<group>"; };
+		D29800010000000000000001 /* core-2.1-recipe.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = "core-2.1-recipe.json"; path = "../../../conformance/core-2.1-recipe.json"; sourceTree = "<group>"; };
+		D29900010000000000000001 /* TextStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TextStyle.swift; path = "../../../ios/RCTImageMarker/TextStyle.swift"; sourceTree = "<group>"; };
+		D29900010000000000000002 /* TextBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TextBackground.swift; path = "../../../ios/RCTImageMarker/TextBackground.swift"; sourceTree = "<group>"; };
+		D29900010000000000000003 /* Padding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Padding.swift; path = "../../../ios/RCTImageMarker/Padding.swift"; sourceTree = "<group>"; };
+		D29900010000000000000004 /* CornerRadius.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CornerRadius.swift; path = "../../../ios/RCTImageMarker/CornerRadius.swift"; sourceTree = "<group>"; };
+		D29900010000000000000005 /* Radius.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Radius.swift; path = "../../../ios/RCTImageMarker/Radius.swift"; sourceTree = "<group>"; };
+		D29900010000000000000006 /* ImageInfoReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ImageInfoReader.swift; path = "../../../ios/RCTImageMarker/ImageInfoReader.swift"; sourceTree = "<group>"; };
+		D29900010000000000000007 /* TextLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TextLayout.swift; path = "../../../ios/RCTImageMarker/TextLayout.swift"; sourceTree = "<group>"; };
 		E3DA1B9696844B35AAE670BD /* RubikBurned-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "RubikBurned-Regular.ttf"; path = "../assets/fonts/RubikBurned-Regular.ttf"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
@@ -155,6 +171,14 @@
 				D29700010000000000000005 /* Constants.swift */,
 				D29700010000000000000006 /* UIColorHex.swift */,
 				D29700010000000000000007 /* InvisibleWatermark.swift */,
+				D29800010000000000000001 /* core-2.1-recipe.json */,
+				D29900010000000000000001 /* TextStyle.swift */,
+				D29900010000000000000002 /* TextBackground.swift */,
+				D29900010000000000000003 /* Padding.swift */,
+				D29900010000000000000004 /* CornerRadius.swift */,
+				D29900010000000000000005 /* Radius.swift */,
+				D29900010000000000000006 /* ImageInfoReader.swift */,
+				D29900010000000000000007 /* TextLayout.swift */,
 			);
 			path = ImageMarkerExampleUITests;
 			sourceTree = "<group>";
@@ -278,6 +302,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D29800110000000000000001 /* core-2.1-recipe.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -438,6 +463,13 @@
 				D29700110000000000000005 /* Constants.swift in Sources */,
 				D29700110000000000000006 /* UIColorHex.swift in Sources */,
 				D29700110000000000000007 /* InvisibleWatermark.swift in Sources */,
+				D29900110000000000000001 /* TextStyle.swift in Sources */,
+				D29900110000000000000002 /* TextBackground.swift in Sources */,
+				D29900110000000000000003 /* Padding.swift in Sources */,
+				D29900110000000000000004 /* CornerRadius.swift in Sources */,
+				D29900110000000000000005 /* Radius.swift in Sources */,
+				D29900110000000000000006 /* ImageInfoReader.swift in Sources */,
+				D29900110000000000000007 /* TextLayout.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

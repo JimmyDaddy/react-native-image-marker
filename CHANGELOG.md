@@ -1,5 +1,29 @@
 # Changelog
 
+## 2.1.0 (2026-07-30)
+
+### Features
+
+- Added `Marker.getImageInfo(source)` across Android, iOS, and Web with upright
+  and encoded dimensions, format, EXIF orientation, rotation, mirroring, and
+  normalization metadata.
+- Added cross-platform text constraints and layout controls: `maxWidth`,
+  `lineHeight`, `letterSpacing`, `direction`, `wrap`, `maxLines`, and
+  `overflow`.
+- Moved the platform-neutral Recipe v2 schema, validation, migration,
+  templating, serialization, and immutable layer operations into
+  `@image-marker/recipe@0.1.0`.
+- Re-exported the shared Recipe authoring API from Core so existing consumers
+  can continue importing from `react-native-image-marker`.
+
+### Quality
+
+- Added one shared Recipe fixture exercised by Android, iOS, and Web text
+  conformance tests.
+- Added encoded-orientation metadata tests on TypeScript, Android, and iOS.
+- Preserved the Core 2.0 rendering, result, and Recipe contracts; this is a
+  backward-compatible minor release.
+
 ## 2.0.0 (2026-07-28)
 
 ### Breaking changes

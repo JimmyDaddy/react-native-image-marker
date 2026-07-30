@@ -1,6 +1,6 @@
 {
   "name": "react-native-image-marker",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "packageManager": "npm@10.9.4",
   "workspaces": [
     "packages/*"
@@ -72,17 +72,17 @@
     "test:recipe": "npm test --workspace @image-marker/recipe",
     "test:cpp": "c++ -std=c++17 -Wall -Wextra -Werror cpp/tests/ImageMarkerCoreTest.cpp -o /tmp/image-marker-core-test && /tmp/image-marker-core-test",
     "test:cpp:ios-bridge": "xcrun clang++ -std=c++17 -Wall -Wextra -Werror -c ios/RCTImageMarker/ImageMarkerCoreBridge.mm -o /tmp/image-marker-core-bridge.o && xcrun swiftc -import-objc-header ios/RCTImageMarker/ImageMarkerCoreBridge.h cpp/tests/ImageMarkerCoreBridgeSmoke.swift /tmp/image-marker-core-bridge.o -lc++ -o /tmp/image-marker-core-bridge-test && /tmp/image-marker-core-bridge-test",
-    "typecheck": "tsc --noEmit && npm run typecheck:api",
+    "typecheck": "npm run build:recipe && tsc --noEmit && npm run typecheck:api",
     "typecheck:api": "tsc --noEmit --strict --skipLibCheck --esModuleInterop --verbatimModuleSyntax --moduleResolution node --module esnext --target esnext src/__tests__/image-mark-options.typecheck.ts src/__tests__/trace-runtime.typecheck.ts",
     "typecheck:example": "npm --prefix example run typecheck",
     "typecheck:expo-example": "npm --prefix expo-example run typecheck",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "build:worker": "node scripts/build-invisible-worker.mjs",
-    "prepack": "bob build && node scripts/fix-esm-imports.mjs lib/module lib/typescript/module && npm run build:worker",
+    "prepack": "npm run build:recipe && bob build && node scripts/fix-esm-imports.mjs lib/module lib/typescript/module && npm run build:worker",
     "build:editor": "npm run build --workspace react-native-image-marker-editor",
     "build:recipe": "npm run build --workspace @image-marker/recipe",
     "check:editor-api": "npm run check:api --workspace react-native-image-marker-editor",
-    "verify:consumer": "npm run prepack && npm run build:recipe && npm run build:editor && node scripts/verify-package-consumer.mjs",
+    "verify:consumer": "npm run prepack && npm run build:editor && node scripts/verify-package-consumer.mjs",
     "verify:actions": "node scripts/verify-github-actions.mjs",
     "verify:size:core": "node scripts/verify-size-budgets.mjs core",
     "verify:size:editor": "node scripts/verify-size-budgets.mjs editor",
@@ -168,6 +168,9 @@
     "react": ">=18",
     "react-native": ">=0.73"
   },
+  "dependencies": {
+    "@image-marker/recipe": "^0.1.0"
+  },
   "engines": {
     "node": ">=20.19.0"
   },
@@ -176,8 +179,12 @@
     "testPathIgnorePatterns": [
       "/node_modules/",
       "<rootDir>/packages/editor/",
+      "<rootDir>/packages/recipe/",
       "<rootDir>/src/__tests__/.*\\.typecheck\\.ts$"
     ],
+    "moduleNameMapper": {
+      "^@image-marker/recipe$": "<rootDir>/packages/recipe/src/index.ts"
+    },
     "modulePathIgnorePatterns": [
       "<rootDir>/example/node_modules",
       "<rootDir>/lib/"

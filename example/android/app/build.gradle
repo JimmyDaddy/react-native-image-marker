@@ -110,6 +110,12 @@ android {
         animationsDisabled = true
     }
 
+    sourceSets {
+        androidTest {
+            assets.srcDirs += ["../../../conformance"]
+        }
+    }
+
     splits {
         abi {
             reset()

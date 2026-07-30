@@ -43,7 +43,7 @@ export class WatermarkRecipeValidationError extends Error {
     message: string,
     public readonly code = 'invalid_recipe'
   ) {
-    super(path ? `${path}: ${message}` : message);
+    super(path ? `${path} ${message}` : message);
     this.name = 'WatermarkRecipeValidationError';
   }
 }
@@ -263,6 +263,12 @@ function validateTextStyle(
     positive: true,
   });
   assertMeasure(style.maxWidth, `${path}.maxWidth`, true);
+  if (
+    style.maxWidth !== undefined &&
+    Number.parseFloat(String(style.maxWidth)) <= 0
+  ) {
+    fail(`${path}.maxWidth`, 'must be greater than zero.');
+  }
   assertFinite(style.lineHeight, `${path}.lineHeight`, { positive: true });
   assertFinite(style.letterSpacing, `${path}.letterSpacing`);
   assertFinite(style.skewX, `${path}.skewX`);

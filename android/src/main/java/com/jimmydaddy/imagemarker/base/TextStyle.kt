@@ -10,6 +10,13 @@ class TextStyle(private val options: ReadableMap?) {
   var fontFallbacks: List<String> = emptyList()
   var fontSize: Float = DEFAULT_FONT_SIZE
   var fontSizeRatio: Float? = null
+  var maxWidth: String? = null
+  var lineHeight: Float? = null
+  var letterSpacing: Float = 0f
+  var direction: String = "auto"
+  var wrap: String = "word"
+  var maxLines: Int? = null
+  var overflow: String = "clip"
   var shadowLayerStyle: ShadowLayerStyle? = null
   var textBackgroundStyle: TextBackgroundStyle? = null
   var strokeStyle: TextStrokeStyle? = null
@@ -33,7 +40,7 @@ class TextStyle(private val options: ReadableMap?) {
               "fontFallbacks must be an array"
             )
           fontFallbacks = List(values.size()) { index ->
-            values.getString(index)?.takeUnless { it.isBlank() }
+            values.getString(index).takeUnless { it.isBlank() }
               ?: throw MarkerError(
                 ErrorCode.INVALID_PARAMS,
                 "fontFallbacks must contain non-empty font family names"
@@ -42,6 +49,34 @@ class TextStyle(private val options: ReadableMap?) {
         }
         fontSize = options.numberOrNull("fontSize")?.toFloat() ?: DEFAULT_FONT_SIZE
         fontSizeRatio = options.numberOrNull("fontSizeRatio")?.toFloat()
+        maxWidth = options.stringOrNull("maxWidth")
+        lineHeight = options.numberOrNull("lineHeight")?.toFloat()
+        letterSpacing = options.numberOrNull("letterSpacing")?.toFloat() ?: 0f
+        direction = options.stringOrNull("direction") ?: "auto"
+        wrap = options.stringOrNull("wrap") ?: "word"
+        val rawMaxLines = options.numberOrNull("maxLines")
+        maxLines = rawMaxLines?.toInt()
+        overflow = options.stringOrNull("overflow") ?: "clip"
+        if (lineHeight != null && (!lineHeight!!.isFinite() || lineHeight!! <= 0f)) {
+          throw MarkerError(ErrorCode.INVALID_PARAMS, "lineHeight must be greater than zero")
+        }
+        if (!letterSpacing.isFinite()) {
+          throw MarkerError(ErrorCode.INVALID_PARAMS, "letterSpacing must be finite")
+        }
+        if (rawMaxLines != null &&
+          (!rawMaxLines.isFinite() || rawMaxLines < 1 || rawMaxLines % 1.0 != 0.0)
+        ) {
+          throw MarkerError(ErrorCode.INVALID_PARAMS, "maxLines must be a positive integer")
+        }
+        if (direction !in setOf("auto", "ltr", "rtl")) {
+          throw MarkerError(ErrorCode.INVALID_PARAMS, "direction is invalid")
+        }
+        if (wrap !in setOf("word", "character", "none")) {
+          throw MarkerError(ErrorCode.INVALID_PARAMS, "wrap is invalid")
+        }
+        if (overflow !in setOf("clip", "ellipsis")) {
+          throw MarkerError(ErrorCode.INVALID_PARAMS, "overflow is invalid")
+        }
         shadowLayerStyle = options.mapOrNull("shadowStyle")?.let(::ShadowLayerStyle)
         textBackgroundStyle = options.mapOrNull("textBackgroundStyle")?.let(::TextBackgroundStyle)
         strokeStyle = options.mapOrNull("strokeStyle")?.let(::TextStrokeStyle)
@@ -68,6 +103,16 @@ class TextStyle(private val options: ReadableMap?) {
 
   fun resolveFontSize(backgroundWidth: Int): Float {
     return fontSizeRatio?.let { backgroundWidth * it } ?: fontSize
+  }
+
+  fun resolveMaxWidth(backgroundWidth: Int): Int {
+    val resolved = maxWidth?.let {
+      Utils.parseSpreadValue(it, backgroundWidth.toFloat())
+    } ?: backgroundWidth.toFloat()
+    if (!resolved.isFinite() || resolved <= 0f) {
+      throw MarkerError(ErrorCode.INVALID_PARAMS, "maxWidth must be greater than zero")
+    }
+    return kotlin.math.ceil(resolved.toDouble()).toInt().coerceAtLeast(1)
   }
 
   private fun ReadableMap.stringOrNull(key: String): String? {

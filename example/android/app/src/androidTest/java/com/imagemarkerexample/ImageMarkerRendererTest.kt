@@ -14,9 +14,11 @@ import com.jimmydaddy.imagemarker.base.MarkImageOptions
 import com.jimmydaddy.imagemarker.base.MarkTextOptions
 import com.jimmydaddy.imagemarker.base.MarkWatermarkOptions
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 
 @RunWith(AndroidJUnit4::class)
@@ -234,6 +236,70 @@ class ImageMarkerRendererTest {
     assertEquals(8, output.width)
     assertEquals(6, output.height)
     assertEquals(Color.GREEN, output.getPixel(1, 1))
+  }
+
+  @Test
+  fun rendersSharedCore21RecipeTextFixtureWithinItsTextBox() {
+    val context = InstrumentationRegistry.getInstrumentation().targetContext
+    val document = context.assets.open("core-2.1-recipe.json")
+      .bufferedReader()
+      .use { JSONObject(it.readText()) }
+    val layer = document.getJSONArray("layers").getJSONObject(0)
+    val fixtureStyle = layer.getJSONObject("style")
+    val style = JavaOnlyMap.of(
+      "color", fixtureStyle.getString("color"),
+      "fontSize", fixtureStyle.getDouble("fontSize"),
+      "maxWidth", fixtureStyle.getString("maxWidth"),
+      "lineHeight", fixtureStyle.getDouble("lineHeight"),
+      "letterSpacing", fixtureStyle.getDouble("letterSpacing"),
+      "direction", fixtureStyle.getString("direction"),
+      "wrap", fixtureStyle.getString("wrap"),
+      "maxLines", fixtureStyle.getInt("maxLines"),
+      "overflow", fixtureStyle.getString("overflow"),
+      "textAlign", fixtureStyle.getString("textAlign")
+    )
+    val options = MarkTextOptions(
+      JavaOnlyMap.of(
+        "backgroundImage", JavaOnlyMap.of(
+          "src", imageSource("background"),
+          "alpha", 1
+        ),
+        "watermarkTexts", JavaOnlyArray.of(
+          JavaOnlyMap.of(
+            "text", layer.getString("text"),
+            "position", JavaOnlyMap.of("position", "center"),
+            "style", style
+          )
+        ),
+        "saveFormat", "png"
+      )
+    )
+
+    val output = ImageMarkerRenderer.renderTextWatermarks(
+      solidBitmap(320, 180, Color.BLACK),
+      options,
+      reactContext()
+    )
+    var minX = output.width
+    var maxX = -1
+    var minY = output.height
+    var maxY = -1
+    for (y in 0 until output.height) {
+      for (x in 0 until output.width) {
+        val pixel = output.getPixel(x, y)
+        if (Color.red(pixel) > 24 || Color.green(pixel) > 24 || Color.blue(pixel) > 24) {
+          minX = minOf(minX, x)
+          maxX = maxOf(maxX, x)
+          minY = minOf(minY, y)
+          maxY = maxOf(maxY, y)
+        }
+      }
+    }
+
+    assertNotEquals("Expected the shared fixture to render visible text", -1, maxX)
+    assertTrue("Text must stay within its 200 px maxWidth", maxX - minX + 1 <= 200)
+    assertTrue("Two configured lines should occupy more than one line", maxY - minY + 1 > 32)
+    assertTrue("Two 40 px lines must not exceed their text box", maxY - minY + 1 <= 80)
   }
 
   @Test

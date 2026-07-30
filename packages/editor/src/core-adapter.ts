@@ -1,4 +1,5 @@
 import Marker, {
+  ImageFormat,
   type MarkerResult,
   type WatermarkRecipeDefinition,
 } from 'react-native-image-marker';
@@ -32,6 +33,23 @@ function signedResult(
     uri: signedImage,
     output: signedImage.startsWith('data:') ? 'data-url' : 'file',
   };
+}
+
+function toCoreSaveFormat(
+  value: WatermarkRecipeDefinition['output']['saveFormat']
+): ImageFormat | undefined {
+  switch (value) {
+    case 'jpg':
+      return ImageFormat.jpg;
+    case 'png':
+      return ImageFormat.png;
+    case 'webp':
+      return ImageFormat.webp;
+    case 'base64':
+      return ImageFormat.base64;
+    default:
+      return undefined;
+  }
 }
 
 /**
@@ -84,7 +102,7 @@ export function createCoreEditorAdapter(
             watermark: {
               image: { src: visible.uri },
               ...invisible,
-              saveFormat: request.recipe.output.saveFormat,
+              saveFormat: toCoreSaveFormat(request.recipe.output.saveFormat),
               quality: request.recipe.output.quality,
               maxSize: request.recipe.output.maxSize,
             },
@@ -103,7 +121,7 @@ export function createCoreEditorAdapter(
           {
             image: { src: visible.uri },
             ...invisible,
-            saveFormat: request.recipe.output.saveFormat,
+            saveFormat: toCoreSaveFormat(request.recipe.output.saveFormat),
             quality: request.recipe.output.quality,
             maxSize: request.recipe.output.maxSize,
           },

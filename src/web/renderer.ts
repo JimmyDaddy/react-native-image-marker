@@ -73,6 +73,10 @@ interface TextLayout {
   height: number;
   lineHeight: number;
   fontSize: number;
+  maxWidth: number;
+  clipped: boolean;
+  letterSpacing: number;
+  direction: 'auto' | 'ltr' | 'rtl';
 }
 
 function assertFinitePositive(value: number, label: string): number {
@@ -149,17 +153,34 @@ function metricHeight(metrics: WebTextMetrics, fontSize: number): number {
   return Math.max(ascent + descent, fontSize);
 }
 
+function measureTextWidth(
+  context: WebCanvasContext,
+  text: string,
+  letterSpacing: number
+): number {
+  const characters = Array.from(text);
+  return Math.max(
+    context.measureText(text).width +
+      Math.max(characters.length - 1, 0) * letterSpacing,
+    0
+  );
+}
+
 function splitOversizedToken(
   context: WebCanvasContext,
   token: string,
-  maxWidth: number
+  maxWidth: number,
+  letterSpacing: number
 ): string[] {
   const chunks: string[] = [];
   let chunk = '';
 
   for (const character of Array.from(token)) {
     const candidate = chunk + character;
-    if (chunk && context.measureText(candidate).width > maxWidth) {
+    if (
+      chunk &&
+      measureTextWidth(context, candidate, letterSpacing) > maxWidth
+    ) {
       chunks.push(chunk);
       chunk = character;
     } else {
@@ -176,10 +197,19 @@ function splitOversizedToken(
 function wrapParagraph(
   context: WebCanvasContext,
   paragraph: string,
-  maxWidth: number
+  maxWidth: number,
+  wrap: NonNullable<TextStyle['wrap']>,
+  letterSpacing: number
 ): string[] {
-  if (context.measureText(paragraph).width <= maxWidth) {
+  if (
+    wrap === 'none' ||
+    measureTextWidth(context, paragraph, letterSpacing) <= maxWidth
+  ) {
     return [paragraph];
+  }
+
+  if (wrap === 'character') {
+    return splitOversizedToken(context, paragraph, maxWidth, letterSpacing);
   }
 
   const lines: string[] = [];
@@ -195,7 +225,7 @@ function wrapParagraph(
     }
 
     const candidate = current + token;
-    if (context.measureText(candidate).width <= maxWidth) {
+    if (measureTextWidth(context, candidate, letterSpacing) <= maxWidth) {
       current = candidate;
       continue;
     }
@@ -206,12 +236,12 @@ function wrapParagraph(
     }
     current = '';
 
-    if (context.measureText(token).width <= maxWidth) {
+    if (measureTextWidth(context, token, letterSpacing) <= maxWidth) {
       current = token;
       continue;
     }
 
-    const chunks = splitOversizedToken(context, token, maxWidth);
+    const chunks = splitOversizedToken(context, token, maxWidth, letterSpacing);
     lines.push(...chunks.slice(0, -1));
     current = chunks[chunks.length - 1] ?? '';
   }
@@ -223,6 +253,30 @@ function wrapParagraph(
   return lines;
 }
 
+function ellipsizeLine(
+  context: WebCanvasContext,
+  value: string,
+  maxWidth: number,
+  letterSpacing: number
+): string {
+  const ellipsis = '…';
+  if (measureTextWidth(context, ellipsis, letterSpacing) > maxWidth) {
+    return '';
+  }
+  let characters = Array.from(value.trimEnd());
+  while (
+    characters.length > 0 &&
+    measureTextWidth(
+      context,
+      `${characters.join('')}${ellipsis}`,
+      letterSpacing
+    ) > maxWidth
+  ) {
+    characters = characters.slice(0, -1);
+  }
+  return `${characters.join('')}${ellipsis}`;
+}
+
 function measureTextLayout(
   context: WebCanvasContext,
   text: string,
@@ -231,20 +285,48 @@ function measureTextLayout(
 ): TextLayout {
   const fontSize = resolveFontSize(style, canvasWidth);
   context.font = createFont(style, fontSize);
-  const lines = text
+  const maxWidth = assertFinitePositive(
+    resolveSpreadValue(style?.maxWidth, canvasWidth) ?? canvasWidth,
+    'text maxWidth'
+  );
+  const letterSpacing = style?.letterSpacing ?? 0;
+  const wrap = style?.wrap ?? 'word';
+  const rawLines = text
     .split(/\r\n?|\n/)
-    .flatMap((line) => wrapParagraph(context, line, canvasWidth))
-    .map((line) => ({
-      text: line,
-      width: context.measureText(line).width,
-    }));
+    .flatMap((line) =>
+      wrapParagraph(context, line, maxWidth, wrap, letterSpacing)
+    );
+  const maxLines = style?.maxLines ?? Number.POSITIVE_INFINITY;
+  const omittedLines = rawLines.length > maxLines;
+  const visibleLines = rawLines.slice(0, maxLines);
+  const lineOverflow = visibleLines.some(
+    (line) => measureTextWidth(context, line, letterSpacing) > maxWidth
+  );
+  if (
+    style?.overflow === 'ellipsis' &&
+    (omittedLines || lineOverflow) &&
+    visibleLines.length > 0
+  ) {
+    const finalIndex = visibleLines.length - 1;
+    visibleLines[finalIndex] = ellipsizeLine(
+      context,
+      visibleLines[finalIndex] ?? '',
+      maxWidth,
+      letterSpacing
+    );
+  }
+  const lines = visibleLines.map((line) => ({
+    text: line,
+    width: Math.min(measureTextWidth(context, line, letterSpacing), maxWidth),
+  }));
   const representative = context.measureText(
     lines.reduce(
       (widest, line) => (line.width > widest.width ? line : widest),
       lines[0] ?? { text: '', width: 0 }
     ).text || 'Mg'
   );
-  const lineHeight = metricHeight(representative, fontSize);
+  const naturalLineHeight = metricHeight(representative, fontSize);
+  const lineHeight = style?.lineHeight ?? naturalLineHeight;
 
   return {
     lines,
@@ -252,6 +334,10 @@ function measureTextLayout(
     height: Math.max(lineHeight * lines.length, 1),
     lineHeight,
     fontSize,
+    maxWidth,
+    clipped: omittedLines || lineOverflow,
+    letterSpacing,
+    direction: style?.direction ?? 'auto',
   };
 }
 
@@ -475,6 +561,42 @@ function drawTextDecorations(
   stroke.stroke();
 }
 
+function drawSpacedText(
+  context: WebCanvasContext,
+  method: 'fillText' | 'strokeText',
+  text: string,
+  textX: number,
+  y: number,
+  alignment: TextStyle['textAlign'],
+  lineWidth: number,
+  letterSpacing: number,
+  direction: 'auto' | 'ltr' | 'rtl'
+) {
+  if (letterSpacing === 0 || 'letterSpacing' in context) {
+    if ('letterSpacing' in context) {
+      context.letterSpacing = `${letterSpacing}px`;
+    }
+    context[method](text, textX, y);
+    return;
+  }
+
+  const previousAlignment = context.textAlign;
+  context.textAlign = 'left';
+  const characters = Array.from(text);
+  if (direction === 'rtl') {
+    characters.reverse();
+  }
+  let cursor = getLineStartX(alignment, textX, lineWidth);
+  characters.forEach((character, index) => {
+    context[method](character, cursor, y);
+    cursor += context.measureText(character).width;
+    if (index < characters.length - 1) {
+      cursor += letterSpacing;
+    }
+  });
+  context.textAlign = previousAlignment;
+}
+
 function drawTextAtPosition(
   context: WebCanvasContext,
   options: TextOptions,
@@ -524,6 +646,10 @@ function drawTextAtPosition(
     context.fillStyle = style?.color ?? '#000000';
     context.textAlign = style?.textAlign ?? 'left';
     context.textBaseline = 'top';
+    if ('direction' in context) {
+      context.direction =
+        layout.direction === 'auto' ? 'inherit' : layout.direction;
+    }
     context.shadowBlur = style?.shadowStyle?.radius ?? 0;
     context.shadowOffsetX = style?.shadowStyle?.dx ?? 0;
     context.shadowOffsetY = style?.shadowStyle?.dy ?? 0;
@@ -539,16 +665,52 @@ function drawTextAtPosition(
       context.translate(-position.x, -position.y);
     }
 
+    if (layout.clipped) {
+      context.beginPath();
+      context.rect(position.x, position.y, layout.width, layout.height);
+      context.clip();
+    }
+
     layout.lines.forEach((line, lineIndex) => {
       const lineY = position.y + lineIndex * layout.lineHeight;
       if (strokeWidth > 0) {
-        context.strokeText(line.text, textX, lineY);
+        drawSpacedText(
+          context,
+          'strokeText',
+          line.text,
+          textX,
+          lineY,
+          style?.textAlign,
+          line.width,
+          layout.letterSpacing,
+          layout.direction
+        );
         const shadowColor = context.shadowColor;
         context.shadowColor = 'transparent';
-        context.fillText(line.text, textX, lineY);
+        drawSpacedText(
+          context,
+          'fillText',
+          line.text,
+          textX,
+          lineY,
+          style?.textAlign,
+          line.width,
+          layout.letterSpacing,
+          layout.direction
+        );
         context.shadowColor = shadowColor;
       } else {
-        context.fillText(line.text, textX, lineY);
+        drawSpacedText(
+          context,
+          'fillText',
+          line.text,
+          textX,
+          lineY,
+          style?.textAlign,
+          line.width,
+          layout.letterSpacing,
+          layout.direction
+        );
       }
       context.save();
       context.translate(position.x, position.y);

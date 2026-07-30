@@ -77,6 +77,7 @@ android {
   if (!isNewArchitectureEnabled()) {
     sourceSets.main.java.srcDirs += ["src/oldarch/java"]
   }
+  sourceSets.test.resources.srcDirs += ["../conformance"]
 }
 
 repositories {
@@ -96,6 +97,7 @@ dependencies {
   testImplementation 'junit:junit:4.13.2'
   androidTestImplementation 'androidx.test.ext:junit:1.1.5'
   testImplementation "org.mockito:mockito-core:3.+"
+  testImplementation "org.json:json:20240303"
   implementation "io.coil-kt:coil:2.5.0"
   implementation "io.coil-kt:coil-svg:2.5.0"
   implementation "io.coil-kt:coil-gif:2.5.0"

@@ -2,6 +2,7 @@
   "compilerOptions": {
     "baseUrl": "./",
     "paths": {
+      "@image-marker/recipe": ["./packages/recipe/lib/module/index.d.ts"],
       "react-native-image-marker": ["./src/index"]
     },
     "types": [],

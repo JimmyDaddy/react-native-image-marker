@@ -18,6 +18,7 @@ describe('Marker JS wrapper', () => {
   let Position: any;
   let RotationCanvasMode: any;
   let nativeModule: {
+    getImageInfo: jest.Mock;
     markWithText: jest.Mock;
     markWithImage: jest.Mock;
     markWithWatermarks: jest.Mock;
@@ -32,6 +33,7 @@ describe('Marker JS wrapper', () => {
 
     const reactNative = require('react-native');
     nativeModule = {
+      getImageInfo: jest.fn(),
       markWithText: jest.fn(),
       markWithImage: jest.fn(),
       markWithWatermarks: jest.fn(),
@@ -66,6 +68,41 @@ describe('Marker JS wrapper', () => {
       expand: 'expand',
       crop: 'crop',
     });
+  });
+
+  it('resolves assets and validates native image metadata', async () => {
+    nativeModule.getImageInfo.mockResolvedValue(
+      JSON.stringify({
+        width: 80,
+        height: 120,
+        encodedWidth: 120,
+        encodedHeight: 80,
+        format: 'jpeg',
+        mimeType: 'image/jpeg',
+        orientation: 6,
+        rotationDegrees: 90,
+        mirrored: false,
+        requiresNormalization: true,
+      })
+    );
+
+    await expect(Marker.getImageInfo(10)).resolves.toEqual(
+      expect.objectContaining({
+        width: 80,
+        height: 120,
+        orientation: 6,
+        format: 'jpeg',
+      })
+    );
+    expect(nativeModule.getImageInfo).toHaveBeenCalledWith({
+      uri: 'asset://10',
+      width: 120,
+      height: 80,
+      scale: 1,
+    });
+
+    nativeModule.getImageInfo.mockResolvedValue('{bad');
+    await expect(Marker.getImageInfo(10)).rejects.toThrow('invalid JSON');
   });
 
   it('normalizes native invisible watermark input and parses detection data', async () => {
@@ -959,6 +996,68 @@ describe('Marker JS wrapper', () => {
     expect(nativeOptions.watermarks[1].position).not.toBe(
       options.watermarkImages[0].position
     );
+  });
+
+  it('normalizes Core 2.1 text layout fields for native renderers', async () => {
+    nativeModule.markWithWatermarks.mockResolvedValueOnce(
+      '/tmp/text-layout.png'
+    );
+
+    await Marker.mark({
+      backgroundImage: { src: 'file:///tmp/background.png' },
+      watermarks: [
+        {
+          type: 'text',
+          text: 'مرحبا Image Marker',
+          style: {
+            maxWidth: '55%',
+            lineHeight: 42,
+            letterSpacing: 1.5,
+            direction: 'rtl',
+            wrap: 'character',
+            maxLines: 2,
+            overflow: 'ellipsis',
+          },
+        },
+      ],
+    });
+
+    expect(
+      nativeModule.markWithWatermarks.mock.calls[0][0].watermarks[0].style
+    ).toEqual(
+      expect.objectContaining({
+        maxWidth: '55%',
+        lineHeight: 42,
+        letterSpacing: 1.5,
+        direction: 'rtl',
+        wrap: 'character',
+        maxLines: 2,
+        overflow: 'ellipsis',
+      })
+    );
+  });
+
+  it.each([
+    [{ maxWidth: 0 }, 'maxWidth must be greater than zero'],
+    [{ lineHeight: 0 }, 'lineHeight must be a finite number greater than zero'],
+    [{ letterSpacing: Number.NaN }, 'letterSpacing must be a finite number'],
+    [{ direction: 'up' }, 'direction must be "auto", "ltr", or "rtl"'],
+    [{ wrap: 'sentence' }, 'wrap must be "word", "character", or "none"'],
+    [{ maxLines: 1.5 }, 'maxLines must be a positive integer'],
+    [{ overflow: 'fade' }, 'overflow must be "clip" or "ellipsis"'],
+  ])('rejects invalid Core 2.1 text style %j', (style, message) => {
+    expect(() =>
+      Marker.mark({
+        backgroundImage: { src: 'file:///tmp/background.png' },
+        watermarks: [
+          {
+            type: 'text',
+            text: 'Invalid layout',
+            style: style as any,
+          },
+        ],
+      })
+    ).toThrow(message);
   });
 
   it('preserves explicit watermarks layer order', async () => {

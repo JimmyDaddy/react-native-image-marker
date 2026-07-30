@@ -82,6 +82,13 @@ export type NativeTextStyle = Readonly<{
   fontFallbacks?: ReadonlyArray<string>;
   fontSize?: Double;
   fontSizeRatio?: Double;
+  maxWidth?: string;
+  lineHeight?: Double;
+  letterSpacing?: Double;
+  direction?: string;
+  wrap?: string;
+  maxLines?: Double;
+  overflow?: string;
   shadowStyle?: NativeShadowStyle;
   textBackgroundStyle?: NativeTextBackgroundStyle;
   strokeStyle?: NativeTextStrokeStyle;
@@ -162,6 +169,7 @@ export type NativeInvisibleWatermarkOptions = Readonly<{
 }>;
 
 export interface Spec extends TurboModule {
+  getImageInfo(source: NativeImageSource): Promise<string>;
   markWithText(options: NativeTextMarkOptions): Promise<string>;
   markWithImage(options: NativeImageMarkOptions): Promise<string>;
   markWithWatermarks(options: NativeMarkOptions): Promise<string>;
