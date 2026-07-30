@@ -5,7 +5,7 @@ prev: false
 title: "EditorInvisibleExport"
 ---
 
-Defined in: [packages/editor/src/types.ts:35](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L35)
+Defined in: [packages/editor/src/types.ts:46](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L46)
 
 ## Properties
 
@@ -13,7 +13,7 @@ Defined in: [packages/editor/src/types.ts:35](https://github.com/JimmyDaddy/reac
 
 > **key**: `string`
 
-Defined in: [packages/editor/src/types.ts:37](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L37)
+Defined in: [packages/editor/src/types.ts:48](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L48)
 
 ***
 
@@ -21,7 +21,7 @@ Defined in: [packages/editor/src/types.ts:37](https://github.com/JimmyDaddy/reac
 
 > **payload**: `string`
 
-Defined in: [packages/editor/src/types.ts:36](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L36)
+Defined in: [packages/editor/src/types.ts:47](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L47)
 
 ***
 
@@ -29,4 +29,4 @@ Defined in: [packages/editor/src/types.ts:36](https://github.com/JimmyDaddy/reac
 
 > `optional` **strength?**: `"subtle"` \| `"balanced"` \| `"robust"`
 
-Defined in: [packages/editor/src/types.ts:38](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L38)
+Defined in: [packages/editor/src/types.ts:49](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L49)

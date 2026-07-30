@@ -171,7 +171,11 @@ jobs:
           docs = any_changed(
               [
                   "src/**",
+                  "docs/**",
+                  "packages/editor/**",
                   "packages/recipe/**",
+                  "packages/node/**",
+                  "packages/cli/**",
                   "website/**",
                   "README.MD",
                   "package.json",

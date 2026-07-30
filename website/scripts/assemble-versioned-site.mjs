@@ -56,6 +56,8 @@ const editorManifest = JSON.parse(
   )
 );
 const editorVersion = editorManifest.version;
+const editorPeerCoreRange =
+  editorManifest.peerDependencies['react-native-image-marker'];
 const isGa = versions.releaseStage === 'ga';
 if (!['pre-ga', 'ga'].includes(versions.releaseStage)) {
   throw new Error(
@@ -234,15 +236,16 @@ const editorPage = `<!doctype html>
     </style>
   </head>
   <body>
-    <span class="badge">Experimental</span>
+    <span class="badge">Current optional package</span>
     <h1>React Native Image Marker Editor ${escapeHtml(editorVersion)}</h1>
-    <p>The optional interaction editor is a separate JS/TS package. It requires <code>react-native-image-marker@^2.0.0</code> and delegates previews and final encoding to Core.</p>
-    <pre><code>npm install react-native-image-marker@^2 react-native-image-marker-editor@${escapeHtml(editorVersion)}</code></pre>
+    <p>The optional interaction editor is a separate JS/TS package. It requires <code>react-native-image-marker@${escapeHtml(editorPeerCoreRange)}</code> and delegates image inspection, previews, and final encoding to Core.</p>
+    <pre><code>npm install react-native-image-marker@${escapeHtml(editorPeerCoreRange)} react-native-image-marker-editor@${escapeHtml(editorVersion)}</code></pre>
     <h2>Included in ${escapeHtml(editorVersion)}</h2>
     <ul>
-      <li>Text and image layers with select, drag, scale, rotate, reorder, visibility, and locks.</li>
-      <li>Alignment guides, snapping, safe areas, grouped undo/redo, keyboard controls, and baseline accessibility.</li>
-      <li>Recipe v2 import/export, low-resolution previews, original export, invisible trace, and optional C2PA settings.</li>
+      <li>Formal Toolbar, Inspector, Layer Panel, and Asset Panel components.</li>
+      <li>Multi-select, duplicate, group, align, distribute, clipboard, resize and rotation handles.</li>
+      <li>Zoom, pan, fit, safe areas, snapping, undo/redo, keyboard controls, and accessibility.</li>
+      <li>Recipe v2 import/export, automatic source inspection, autosave, templates, brand kits, and plugins.</li>
       <li>An opt-in Core adapter; applications may inject a server or custom renderer instead.</li>
     </ul>
     <p>Video, general filters, cloud collaboration, and duplicate native encoding are intentionally outside this release.</p>
@@ -275,15 +278,16 @@ const editorZhPage = `<!doctype html>
     </style>
   </head>
   <body>
-    <span class="badge">实验性</span>
+    <span class="badge">当前可选包</span>
     <h1>React Native Image Marker Editor ${escapeHtml(editorVersion)}</h1>
-    <p>可选交互编辑器是独立 JS/TS 包，依赖 <code>react-native-image-marker@^2.0.0</code>，预览与最终编码仍委托给 Core。</p>
-    <pre><code>npm install react-native-image-marker@^2 react-native-image-marker-editor@${escapeHtml(editorVersion)}</code></pre>
+    <p>可选交互编辑器是独立 JS/TS 包，依赖 <code>react-native-image-marker@${escapeHtml(editorPeerCoreRange)}</code>，图片检查、预览与最终编码仍委托给 Core。</p>
+    <pre><code>npm install react-native-image-marker@${escapeHtml(editorPeerCoreRange)} react-native-image-marker-editor@${escapeHtml(editorVersion)}</code></pre>
     <h2>${escapeHtml(editorVersion)} 包含</h2>
     <ul>
-      <li>文字和图片图层，以及选择、拖动、缩放、旋转、排序、显隐和锁定。</li>
-      <li>对齐线、吸附、安全区域、分组 undo/redo、键盘操作和基础无障碍。</li>
-      <li>Recipe v2 导入导出、低分辨率预览、原图导出、隐形追踪与可选 C2PA 设置。</li>
+      <li>正式的 Toolbar、Inspector、Layer Panel 与 Asset Panel 组件。</li>
+      <li>多选、复制、分组、对齐、分布、clipboard、resize 与 rotate handles。</li>
+      <li>Zoom、pan、fit、安全区、吸附、undo/redo、键盘操作与无障碍。</li>
+      <li>Recipe v2 导入导出、自动图片检查、autosave、模板、品牌配置与插件。</li>
       <li>按需引入 Core adapter；应用也可注入服务端或自定义 renderer。</li>
     </ul>
     <p>视频、通用滤镜、云端协作和重复的原生编码不进入此版本。</p>

@@ -5,7 +5,7 @@ prev: false
 title: "EditorState"
 ---
 
-Defined in: [packages/editor/src/types.ts:51](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L51)
+Defined in: [packages/editor/src/types.ts:62](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L62)
 
 ## Properties
 
@@ -13,7 +13,7 @@ Defined in: [packages/editor/src/types.ts:51](https://github.com/JimmyDaddy/reac
 
 > **canRedo**: `boolean`
 
-Defined in: [packages/editor/src/types.ts:58](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L58)
+Defined in: [packages/editor/src/types.ts:73](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L73)
 
 ***
 
@@ -21,7 +21,7 @@ Defined in: [packages/editor/src/types.ts:58](https://github.com/JimmyDaddy/reac
 
 > **canUndo**: `boolean`
 
-Defined in: [packages/editor/src/types.ts:57](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L57)
+Defined in: [packages/editor/src/types.ts:72](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L72)
 
 ***
 
@@ -29,7 +29,7 @@ Defined in: [packages/editor/src/types.ts:57](https://github.com/JimmyDaddy/reac
 
 > **exportOptions**: [`EditorExportOptions`](/guides/editor/reference/interfaces/editorexportoptions/)
 
-Defined in: [packages/editor/src/types.ts:56](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L56)
+Defined in: [packages/editor/src/types.ts:70](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L70)
 
 ***
 
@@ -37,7 +37,7 @@ Defined in: [packages/editor/src/types.ts:56](https://github.com/JimmyDaddy/reac
 
 > **recipe**: [`WatermarkRecipeDefinition`](/guides/editor/reference/interfaces/watermarkrecipedefinition/)
 
-Defined in: [packages/editor/src/types.ts:52](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L52)
+Defined in: [packages/editor/src/types.ts:63](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L63)
 
 ***
 
@@ -45,7 +45,7 @@ Defined in: [packages/editor/src/types.ts:52](https://github.com/JimmyDaddy/reac
 
 > **safeArea**: [`EditorSafeArea`](/guides/editor/reference/interfaces/editorsafearea/)
 
-Defined in: [packages/editor/src/types.ts:54](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L54)
+Defined in: [packages/editor/src/types.ts:68](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L68)
 
 ***
 
@@ -53,7 +53,19 @@ Defined in: [packages/editor/src/types.ts:54](https://github.com/JimmyDaddy/reac
 
 > `optional` **selectedLayerId?**: `string`
 
-Defined in: [packages/editor/src/types.ts:53](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L53)
+Defined in: [packages/editor/src/types.ts:67](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L67)
+
+Convenience alias for the primary selection.
+
+***
+
+### selectedLayerIds
+
+> **selectedLayerIds**: readonly `string`[]
+
+Defined in: [packages/editor/src/types.ts:65](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L65)
+
+Ordered selection. The final item is the primary selection.
 
 ***
 
@@ -61,4 +73,12 @@ Defined in: [packages/editor/src/types.ts:53](https://github.com/JimmyDaddy/reac
 
 > **snapGuides**: readonly [`EditorSnapGuide`](/guides/editor/reference/type-aliases/editorsnapguide/)[]
 
-Defined in: [packages/editor/src/types.ts:55](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L55)
+Defined in: [packages/editor/src/types.ts:69](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L69)
+
+***
+
+### viewport
+
+> **viewport**: [`EditorViewportState`](/guides/editor/reference/interfaces/editorviewportstate/)
+
+Defined in: [packages/editor/src/types.ts:71](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L71)

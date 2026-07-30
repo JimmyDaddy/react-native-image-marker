@@ -72,7 +72,7 @@ export const toolGroups = [
           en: 'Drag, scale, rotate, and reorder layers, then render Recipe v2 through Core.',
           zh: '拖动、缩放、旋转和排序图层，再通过 Core 渲染 Recipe v2。',
         },
-        badge: { en: 'Editor 0.1.0', zh: 'Editor 0.1.0' },
+        badge: { en: 'Editor 0.3.0', zh: 'Editor 0.3.0' },
       },
     ],
   },

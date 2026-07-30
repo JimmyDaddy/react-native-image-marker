@@ -5,17 +5,37 @@ prev: false
 title: "WatermarkRecipeInput"
 ---
 
-Defined in: [src/recipe.ts:107](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/src/recipe.ts#L107)
+Defined in: packages/recipe/lib/module/types.d.ts:143
+
+## Type Parameters
+
+### Source
+
+`Source` = `unknown`
 
 ## Properties
 
 ### backgroundImage
 
-> **backgroundImage**: `ImageOptions`
+> **backgroundImage**: `object`
 
-Defined in: [src/recipe.ts:109](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/src/recipe.ts#L109)
+Defined in: packages/recipe/lib/module/types.d.ts:144
 
-Source image processed by this recipe invocation.
+#### alpha?
+
+> `optional` **alpha?**: `number`
+
+#### rotate?
+
+> `optional` **rotate?**: `number`
+
+#### scale?
+
+> `optional` **scale?**: `number`
+
+#### src
+
+> **src**: `Source`
 
 ***
 
@@ -23,9 +43,7 @@ Source image processed by this recipe invocation.
 
 > `optional` **filename?**: `string`
 
-Defined in: [src/recipe.ts:111](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/src/recipe.ts#L111)
-
-Optional output basename for this input.
+Defined in: packages/recipe/lib/module/types.d.ts:150
 
 ***
 
@@ -33,6 +51,4 @@ Optional output basename for this input.
 
 > `optional` **variables?**: `Readonly`\<`Record`\<`string`, `WatermarkRecipeVariable`\>\>
 
-Defined in: [src/recipe.ts:113](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/src/recipe.ts#L113)
-
-Values substituted into text templates and used by layer conditions.
+Defined in: packages/recipe/lib/module/types.d.ts:151

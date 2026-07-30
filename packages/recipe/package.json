@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Platform-neutral Recipe v2 schema, validation, migration, templates, and layer operations for Image Marker",
   "license": "MIT",
-  "homepage": "https://image-marker.corerobin.com/guides/recipes/",
+  "homepage": "https://image-marker.corerobin.com/recipe/",
   "bugs": {
     "url": "https://github.com/JimmyDaddy/react-native-image-marker/issues"
   },

@@ -59,6 +59,8 @@ const editorManifest = JSON.parse(
   )
 );
 const editorVersion = editorManifest.version;
+const editorPeerCoreRange =
+  editorManifest.peerDependencies['react-native-image-marker'];
 const isGa = versions.releaseStage === 'ga';
 const v2DocsBase = isGa ? '/' : '/next/';
 const v2DocsRoot = isGa ? outputRoot : join(outputRoot, 'next');
@@ -116,7 +118,7 @@ if (!archive.includes(buildManifest.sources.archive.sha)) {
 }
 if (
   !editor.includes(`react-native-image-marker-editor@${editorVersion}`) ||
-  !editor.includes('react-native-image-marker@^2.0.0')
+  !editor.includes(`react-native-image-marker@${editorPeerCoreRange}`)
 ) {
   throw new Error('Editor page does not expose the current version contract.');
 }
@@ -155,7 +157,7 @@ if (
     (version) =>
       version.id === 'editor' &&
       version.currentVersion === editorVersion &&
-      version.peerCoreRange === '^2.0.0'
+      version.peerCoreRange === editorPeerCoreRange
   )
 ) {
   throw new Error('Version manifest does not match the Editor package contract.');

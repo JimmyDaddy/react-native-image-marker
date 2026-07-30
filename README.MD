@@ -323,22 +323,64 @@ Browser Canvas and native graphics stacks share the API and positioning model bu
 ## Optional interaction editor
 
 The independently versioned
-`react-native-image-marker-editor@0.1.0` package provides Recipe v2 layer
-selection, drag/scale/rotate/reorder, visibility and locking, snapping,
-undo/redo, accessible keyboard controls, preview rendering, and final export.
-It requires Core `^2.0.0` and delegates image processing back to Core.
+`react-native-image-marker-editor@0.3.0` package provides formal Toolbar,
+Inspector, Layer, and Asset panels; multi-selection, grouping, alignment,
+clipboard, handles, zoom/pan, templates, autosave, and plugins. It requires
+Core `^2.1.0` and delegates image inspection, preview, and encoding back to
+Core.
 
 ```sh
-npm install react-native-image-marker-editor@0.1.0
+npm install react-native-image-marker@^2.1 \
+  react-native-image-marker-editor@^0.3
 ```
 
 Import `react-native-image-marker-editor/core-adapter` only when the editor
 should invoke Core directly; a custom adapter can render on a server instead.
+Core 2.1 automatically resolves the decoded source size and orientation when
+the Editor receives `source` and the Core adapter.
 Start with the repository's
 [complete Editor component and coordinate guide](docs/editor.md), then see the
 [Editor integration guide](https://image-marker.corerobin.com/guides/editor/),
 [generated API reference](https://image-marker.corerobin.com/guides/editor/reference/),
 or [open the Editor workflow](https://image-marker.corerobin.com/playground/?workflow=editor#editor-playground).
+
+## Shared Recipe, Node, and CLI packages
+
+Every renderer and tool uses the same platform-neutral Recipe v2 document:
+
+```sh
+npm install @image-marker/recipe@^0.1
+```
+
+`@image-marker/recipe` provides schema, validation, migration, templates,
+serialization, immutable layer operations, and a published JSON Schema without
+depending on React, React Native, a browser, or an image renderer. See the
+[Recipe guide](https://image-marker.corerobin.com/recipe/).
+
+Render the same document in a Node.js service without React Native:
+
+```sh
+npm install @image-marker/node@^0.1 sharp@^0.35
+```
+
+`@image-marker/node` accepts file paths, buffers, typed arrays, and readable
+streams; it supports file/stream output, inspection, bounded batches, retry,
+cancellation, progress, and authenticated lossless PNG locators. See the
+[Node guide](https://image-marker.corerobin.com/node/) and
+[package README](packages/node/README.md).
+
+For terminal and CI automation:
+
+```sh
+npm install --global @image-marker/cli@^0.1
+image-marker --help
+```
+
+The CLI provides `init`, `validate`, `migrate`, `render`, `batch`, `inspect`,
+`embed`, and `detect`, plus stable exit codes, JSON output, atomic writes, and
+stdin/stdout support. See the
+[CLI guide](https://image-marker.corerobin.com/cli/) and
+[package README](packages/cli/README.md).
 
 ## Choose an API
 

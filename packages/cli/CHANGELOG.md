@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0
+## 0.1.0 (2026-07-30)
 
 - Ship with Sharp 0.35.3 or newer as the secure image runtime baseline.
 - Add Recipe validation, migration, and starter generation commands.

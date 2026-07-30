@@ -252,6 +252,32 @@ export default defineConfig({
           ],
         },
         {
+          label: 'Toolchain',
+          translations: { 'zh-CN': '工具链' },
+          items: [
+            {
+              label: 'Recipe documents',
+              translations: { 'zh-CN': 'Recipe 文档' },
+              slug: 'recipe',
+            },
+            {
+              label: 'Node renderer',
+              translations: { 'zh-CN': 'Node 渲染器' },
+              slug: 'node',
+            },
+            {
+              label: 'Command-line interface',
+              translations: { 'zh-CN': '命令行工具' },
+              slug: 'cli',
+            },
+            {
+              label: 'Optional interaction editor',
+              translations: { 'zh-CN': '可选交互编辑器' },
+              slug: 'guides/editor',
+            },
+          ],
+        },
+        {
           label: 'Guides',
           translations: { 'zh-CN': '指南' },
           items: [

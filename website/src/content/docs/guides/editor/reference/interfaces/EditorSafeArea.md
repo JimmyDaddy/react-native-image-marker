@@ -5,7 +5,7 @@ prev: false
 title: "EditorSafeArea"
 ---
 
-Defined in: [packages/editor/src/types.ts:24](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L24)
+Defined in: [packages/editor/src/types.ts:35](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L35)
 
 ## Properties
 
@@ -13,7 +13,7 @@ Defined in: [packages/editor/src/types.ts:24](https://github.com/JimmyDaddy/reac
 
 > **bottom**: `number`
 
-Defined in: [packages/editor/src/types.ts:27](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L27)
+Defined in: [packages/editor/src/types.ts:38](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L38)
 
 ***
 
@@ -21,7 +21,7 @@ Defined in: [packages/editor/src/types.ts:27](https://github.com/JimmyDaddy/reac
 
 > **left**: `number`
 
-Defined in: [packages/editor/src/types.ts:28](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L28)
+Defined in: [packages/editor/src/types.ts:39](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L39)
 
 ***
 
@@ -29,7 +29,7 @@ Defined in: [packages/editor/src/types.ts:28](https://github.com/JimmyDaddy/reac
 
 > **right**: `number`
 
-Defined in: [packages/editor/src/types.ts:26](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L26)
+Defined in: [packages/editor/src/types.ts:37](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L37)
 
 ***
 
@@ -37,4 +37,4 @@ Defined in: [packages/editor/src/types.ts:26](https://github.com/JimmyDaddy/reac
 
 > **top**: `number`
 
-Defined in: [packages/editor/src/types.ts:25](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L25)
+Defined in: [packages/editor/src/types.ts:36](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L36)

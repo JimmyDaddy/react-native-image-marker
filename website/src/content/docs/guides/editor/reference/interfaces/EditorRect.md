@@ -5,11 +5,15 @@ prev: false
 title: "EditorRect"
 ---
 
-Defined in: [packages/editor/src/types.ts:22](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L22)
+Defined in: [packages/editor/src/types.ts:27](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L27)
 
 ## Extends
 
 - [`EditorPoint`](/guides/editor/reference/interfaces/editorpoint/).[`EditorSize`](/guides/editor/reference/interfaces/editorsize/)
+
+## Extended by
+
+- [`EditorLayerBounds`](/guides/editor/reference/interfaces/editorlayerbounds/)
 
 ## Properties
 
@@ -17,7 +21,7 @@ Defined in: [packages/editor/src/types.ts:22](https://github.com/JimmyDaddy/reac
 
 > **height**: `number`
 
-Defined in: [packages/editor/src/types.ts:19](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L19)
+Defined in: [packages/editor/src/types.ts:24](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L24)
 
 #### Inherited from
 
@@ -29,7 +33,7 @@ Defined in: [packages/editor/src/types.ts:19](https://github.com/JimmyDaddy/reac
 
 > **width**: `number`
 
-Defined in: [packages/editor/src/types.ts:18](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L18)
+Defined in: [packages/editor/src/types.ts:23](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L23)
 
 #### Inherited from
 
@@ -41,7 +45,7 @@ Defined in: [packages/editor/src/types.ts:18](https://github.com/JimmyDaddy/reac
 
 > **x**: `number`
 
-Defined in: [packages/editor/src/types.ts:13](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L13)
+Defined in: [packages/editor/src/types.ts:18](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L18)
 
 #### Inherited from
 
@@ -53,7 +57,7 @@ Defined in: [packages/editor/src/types.ts:13](https://github.com/JimmyDaddy/reac
 
 > **y**: `number`
 
-Defined in: [packages/editor/src/types.ts:14](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L14)
+Defined in: [packages/editor/src/types.ts:19](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/packages/editor/src/types.ts#L19)
 
 #### Inherited from
 

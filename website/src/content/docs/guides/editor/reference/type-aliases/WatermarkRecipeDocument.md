@@ -5,6 +5,12 @@ prev: false
 title: "WatermarkRecipeDocument"
 ---
 
-> **WatermarkRecipeDocument** = [`WatermarkRecipeDefinition`](/guides/editor/reference/interfaces/watermarkrecipedefinition/) \| `LegacyWatermarkRecipeDefinition`
+> **WatermarkRecipeDocument**\<`Source`\> = [`WatermarkRecipeDefinition`](/guides/editor/reference/interfaces/watermarkrecipedefinition/)\<`Source`\> \| `LegacyWatermarkRecipeDefinition`\<`Source`\>
 
-Defined in: [src/recipe.ts:89](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/src/recipe.ts#L89)
+Defined in: packages/recipe/lib/module/types.d.ts:142
+
+## Type Parameters
+
+### Source
+
+`Source` = `unknown`

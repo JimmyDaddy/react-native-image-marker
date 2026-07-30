@@ -4,7 +4,7 @@
     "distDirectory": "website/dist",
     "maxSourceBytes": 6000000,
     "maxSourceFileBytes": 700000,
-    "maxDistBytes": 50000000,
+    "maxDistBytes": 56000000,
     "maxJavaScriptFileBytes": 200000,
     "maxWasmFileBytes": 8500000
   },

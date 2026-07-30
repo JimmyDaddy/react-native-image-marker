@@ -75,10 +75,16 @@ const routes = [
   '/getting-started/',
   '/tools/',
   '/playground/',
+  '/recipe/',
+  '/node/',
+  '/cli/',
   '/zh-cn/',
   '/zh-cn/getting-started/',
   '/zh-cn/tools/',
   '/zh-cn/playground/',
+  '/zh-cn/recipe/',
+  '/zh-cn/node/',
+  '/zh-cn/cli/',
 ];
 const viewports = [
   { name: 'mobile', width: 390, height: 844 },

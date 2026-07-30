@@ -9,7 +9,7 @@
       "status": "current",
       "basePath": "/",
       "source": "master",
-      "packageRange": "2.0.x"
+      "packageRange": "2.1.x"
     },
     {
       "id": "v1",
@@ -30,13 +30,37 @@
     },
     {
       "id": "editor",
-      "label": "Editor 0.1.0",
-      "status": "experimental",
+      "label": "Editor 0.3.0",
+      "status": "current",
       "basePath": "/editor/",
       "source": "master",
-      "packageRange": "0.1.x",
-      "currentVersion": "0.1.0",
-      "peerCoreRange": "^2.0.0"
+      "packageRange": "0.3.x",
+      "currentVersion": "0.3.0",
+      "peerCoreRange": "^2.1.0"
+    },
+    {
+      "id": "recipe",
+      "label": "Recipe 0.1.0",
+      "status": "current",
+      "basePath": "/recipe/",
+      "source": "master",
+      "packageRange": "0.1.x"
+    },
+    {
+      "id": "node",
+      "label": "Node 0.1.0",
+      "status": "current",
+      "basePath": "/node/",
+      "source": "master",
+      "packageRange": "0.1.x"
+    },
+    {
+      "id": "cli",
+      "label": "CLI 0.1.0",
+      "status": "current",
+      "basePath": "/cli/",
+      "source": "master",
+      "packageRange": "0.1.x"
     }
   ]
 }
