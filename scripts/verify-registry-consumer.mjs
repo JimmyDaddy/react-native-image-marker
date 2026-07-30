@@ -49,6 +49,12 @@ try {
   if (packageName === 'react-native-image-marker-editor') {
     dependencies.push('react-native-image-marker@^2.1.0');
   }
+  if (
+    packageName === '@image-marker/node' ||
+    packageName === '@image-marker/cli'
+  ) {
+    dependencies.push('@types/node@22.15.0');
+  }
   if (packageName === '@image-marker/node') {
     dependencies.push('sharp@^0.35.3');
   }
