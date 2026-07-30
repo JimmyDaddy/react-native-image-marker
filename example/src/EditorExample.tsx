@@ -11,7 +11,10 @@ import {
 } from 'react-native';
 import {
   ImageMarkerEditor,
+  ImageMarkerEditorAssetPanel,
   ImageMarkerEditorController,
+  ImageMarkerEditorInspector,
+  ImageMarkerEditorLayerPanel,
   ImageMarkerEditorToolbar,
   type EditorState,
 } from 'react-native-image-marker-editor';
@@ -21,7 +24,6 @@ import { ImageFormat } from 'react-native-image-marker';
 const background = require('./bg.png');
 const logo = require('./icon.jpeg');
 const adapter = createCoreEditorAdapter(960);
-const backgroundSize = { width: 1920, height: 1080 };
 
 function actionStyle(pressed: boolean) {
   return [styles.action, pressed && styles.actionPressed];
@@ -30,9 +32,7 @@ function actionStyle(pressed: boolean) {
 export default function EditorExample() {
   const { width } = useWindowDimensions();
   const canvasWidth = Math.min(Math.max(width - 32, 280), 720);
-  const canvasHeight = Math.round(
-    canvasWidth * (backgroundSize.height / backgroundSize.width)
-  );
+  const canvasHeight = Math.round(canvasWidth * (9 / 16));
   const controller = React.useMemo(
     () =>
       new ImageMarkerEditorController({
@@ -90,7 +90,6 @@ export default function EditorExample() {
         const request = {
           recipe: controller.exportRecipe(),
           input: { backgroundImage: { src: background } },
-          sourceSize: backgroundSize,
           control: {
             timeoutMs: 20_000,
             onProgress: ({
@@ -145,12 +144,12 @@ export default function EditorExample() {
     >
       <View style={styles.heading}>
         <View>
-          <Text style={styles.eyebrow}>OPTIONAL PACKAGE · 0.1.0</Text>
+          <Text style={styles.eyebrow}>OPTIONAL PACKAGE · 0.3.0</Text>
           <Text style={styles.title}>Interactive Recipe v2 editor</Text>
         </View>
         <Text style={styles.subtitle}>
-          Select, drag, pinch, rotate, lock, reorder, undo, and export through
-          Core 2.0.
+          Edit rich text and assets, multi-select, group, drag, resize, rotate,
+          autosave, and export through Core 2.1.
         </Text>
       </View>
 
@@ -197,6 +196,7 @@ export default function EditorExample() {
       />
       <View style={styles.canvasFrame}>
         <ImageMarkerEditor
+          adapter={adapter}
           background={
             <Image
               resizeMode="contain"
@@ -208,10 +208,32 @@ export default function EditorExample() {
           height={canvasHeight}
           onStateChange={setState}
           snapThreshold={8}
-          sourceSize={backgroundSize}
+          source={background}
           style={styles.canvas}
           testID="editor"
           width={canvasWidth}
+        />
+      </View>
+      <View style={styles.panels}>
+        <ImageMarkerEditorLayerPanel
+          controller={controller}
+          style={styles.panel}
+          testID="editor-layers"
+        />
+        <ImageMarkerEditorInspector
+          brandKit={{
+            colors: ['#FFFFFF', '#5271FF', '#FF5B45', '#0F172A'],
+            fonts: ['System', 'Courier'],
+          }}
+          controller={controller}
+          style={styles.panel}
+          testID="editor-inspector"
+        />
+        <ImageMarkerEditorAssetPanel
+          assets={[{ id: 'brand-logo', name: 'Brand logo', source: logo }]}
+          controller={controller}
+          style={styles.panel}
+          testID="editor-assets"
         />
       </View>
 
@@ -314,6 +336,14 @@ const styles = StyleSheet.create({
   },
   canvas: {
     backgroundColor: '#0F172A',
+  },
+  panels: {
+    marginTop: 12,
+    maxWidth: 720,
+    width: '100%',
+  },
+  panel: {
+    marginBottom: 10,
   },
   statusRow: {
     alignItems: 'center',

@@ -10,6 +10,13 @@ on:
       - 'src/marker.ts'
       - 'src/marker.web.ts'
       - 'src/web/**'
+      - 'packages/editor/src/**'
+      - 'packages/editor/package.json'
+      - 'packages/editor/README.md'
+      - 'packages/recipe/**'
+      - 'packages/node/**'
+      - 'packages/cli/**'
+      - 'docs/**'
       - 'website/**'
       - 'README.MD'
       - 'package.json'
@@ -32,25 +39,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout v2 documentation
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: master
           path: current
 
       - name: Checkout v1 LTS
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: release/1.x
           path: v1
 
       - name: Checkout immutable v1.0.0 source
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: v1.0.0
           path: archive
 
       - name: Setup Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: '22.22.0'
           cache: npm
@@ -72,6 +79,7 @@ jobs:
 
       - name: Build v2 documentation
         run: |
+          npm --prefix current run build:recipe
           if [ "$(node -p "require('./current/website/versions.json').releaseStage")" = "ga" ]; then
             docs_channel=current
           else
@@ -100,10 +108,10 @@ jobs:
             --dir current/website/versioned-dist
 
       - name: Setup Pages
-        uses: actions/configure-pages@v6
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v5
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
         with:
           path: current/website/versioned-dist
 
@@ -116,4 +124,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5

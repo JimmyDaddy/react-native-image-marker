@@ -17,12 +17,14 @@ const links = isZh
   ? [
       { label: '在线工具', href: '/zh-cn/tools/' },
       { label: '在线体验', href: '/zh-cn/playground/' },
+      { label: '服务端与 CLI', href: '/zh-cn/node/' },
       { label: '使用指南', href: '/zh-cn/guides/choose-an-api/' },
       { label: 'API', href: '/zh-cn/api/' },
     ]
   : [
       { label: 'Tools', href: '/tools/' },
       { label: 'Playground', href: '/playground/' },
+      { label: 'Node & CLI', href: '/node/' },
       { label: 'Guides', href: '/guides/choose-an-api/' },
       { label: 'API', href: '/api/' },
     ];
@@ -34,6 +36,10 @@ const isActive = (href: string) => {
 
   if (href.includes('/guides/')) {
     return pathname.startsWith(isZh ? '/zh-cn/guides/' : '/guides/');
+  }
+
+  if (href.endsWith('/node/')) {
+    return pathname.startsWith(isZh ? '/zh-cn/node/' : '/node/');
   }
 
   if (href.endsWith('/api/')) {
@@ -64,11 +70,26 @@ const isActive = (href: string) => {
   <details class="mobile-nav print:hidden">
     <summary>{isZh ? '菜单' : 'Menu'}</summary>
     <div class="mobile-nav-menu">
-      {links.map((link) => (
-        <a href={link.href} aria-current={isActive(link.href) ? 'page' : undefined}>
-          {link.label}
+      <nav aria-label={isZh ? '移动端主导航' : 'Mobile primary'}>
+        {links.map((link) => (
+          <a href={link.href} aria-current={isActive(link.href) ? 'page' : undefined}>
+            {link.label}
+          </a>
+        ))}
+      </nav>
+      <div class="mobile-nav-preferences">
+        <VersionSelect />
+        <div class="mobile-preference-row">
+          <ThemeSelect />
+          <LanguageSelect />
+        </div>
+        <a
+          class="mobile-github-link"
+          href="https://github.com/JimmyDaddy/react-native-image-marker"
+        >
+          GitHub <span aria-hidden="true">↗</span>
         </a>
-      ))}
+      </div>
     </div>
   </details>
 
@@ -81,6 +102,29 @@ const isActive = (href: string) => {
     <LanguageSelect />
   </div>
 </div>
+
+<script>
+  document.querySelectorAll<HTMLDetailsElement>('.mobile-nav').forEach((menu) => {
+    if (menu.dataset.initialized === 'true') return;
+    menu.dataset.initialized = 'true';
+
+    menu.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        menu.open = false;
+        menu.querySelector('summary')?.focus();
+      }
+    });
+    document.addEventListener('click', (event) => {
+      if (
+        menu.open &&
+        event.target instanceof Node &&
+        !menu.contains(event.target)
+      ) {
+        menu.open = false;
+      }
+    });
+  });
+</script>
 
 <style>
   @layer starlight.core {
@@ -168,7 +212,11 @@ const isActive = (href: string) => {
       box-shadow: 0 0.8rem 2rem rgb(0 0 0 / 18%);
     }
 
-    .mobile-nav-menu a {
+    .mobile-nav-menu > nav {
+      display: grid;
+    }
+
+    .mobile-nav-menu > nav a {
       padding: 0.65rem 0.75rem;
       border-radius: 0.5rem;
       color: var(--sl-color-gray-2);
@@ -177,8 +225,57 @@ const isActive = (href: string) => {
       text-decoration: none;
     }
 
-    .mobile-nav-menu a:hover,
-    .mobile-nav-menu a[aria-current='page'] {
+    .mobile-nav-menu > nav a:hover,
+    .mobile-nav-menu > nav a[aria-current='page'] {
+      color: var(--sl-color-text-accent);
+      background: var(--sl-color-accent-low);
+    }
+
+    .mobile-nav-preferences {
+      display: grid;
+      gap: 0.65rem;
+      padding: 0.75rem;
+      margin-top: 0.35rem;
+      border-top: 1px solid var(--sl-color-gray-5);
+    }
+
+    .mobile-nav-preferences :global(.version-select),
+    .mobile-nav-preferences :global(.version-select select) {
+      width: 100%;
+      max-width: none;
+    }
+
+    .mobile-preference-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.5rem;
+    }
+
+    .mobile-preference-row :global(.preference-menu) {
+      width: 100%;
+    }
+
+    .mobile-preference-row :global(.preference-menu summary) {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .mobile-preference-row :global(.preference-popover) {
+      width: min(18rem, calc(100vw - 3.4rem));
+    }
+
+    .mobile-github-link {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.55rem 0.65rem;
+      border-radius: 0.5rem;
+      color: var(--sl-color-gray-2);
+      font-size: 0.78rem;
+      font-weight: 650;
+      text-decoration: none;
+    }
+
+    .mobile-github-link:hover {
       color: var(--sl-color-text-accent);
       background: var(--sl-color-accent-low);
     }

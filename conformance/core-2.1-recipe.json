@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 2,
+  "layers": [
+    {
+      "id": "headline",
+      "name": "Cross-platform headline",
+      "type": "text",
+      "text": "Image Marker 2.1 跨平台排版一致性测试内容与截断以及更多跨语言文字",
+      "position": {
+        "position": "center"
+      },
+      "style": {
+        "color": "#FFFFFF",
+        "fontSize": 32,
+        "maxWidth": "62.5%",
+        "lineHeight": 40,
+        "letterSpacing": 1,
+        "direction": "auto",
+        "wrap": "character",
+        "maxLines": 2,
+        "overflow": "ellipsis",
+        "textAlign": "center"
+      }
+    }
+  ],
+  "output": {
+    "quality": 100,
+    "saveFormat": "png"
+  }
+}

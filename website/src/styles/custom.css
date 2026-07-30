@@ -22,7 +22,7 @@
   --marker-panel: #f8f9fc;
   --marker-border: #dde1ea;
   --marker-blue: #3156d9;
-  --marker-coral: #e95e70;
+  --marker-coral: #b42343;
 }
 
 html {
@@ -447,6 +447,29 @@ html:lang(zh-CN) .sl-markdown-content h3 {
   color: var(--marker-ink);
 }
 
+.principle strong span {
+  display: block;
+  margin-top: 0.35rem;
+  color: var(--marker-coral);
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.principle-link {
+  color: inherit;
+  text-decoration: none;
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.principle-link:hover {
+  border-color: color-mix(in srgb, var(--marker-blue) 60%, var(--marker-border));
+  transform: translateY(-3px);
+}
+
 .principle p {
   margin: 0;
   color: var(--marker-muted);
@@ -510,5 +533,15 @@ html:lang(zh-CN) .sl-markdown-content h3 {
 
   .preview-card figcaption span {
     text-align: left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .principle-link {
+    transition: none;
   }
 }

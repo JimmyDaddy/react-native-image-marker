@@ -6,6 +6,9 @@ const requiredFiles = [
   'index.html',
   '404.html',
   'getting-started/index.html',
+  'recipe/index.html',
+  'node/index.html',
+  'cli/index.html',
   'playground/index.html',
   'tools/index.html',
   'tools/watermark/index.html',
@@ -21,6 +24,10 @@ const requiredFiles = [
   'guides/invisible-watermarks/index.html',
   'guides/performance-and-jobs/index.html',
   'guides/editor/index.html',
+  'guides/editor/reference/index.html',
+  'guides/editor/reference/classes/imagemarkereditorcontroller/index.html',
+  'guides/editor/reference/functions/createcoreeditoradapter/index.html',
+  'whats-new-2/index.html',
   'cookbook/index.html',
   'troubleshooting/index.html',
   'support-policy/index.html',
@@ -28,6 +35,9 @@ const requiredFiles = [
   'api/index.html',
   'zh-cn/index.html',
   'zh-cn/getting-started/index.html',
+  'zh-cn/recipe/index.html',
+  'zh-cn/node/index.html',
+  'zh-cn/cli/index.html',
   'zh-cn/playground/index.html',
   'zh-cn/tools/index.html',
   'zh-cn/tools/watermark/index.html',
@@ -46,6 +56,8 @@ const requiredFiles = [
   'zh-cn/guides/invisible-watermarks/index.html',
   'zh-cn/guides/performance-and-jobs/index.html',
   'zh-cn/guides/editor/index.html',
+  'zh-cn/guides/editor/reference/index.html',
+  'zh-cn/whats-new-2/index.html',
   'zh-cn/cookbook/index.html',
   'zh-cn/troubleshooting/index.html',
   'zh-cn/support-policy/index.html',
@@ -64,7 +76,11 @@ const requiredFiles = [
   'social-preview.png',
   'social-preview.svg',
   'media/watermark-after-dark.jpg',
+  'media/watermark-after-dark.webp',
+  'media/watermark-coast.webp',
+  'media/watermark-image-layer.webp',
   'media/watermark-tiled.jpg',
+  'media/watermark-tiled.webp',
   'media/marker-compass.png',
   'worker/invisible-watermark.js',
   'robots.txt',
@@ -96,6 +112,9 @@ const staleDeploymentReference =
   /jimmydaddy\.github\.io\/react-native-image-marker|(?:href|src)=["']\/react-native-image-marker\//g;
 const offenders = [];
 const brokenLinks = [];
+const brokenFragments = [];
+const invalidWorkflowLinks = [];
+const htmlCache = new Map();
 
 function outputPathForUrl(urlPath) {
   const decoded = decodeURIComponent(urlPath);
@@ -125,7 +144,11 @@ for (const file of await collectHtml(outputRoot)) {
       continue;
     }
 
-    const urlPath = reference.split(/[?#]/, 1)[0];
+    const parsedReference = new URL(
+      reference,
+      'https://image-marker.corerobin.com'
+    );
+    const urlPath = parsedReference.pathname;
     if (
       ['/v1/', '/v2/', '/next/', '/editor/', '/versions/'].some((prefix) =>
         urlPath.startsWith(prefix)
@@ -135,10 +158,39 @@ for (const file of await collectHtml(outputRoot)) {
       // the Pages workflow after each individual documentation build passes.
       continue;
     }
+    const targetPath = outputPathForUrl(urlPath);
     try {
-      await access(outputPathForUrl(urlPath));
+      await access(targetPath);
     } catch {
       brokenLinks.push(`${file.slice(outputRoot.length)} -> ${reference}`);
+      continue;
+    }
+
+    const rawFragment = parsedReference.hash.slice(1).replace(/\/$/, '');
+    if (rawFragment) {
+      const fragment = decodeURIComponent(rawFragment);
+      let targetHtml = htmlCache.get(targetPath);
+      if (targetHtml === undefined && extname(targetPath) === '.html') {
+        targetHtml = await readFile(targetPath, 'utf8');
+        htmlCache.set(targetPath, targetHtml);
+      }
+      const escapedFragment = fragment.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const fragmentPattern = new RegExp(
+        `(?:id|name)=["']${escapedFragment}["']`
+      );
+      if (targetHtml !== undefined && !fragmentPattern.test(targetHtml)) {
+        brokenFragments.push(
+          `${file.slice(outputRoot.length)} -> ${reference}`
+        );
+      }
+      if (
+        fragment === 'editor-playground' &&
+        parsedReference.searchParams.get('workflow') !== 'editor'
+      ) {
+        invalidWorkflowLinks.push(
+          `${file.slice(outputRoot.length)} -> ${reference}`
+        );
+      }
     }
   }
 }
@@ -153,6 +205,20 @@ if (offenders.length > 0) {
 
 if (brokenLinks.length > 0) {
   throw new Error(`Found broken internal links:\n${brokenLinks.join('\n')}`);
+}
+
+if (brokenFragments.length > 0) {
+  throw new Error(
+    `Found broken internal fragments:\n${brokenFragments.join('\n')}`
+  );
+}
+
+if (invalidWorkflowLinks.length > 0) {
+  throw new Error(
+    `Editor links must activate the Editor workflow:\n${invalidWorkflowLinks.join(
+      '\n'
+    )}`
+  );
 }
 
 const cname = (await readFile(join(outputRoot, 'CNAME'), 'utf8')).trim();
@@ -254,7 +320,15 @@ if (
 const xmlSitemap = await readFile(join(outputRoot, 'sitemap-0.xml'), 'utf8');
 for (const url of [
   'https://image-marker.corerobin.com/sitemap/',
+  'https://image-marker.corerobin.com/recipe/',
+  'https://image-marker.corerobin.com/node/',
+  'https://image-marker.corerobin.com/cli/',
+  'https://image-marker.corerobin.com/whats-new-2/',
+  'https://image-marker.corerobin.com/guides/editor/reference/',
   'https://image-marker.corerobin.com/zh-cn/sitemap/',
+  'https://image-marker.corerobin.com/zh-cn/recipe/',
+  'https://image-marker.corerobin.com/zh-cn/node/',
+  'https://image-marker.corerobin.com/zh-cn/cli/',
   'https://image-marker.corerobin.com/tools/',
   'https://image-marker.corerobin.com/tools/watermark/',
   'https://image-marker.corerobin.com/tools/batch-watermark/',
@@ -275,6 +349,7 @@ for (const url of [
   'https://image-marker.corerobin.com/zh-cn/tools/recipient-trace-package/',
   'https://image-marker.corerobin.com/zh-cn/tools/trace-lab/',
   'https://image-marker.corerobin.com/zh-cn/tools/content-credentials/',
+  'https://image-marker.corerobin.com/zh-cn/whats-new-2/',
 ]) {
   if (!xmlSitemap.includes(`<loc>${url}</loc>`)) {
     throw new Error(`XML sitemap is missing expected URL: ${url}`);

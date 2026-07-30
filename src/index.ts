@@ -1,6 +1,14 @@
 import Marker from './marker';
 
 export type {
+  ImageOrientation,
+  MarkerImageFormat,
+  MarkerImageInfo,
+} from './image-info';
+
+export { parseEncodedImageInfo } from './image-info';
+
+export type {
   MarkerOperation,
   MarkerOutputFormat,
   MarkerMetadataResult,
@@ -45,6 +53,39 @@ export {
   migrateWatermarkRecipe,
   WATERMARK_RECIPE_SCHEMA_VERSION,
 } from './recipe';
+
+export {
+  addWatermarkRecipeLayer,
+  cloneRecipeValue,
+  cloneWatermarkRecipe,
+  cloneWatermarkRecipeLayer,
+  createWatermarkRecipeDefinition,
+  duplicateWatermarkRecipeLayer,
+  groupWatermarkRecipeLayers,
+  materializeWatermarkRecipe,
+  parseWatermarkRecipe,
+  recipeValidationPatterns,
+  removeWatermarkRecipeLayer,
+  reorderWatermarkRecipeLayer,
+  resolveWatermarkTemplate,
+  safeValidateWatermarkRecipe,
+  serializeWatermarkRecipe,
+  ungroupWatermarkRecipeLayers,
+  updateWatermarkRecipeLayer,
+  validateWatermarkRecipe,
+  validateWatermarkTemplate,
+  WatermarkRecipeValidationError,
+} from '@image-marker/recipe';
+
+export type {
+  WatermarkRecipeValidationFailure,
+  WatermarkRecipeValidationResult,
+  WatermarkRecipeValidationSuccess,
+  WatermarkRecipeVariableContext,
+  WatermarkTextDirection,
+  WatermarkTextOverflow,
+  WatermarkTextWrap,
+} from '@image-marker/recipe';
 
 export type {
   DetectInvisibleWatermarkOptions,
@@ -344,6 +385,24 @@ export interface TextStyle {
    *  fontSizeRatio: 0.03
    */
   fontSizeRatio?: number;
+  /**
+   * Maximum text box width in output pixels or as a percentage of the
+   * background width.
+   * @example maxWidth: '60%'
+   */
+  maxWidth?: number | string;
+  /** Absolute distance between line origins in output pixels. */
+  lineHeight?: number;
+  /** Additional spacing between grapheme clusters in output pixels. */
+  letterSpacing?: number;
+  /** Unicode base direction used for layout. @defaultValue 'auto' */
+  direction?: 'auto' | 'ltr' | 'rtl';
+  /** Wrapping strategy. @defaultValue 'word' */
+  wrap?: 'word' | 'character' | 'none';
+  /** Maximum number of rendered lines. */
+  maxLines?: number;
+  /** Behavior when text exceeds `maxWidth` or `maxLines`. @defaultValue 'clip' */
+  overflow?: 'clip' | 'ellipsis';
   /**
    * text shadow style
    * @example

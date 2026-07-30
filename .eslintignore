@@ -5,8 +5,11 @@ docs
 **/dist/**
 coverage/**
 website/.astro/**
+website/versioned-dist/**
 website/public/worker/**
 website/src/content/docs/api/**
+example/src/bas64bg.js
+expo-example/assets/bas64bg.js
 !website/src/lib/
 !website/src/lib/online-tools.ts
 

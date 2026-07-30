@@ -1,0 +1,35 @@
+name: Setup Android
+description: Configure Node.js, Java, Gradle caching, and the Android SDK
+
+inputs:
+  node-version:
+    description: Node.js version
+    required: false
+    default: '22.22.0'
+  cache-dependency-path:
+    description: Lockfile path or multiline lockfile paths used by setup-node
+    required: false
+    default: package-lock.json
+  java-distribution:
+    description: JDK distribution
+    required: false
+    default: temurin
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Node.js
+      uses: ./.github/actions/setup
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache-dependency-path: ${{ inputs.cache-dependency-path }}
+
+    - name: Setup Java
+      uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5
+      with:
+        distribution: ${{ inputs.java-distribution }}
+        java-version: '17'
+        cache: gradle
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4

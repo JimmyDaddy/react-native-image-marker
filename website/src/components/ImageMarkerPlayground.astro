@@ -1,5 +1,6 @@
 ---
 import CustomSelect from './CustomSelect.astro';
+import ImageMarkerEditorPlayground from './ImageMarkerEditorPlayground.astro';
 
 interface Props {
   locale?: 'en' | 'zh-CN';
@@ -25,6 +26,8 @@ const strings = isZh
       batchTabMeta: 'Recipe、进度与 Blob',
       invisibleTab: '隐形追踪',
       invisibleTabMeta: '短 ID、缩放验证与 Worker',
+      editorTab: '交互编辑器',
+      editorTabMeta: '图层、拖拽、撤销与 Recipe v2',
       capabilitiesTitle: '主要功能都可以直接试',
       capabilities: [
         '文字水印',
@@ -36,6 +39,7 @@ const strings = isZh
         '位置与旋转',
         '变量与条件 Recipe',
         '隐形追踪水印',
+        '交互式图层编辑器',
         'Content Credentials 适配器',
         'PNG、JPEG 与 Web Blob',
       ],
@@ -66,8 +70,8 @@ const strings = isZh
         { id: 'outline', title: '高对比文字描边', meta: '明暗底图都清楚', version: '' },
         { id: 'tiled-text', title: '平铺文字', meta: '错行、间距、旋转', version: '' },
         { id: 'tiled-logo', title: '平铺 Logo', meta: '一次解码，多处绘制', version: '' },
-        { id: 'opacity', title: '半透明文字', meta: '整个文字图层 40%', version: 'v1.8' },
-        { id: 'blend', title: '自然融合', meta: 'Screen 文字 + Multiply Logo', version: 'v1.9' },
+        { id: 'opacity', title: '半透明文字', meta: '整个文字图层 40%', version: '' },
+        { id: 'blend', title: '自然融合', meta: 'Screen 文字 + Multiply Logo', version: '' },
       ],
       textLayer: '文字设置',
       text: '文字内容',
@@ -122,7 +126,7 @@ const strings = isZh
       dimensions: '尺寸',
       elapsed: '耗时',
       localNote: '本地图片不会离开你的设备。刷新页面后，选择的文件会被清除。',
-      batchEyebrow: 'v1.9 · 变量 Recipe 与 Web Blob',
+      batchEyebrow: 'Core 2 · 变量 Recipe 与 Web Blob',
       batchTitle: '一次选择多张图片，自动写入各自文件名。',
       batchDescription:
         '当前文字、Logo 和导出设置会保存成一个 Recipe，文字会追加每张源文件的名称。Web 最多同时处理 4 张；结果仍按选择顺序排列。',
@@ -138,7 +142,7 @@ const strings = isZh
       batchFailed: '批量处理失败',
       batchResults: '处理结果',
       downloadResult: '保存',
-      invisibleEyebrow: 'v1.12 · 跨端隐形追踪',
+      invisibleEyebrow: 'Core 2 · 跨端隐形追踪',
       invisibleTitle: '画面看不出变化，也能找回短 ID。',
       invisibleDescription:
         '把短 locator 写入图片像素，再用相同密钥验证。适合素材分发追踪；它不是 DRM，也不能证明图片从未被修改。',
@@ -202,6 +206,8 @@ const strings = isZh
       batchTabMeta: 'Variables, progress, and Blob',
       invisibleTab: 'Invisible trace',
       invisibleTabMeta: 'Short IDs, resize checks, and Worker',
+      editorTab: 'Interaction editor',
+      editorTabMeta: 'Layers, gestures, undo, and Recipe v2',
       capabilitiesTitle: 'Try every core workflow',
       capabilities: [
         'Text watermark',
@@ -213,6 +219,7 @@ const strings = isZh
         'Position and rotation',
         'Variable and conditional Recipe',
         'Invisible trace watermark',
+        'Interactive layer editor',
         'Content Credentials adapter',
         'PNG, JPEG, and Web Blob',
       ],
@@ -243,8 +250,8 @@ const strings = isZh
         { id: 'outline', title: 'High-contrast outline', meta: 'Readable on light or dark', version: '' },
         { id: 'tiled-text', title: 'Tiled text', meta: 'Stagger, gaps, rotation', version: '' },
         { id: 'tiled-logo', title: 'Tiled logo', meta: 'Decode once, draw many', version: '' },
-        { id: 'opacity', title: 'Translucent text', meta: 'Whole text layer at 40%', version: 'v1.8' },
-        { id: 'blend', title: 'Natural compositing', meta: 'Screen text + Multiply logo', version: 'v1.9' },
+        { id: 'opacity', title: 'Translucent text', meta: 'Whole text layer at 40%', version: '' },
+        { id: 'blend', title: 'Natural compositing', meta: 'Screen text + Multiply logo', version: '' },
       ],
       textLayer: 'Text settings',
       text: 'Watermark text',
@@ -300,7 +307,7 @@ const strings = isZh
       dimensions: 'Dimensions',
       elapsed: 'Time',
       localNote: 'Local images never leave your device. Selected files are cleared when you refresh.',
-      batchEyebrow: 'v1.9 · Variable Recipe and Web Blob',
+      batchEyebrow: 'Core 2 · Variable Recipe and Web Blob',
       batchTitle: 'Choose several images. Add each filename automatically.',
       batchDescription:
         'Your current text, logo, and output settings become one reusable Recipe, and each text mark includes its source filename. Web runs up to four jobs at once and keeps results in selection order.',
@@ -316,7 +323,7 @@ const strings = isZh
       batchFailed: 'Batch failed',
       batchResults: 'Batch results',
       downloadResult: 'Save',
-      invisibleEyebrow: 'v1.12 · Cross-runtime invisible traces',
+      invisibleEyebrow: 'Core 2 · Cross-runtime invisible traces',
       invisibleTitle: 'Keep the image clean. Recover a short ID later.',
       invisibleDescription:
         'Write a short locator into the pixels, then authenticate it with the same key. Use it for distribution tracing—not as DRM or proof that an image was never edited.',
@@ -484,7 +491,7 @@ const invisibleExecutors = ['main', 'worker'].map((value, index) => ({
       tabindex="-1"
       data-workspace-tab="batch"
     >
-      <span>{strings.batchTab} <em>v1.9</em></span>
+      <span>{strings.batchTab} <em>Core 2</em></span>
       <small>{strings.batchTabMeta}</small>
     </button>
     <button
@@ -496,8 +503,20 @@ const invisibleExecutors = ['main', 'worker'].map((value, index) => ({
       tabindex="-1"
       data-workspace-tab="invisible"
     >
-      <span>{strings.invisibleTab} <em>v1.12</em></span>
+      <span>{strings.invisibleTab} <em>Core 2</em></span>
       <small>{strings.invisibleTabMeta}</small>
+    </button>
+    <button
+      id={`${idPrefix}-workspace-editor-tab`}
+      type="button"
+      role="tab"
+      aria-selected="false"
+      aria-controls={`${idPrefix}-workspace-editor`}
+      tabindex="-1"
+      data-workspace-tab="editor"
+    >
+      <span>{strings.editorTab} <em>0.3.0</em></span>
+      <small>{strings.editorTabMeta}</small>
     </button>
   </div>
 
@@ -1020,6 +1039,17 @@ const credentials = await Marker.verifyContentCredentials({
         </a>
       </details>
     </section>
+    <section
+      id={`${idPrefix}-workspace-editor`}
+      class="editor-workspace-panel"
+      role="tabpanel"
+      aria-labelledby={`${idPrefix}-workspace-editor-tab`}
+      data-workspace-panel="editor"
+      tabindex="0"
+      hidden
+    >
+      <ImageMarkerEditorPlayground locale={locale} embedded />
+    </section>
     </div>
   </div>
 
@@ -1069,7 +1099,7 @@ const credentials = await Marker.verifyContentCredentials({
       aria-labelledby={`${idPrefix}-web-tab`}
       data-code-panel="web"
     >
-      <pre><code data-web-code></code></pre>
+      <pre tabindex="0"><code data-web-code></code></pre>
     </div>
     <div
       id={`${idPrefix}-native-code`}
@@ -1079,7 +1109,7 @@ const credentials = await Marker.verifyContentCredentials({
       data-code-panel="native"
       hidden
     >
-      <pre><code data-native-code></code></pre>
+      <pre tabindex="0"><code data-native-code></code></pre>
     </div>
   </section>
 
@@ -1100,7 +1130,7 @@ const credentials = await Marker.verifyContentCredentials({
   type PlaygroundMode = 'text' | 'image' | 'mixed';
   type LayoutMode = 'single' | 'tile';
   type CodeTarget = 'web' | 'native';
-  type WorkspaceTab = 'visible' | 'batch' | 'invisible';
+  type WorkspaceTab = 'visible' | 'batch' | 'invisible' | 'editor';
   type MarkerSdk = typeof import('../../../src/index');
   type PositionEnum = MarkerSdk['Position'];
 
@@ -1167,6 +1197,18 @@ const credentials = await Marker.verifyContentCredentials({
 
     const defaultBackground = root.dataset.backgroundUrl ?? '';
     const defaultLogo = root.dataset.logoUrl ?? '';
+    const normalizedHash = window.location.hash.replace(/\/$/, '');
+    const requestedWorkspace =
+      new URLSearchParams(window.location.search).get('workflow') ??
+      (normalizedHash === '#editor-playground' ? 'editor' : null);
+    const initialWorkspace: WorkspaceTab = [
+      'visible',
+      'batch',
+      'invisible',
+      'editor',
+    ].includes(requestedWorkspace ?? '')
+      ? (requestedWorkspace as WorkspaceTab)
+      : 'visible';
     const state: PlaygroundState = {
       mode: 'mixed',
       textLayout: 'single',
@@ -1175,7 +1217,7 @@ const credentials = await Marker.verifyContentCredentials({
       logoSrc: defaultLogo,
       result: '',
       codeTarget: 'web',
-      workspace: 'visible',
+      workspace: initialWorkspace,
       renderSequence: 0,
     };
 
@@ -1573,6 +1615,7 @@ ${transformNote}  const detection = await Marker.detectInvisible({
     };
 
     const updateCode = () => {
+      if (state.workspace === 'editor') return;
       const createCode = state.workspace === 'batch'
         ? createBatchCode
         : state.workspace === 'invisible'
@@ -1632,6 +1675,14 @@ ${transformNote}  const detection = await Marker.detectInvisible({
       updateCode();
     };
     updateWorkspace(state.workspace);
+    if (
+      state.workspace === 'editor' &&
+      normalizedHash === '#editor-playground'
+    ) {
+      window.requestAnimationFrame(() =>
+        document.getElementById('editor-playground')?.scrollIntoView()
+      );
+    }
 
     const updateMode = (mode: PlaygroundMode) => {
       state.mode = mode;
@@ -2581,7 +2632,7 @@ ${transformNote}  const detection = await Marker.detectInvisible({
 
   .workspace-tabs {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0.4rem;
     margin: 0 0 0.75rem;
     padding: 0.35rem;
@@ -2638,7 +2689,7 @@ ${transformNote}  const detection = await Marker.detectInvisible({
   .workspace-tabs em {
     padding: 0.1rem 0.32rem;
     border-radius: 999px;
-    color: var(--marker-blue);
+    color: var(--marker-ink);
     background: color-mix(in srgb, var(--marker-blue) 12%, transparent);
     font-family: var(--sl-font-mono);
     font-size: 0.52rem;
@@ -2668,6 +2719,17 @@ ${transformNote}  const detection = await Marker.detectInvisible({
   .marker-playground[data-workspace='batch'] .playground-shell,
   .marker-playground[data-workspace='invisible'] .playground-shell {
     grid-template-columns: minmax(25rem, 32rem) minmax(0, 1fr);
+  }
+
+  .marker-playground[data-workspace='editor'] .playground-shell {
+    grid-template-areas: 'controls';
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .marker-playground[data-workspace='editor'] .preview-panel,
+  .marker-playground[data-workspace='editor'] > .code-panel,
+  .marker-playground[data-workspace='editor'] > .differences {
+    display: none;
   }
 
   .preview-panel,
@@ -2706,6 +2768,16 @@ ${transformNote}  const detection = await Marker.detectInvisible({
 
   .workspace-panel-stack > [data-workspace-panel][hidden] {
     display: none;
+  }
+
+  .marker-playground[data-workspace='editor'] .workspace-panel-stack,
+  .marker-playground[data-workspace='editor']
+    .workspace-panel-stack
+    > [data-workspace-panel] {
+    position: static;
+    max-height: none;
+    overflow: visible;
+    scrollbar-gutter: auto;
   }
 
   .panel-heading,
@@ -2955,6 +3027,10 @@ ${transformNote}  const detection = await Marker.detectInvisible({
     background: var(--marker-blue);
   }
 
+  :global(:root[data-theme='light']) .primary-button {
+    color: #ffffff;
+  }
+
   .secondary-button,
   .file-button,
   .quiet-button,
@@ -2974,7 +3050,12 @@ ${transformNote}  const detection = await Marker.detectInvisible({
   button:disabled,
   .is-disabled {
     cursor: not-allowed;
-    opacity: 0.5;
+  }
+
+  .primary-button:disabled {
+    border-color: color-mix(in srgb, var(--marker-blue) 38%, var(--playground-line));
+    color: var(--marker-ink);
+    background: color-mix(in srgb, var(--marker-blue) 22%, var(--playground-panel));
   }
 
   .quiet-button {
@@ -3103,6 +3184,11 @@ ${transformNote}  const detection = await Marker.detectInvisible({
     border: 1px solid var(--playground-line);
     border-radius: 0.72rem;
     background: color-mix(in srgb, var(--playground-panel) 76%, black);
+  }
+
+  :global(:root[data-theme='light']) .segmented-control,
+  :global(:root[data-theme='light']) .result-row {
+    background: var(--playground-panel);
   }
 
   .segmented-control button {

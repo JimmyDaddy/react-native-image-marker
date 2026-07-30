@@ -9,6 +9,9 @@
 
 @interface RCT_EXTERN_MODULE(ImageMarker, NSObject)
 
+RCT_EXTERN_METHOD(getImageInfo: (nonnull NSDictionary *) source
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
 RCT_EXTERN_METHOD(markWithImage: (nonnull NSDictionary *) opts
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject)

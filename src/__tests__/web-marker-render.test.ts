@@ -1,6 +1,8 @@
 import WebMarker from '../web';
 import { ImageFormat, Position } from '../index';
 import { loadWebImage } from '../web/browser';
+import core21Recipe from '../../conformance/core-2.1-recipe.json';
+import type { WatermarkRecipeDocument } from '../index';
 
 class FakeImage {
   static instances: FakeImage[] = [];
@@ -52,6 +54,8 @@ function createFakeCanvas() {
     font: '',
     textAlign: 'left',
     textBaseline: 'top',
+    direction: 'inherit',
+    letterSpacing: '0px',
     shadowBlur: 0,
     shadowColor: 'transparent',
     shadowOffsetX: 0,
@@ -195,6 +199,24 @@ describe('WebMarker browser render integration', () => {
     );
   });
 
+  it('renders the shared Core 2.1 Recipe conformance fixture', async () => {
+    const canvases = installFakeBrowserRuntime();
+    const recipe = WebMarker.importRecipe(
+      core21Recipe as WatermarkRecipeDocument
+    );
+
+    await recipe.apply({
+      backgroundImage: { src: '/background.jpg' },
+    });
+
+    const context = canvases[0]?.context;
+    const lines = context?.fillText.mock.calls.map(([line]) => line) ?? [];
+    expect(lines).toHaveLength(2);
+    expect(lines[1]).toMatch(/…$/u);
+    expect(context?.letterSpacing).toBe('1px');
+    expect(context?.textAlign).toBe('center');
+  });
+
   it('wraps long text and splits words that exceed the canvas width', async () => {
     const canvases = installFakeBrowserRuntime();
     const longWord = 'x'.repeat(65);
@@ -219,6 +241,41 @@ describe('WebMarker browser render integration', () => {
       'x',
     ]);
     expect(calls.every(([, x]) => Number(x) >= 0)).toBe(true);
+  });
+
+  it('applies bounded character wrapping, line spacing, ellipsis, and RTL direction', async () => {
+    const canvases = installFakeBrowserRuntime();
+
+    await WebMarker.markText({
+      backgroundImage: { src: '/background.jpg' },
+      watermarkTexts: [
+        {
+          text: 'abcdefghij',
+          style: {
+            maxWidth: 45,
+            lineHeight: 30,
+            letterSpacing: 2,
+            direction: 'rtl',
+            wrap: 'character',
+            maxLines: 2,
+            overflow: 'ellipsis',
+          },
+        },
+      ],
+      saveFormat: ImageFormat.png,
+    });
+
+    const context = canvases[0]?.context;
+    expect(context?.fillText.mock.calls.map(([line]) => line)).toEqual([
+      'abc',
+      'de…',
+    ]);
+    expect(context?.fillText.mock.calls[1]?.[2]).toBe(
+      (context?.fillText.mock.calls[0]?.[2] as number) + 30
+    );
+    expect(context?.letterSpacing).toBe('2px');
+    expect(context?.direction).toBe('rtl');
+    expect(context?.clip).toHaveBeenCalled();
   });
 
   it('renders styled text backgrounds, decorations, alignment, and shadows', async () => {

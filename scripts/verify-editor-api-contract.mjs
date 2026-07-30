@@ -43,6 +43,16 @@ for (const [name, range] of Object.entries(contract.peerDependencies)) {
   }
 }
 
+for (const [name, range] of Object.entries(contract.dependencies ?? {})) {
+  if (manifest.dependencies?.[name] !== range) {
+    throw new Error(
+      `Editor dependency ${name} must remain ${range}; received ${
+        manifest.dependencies?.[name] ?? 'missing'
+      }.`
+    );
+  }
+}
+
 const rootNames = Object.values(contract.entries).map(({ source }) =>
   join(editorRoot, source)
 );

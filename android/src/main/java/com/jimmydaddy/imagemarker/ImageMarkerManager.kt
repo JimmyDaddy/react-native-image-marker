@@ -104,6 +104,20 @@ class ImageMarkerManager(private val context: ReactApplicationContext) : NativeI
     }
   }
 
+  @ReactMethod
+  override fun getImageInfo(source: ReadableMap, promise: Promise) {
+    moduleScope.launch {
+      try {
+        val result = withContext(Dispatchers.IO) {
+          ImageInfoReader(context).read(source).toJson()
+        }
+        promise.resolve(result)
+      } catch (error: Exception) {
+        promise.rejectMarkerError(error)
+      }
+    }
+  }
+
   private suspend fun markImageByBitmap(
     bg: Bitmap,
     markers: List<Bitmap>,

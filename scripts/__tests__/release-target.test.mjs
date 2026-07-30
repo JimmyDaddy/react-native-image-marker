@@ -9,8 +9,8 @@ test('routes a v1 maintenance release to the LTS branch', () => {
     packagePath: '.',
     version: '1.12.1',
     branch: 'release/1.x',
-    npmTag: 'v1',
-    additionalDistTags: ['lts'],
+    npmTag: 'lts',
+    additionalDistTags: [],
     channel: 'core-v1',
   });
 });
@@ -32,6 +32,51 @@ test('routes editor releases without publishing the core package', () => {
   assert.equal(stable.npmTag, 'latest');
 });
 
+test('routes platform-neutral Recipe releases independently', () => {
+  const target = resolveReleaseTarget('recipe-v0.1.0');
+  assert.deepEqual(target, {
+    tag: 'recipe-v0.1.0',
+    packageName: '@image-marker/recipe',
+    packagePath: 'packages/recipe',
+    version: '0.1.0',
+    branch: 'release/2.0',
+    npmTag: 'latest',
+    additionalDistTags: [],
+    channel: 'recipe',
+  });
+  assert.equal(resolveReleaseTarget('recipe-v0.2.0-next.1').npmTag, 'next');
+});
+
+test('routes the pure Node renderer independently', () => {
+  const target = resolveReleaseTarget('node-v0.1.0');
+  assert.deepEqual(target, {
+    tag: 'node-v0.1.0',
+    packageName: '@image-marker/node',
+    packagePath: 'packages/node',
+    version: '0.1.0',
+    branch: 'release/2.0',
+    npmTag: 'latest',
+    additionalDistTags: [],
+    channel: 'node',
+  });
+  assert.equal(resolveReleaseTarget('node-v0.2.0-next.1').npmTag, 'next');
+});
+
+test('routes the command-line package independently', () => {
+  const target = resolveReleaseTarget('cli-v0.1.0');
+  assert.deepEqual(target, {
+    tag: 'cli-v0.1.0',
+    packageName: '@image-marker/cli',
+    packagePath: 'packages/cli',
+    version: '0.1.0',
+    branch: 'release/2.0',
+    npmTag: 'latest',
+    additionalDistTags: [],
+    channel: 'cli',
+  });
+  assert.equal(resolveReleaseTarget('cli-v0.2.0-next.1').npmTag, 'next');
+});
+
 test('rejects ambiguous or unsupported release tags', () => {
   for (const tag of [
     '',
@@ -40,6 +85,9 @@ test('rejects ambiguous or unsupported release tags', () => {
     'v2.0.0-next.1',
     'editor-v1.0.0',
     'editor-v0.0.1-beta.1',
+    'recipe-v1.0.0',
+    'node-v1.0.0',
+    'cli-v1.0.0',
   ]) {
     assert.throws(() => resolveReleaseTarget(tag));
   }

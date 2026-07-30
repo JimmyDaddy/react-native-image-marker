@@ -35,7 +35,7 @@ body:
     attributes:
       label: Versions
       description: Include Core, optional Editor, React Native, Expo (if used), and browser versions.
-      placeholder: react-native-image-marker 2.0.0; react-native-image-marker-editor 0.1.0; React Native 0.86.0
+      placeholder: react-native-image-marker 2.1.0; react-native-image-marker-editor 0.3.0; React Native 0.86.0
     validations:
       required: true
   - type: dropdown

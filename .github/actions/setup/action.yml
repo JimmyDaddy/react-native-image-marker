@@ -1,27 +1,22 @@
-name: Setup
-description: Setup Node.js and install dependencies
+name: Setup Node
+description: Configure the repository Node.js version and npm download cache
+
+inputs:
+  node-version:
+    description: Node.js version; defaults to the repository CI baseline
+    required: false
+    default: '22.22.0'
+  cache-dependency-path:
+    description: Lockfile path or multiline lockfile paths used by setup-node
+    required: false
+    default: package-lock.json
 
 runs:
   using: composite
   steps:
     - name: Setup Node.js
-      uses: actions/setup-node@v7
+      uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
       with:
-        node-version-file: .nvmrc
-
-    - name: Cache dependencies
-      id: yarn-cache
-      uses: actions/cache@v6
-      with:
-        path: |
-          **/node_modules
-        key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-yarn-
-
-    - name: Install dependencies
-      if: steps.yarn-cache.outputs.cache-hit != 'true'
-      run: |
-        yarn install --cwd example --frozen-lockfile
-        yarn install --frozen-lockfile
-      shell: bash
+        node-version: ${{ inputs.node-version }}
+        cache: npm
+        cache-dependency-path: ${{ inputs.cache-dependency-path }}

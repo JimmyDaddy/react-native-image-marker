@@ -18,6 +18,7 @@ const contentTypes = new Map([
   ['.png', 'image/png'],
   ['.jpg', 'image/jpeg'],
   ['.jpeg', 'image/jpeg'],
+  ['.webp', 'image/webp'],
   ['.svg', 'image/svg+xml'],
   ['.ico', 'image/x-icon'],
   ['.woff', 'font/woff'],
@@ -82,12 +83,40 @@ try {
   const primaryNav = page.locator('[data-primary-nav]');
   await primaryNav.waitFor();
   await primaryNav.getByRole('link', { name: 'Playground' }).waitFor();
+  await primaryNav.getByRole('link', { name: 'Node & CLI' }).click();
+  await page.getByRole('heading', { name: 'Node renderer' }).waitFor();
+  await page.goto(`${origin}/`, { waitUntil: 'networkidle' });
+  assert.equal(
+    await page.locator('.sl-banner').count(),
+    0,
+    'Current v2 pages should use the compact version selector instead of a site-wide banner.'
+  );
+  assert.equal(
+    await page.locator('[data-version-select]').first().inputValue(),
+    '/',
+    'The header version selector should identify the current v2 documentation.'
+  );
   await assertWideHomepageLayout(page, origin);
+
+  await page.goto(`${origin}/guides/editor/`, { waitUntil: 'networkidle' });
+  const editorGuideLink = page.getByRole('link', {
+    name: 'live Playground',
+    exact: true,
+  });
+  assert.equal(
+    await editorGuideLink.getAttribute('href'),
+    '/playground/?workflow=editor#editor-playground'
+  );
+  await editorGuideLink.click();
+  await page
+    .locator('[data-workspace-tab="editor"][aria-selected="true"]')
+    .waitFor();
 
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto(`${origin}/playground/`, { waitUntil: 'networkidle' });
   const playground = page.locator('[data-marker-playground]');
   await playground.waitFor();
+  await assertCurrentPlaygroundLabels(playground);
   await waitForRendered(playground);
   await assertPreviewMime(playground, 'image/png');
   await assertVisibleLogo(playground);
@@ -95,8 +124,9 @@ try {
   await assertLayoutControlsAndCode(page, playground);
   await assertInvisibleTrace(page, playground);
   await assertBatchRecipe(page, playground);
-  await selectWorkspaceTab(playground, 'visible');
+  await selectWorkspaceTab(playground, 'editor');
   await assertEditorPlayground(page);
+  await selectWorkspaceTab(playground, 'visible');
 
   const code = await playground.locator('[data-web-code]').textContent();
   assert.match(
@@ -123,10 +153,11 @@ try {
   await page.setViewportSize({ width: 1000, height: 900 });
   await page.goto(`${origin}/zh-cn/playground/`, { waitUntil: 'networkidle' });
   const chinesePlayground = page.locator('[data-marker-playground]');
+  await assertCurrentPlaygroundLabels(chinesePlayground);
   await waitForRendered(chinesePlayground);
   await page
     .locator('[data-editor-playground][data-initialized="true"]')
-    .waitFor();
+    .waitFor({ state: 'attached' });
   await page.getByText('试着给图片加上水印。').waitFor();
   await assertWorkbenchLayout(page);
   await assertLanguageMenu(page);
@@ -140,6 +171,7 @@ try {
   await page.goto(`${origin}/zh-cn/playground/`, { waitUntil: 'networkidle' });
   await page.getByText('菜单', { exact: true }).click();
   await page.getByRole('link', { name: '使用指南', exact: true }).waitFor();
+  await assertMobileUtilities(page);
   const mobileWidth = await page.evaluate(() => ({
     page: document.documentElement.scrollWidth,
     viewport: window.innerWidth,
@@ -200,6 +232,31 @@ async function waitForRendered(playground) {
   await playground
     .locator('[data-render-state][data-state="rendered"]')
     .waitFor();
+}
+
+async function assertCurrentPlaygroundLabels(playground) {
+  const workspaceLabels = await playground
+    .locator('.workspace-tabs')
+    .innerText();
+  assert.doesNotMatch(
+    workspaceLabels,
+    /\bv1\.\d+\b/,
+    'Core 2 Playground workflow tabs should not display legacy release badges.'
+  );
+  assert.equal(
+    (workspaceLabels.match(/Core 2/g) ?? []).length,
+    2,
+    'Batch and invisible workflows should be labeled as Core 2.'
+  );
+
+  const exampleLabels = await playground
+    .locator('.example-presets')
+    .innerText();
+  assert.doesNotMatch(
+    exampleLabels,
+    /\bv1\.\d+\b/,
+    'Core 2 Playground presets should not display legacy release badges.'
+  );
 }
 
 async function assertPreviewMime(playground, mimeType) {
@@ -302,7 +359,9 @@ async function assertBatchRecipe(page, playground) {
     'Batch processing code'
   );
   const webCode = await playground.locator('[data-web-code]').textContent();
-  const nativeCode = await playground.locator('[data-native-code]').textContent();
+  const nativeCode = await playground
+    .locator('[data-native-code]')
+    .textContent();
   assert.match(webCode ?? '', /Marker\.createRecipe/);
   assert.match(webCode ?? '', /schemaVersion: 2/);
   assert.match(webCode ?? '', /layers:/);
@@ -383,6 +442,19 @@ async function assertEditorPlayground(page) {
     (await editor.locator('[data-editor-recipe]').textContent()) ?? '',
     /"schemaVersion": 2/
   );
+  await editor
+    .locator('[data-editor-detail-panel="usage"]:not([hidden])')
+    .waitFor();
+  assert.match(
+    (await editor.locator('[data-editor-usage-code]').textContent()) ?? '',
+    /createCoreEditorAdapter[\s\S]*renderPreview[\s\S]*source=\{background\}[\s\S]*ImageMarkerEditorLayerPanel/,
+    'Editor playground should expose a complete Core-backed usage example.'
+  );
+  await editor.locator('[data-editor-detail-tab="recipe"]').click();
+  await editor
+    .locator('[data-editor-detail-panel="recipe"]:not([hidden])')
+    .waitFor();
+  await editor.locator('[data-editor-detail-tab="usage"]').click();
 
   const title = editor.locator('[data-editor-layer="web-title"]');
   await title.scrollIntoViewIfNeeded();
@@ -392,27 +464,26 @@ async function assertEditorPlayground(page) {
   const beforeTitle = before.layers.find((layer) => layer.id === 'web-title');
   const bounds = await title.boundingBox();
   assert(bounds, 'Editor title layer should be visible.');
-  const canvasBounds = await editor.locator('[data-editor-canvas]').boundingBox();
+  const canvasBounds = await editor
+    .locator('[data-editor-canvas]')
+    .boundingBox();
   assert(canvasBounds, 'Editor canvas should be visible.');
   const dragStart = {
     x: Math.max(bounds.x, canvasBounds.x) + 20,
     y: Math.max(bounds.y, canvasBounds.y) + 20,
   };
-  const hitTarget = await page.evaluate(
-    ({ x, y }) => {
-      const hit = document.elementFromPoint(x, y);
-      return {
-        tag: hit?.tagName,
-        layer: hit?.closest('[data-editor-layer]')?.getAttribute(
-          'data-editor-layer'
-        ),
-        classes: hit?.getAttribute('class'),
-        action: hit?.getAttribute('data-editor-action'),
-        text: hit?.textContent,
-      };
-    },
-    dragStart
-  );
+  const hitTarget = await page.evaluate(({ x, y }) => {
+    const hit = document.elementFromPoint(x, y);
+    return {
+      tag: hit?.tagName,
+      layer: hit
+        ?.closest('[data-editor-layer]')
+        ?.getAttribute('data-editor-layer'),
+      classes: hit?.getAttribute('class'),
+      action: hit?.getAttribute('data-editor-action'),
+      text: hit?.textContent,
+    };
+  }, dragStart);
   await page.mouse.move(dragStart.x, dragStart.y);
   await page.mouse.down();
   await page.mouse.move(dragStart.x + 42, dragStart.y + 24, { steps: 4 });
@@ -437,16 +508,162 @@ async function assertEditorPlayground(page) {
   await editor.locator('[data-editor-action="undo"]').click();
   assert.equal(await editor.locator('[data-editor-layer]').count(), 2);
 
+  await editor.locator('[data-editor-action="select-all"]').click();
+  assert.equal(
+    await editor.locator('[data-editor-layer][aria-pressed="true"]').count(),
+    2
+  );
+  await editor.locator('[data-editor-action="group"]').click();
+  const grouped = JSON.parse(
+    (await editor.locator('[data-editor-recipe]').textContent()) ?? '{}'
+  );
+  assert(grouped.layers.every((layer) => typeof layer.groupId === 'string'));
+  await editor.locator('[data-editor-action="ungroup"]').click();
+  await editor.locator('[data-editor-action="duplicate"]').click();
+  assert.equal(await editor.locator('[data-editor-layer]').count(), 4);
+  await editor.locator('[data-editor-action="undo"]').click();
+  assert.equal(await editor.locator('[data-editor-layer]').count(), 2);
+
   await editor.locator('[data-editor-layer="web-logo"]').click();
   await editor.locator('[data-editor-action="lock"]').click();
   assert.equal(await editor.locator('[data-editor-scale]').isDisabled(), true);
   await editor.locator('[data-editor-action="lock"]').click();
   assert.equal(await editor.locator('[data-editor-scale]').isEnabled(), true);
 
+  const editorLogo = await editor
+    .locator('[data-editor-layer="web-logo"]')
+    .evaluate((node) => {
+      const canvas = node.closest('[data-editor-canvas]');
+      const image = node.querySelector('img');
+      if (!(canvas instanceof HTMLElement) || !(image instanceof HTMLElement)) {
+        throw new Error('Editor logo geometry is unavailable.');
+      }
+      const canvasBounds = canvas.getBoundingClientRect();
+      const imageBounds = image.getBoundingClientRect();
+      return {
+        x: (imageBounds.left - canvasBounds.left) / canvasBounds.width,
+        y: (imageBounds.top - canvasBounds.top) / canvasBounds.height,
+        width: imageBounds.width / canvasBounds.width,
+        height: imageBounds.height / canvasBounds.height,
+      };
+    });
+
+  const readRenderedLogo = () =>
+    editor
+      .locator('[data-editor-result-image]')
+      .evaluate(async (image, editorLogo) => {
+        if (!(image instanceof HTMLImageElement)) {
+          throw new Error('Core result image is unavailable.');
+        }
+        await image.decode();
+        const canvas = document.createElement('canvas');
+        canvas.width = image.naturalWidth;
+        canvas.height = image.naturalHeight;
+        const context = canvas.getContext('2d', { willReadFrequently: true });
+        if (!context) throw new Error('Unable to inspect the Core result.');
+        context.drawImage(image, 0, 0);
+        const pixels = context.getImageData(
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        ).data;
+        const left = Math.max(
+          0,
+          Math.floor((editorLogo.x - 0.03) * canvas.width)
+        );
+        const right = Math.min(
+          canvas.width,
+          Math.ceil((editorLogo.x + editorLogo.width + 0.03) * canvas.width)
+        );
+        const top = Math.max(
+          0,
+          Math.floor((editorLogo.y - 0.03) * canvas.height)
+        );
+        const bottom = Math.min(
+          canvas.height,
+          Math.ceil((editorLogo.y + editorLogo.height + 0.03) * canvas.height)
+        );
+        let minX = canvas.width;
+        let minY = canvas.height;
+        let maxX = -1;
+        let maxY = -1;
+        for (let y = top; y < bottom; y += 1) {
+          for (let x = left; x < right; x += 1) {
+            const offset = (y * canvas.width + x) * 4;
+            const red = pixels[offset];
+            const green = pixels[offset + 1];
+            const blue = pixels[offset + 2];
+            const alpha = pixels[offset + 3];
+            if (
+              red > 245 &&
+              green > 50 &&
+              green < 125 &&
+              blue > 20 &&
+              blue < 105 &&
+              red - green > 125 &&
+              alpha > 220
+            ) {
+              minX = Math.min(minX, x);
+              minY = Math.min(minY, y);
+              maxX = Math.max(maxX, x);
+              maxY = Math.max(maxY, y);
+            }
+          }
+        }
+        if (maxX < minX || maxY < minY) {
+          throw new Error('Unable to find the rendered orange logo pixels.');
+        }
+        return {
+          naturalWidth: image.naturalWidth,
+          naturalHeight: image.naturalHeight,
+          x: minX / canvas.width,
+          y: minY / canvas.height,
+          width: (maxX - minX + 1) / canvas.width,
+          height: (maxY - minY + 1) / canvas.height,
+        };
+      }, editorLogo);
+
+  const assertLogoParity = (rendered, kind) => {
+    const editorCenter = {
+      x: editorLogo.x + editorLogo.width / 2,
+      y: editorLogo.y + editorLogo.height / 2,
+    };
+    const renderedCenter = {
+      x: rendered.x + rendered.width / 2,
+      y: rendered.y + rendered.height / 2,
+    };
+    const widthRatio = rendered.width / editorLogo.width;
+    const heightRatio = rendered.height / editorLogo.height;
+    assert(
+      Math.abs(renderedCenter.x - editorCenter.x) < 0.012 &&
+        Math.abs(renderedCenter.y - editorCenter.y) < 0.012 &&
+        widthRatio > 0.75 &&
+        widthRatio < 0.9 &&
+        Math.abs(widthRatio - heightRatio) < 0.03,
+      `${kind} logo geometry should match the Editor canvas: ${JSON.stringify({
+        editor: editorLogo,
+        rendered,
+      })}`
+    );
+  };
+
   await editor.locator('[data-editor-action="preview"]').click();
   await editor
     .locator('[data-editor-result]:not([hidden]) [data-editor-result-image]')
     .waitFor();
+  assert.equal(
+    await editor
+      .locator('[data-editor-view-tab="result"]')
+      .getAttribute('aria-selected'),
+    'true',
+    'Core renders should open in the in-place result view.'
+  );
+  assert.equal(
+    await editor.locator('[data-editor-view-panel="canvas"]').isHidden(),
+    true,
+    'The result should replace the canvas instead of appearing below it.'
+  );
   await page.waitForFunction(() => {
     const root = document.querySelector('[data-editor-playground]');
     return root?.getAttribute('data-editor-render-state') === 'rendered';
@@ -458,6 +675,34 @@ async function assertEditorPlayground(page) {
     output?.startsWith('data:image/png;base64,'),
     'Editor preview should render a real PNG through Core.'
   );
+  const previewLogo = await readRenderedLogo();
+  assert.deepEqual(
+    [previewLogo.naturalWidth, previewLogo.naturalHeight],
+    [960, 600],
+    'Editor preview should use the bounded Core dimensions.'
+  );
+  assertLogoParity(previewLogo, 'Preview');
+
+  await editor.locator('[data-editor-view-tab="canvas"]').click();
+  await editor.locator('[data-editor-view-panel="canvas"]').waitFor();
+  await editor.locator('[data-editor-action="export"]').click();
+  await page.waitForFunction(() => {
+    const root = document.querySelector('[data-editor-playground]');
+    const image = root?.querySelector('[data-editor-result-image]');
+    return (
+      root?.getAttribute('data-editor-render-state') === 'rendered' &&
+      root?.getAttribute('data-editor-render-kind') === 'export' &&
+      image instanceof HTMLImageElement &&
+      image.naturalWidth === 1586
+    );
+  });
+  const exportedLogo = await readRenderedLogo();
+  assert.deepEqual(
+    [exportedLogo.naturalWidth, exportedLogo.naturalHeight],
+    [1586, 992],
+    'Editor export should preserve the original dimensions.'
+  );
+  assertLogoParity(exportedLogo, 'Export');
 }
 
 async function assertLayoutControlsAndCode(page, playground) {
@@ -476,7 +721,7 @@ async function assertLayoutControlsAndCode(page, playground) {
   const preview = playground.locator('[data-preview]');
 
   const workspaceTabs = playground.locator('[data-workspace-tab]');
-  assert.equal(await workspaceTabs.count(), 3);
+  assert.equal(await workspaceTabs.count(), 4);
   assert.equal(
     await playground
       .locator('[data-workspace-tab="visible"]')
@@ -488,7 +733,7 @@ async function assertLayoutControlsAndCode(page, playground) {
     'Visible watermark controls should be the initial workspace.'
   );
   assert.equal(await playground.locator('[data-example]').count(), 6);
-  assert.equal(await playground.locator('.capability-index li').count(), 11);
+  assert.equal(await playground.locator('.capability-index li').count(), 12);
   assert(
     await textSingle.isVisible(),
     'Text layout switch should be visible without opening advanced controls.'
@@ -583,10 +828,14 @@ async function selectWorkspaceTab(playground, workspace) {
   await tab.click();
   assert.equal(await tab.getAttribute('aria-selected'), 'true');
   assert.equal(await panel.getAttribute('hidden'), null);
-  assert.equal(
-    await playground.locator('.code-panel').getAttribute('data-code-workspace'),
-    workspace
-  );
+  if (workspace !== 'editor') {
+    assert.equal(
+      await playground
+        .locator('.code-panel')
+        .getAttribute('data-code-workspace'),
+      workspace
+    );
+  }
   assert(
     await panel.isVisible(),
     `${workspace} workspace panel should be visible.`
@@ -783,7 +1032,7 @@ async function assertWideWorkbenchLayout(page, origin) {
 }
 
 async function assertLanguageMenu(page) {
-  const menu = page.locator('[data-language-menu]').first();
+  const menu = page.locator('[data-language-menu]:visible').first();
   await menu.locator('summary').click();
   const popover = menu.locator('.preference-popover');
   await popover.waitFor();
@@ -806,7 +1055,7 @@ async function assertLanguageMenu(page) {
 }
 
 async function assertThemeMenu(page) {
-  const menu = page.locator('[data-theme-menu]').first();
+  const menu = page.locator('[data-theme-menu]:visible').first();
   await menu.locator('summary').click();
   const popover = menu.locator('.preference-popover');
   await popover.waitFor();
@@ -829,6 +1078,33 @@ async function assertThemeMenu(page) {
     await page.evaluate(() => localStorage.getItem('starlight-theme')),
     ''
   );
+}
+
+async function assertMobileUtilities(page) {
+  const menu = page.locator('.mobile-nav-menu');
+  const version = menu.getByRole('combobox', { name: '文档版本' });
+  await version.waitFor();
+  assert.deepEqual(
+    await version
+      .locator('option')
+      .evaluateAll((options) => options.map((option) => option.value)),
+    ['/zh-cn/', '/v1/zh-cn/', '/versions/1.0.0/', '/editor/zh-cn/']
+  );
+  await menu.getByRole('link', { name: /GitHub/ }).waitFor();
+
+  const themeSummary = menu.locator('[data-theme-menu] summary');
+  assert.equal(await themeSummary.getAttribute('aria-label'), '切换主题');
+  await themeSummary.focus();
+  await themeSummary.press('Enter');
+  await menu.getByRole('menuitemradio', { name: /深色/ }).waitFor();
+  await themeSummary.press('Escape');
+
+  const languageSummary = menu.locator('[data-language-menu] summary');
+  assert.equal(await languageSummary.getAttribute('aria-label'), '切换语言');
+  await languageSummary.focus();
+  await languageSummary.press('Enter');
+  await menu.getByRole('menuitem', { name: /English/ }).waitFor();
+  await languageSummary.press('Escape');
 }
 
 async function assertCustomSelects(playground) {

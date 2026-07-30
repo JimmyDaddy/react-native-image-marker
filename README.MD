@@ -80,6 +80,60 @@ console.log(result.uri, result.jobId, result.durationMs);
 
 Core 2 returns a structured `MarkerResult`. Use `result.uri` as the native cache-file path or browser-ready data URL. The result also includes the job ID, operation, format, MIME type, duration, and applied metadata policy.
 
+### Inspect an image before editing
+
+Core 2.1 can read the encoded dimensions, upright display dimensions, format,
+and EXIF orientation before you build an Editor viewport or Recipe:
+
+```ts
+const info = await Marker.getImageInfo(
+  require('./images/background.jpg')
+);
+
+console.log(info.width, info.height); // Upright display dimensions
+console.log(info.encodedWidth, info.encodedHeight);
+console.log(info.format, info.orientation, info.rotationDegrees);
+```
+
+`requiresNormalization` is `true` when the encoded orientation is not upright;
+`mirrored` identifies reflected EXIF orientations. The same API accepts native
+image sources and Web URLs, data URLs, `Blob`, `File`, or loaded browser images.
+
+### Constrain multilingual text
+
+Core 2.1 adds cross-platform text-box controls for captions, labels, and
+right-to-left content:
+
+```ts
+const result = await Marker.markText({
+  backgroundImage: { src: require('./images/background.jpg') },
+  watermarkTexts: [
+    {
+      text: 'A long multilingual caption · 多语言说明 · وصف متعدد اللغات',
+      position: { position: Position.bottomCenter, Y: 32 },
+      style: {
+        color: '#FFFFFF',
+        fontSize: 32,
+        maxWidth: '80%',
+        lineHeight: 40,
+        letterSpacing: 0.5,
+        direction: 'auto',
+        wrap: 'word',
+        maxLines: 2,
+        overflow: 'ellipsis',
+        textAlign: 'center',
+      },
+    },
+  ],
+  saveFormat: ImageFormat.png,
+});
+```
+
+`maxWidth` accepts output pixels or a percentage of the background width.
+`lineHeight` and `letterSpacing` are measured in output pixels. Use
+`wrap: 'character'` for scripts or labels that should break at grapheme
+boundaries, or `wrap: 'none'` for a single unwrapped line.
+
 ### Repeat a readable mark across the image
 
 The same `layout` and `strokeStyle` options work on iOS, Android, and Web. Tiled layers can use pixel or percentage gaps and stagger every second row.
@@ -269,20 +323,64 @@ Browser Canvas and native graphics stacks share the API and positioning model bu
 ## Optional interaction editor
 
 The independently versioned
-`react-native-image-marker-editor@0.1.0` package provides Recipe v2 layer
-selection, drag/scale/rotate/reorder, visibility and locking, snapping,
-undo/redo, accessible keyboard controls, preview rendering, and final export.
-It requires Core `^2.0.0` and delegates image processing back to Core.
+`react-native-image-marker-editor@0.3.0` package provides formal Toolbar,
+Inspector, Layer, and Asset panels; multi-selection, grouping, alignment,
+clipboard, handles, zoom/pan, templates, autosave, and plugins. It requires
+Core `^2.1.0` and delegates image inspection, preview, and encoding back to
+Core.
 
 ```sh
-npm install react-native-image-marker-editor@0.1.0
+npm install react-native-image-marker@^2.1 \
+  react-native-image-marker-editor@^0.3
 ```
 
 Import `react-native-image-marker-editor/core-adapter` only when the editor
 should invoke Core directly; a custom adapter can render on a server instead.
-See the [Editor integration guide](https://image-marker.corerobin.com/guides/editor/),
+Core 2.1 automatically resolves the decoded source size and orientation when
+the Editor receives `source` and the Core adapter.
+Start with the repository's
+[complete Editor component and coordinate guide](docs/editor.md), then see the
+[Editor integration guide](https://image-marker.corerobin.com/guides/editor/),
 [generated API reference](https://image-marker.corerobin.com/guides/editor/reference/),
 or [open the Editor workflow](https://image-marker.corerobin.com/playground/?workflow=editor#editor-playground).
+
+## Shared Recipe, Node, and CLI packages
+
+Every renderer and tool uses the same platform-neutral Recipe v2 document:
+
+```sh
+npm install @image-marker/recipe@^0.1
+```
+
+`@image-marker/recipe` provides schema, validation, migration, templates,
+serialization, immutable layer operations, and a published JSON Schema without
+depending on React, React Native, a browser, or an image renderer. See the
+[Recipe guide](https://image-marker.corerobin.com/recipe/).
+
+Render the same document in a Node.js service without React Native:
+
+```sh
+npm install @image-marker/node@^0.1 sharp@^0.35
+```
+
+`@image-marker/node` accepts file paths, buffers, typed arrays, and readable
+streams; it supports file/stream output, inspection, bounded batches, retry,
+cancellation, progress, and authenticated lossless PNG locators. See the
+[Node guide](https://image-marker.corerobin.com/node/) and
+[package README](packages/node/README.md).
+
+For terminal and CI automation:
+
+```sh
+npm install --global @image-marker/cli@^0.1
+image-marker --help
+```
+
+The CLI provides `init`, `validate`, `migrate`, `render`, `batch`, `inspect`,
+`embed`, and `detect`, plus stable exit codes, JSON output, atomic writes, and
+stdin/stdout support. See the
+[CLI guide](https://image-marker.corerobin.com/cli/) and
+[package README](packages/cli/README.md).
 
 ## Choose an API
 
@@ -291,6 +389,7 @@ or [open the Editor workflow](https://image-marker.corerobin.com/playground/?wor
 | `Marker.markText`                                   | One or many text layers                          |
 | `Marker.markImage`                                  | One or many logo, icon, or image layers          |
 | `Marker.mark`                                       | Ordered text and image layers in one render pass |
+| `Marker.getImageInfo`                               | Read dimensions, format, and orientation         |
 | `Marker.createRecipe`                               | Reusable, personalized batch workflows           |
 | `Marker.embedInvisible`                             | Write an authenticated short trace ID            |
 | `Marker.detectInvisible`                            | Recover and verify an invisible trace ID         |
@@ -321,6 +420,7 @@ See the full [compatibility guide](https://image-marker.corerobin.com/compatibil
 - [Guides](https://image-marker.corerobin.com/guides/choose-an-api/)
 - [Visual cookbook](https://image-marker.corerobin.com/cookbook/)
 - [Invisible trace watermarks](https://image-marker.corerobin.com/guides/invisible-watermarks/)
+- [Editor usage guide](docs/editor.md)
 - [Optional interaction editor](https://image-marker.corerobin.com/guides/editor/)
 - [Editor API reference](https://image-marker.corerobin.com/guides/editor/reference/)
 - [Troubleshooting](https://image-marker.corerobin.com/troubleshooting/)

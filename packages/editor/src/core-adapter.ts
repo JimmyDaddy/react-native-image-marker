@@ -1,4 +1,6 @@
 import Marker, {
+  ImageFormat,
+  type MarkerImageInfo,
   type MarkerResult,
   type WatermarkRecipeDefinition,
 } from 'react-native-image-marker';
@@ -34,6 +36,30 @@ function signedResult(
   };
 }
 
+function toCoreSaveFormat(
+  value: WatermarkRecipeDefinition['output']['saveFormat']
+): ImageFormat | undefined {
+  switch (value) {
+    case 'jpg':
+      return ImageFormat.jpg;
+    case 'png':
+      return ImageFormat.png;
+    case 'webp':
+      return ImageFormat.webp;
+    case 'base64':
+      return ImageFormat.base64;
+    default:
+      return undefined;
+  }
+}
+
+/** Resolve display dimensions and encoded orientation through Core 2.1. */
+export function resolveCoreEditorSourceInfo(
+  source: unknown
+): Promise<MarkerImageInfo> {
+  return Marker.getImageInfo(source as never);
+}
+
 /**
  * Lightweight default adapter. Import this opt-in entry only when the editor
  * should invoke Core directly; applications can inject a server or custom
@@ -42,17 +68,21 @@ function signedResult(
 export function createCoreEditorAdapter(
   previewMaxSize = 1024
 ): ImageMarkerEditorRenderAdapter {
-  const renderVisible = (request: EditorRenderRequest, maxSize?: number) => {
-    const targetSize =
-      request.sourceSize && maxSize
-        ? fitEditorSizeWithinMax(request.sourceSize, maxSize)
-        : undefined;
+  const renderVisible = async (
+    request: EditorRenderRequest,
+    maxSize?: number
+  ) => {
+    const sourceSize =
+      request.sourceSize ??
+      (await resolveCoreEditorSourceInfo(request.input.backgroundImage.src));
+    const targetSize = maxSize
+      ? fitEditorSizeWithinMax(sourceSize, maxSize)
+      : undefined;
     const recipe =
-      request.sourceSize &&
       targetSize &&
-      (targetSize.width !== request.sourceSize.width ||
-        targetSize.height !== request.sourceSize.height)
-        ? projectEditorRecipe(request.recipe, request.sourceSize, targetSize)
+      (targetSize.width !== sourceSize.width ||
+        targetSize.height !== sourceSize.height)
+        ? projectEditorRecipe(request.recipe, sourceSize, targetSize)
         : request.recipe;
     return Marker.createRecipe(withMaxSize(recipe, maxSize)).apply(
       request.input,
@@ -61,6 +91,8 @@ export function createCoreEditorAdapter(
   };
 
   return {
+    getSourceInfo: resolveCoreEditorSourceInfo,
+
     renderPreview(request) {
       return renderVisible(request, request.maxSize ?? previewMaxSize);
     },
@@ -84,7 +116,7 @@ export function createCoreEditorAdapter(
             watermark: {
               image: { src: visible.uri },
               ...invisible,
-              saveFormat: request.recipe.output.saveFormat,
+              saveFormat: toCoreSaveFormat(request.recipe.output.saveFormat),
               quality: request.recipe.output.quality,
               maxSize: request.recipe.output.maxSize,
             },
@@ -103,7 +135,7 @@ export function createCoreEditorAdapter(
           {
             image: { src: visible.uri },
             ...invisible,
-            saveFormat: request.recipe.output.saveFormat,
+            saveFormat: toCoreSaveFormat(request.recipe.output.saveFormat),
             quality: request.recipe.output.quality,
             maxSize: request.recipe.output.maxSize,
           },

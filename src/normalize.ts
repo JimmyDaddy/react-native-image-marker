@@ -198,6 +198,13 @@ function toNativeImageSource(source: any): NativeImageSource {
   return omitUndefined(result);
 }
 
+export function createNativeImageSource(
+  source: any,
+  assetResolver: AssetResolver = defaultAssetResolver
+): NativeImageSource {
+  return toNativeImageSource(resolveImageSource(source, assetResolver));
+}
+
 function toNativeImageOptions(
   imageOptions: ImageOptions,
   assetResolver: AssetResolver
@@ -317,6 +324,13 @@ function toNativeTextStyle(
     fontFallbacks: style.fontFallbacks ? [...style.fontFallbacks] : undefined,
     fontSize: style.fontSize,
     fontSizeRatio: style.fontSizeRatio,
+    maxWidth: nativeMeasure(style.maxWidth),
+    lineHeight: style.lineHeight,
+    letterSpacing: style.letterSpacing,
+    direction: style.direction,
+    wrap: style.wrap,
+    maxLines: style.maxLines,
+    overflow: style.overflow,
     shadowStyle: style.shadowStyle ?? undefined,
     textBackgroundStyle: toNativeTextBackgroundStyle(style.textBackgroundStyle),
     strokeStyle: style.strokeStyle ?? undefined,

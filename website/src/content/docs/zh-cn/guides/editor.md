@@ -1,84 +1,128 @@
 ---
 title: 可选交互编辑器
-description: 在 Core 2 上安装并接入 react-native-image-marker-editor 0.0.1。
+description: 使用 react-native-image-marker-editor 0.3 与 Core 2.1 构建可视化 Recipe v2 工作区。
 ---
 
-`react-native-image-marker-editor` 是独立、可选的 JS/TS 包。首个版本是
-`0.0.1`，依赖 `react-native-image-marker@^2.0.0`。解码、合成、隐形水印和
-最终原生编码仍由 Core 负责。
+`react-native-image-marker-editor@0.3` 是可选的 React Native 与 Web 交互包，
+负责 Recipe 状态、选择、手势、历史、面板、模板与持久化；Core 2.1 负责图片
+检查、预览渲染、合成与编码。
 
 ```sh
-npm install react-native-image-marker@^2 \
-  react-native-image-marker-editor@0.0.1
+npm install react-native-image-marker@^2.1 \
+  react-native-image-marker-editor@^0.3
 ```
 
-## 创建编辑器
+## 完整工作区
 
 ```tsx
+import { Image, StyleSheet } from 'react-native';
 import {
   ImageMarkerEditor,
+  ImageMarkerEditorAssetPanel,
   ImageMarkerEditorController,
+  ImageMarkerEditorInspector,
+  ImageMarkerEditorLayerPanel,
   ImageMarkerEditorToolbar,
 } from 'react-native-image-marker-editor';
 import { createCoreEditorAdapter } from 'react-native-image-marker-editor/core-adapter';
-import { ImageFormat } from 'react-native-image-marker';
 
+const adapter = createCoreEditorAdapter(1024);
 const controller = new ImageMarkerEditorController({
   schemaVersion: 2,
   layers: [
     {
       id: 'title',
-      name: '标题',
+      name: '活动标题',
       type: 'text',
-      text: '草稿',
-      position: { X: 80, Y: 60 },
+      text: 'IMAGE MARKER 2.1',
+      position: { X: 160, Y: 120 },
+      style: { color: '#FFFFFF', fontSize: 64, bold: true },
     },
   ],
-  output: { saveFormat: ImageFormat.png },
+  output: { saveFormat: 'png' },
 });
-const adapter = createCoreEditorAdapter(1024);
 
-<ImageMarkerEditor controller={controller} width={360} height={240} />;
 <ImageMarkerEditorToolbar controller={controller} />;
-
-const recipe = controller.exportRecipe();
-const result = await adapter.exportOriginal({
-  recipe,
-  input: { backgroundImage: { src: imageSource } },
-});
-
-console.log(result.final.uri);
+<ImageMarkerEditor
+  adapter={adapter}
+  background={
+    <Image source={imageSource} style={StyleSheet.absoluteFill} />
+  }
+  controller={controller}
+  source={imageSource}
+  width={720}
+  height={405}
+/>;
+<ImageMarkerEditorLayerPanel controller={controller} />;
+<ImageMarkerEditorInspector controller={controller} />;
+<ImageMarkerEditorAssetPanel
+  assets={[{ id: 'logo', name: 'Logo', source: logoSource }]}
+  controller={controller}
+/>;
 ```
 
-## 运行完整示例
+同时传入 `source` 与 Core adapter 后，Core 2.1 会自动读取解码尺寸与编码方向，
+数值坐标始终使用原图像素。只有自定义 renderer 需要覆盖检测结果时才传
+`sourceSize`。
 
-[在线 Playground](/zh-cn/playground/#editor-playground) 在浏览器中直接使用真实
-Editor controller 和 Core adapter，可免安装体验拖动、缩放、旋转、排序、锁定、
-undo/redo 与 Core 渲染。
+## 预览与导出
 
-原生端可运行仓库中的
-[React Native example](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/example)，
-选择 **Editor 0.0.1**。该页面会渲染 `ImageMarkerEditor` 与
-`ImageMarkerEditorToolbar`，并验证预览和原分辨率 Core 导出。
+```ts
+const request = {
+  recipe: controller.exportRecipe(),
+  input: { backgroundImage: { src: imageSource } },
+  control: { timeoutMs: 20_000 },
+};
 
-## 0.0.1 范围
+const preview = await adapter.renderPreview(request);
+const exported = await adapter.exportOriginal(request);
 
-- 图片和文字图层，以及选择、拖动、双指缩放、旋转和排序。
-- 显隐与锁定；锁定图层不能修改、删除或排序。
-- 对齐线、吸附和安全区域。
-- 分组 undo/redo 与 Recipe v2 导入导出。
-- 低分辨率交互预览和原分辨率最终导出。
-- 键盘操作与基础无障碍标签/角色。
-- 可见、隐形水印和可选 C2PA 导出选项。
-- 按需引入 Core adapter，主入口不强制带入较重 renderer。
+console.log(preview.uri, exported.final.uri);
+```
 
-视频、通用滤镜、云端协作以及重复的原生编码逻辑不进入 `0.0.1`。
+受限尺寸预览与原图导出共用相同 Recipe 坐标空间，因此文字、图片、缩放与位置
+会保持一致。
 
-## 状态与持久化
+## Editor 0.3 能力
 
-Controller 是唯一状态源。订阅其 snapshot，保留稳定 Recipe 图层 ID，并持久化
-`controller.exportRecipe()`。导入 v1 Recipe 时会先经过 Core 迁移边界，再由
-Controller 保存 v2 文档。
+- Toolbar、Inspector、Layer Panel 与可复用 Asset Panel。
+- 文字排版、颜色、透明度、描边与混合模式编辑。
+- 图片新增/替换、品牌颜色、字体、资产与 Logo preset。
+- 多选、复制、分组、解组、对齐、分布、copy 与 paste。
+- 拖动、双指缩放、resize/rotate handle、zoom、pan、fit、安全区与吸附。
+- 重命名、锁定、显隐、删除、层级、键盘快捷键、undo 与 redo。
+- 可选 autosave、受控状态、模板、占位符、条件、自定义 slots 与插件。
 
-如果预览或最终渲染在服务端完成，可注入自定义 adapter。默认 Core adapter 会
-继续转发任务取消、超时和进度参数。
+Controller 操作是原子且可撤销的：
+
+```ts
+controller.selectLayers(['title', 'logo']);
+controller.groupLayers();
+controller.alignLayers('center', measuredBounds);
+controller.distributeLayers('horizontal', measuredBounds);
+
+const portableClipboard = controller.copyLayers();
+otherController.pasteLayers(portableClipboard);
+```
+
+## 示例、测试与 API
+
+[在线 Playground](/zh-cn/playground/?workflow=editor#editor-playground) 使用真实
+Editor controller 与 Core adapter，把结果作为与画布并列的 tab 展示，同时提供
+集成代码和实时 Recipe。
+
+仓库还提供
+[完整原生组件指南](https://github.com/JimmyDaddy/react-native-image-marker/blob/master/docs/editor.md)、
+[React Native example](https://github.com/JimmyDaddy/react-native-image-marker/tree/master/example)、
+单元测试与原生 Editor E2E 覆盖。
+
+可在 [Editor API 参考](/zh-cn/guides/editor/reference/)中查询 controller 方法、
+组件 props、adapter、模板、持久化、安全区、吸附与插件类型。
+
+## 渲染边界
+
+Editor 主入口不会强制把图片 renderer 带入 bundle。需要端内渲染时导入显式的
+`/core-adapter` 子路径；预览与导出由服务端完成时，可注入由
+[`@image-marker/node`](/zh-cn/node/) 支持的
+`ImageMarkerEditorRenderAdapter`。视频、通用滤镜、云资产管理与云协作不属于
+Editor 0.3。

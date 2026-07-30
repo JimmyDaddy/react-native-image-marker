@@ -1,13 +1,20 @@
 import starlight from '@astrojs/starlight';
 import { defineConfig } from 'astro/config';
-import starlightTypeDoc, { typeDocSidebarGroup } from 'starlight-typedoc';
+import starlightTypeDoc, {
+  createStarlightTypeDocPlugin,
+  typeDocSidebarGroup,
+} from 'starlight-typedoc';
 import { fileURLToPath } from 'node:url';
+import { toolSidebarGroups } from './src/data/tools.mjs';
 
 const repository = 'https://github.com/JimmyDaddy/react-native-image-marker';
 const docsGitRef = process.env.DOCS_GIT_REF || 'master';
+const [editorTypeDoc, editorTypeDocSidebarGroup] =
+  createStarlightTypeDocPlugin();
 
 const apiSidebarLabels = new Map([
   ['API reference', 'API 参考'],
+  ['Editor API reference', 'Editor API 参考'],
   ['Classes', '类'],
   ['Enumerations', '枚举'],
   ['Interfaces', '接口'],
@@ -176,6 +183,27 @@ export default defineConfig({
             readme: 'none',
           },
         }),
+        editorTypeDoc({
+          entryPoints: [
+            './src/typedoc/editor.ts',
+          ],
+          tsconfig: './tsconfig.editor-typedoc.json',
+          output: 'guides/editor/reference',
+          pagination: false,
+          sidebar: {
+            label: 'Editor API reference',
+            readmeLabel: 'Overview',
+            collapsed: true,
+          },
+          typeDoc: {
+            excludeExternals: true,
+            excludePrivate: true,
+            gitRevision: docsGitRef,
+            name: 'react-native-image-marker-editor',
+            plugin: ['typedoc-plugin-rename-defaults'],
+            readme: 'none',
+          },
+        }),
         localizeTypeDocSidebar,
       ],
       sidebar: [
@@ -187,6 +215,11 @@ export default defineConfig({
               label: 'Overview',
               translations: { 'zh-CN': '概览' },
               slug: 'index',
+            },
+            {
+              label: 'What’s new in Core 2',
+              translations: { 'zh-CN': 'Core 2 新增内容' },
+              slug: 'whats-new-2',
             },
             {
               label: 'Live playground',
@@ -215,50 +248,32 @@ export default defineConfig({
               translations: { 'zh-CN': '全部工具' },
               slug: 'tools',
             },
+            ...toolSidebarGroups(),
+          ],
+        },
+        {
+          label: 'Toolchain',
+          translations: { 'zh-CN': '工具链' },
+          items: [
             {
-              label: 'Watermark an image',
-              translations: { 'zh-CN': '图片加水印' },
-              slug: 'tools/watermark',
+              label: 'Recipe documents',
+              translations: { 'zh-CN': 'Recipe 文档' },
+              slug: 'recipe',
             },
             {
-              label: 'Batch watermark',
-              translations: { 'zh-CN': '批量加水印' },
-              slug: 'tools/batch-watermark',
+              label: 'Node renderer',
+              translations: { 'zh-CN': 'Node 渲染器' },
+              slug: 'node',
             },
             {
-              label: 'Confidential watermark',
-              translations: { 'zh-CN': '保密水印' },
-              slug: 'tools/confidential-watermark',
+              label: 'Command-line interface',
+              translations: { 'zh-CN': '命令行工具' },
+              slug: 'cli',
             },
             {
-              label: 'Invisible watermark',
-              translations: { 'zh-CN': '嵌入隐形水印' },
-              slug: 'tools/invisible-watermark',
-            },
-            {
-              label: 'Trace checker',
-              translations: { 'zh-CN': '检查追踪水印' },
-              slug: 'tools/trace-checker',
-            },
-            {
-              label: 'Recipe builder',
-              translations: { 'zh-CN': 'Recipe 构建器' },
-              slug: 'tools/recipe-builder',
-            },
-            {
-              label: 'Recipient trace package',
-              translations: { 'zh-CN': '收件人追踪包' },
-              slug: 'tools/recipient-trace-package',
-            },
-            {
-              label: 'Trace robustness lab',
-              translations: { 'zh-CN': '追踪稳健性实验室' },
-              slug: 'tools/trace-lab',
-            },
-            {
-              label: 'Content Credentials',
-              translations: { 'zh-CN': 'Content Credentials 检查器' },
-              slug: 'tools/content-credentials',
+              label: 'Optional interaction editor',
+              translations: { 'zh-CN': '可选交互编辑器' },
+              slug: 'guides/editor',
             },
           ],
         },
@@ -296,6 +311,7 @@ export default defineConfig({
               translations: { 'zh-CN': '可选交互编辑器' },
               slug: 'guides/editor',
             },
+            editorTypeDocSidebarGroup,
             {
               label: 'Visual cookbook',
               translations: { 'zh-CN': '可视化示例' },

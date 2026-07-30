@@ -12,22 +12,24 @@
     "build": "node ../scripts/build-invisible-worker.mjs public/worker/invisible-watermark.js && astro check && astro build && node scripts/postbuild.mjs && node scripts/check-build.mjs",
     "assemble:versions": "node scripts/assemble-versioned-site.mjs",
     "check:versions": "node scripts/check-versioned-site.mjs",
-    "smoke": "node scripts/smoke-playground.mjs && node scripts/smoke-tools.mjs",
+    "smoke": "node scripts/smoke-playground.mjs && node scripts/smoke-tools.mjs && node scripts/smoke-accessibility.mjs",
+    "smoke:accessibility": "node scripts/smoke-accessibility.mjs",
     "generate:v1-7-example": "node scripts/generate-v1-7-example.mjs",
     "preview": "astro preview"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.9",
     "@astrojs/starlight": "0.41.3",
+    "@axe-core/playwright": "^4.12.1",
     "@contentauth/c2pa-web": "0.12.3",
     "astro": "7.1.1",
     "fflate": "0.8.3",
+    "playwright": "1.61.1",
     "starlight-typedoc": "0.23.0",
     "typedoc": "0.28.20",
     "typedoc-plugin-markdown": "4.12.0",
     "typedoc-plugin-rename-defaults": "0.7.3",
-    "typescript": "5.9.3",
-    "playwright": "1.61.1"
+    "typescript": "5.9.3"
   },
   "overrides": {
     "ts-deepmerge": "8.0.0"

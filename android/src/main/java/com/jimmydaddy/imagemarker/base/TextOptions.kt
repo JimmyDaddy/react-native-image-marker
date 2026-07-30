@@ -10,8 +10,9 @@ import android.os.Build
 import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
+import android.text.TextDirectionHeuristics
+import android.text.TextUtils
 import android.util.Log
-import android.util.TypedValue
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.common.assets.ReactFontManager
@@ -91,6 +92,32 @@ data class TextOptions(val options: ReadableMap) {
     }
   }
 
+  private fun wrapByCharacter(
+    value: String,
+    paint: TextPaint,
+    width: Int
+  ): String {
+    return value.split('\n').joinToString("\n") { paragraph ->
+      val lines = mutableListOf<String>()
+      var line = ""
+      var offset = 0
+      while (offset < paragraph.length) {
+        val codePoint = Character.codePointAt(paragraph, offset)
+        val character = String(Character.toChars(codePoint))
+        val candidate = line + character
+        if (line.isNotEmpty() && paint.measureText(candidate) > width) {
+          lines.add(line)
+          line = character
+        } else {
+          line = candidate
+        }
+        offset += Character.charCount(codePoint)
+      }
+      lines.add(line)
+      lines.joinToString("\n")
+    }
+  }
+
   fun applyStyle(
     context: ReactApplicationContext,
     canvas: Canvas,
@@ -127,6 +154,7 @@ data class TextOptions(val options: ReadableMap) {
     val textSize = style.resolveFontSize(maxWidth)
     textPaint.isAntiAlias = true
     textPaint.textSize = textSize
+    textPaint.letterSpacing = style.letterSpacing / textSize
     Log.i(Constants.IMAGE_MARKER_TAG, "textSize: " + textSize + " fontSize: " + style.fontSize + " displayMetrics: " + context.resources.displayMetrics)
     textPaint.color = colorWithLayerAlpha(Color.parseColor(Utils.transRGBColor(style.color)))
     textPaint.isUnderlineText = style.underline
@@ -142,35 +170,75 @@ data class TextOptions(val options: ReadableMap) {
     textPaint.isStrikeThruText = style.strikeThrough
     textPaint.typeface = typeface
     textPaint.textAlign = style.textAlign
+    val textBoxWidth = style.resolveMaxWidth(maxWidth)
+    val layoutText = when (style.wrap) {
+      "character" -> wrapByCharacter(text!!, textPaint, textBoxWidth)
+      else -> text!!
+    }
+    val measuredNoWrapWidth = layoutText
+      .split('\n')
+      .maxOfOrNull { textPaint.measureText(it) }
+      ?.let { ceil(it.toDouble()).toInt() }
+      ?: 1
+    val layoutWidth = if (style.wrap == "none") {
+      measuredNoWrapWidth.coerceAtLeast(textBoxWidth).coerceAtMost(1_000_000)
+    } else {
+      textBoxWidth
+    }
+    val naturalLineHeight = textPaint.fontMetrics.run { descent - ascent }
+    val lineSpacingExtra = style.lineHeight?.minus(naturalLineHeight) ?: 0f
     // ALIGN_CENTER, ALIGN_NORMAL, ALIGN_OPPOSITE
     val textLayout: StaticLayout = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
       val builder =
-        StaticLayout.Builder.obtain(text!!, 0, text!!.length, textPaint, maxWidth)
+        StaticLayout.Builder.obtain(layoutText, 0, layoutText.length, textPaint, layoutWidth)
       builder.setAlignment(Layout.Alignment.ALIGN_NORMAL)
-      builder.setLineSpacing(0.0f, 1.0f)
+      builder.setLineSpacing(lineSpacingExtra, 1.0f)
       builder.setIncludePad(false)
+      builder.setTextDirection(
+        when (style.direction) {
+          "ltr" -> TextDirectionHeuristics.LTR
+          "rtl" -> TextDirectionHeuristics.RTL
+          else -> TextDirectionHeuristics.FIRSTSTRONG_LTR
+        }
+      )
+      style.maxLines?.let(builder::setMaxLines)
+      if (style.overflow == "ellipsis") {
+        builder.setEllipsize(TextUtils.TruncateAt.END)
+        builder.setEllipsizedWidth(textBoxWidth)
+      }
       builder.build()
     } else {
       StaticLayout(
-        text,
+        layoutText,
         textPaint,
-        maxWidth,
+        layoutWidth,
         Layout.Alignment.ALIGN_NORMAL,
         1.0f,
-        0.0f,
+        lineSpacingExtra,
         false
       )
     }
 
-    val textHeight = textLayout.height
+    val visibleLineCount = minOf(
+      textLayout.lineCount,
+      style.maxLines ?: textLayout.lineCount
+    )
+    val textHeight = if (visibleLineCount > 0) {
+      textLayout.getLineBottom(visibleLineCount - 1)
+    } else {
+      1
+    }
     var textWidth = 0
-    val count = textLayout.lineCount
-    for (a in 0 until count) {
+    for (a in 0 until visibleLineCount) {
       textWidth = ceil(
         textWidth.toFloat()
           .coerceAtLeast(textLayout.getLineWidth(a) + textLayout.getLineLeft(a)).toDouble()
       ).toInt()
     }
+    textWidth = textWidth.coerceAtMost(textBoxWidth)
+    val shouldClip =
+      textLayout.lineCount > visibleLineCount ||
+        (0 until visibleLineCount).any { textLayout.getLineWidth(it) > textBoxWidth }
     val strokeWidth = style.strokeStyle?.width ?: 0f
     val outlineInset = strokeWidth / 2f
     val visualTextWidth = ceil(textWidth + strokeWidth.toDouble()).toInt()
@@ -261,6 +329,9 @@ data class TextOptions(val options: ReadableMap) {
         else -> drawX
       }
       canvas.translate(textX, drawY)
+      if (shouldClip) {
+        canvas.clipRect(0f, 0f, textWidth.toFloat(), textHeight.toFloat())
+      }
       val fillColor = textPaint.color
       if (strokeWidth > 0f) {
         if (style.shadowLayerStyle != null) {

@@ -1,5 +1,5 @@
 import { access, readFile, readdir } from 'node:fs/promises';
-import { extname, join, resolve } from 'node:path';
+import { extname, join, relative, resolve, sep } from 'node:path';
 
 function readArgument(name) {
   const index = process.argv.indexOf(name);
@@ -10,6 +10,7 @@ const outputRoot = resolve(readArgument('--dir') || 'versioned-dist');
 const alwaysRequiredFiles = [
   'index.html',
   'v1/index.html',
+  'v1/zh-cn/index.html',
   'v1/getting-started/index.html',
   'v1/api/index.html',
   'versions/1.0.0/index.html',
@@ -35,6 +36,10 @@ async function collectHtml(directory) {
 }
 
 const v1Home = await readFile(join(outputRoot, 'v1/index.html'), 'utf8');
+const v1ZhHome = await readFile(
+  join(outputRoot, 'v1/zh-cn/index.html'),
+  'utf8'
+);
 const archive = await readFile(
   join(outputRoot, 'versions/1.0.0/index.html'),
   'utf8'
@@ -47,15 +52,27 @@ const editorZh = await readFile(
 const versions = JSON.parse(
   await readFile(join(outputRoot, 'versions.json'), 'utf8')
 );
+const editorManifest = JSON.parse(
+  await readFile(
+    new URL('../../packages/editor/package.json', import.meta.url),
+    'utf8'
+  )
+);
+const editorVersion = editorManifest.version;
+const editorPeerCoreRange =
+  editorManifest.peerDependencies['react-native-image-marker'];
 const isGa = versions.releaseStage === 'ga';
-const v2Namespace = isGa ? 'v2' : 'next';
+const v2DocsBase = isGa ? '/' : '/next/';
+const v2DocsRoot = isGa ? outputRoot : join(outputRoot, 'next');
 const stageRequiredFiles = isGa
   ? [
       'getting-started/index.html',
+      'api/index.html',
       'v2/index.html',
       'v2/getting-started/index.html',
       'v2/api/index.html',
       'next/index.html',
+      'next/getting-started/index.html',
     ]
   : [
       'getting-started/index.html',
@@ -70,10 +87,7 @@ for (const relativePath of stageRequiredFiles) {
 const buildManifest = JSON.parse(
   await readFile(join(outputRoot, 'build-manifest.json'), 'utf8')
 );
-const v2Home = await readFile(
-  join(outputRoot, v2Namespace, 'index.html'),
-  'utf8'
-);
+const v2Home = await readFile(join(v2DocsRoot, 'index.html'), 'utf8');
 
 for (const fragment of [
   '/v1/getting-started/',
@@ -81,30 +95,36 @@ for (const fragment of [
   'edit/release/1.x/website/',
 ]) {
   if (!v1Home.includes(fragment)) {
-    throw new Error(`v1 documentation is missing versioned fragment: ${fragment}`);
+    throw new Error(
+      `v1 documentation is missing versioned fragment: ${fragment}`
+    );
   }
 }
 for (const fragment of [
-  `/${v2Namespace}/getting-started/`,
-  `/${v2Namespace}/tools/`,
+  `${v2DocsBase}getting-started/`,
+  `${v2DocsBase}tools/`,
   'edit/master/website/',
 ]) {
   if (!v2Home.includes(fragment)) {
-    throw new Error(`v2 documentation is missing versioned fragment: ${fragment}`);
+    throw new Error(
+      `v2 documentation is missing versioned fragment: ${fragment}`
+    );
   }
 }
 if (!archive.includes(buildManifest.sources.archive.sha)) {
-  throw new Error('v1.0.0 archive page does not expose its immutable source SHA.');
+  throw new Error(
+    'v1.0.0 archive page does not expose its immutable source SHA.'
+  );
 }
 if (
-  !editor.includes('react-native-image-marker-editor@0.0.1') ||
-  !editor.includes('react-native-image-marker@^2.0.0')
+  !editor.includes(`react-native-image-marker-editor@${editorVersion}`) ||
+  !editor.includes(`react-native-image-marker@${editorPeerCoreRange}`)
 ) {
-  throw new Error('Editor page does not expose the initial version contract.');
+  throw new Error('Editor page does not expose the current version contract.');
 }
 if (
-  !editor.includes(`/${v2Namespace}/guides/editor/`) ||
-  !editorZh.includes(`/${v2Namespace}/zh-cn/guides/editor/`)
+  !editor.includes(`${v2DocsBase}guides/editor/`) ||
+  !editorZh.includes(`${v2DocsBase}zh-cn/guides/editor/`)
 ) {
   throw new Error('Editor pages do not expose localized integration guides.');
 }
@@ -121,11 +141,31 @@ if (
 ) {
   throw new Error('Version manifest does not preserve v1 LTS.');
 }
+if (
+  !versions.versions.some(
+    (version) =>
+      version.id === 'v2' &&
+      version.source === 'master' &&
+      version.status === 'current' &&
+      version.basePath === (isGa ? '/' : '/next/')
+  )
+) {
+  throw new Error('Version manifest does not expose v2 at its canonical path.');
+}
+if (
+  !versions.versions.some(
+    (version) =>
+      version.id === 'editor' &&
+      version.currentVersion === editorVersion &&
+      version.peerCoreRange === editorPeerCoreRange
+  )
+) {
+  throw new Error('Version manifest does not match the Editor package contract.');
+}
 
 if (isGa) {
-  const neutralHome = await readFile(join(outputRoot, 'index.html'), 'utf8');
-  const legacyRedirect = await readFile(
-    join(outputRoot, 'getting-started/index.html'),
+  const v2Redirect = await readFile(
+    join(outputRoot, 'v2/getting-started/index.html'),
     'utf8'
   );
   const nextRedirect = await readFile(
@@ -133,38 +173,76 @@ if (isGa) {
     'utf8'
   );
   if (
-    !neutralHome.includes('/v2/') ||
-    !neutralHome.includes('/v1/') ||
-    !neutralHome.includes('/editor/')
+    !v2Home.includes('/getting-started/') ||
+    !v2Home.includes('/tools/') ||
+    !v2Home.includes('data-primary-nav')
   ) {
-    throw new Error('GA root is not a neutral product/version entry point.');
+    throw new Error('GA root does not contain the canonical v2 documentation.');
   }
-  if (!legacyRedirect.includes('/v1/getting-started/')) {
-    throw new Error('Legacy unversioned docs do not redirect to v1 LTS.');
+  if (!v2Redirect.includes('/getting-started/')) {
+    throw new Error(
+      'The legacy /v2 namespace does not redirect to the root docs.'
+    );
   }
-  if (!nextRedirect.includes('/v2/getting-started/')) {
-    throw new Error('The v2 preview namespace does not redirect to /v2.');
+  if (!nextRedirect.includes('/getting-started/')) {
+    throw new Error(
+      'The v2 preview namespace does not redirect to the root docs.'
+    );
   }
-  if (v1Home.includes('/next/')) {
-    throw new Error('v1 LTS still links to the retired preview namespace.');
+  if (v1Home.includes('/next/') || v1Home.includes('/v2/')) {
+    throw new Error('v1 LTS still links to a non-canonical v2 namespace.');
+  }
+  for (const destination of [
+    'value="/zh-cn/"',
+    'value="/v1/zh-cn/"',
+    'value="/editor/zh-cn/"',
+  ]) {
+    if (!v1ZhHome.includes(destination)) {
+      throw new Error(
+        `Chinese v1 documentation is missing localized version destination: ${destination}`
+      );
+    }
+  }
+
+  for (const file of await collectHtml(outputRoot)) {
+    const relativePath = relative(outputRoot, file).split(sep).join('/');
+    if (
+      ['v1/', 'v2/', 'next/', 'editor/', 'versions/'].some((prefix) =>
+        relativePath.startsWith(prefix)
+      )
+    ) {
+      continue;
+    }
+    const html = await readFile(file, 'utf8');
+    if (/(?:href|src|action)=["']\/v2\//.test(html)) {
+      throw new Error(
+        `Canonical v2 documentation still links through /v2: ${relativePath}`
+      );
+    }
   }
 }
 
-for (const namespace of ['v1', v2Namespace]) {
+const invalidVersionNamespaceLink = isGa
+  ? /(?:href|src|action)=["']\/(?!["']|\/|zh-cn\/|v1\/|v2\/|next\/|editor\/|versions\/)/
+  : /(?:href|src|action)=["']\/(?!["']|\/|v1\/|v2\/|next\/|editor\/|versions\/)/;
+
+for (const namespace of isGa ? ['v1'] : ['v1', 'next']) {
   const namespaceRoot = join(outputRoot, namespace);
   for (const file of await collectHtml(namespaceRoot)) {
     const html = await readFile(file, 'utf8');
-    const invalidRootLink = html.match(
-      /(?:href|src|action)=["']\/(?!\/|v1\/|v2\/|next\/|editor\/|versions\/)/
-    );
+    const invalidRootLink = html.match(invalidVersionNamespaceLink);
     if (invalidRootLink) {
       throw new Error(
-        `${file.slice(outputRoot.length)} escapes its version namespace: ${invalidRootLink[0]}`
+        `${file.slice(outputRoot.length)} escapes its version namespace: ${
+          invalidRootLink[0]
+        }`
       );
     }
   }
 }
 
 process.stdout.write(
-  `Verified ${alwaysRequiredFiles.length + stageRequiredFiles.length} versioned site artifacts and source contracts.\n`
+  `Verified ${
+    alwaysRequiredFiles.length + stageRequiredFiles.length
+  } versioned site artifacts and source contracts.\n`
 );

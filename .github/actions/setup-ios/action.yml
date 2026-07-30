@@ -1,0 +1,40 @@
+name: Setup iOS
+description: Configure Node.js, Ruby, CocoaPods, and xcpretty for native CI
+
+inputs:
+  node-version:
+    description: Node.js version
+    required: false
+    default: '22.22.0'
+  cache-dependency-path:
+    description: Lockfile path or multiline lockfile paths used by setup-node
+    required: false
+    default: package-lock.json
+  ruby-version:
+    description: Ruby version
+    required: false
+    default: '3.2'
+  cocoapods-version:
+    description: CocoaPods version
+    required: false
+    default: '1.15.2'
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Node.js
+      uses: ./.github/actions/setup
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache-dependency-path: ${{ inputs.cache-dependency-path }}
+
+    - name: Setup Ruby
+      uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1
+      with:
+        ruby-version: ${{ inputs.ruby-version }}
+
+    - name: Install native build tools
+      shell: bash
+      run: |
+        gem install cocoapods -v "${{ inputs.cocoapods-version }}"
+        gem install xcpretty

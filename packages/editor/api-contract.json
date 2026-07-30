@@ -3,53 +3,88 @@
   "peerDependencies": {
     "react": ">=18",
     "react-native": ">=0.73",
-    "react-native-image-marker": "^2.0.0"
+    "react-native-image-marker": "^2.1.0"
+  },
+  "dependencies": {
+    "@image-marker/recipe": "^0.1.0"
   },
   "entries": {
     ".": {
       "source": "src/index.ts",
       "values": [
         "ImageMarkerEditor",
+        "ImageMarkerEditorAssetPanel",
         "ImageMarkerEditorController",
+        "ImageMarkerEditorInspector",
+        "ImageMarkerEditorLayerPanel",
         "ImageMarkerEditorToolbar",
         "angle",
+        "createBrandLogoLayer",
+        "createBrandTextLayer",
+        "createEditorBrandKit",
+        "createEditorTemplate",
         "createEditorViewportProjection",
         "distance",
         "fitEditorSizeWithinMax",
+        "materializeEditorTemplate",
         "normalizeSafeArea",
         "projectEditorPoint",
         "projectEditorRecipe",
         "snapLayerPosition",
-        "unprojectEditorPoint"
+        "unprojectEditorPoint",
+        "useImageMarkerEditorState"
       ],
       "types": [
+        "EditorAlignment",
+        "EditorAsset",
+        "EditorAutosaveOptions",
+        "EditorBrandKit",
+        "EditorClipboardDocument",
+        "EditorComponentSlots",
         "EditorContentCredentialsExport",
+        "EditorDistribution",
         "EditorExportOptions",
         "EditorExportResult",
         "EditorInvisibleExport",
         "EditorKeyCommand",
+        "EditorLayerBounds",
         "EditorLayerRenderContext",
+        "EditorPluginContext",
         "EditorPoint",
         "EditorRect",
         "EditorRenderRequest",
         "EditorSafeArea",
+        "EditorSelectionMode",
+        "EditorSerializedState",
         "EditorSize",
         "EditorSnapContext",
         "EditorSnapGuide",
         "EditorState",
+        "EditorTemplate",
+        "EditorTextLayerPatch",
+        "EditorToolbarAction",
         "EditorViewportProjection",
+        "EditorViewportState",
+        "ImageMarkerEditorAssetPanelProps",
+        "ImageMarkerEditorControllerOptions",
+        "ImageMarkerEditorInspectorProps",
+        "ImageMarkerEditorLayerPanelProps",
+        "ImageMarkerEditorPlugin",
         "ImageMarkerEditorProps",
         "ImageMarkerEditorRenderAdapter",
         "ImageMarkerEditorToolbarProps",
+        "MarkerImageInfo",
+        "WatermarkBlendMode",
         "WatermarkRecipeDefinition",
         "WatermarkRecipeDefinitionLayer",
         "WatermarkRecipeDocument",
-        "WatermarkRecipeInput"
+        "WatermarkRecipeInput",
+        "WatermarkTextStyle"
       ]
     },
     "./core-adapter": {
       "source": "src/core-adapter.ts",
-      "values": ["createCoreEditorAdapter"],
+      "values": ["createCoreEditorAdapter", "resolveCoreEditorSourceInfo"],
       "types": []
     }
   }

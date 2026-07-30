@@ -1,5 +1,6 @@
 import type {
   ImageMarkOptions,
+  ImageOptions,
   MarkOptions,
   TextMarkOptions,
   TextOptions,
@@ -29,6 +30,8 @@ import type {
   InvisibleWatermarkDetectionData,
   InvisibleWatermarkDetectionResult,
 } from '../invisible-watermark';
+import { getWebImageInfo } from './browser';
+import type { MarkerImageInfo } from '../image-info';
 import { runControlledMarkerJob, runMarkerJob } from '../job';
 import type { MarkerJobOptions } from '../job';
 import type { MarkerResult } from '../result';
@@ -148,6 +151,11 @@ function createMarkLayers(options: MarkOptions): WebRenderLayer[] {
  * 2D implementation, which only touches DOM globals when a method is called.
  */
 class Marker {
+  /** Read display dimensions, encoded dimensions, format, and orientation. */
+  static getImageInfo(source: ImageOptions['src']): Promise<MarkerImageInfo> {
+    return getWebImageInfo(source);
+  }
+
   /** Embed a locator first, then ask the supplied adapter to sign the result. */
   static embedInvisibleWithCredentials(
     options: EmbedInvisibleWithCredentialsOptions,

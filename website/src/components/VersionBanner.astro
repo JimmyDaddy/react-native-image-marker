@@ -6,21 +6,25 @@ const channel =
   process.env.DOCS_CHANNEL ||
   (versions.releaseStage === 'ga' ? 'current' : 'preview');
 const isZh = Astro.url.pathname.includes('/zh-cn/');
-const v2Base = versions.releaseStage === 'ga' ? '/v2/' : '/next/';
+const v2Base =
+  versions.releaseStage === 'ga'
+    ? isZh
+      ? '/zh-cn/'
+      : '/'
+    : isZh
+      ? '/next/zh-cn/'
+      : '/next/';
+const v1Base = isZh ? '/v1/zh-cn/' : '/v1/';
 
 const versionNotice =
   channel === 'preview'
     ? isZh
-      ? '这是 v2 预览文档，API 在正式发布前仍可能调整。查看 <a href="/v1/">v1 LTS 文档</a>。'
-      : 'These are the v2 preview docs. APIs may still change before release. See the <a href="/v1/">v1 LTS docs</a>.'
+      ? `这是 v2 预览文档，API 在正式发布前仍可能调整。查看 <a href="${v1Base}">v1 LTS 文档</a>。`
+      : `These are the v2 preview docs. APIs may still change before release. See the <a href="${v1Base}">v1 LTS docs</a>.`
     : channel === 'v1'
       ? isZh
         ? `v1 处于长期维护状态，将继续接收兼容性、安全和严重错误修复。查看 <a href="${v2Base}">${versions.releaseStage === 'ga' ? '当前 v2 文档' : 'v2 预览'}</a>。`
         : `v1 is in long-term maintenance and continues to receive compatibility, security, and critical bug fixes. See the <a href="${v2Base}">${versions.releaseStage === 'ga' ? 'current v2 docs' : 'v2 preview'}</a>.`
-      : channel === 'current'
-        ? isZh
-          ? '这是当前 v2 文档。需要兼容旧接口？查看 <a href="/v1/">v1 LTS 文档</a>。'
-          : 'These are the current v2 docs. Need the compatible API? See the <a href="/v1/">v1 LTS docs</a>.'
       : undefined;
 ---
 

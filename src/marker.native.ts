@@ -4,11 +4,17 @@ import NativeImageMarker from './NativeImageMarker';
 import {
   createNativeDetectInvisibleOptions,
   createNativeEmbedInvisibleOptions,
+  createNativeImageSource,
   createNativeMarkOptions,
   normalizeImageMarkOptions,
   normalizeTextMarkOptions,
 } from './normalize';
-import type { ImageMarkOptions, MarkOptions, TextMarkOptions } from './index';
+import type {
+  ImageMarkOptions,
+  ImageOptions,
+  MarkOptions,
+  TextMarkOptions,
+} from './index';
 import { createWatermarkRecipe, importWatermarkRecipe } from './recipe';
 import type {
   WatermarkBlobRecipeResultOptions,
@@ -31,6 +37,8 @@ import type {
 import { runControlledMarkerJob, runMarkerJob } from './job';
 import type { MarkerJobOptions } from './job';
 import type { MarkerResult } from './result';
+import { parseNativeImageInfo } from './image-info';
+import type { MarkerImageInfo } from './image-info';
 import { runWatermarkBatch } from './batch';
 import type { WatermarkBatchOptions, WatermarkBatchResult } from './batch';
 import {
@@ -78,6 +86,15 @@ function cancelNativeJob(jobId: string): Promise<boolean> {
 
 /** Native iOS and Android implementation of the public Marker API. */
 class Marker {
+  /** Read display dimensions, encoded dimensions, format, and orientation. */
+  static async getImageInfo(
+    source: ImageOptions['src']
+  ): Promise<MarkerImageInfo> {
+    return parseNativeImageInfo(
+      await getImageMarker().getImageInfo(createNativeImageSource(source))
+    );
+  }
+
   /** Embed a locator first, then ask the supplied adapter to sign the result. */
   static embedInvisibleWithCredentials(
     options: EmbedInvisibleWithCredentialsOptions,
