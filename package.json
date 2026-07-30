@@ -65,6 +65,7 @@
   ],
   "scripts": {
     "test": "jest",
+    "test:ci-guards": "node --test scripts/__tests__/verify-github-actions.test.mjs scripts/__tests__/verify-size-budgets.test.mjs",
     "test:release-routing": "node --test scripts/__tests__/release-target.test.mjs",
     "test:web": "jest src/__tests__/web-marker.test.ts src/__tests__/web-marker-api.test.ts src/__tests__/web-marker-render.test.ts src/__tests__/invisible-worker-client.test.ts --runInBand",
     "test:editor": "npm test --workspace react-native-image-marker-editor",
@@ -80,6 +81,10 @@
     "build:editor": "npm run build --workspace react-native-image-marker-editor",
     "check:editor-api": "npm run check:api --workspace react-native-image-marker-editor",
     "verify:consumer": "npm run prepack && npm run build:editor && node scripts/verify-package-consumer.mjs",
+    "verify:actions": "node scripts/verify-github-actions.mjs",
+    "verify:size:core": "node scripts/verify-size-budgets.mjs core",
+    "verify:size:editor": "node scripts/verify-size-budgets.mjs editor",
+    "verify:size:website": "node scripts/verify-size-budgets.mjs website",
     "check:release-notes": "node scripts/check-release-notes.mjs",
     "release": "release-it",
     "example": "yarn --cwd example",

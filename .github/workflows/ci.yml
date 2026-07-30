@@ -30,35 +30,7 @@ jobs:
           fetch-depth: 0
 
       - name: Verify immutable GitHub Actions references
-        run: |
-          python3 <<'PY'
-          import pathlib
-          import re
-
-          action_ref = re.compile(r"^\s*uses:\s*([^\s#]+)", re.MULTILINE)
-          immutable_ref = re.compile(r"^[^@]+@[0-9a-f]{40}$")
-          failures = []
-
-          for path in pathlib.Path(".github").rglob("*"):
-              if path.suffix not in {".yml", ".yaml"}:
-                  continue
-              content = path.read_text(encoding="utf-8")
-              for match in action_ref.finditer(content):
-                  value = match.group(1)
-                  if value.startswith("./") or value.startswith("docker://"):
-                      continue
-                  if not immutable_ref.fullmatch(value):
-                      line = content.count("\n", 0, match.start()) + 1
-                      failures.append(f"{path}:{line}: {value}")
-
-          if failures:
-              raise SystemExit(
-                  "Remote GitHub Actions must use a full commit SHA:\n"
-                  + "\n".join(failures)
-              )
-
-          print("Verified immutable GitHub Actions references.")
-          PY
+        run: node scripts/verify-github-actions.mjs
 
       - name: Classify changed files
         id: filter
@@ -292,8 +264,8 @@ jobs:
           # are audited below.
           allow-ghsas: GHSA-mh99-v99m-4gvg,GHSA-2p57-rm9w-gvfp,GHSA-gh4j-gqv2-49f6
 
-      - name: Setup node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+      - name: Setup Node.js
+        uses: ./.github/actions/setup
         with:
           node-version: '22.22.0'
 
@@ -356,10 +328,13 @@ jobs:
         run: |
           npm test -- --coverage --runInBand
           npm run test:cpp
+          npm run test:ci-guards
           npm run test:release-routing
 
       - name: Build package
-        run: npm run prepack
+        run: |
+          npm run prepack
+          npm run verify:size:core
 
   editor-check:
     runs-on: ubuntu-latest
@@ -370,11 +345,10 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - name: Setup node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+      - name: Setup Node.js
+        uses: ./.github/actions/setup
         with:
           node-version: '22.22.0'
-          cache: npm
           cache-dependency-path: package-lock.json
 
       - name: Install dependencies
@@ -386,6 +360,7 @@ jobs:
           npm run test:editor
           npm run build:editor
           npm run check:editor-api
+          npm run verify:size:editor
 
       - name: Verify packed Core and Editor consumers
         run: node scripts/verify-package-consumer.mjs
@@ -399,11 +374,10 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - name: Setup node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+      - name: Setup Node.js
+        uses: ./.github/actions/setup
         with:
           node-version: '22.22.0'
-          cache: npm
           cache-dependency-path: examples/c2pa-service/package-lock.json
 
       - name: Install dependencies
@@ -435,11 +409,10 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - name: Setup node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+      - name: Setup Node.js
+        uses: ./.github/actions/setup
         with:
           node-version: ${{ matrix.node }}
-          cache: npm
           cache-dependency-path: |
             package-lock.json
             examples/trace-service/package-lock.json
@@ -515,11 +488,10 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - name: Setup node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+      - name: Setup Node.js
+        uses: ./.github/actions/setup
         with:
           node-version: '22.22.0'
-          cache: npm
           cache-dependency-path: |
             package-lock.json
             website/package-lock.json
@@ -530,7 +502,9 @@ jobs:
           npm ci --prefix website
 
       - name: Build and verify documentation
-        run: npm run docs
+        run: |
+          npm run docs
+          npm run verify:size:website
 
       - name: Install Chromium
         run: npm exec --prefix website -- playwright install --with-deps chromium firefox webkit
@@ -547,11 +521,10 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - name: Setup node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+      - name: Setup Node.js
+        uses: ./.github/actions/setup
         with:
           node-version: '22.22.0'
-          cache: npm
           cache-dependency-path: |
             package-lock.json
             expo-example/package-lock.json
@@ -598,22 +571,10 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - name: Setup node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+      - name: Setup Android toolchain
+        uses: ./.github/actions/setup-android
         with:
-          node-version: '22.22.0'
-          cache: npm
           cache-dependency-path: expo-example/package-lock.json
-
-      - name: Set up JDK
-        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5
-        with:
-          distribution: temurin
-          java-version: '17'
-          cache: gradle
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4
 
       - name: Install dependencies
         run: npm ci --prefix expo-example --ignore-scripts --no-audit --no-fund
@@ -645,179 +606,42 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - name: Setup node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
-        with:
-          node-version: '22.22.0'
-          cache: npm
-          cache-dependency-path: package-lock.json
-
-      - name: Set up JDK
-        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5
-        with:
-          distribution: temurin
-          java-version: '17'
-          cache: gradle
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4
+      - name: Setup Android toolchain
+        uses: ./.github/actions/setup-android
 
       - name: Install and build current React Native fixture
         run: |
           npm ci
           bash scripts/test-react-native-current.sh
 
-  install-dep:
-    runs-on: macos-latest
-    env:
-      NO_FLIPPER: '1'
-    name: Install dependencies
-    needs: changes
-    if: needs.changes.outputs.native == 'true'
-    steps:
-      - name: Checkout the code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-
-      - name: Verify Dev Changed files
-        uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v47
-        id: verify-dev-changed-files
-        with:
-          files: |
-            !*.md
-            !*.MD
-            !*.yml
-
-      - uses: actions/cache@v6
-        name: Cache node_modules
-        id: cache-node-modules
-        if: steps.verify-dev-changed-files.outputs.any_changed == 'true'
-        with:
-          path: |
-            node_modules
-            example/node_modules
-          key: ${{ runner.os }}-nodeModules-${{ hashFiles('package.json') }}-${{ hashFiles('example/package.json') }}
-          restore-keys: |
-            ${{ runner.os }}-nodeModules-
-
-      - name: Set up Ruby
-        if: steps.verify-dev-changed-files.outputs.any_changed == 'true'
-        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1
-        with:
-          ruby-version: '3.2'
-          bundler-cache: true
-
-      - name: Setup node
-        if: steps.verify-dev-changed-files.outputs.any_changed == 'true'
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
-        with:
-          node-version: '22.22.0'
-
-      - name: Install npm dependencies
-        if: steps.cache-node-modules.outputs.cache-hit != 'true' && steps.verify-dev-changed-files.outputs.any_changed == 'true'
-        run: |
-          ls
-          pwd
-          npm install
-          cd example
-          ls
-          pwd
-          npm install
-
-      - name: Typecheck example
-        if: steps.verify-dev-changed-files.outputs.any_changed == 'true'
-        run: npm run typecheck:example
-
   android-build:
     runs-on: macos-latest
     name: RN 0.73 Android (Legacy + New Architecture)
-    needs: [changes, install-dep]
+    needs: changes
     if: needs.changes.outputs.android == 'true'
     steps:
       - name: Checkout the code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - name: Verify Android Changed files
-        uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v47
-        id: verify-android-changed-files
+      - name: Setup Android toolchain
+        uses: ./.github/actions/setup-android
         with:
-          files: |
-            android/**
-            src/**
-            package.json
+          java-distribution: zulu
+          cache-dependency-path: |
             package-lock.json
-            app.plugin.js
-            .github/workflows/ci.yml
-            example/android/**
-            example/app.json
-            example/babel.config.js
-            !example/ios/**
-            example/e2e/**
-            example/index.js
-            example/metro.config.js
-            example/package.json
             example/package-lock.json
-            example/tsconfig.json
-            example/src/**
-            scripts/run-android-instrumentation.sh
-
-      - uses: actions/cache@v6
-        name: Cache node_modules
-        if: steps.verify-android-changed-files.outputs.any_changed == 'true'
-        id: cache-node-modules
-        with:
-          path: |
-            node_modules
-            example/node_modules
-          key: ${{ runner.os }}-nodeModules-${{ hashFiles('package.json') }}-${{ hashFiles('example/package.json') }}
-          restore-keys: |
-            ${{ runner.os }}-nodeModules-
-
-      - uses: actions/cache@v6
-        id: cache-gradle
-        name: Cache Gradle dependencies
-        if: steps.verify-android-changed-files.outputs.any_changed == 'true'
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('example/android/gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('android/src/**/*.kt') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-
-      - name: Setup node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
-        if: steps.verify-android-changed-files.outputs.any_changed == 'true'
-        with:
-          node-version: '22.22.0'
-
-      - name: Set up JDK
-        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5
-        if: steps.verify-android-changed-files.outputs.any_changed == 'true'
-        with:
-          distribution: 'zulu'
-          java-version: 17
 
       - name: Install npm dependencies
-        if: steps.cache-node-modules.outputs.cache-hit != 'true' && steps.verify-android-changed-files.outputs.any_changed == 'true'
         run: |
-          npm install
-          cd example
-          npm install
-
-      - name: Install Gradle dependencies
-        if: steps.cache-gradle.outputs.cache-hit != 'true' && steps.verify-android-changed-files.outputs.any_changed == 'true'
-        run: |
-          cd example/android
-          ./gradlew build --stacktrace
+          npm ci
+          npm ci --prefix example
 
       - name: Run unit tests
-        if: steps.verify-android-changed-files.outputs.any_changed == 'true'
         run: |
           cd example/android
           ./gradlew test --stacktrace
 
       - name: Build APK
-        if: steps.verify-android-changed-files.outputs.any_changed == 'true'
         run: |
           npm run prepack
           cd example/android
@@ -825,21 +649,18 @@ jobs:
           mv app/build/outputs/apk/release/app-release.apk app-release-${{ github.sha }}.apk
 
       - name: Upload APK
-        if: steps.verify-android-changed-files.outputs.any_changed == 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: app-release-${{ github.sha }}.apk
           path: ${{ github.workspace }}/example/android/app-release-${{ github.sha }}.apk
 
       - name: Build APK New Architecture
-        if: steps.verify-android-changed-files.outputs.any_changed == 'true'
         run: |
           cd example/android
           ./gradlew clean
           ./gradlew -PnewArchEnabled=true assembleDebug --stacktrace
 
       - name: Compile Android tests New Architecture
-        if: steps.verify-android-changed-files.outputs.any_changed == 'true'
         run: |
           cd example/android
           ./gradlew -PnewArchEnabled=true :app:compileDebugAndroidTestKotlin --stacktrace
@@ -858,76 +679,20 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - name: Verify Android Changed files
-        uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v47
-        id: verify-android-changed-files
+      - name: Setup Android toolchain
+        uses: ./.github/actions/setup-android
         with:
-          files: |
-            android/**
-            src/**
-            package.json
+          java-distribution: zulu
+          cache-dependency-path: |
             package-lock.json
-            app.plugin.js
-            .github/workflows/ci.yml
-            example/android/**
-            example/app.json
-            example/babel.config.js
-            !example/ios/**
-            example/e2e/**
-            example/index.js
-            example/metro.config.js
-            example/package.json
             example/package-lock.json
-            example/tsconfig.json
-            example/src/**
-            scripts/run-android-instrumentation.sh
-
-      - uses: actions/cache@v6
-        name: Cache node_modules
-        if: steps.verify-android-changed-files.outputs.any_changed == 'true'
-        id: cache-node-modules
-        with:
-          path: |
-            node_modules
-            example/node_modules
-          key: ${{ runner.os }}-nodeModules-${{ hashFiles('package.json') }}-${{ hashFiles('example/package.json') }}
-          restore-keys: |
-            ${{ runner.os }}-nodeModules-
-
-      - uses: actions/cache@v6
-        name: Cache Gradle dependencies
-        if: steps.verify-android-changed-files.outputs.any_changed == 'true'
-        id: cache-gradle
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('example/android/gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('android/src/**/*.kt') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-
-      - name: Setup node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
-        if: steps.verify-android-changed-files.outputs.any_changed == 'true'
-        with:
-          node-version: '22.22.0'
-
-      - name: Set up JDK
-        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5
-        if: steps.verify-android-changed-files.outputs.any_changed == 'true'
-        with:
-          distribution: 'zulu'
-          java-version: 17
 
       - name: Install npm dependencies
-        if: steps.cache-node-modules.outputs.cache-hit != 'true' && steps.verify-android-changed-files.outputs.any_changed == 'true'
         run: |
-          npm install
-          cd example
-          npm install
+          npm ci
+          npm ci --prefix example
 
       - name: Enable KVM group perms
-        if: steps.verify-android-changed-files.outputs.any_changed == 'true'
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
@@ -935,7 +700,6 @@ jobs:
 
       - name: Instrumentation Tests
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
-        if: steps.verify-android-changed-files.outputs.any_changed == 'true'
         with:
           api-level: ${{ matrix.api-level }}
           target: ${{ matrix.target }}
@@ -945,7 +709,6 @@ jobs:
 
       - name: Upload Reports
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        if: steps.verify-android-changed-files.outputs.any_changed == 'true'
         with:
           name: Test-Reports-api-${{ matrix.api-level }}
           path: ${{ github.workspace }}/example/android/app/build/reports
@@ -954,7 +717,7 @@ jobs:
     runs-on: macos-15
     env:
       NO_FLIPPER: '1'
-    needs: [changes, install-dep]
+    needs: changes
     if: needs.changes.outputs.ios == 'true'
     name: RN 0.73 iOS (Legacy Architecture)
     strategy:
@@ -964,46 +727,17 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - name: Verify iOS Changed files
-        uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v47
-        id: verify-iOS-changed-files
+      - name: Setup iOS toolchain
+        uses: ./.github/actions/setup-ios
         with:
-          files: |
-            ios/**
-            src/**
-            package.json
+          cocoapods-version: ${{ matrix.cocoapods }}
+          cache-dependency-path: |
             package-lock.json
-            app.plugin.js
-            react-native-image-marker.podspec
-            .github/workflows/ci.yml
-            example/app.json
-            example/babel.config.js
-            !example/android/**
-            example/e2e/**
-            example/index.js
-            example/ios/**
-            example/metro.config.js
-            example/package.json
             example/package-lock.json
-            example/tsconfig.json
-            example/src/**
-
-      - uses: actions/cache@v6
-        name: Cache node_modules
-        id: cache-node-modules
-        if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
-        with:
-          path: |
-            node_modules
-            example/node_modules
-          key: ${{ runner.os }}-nodeModules-${{ hashFiles('package.json') }}-${{ hashFiles('example/package.json') }}
-          restore-keys: |
-            ${{ runner.os }}-nodeModules-
 
       - name: Cache Pods
         id: cache-pods
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
-        if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
         with:
           path: example/ios/Pods
           key: ${{ runner.os }}-pods-${{ matrix.cocoapods }}-${{ hashFiles('example/ios/Podfile', 'react-native-image-marker.podspec', 'package.json', 'ios/**/*', 'src/NativeImageMarker.ts') }}
@@ -1011,36 +745,15 @@ jobs:
             ${{ runner.os }}-pods-${{ matrix.cocoapods }}-
             ${{ runner.os }}-pods-
 
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1
-        if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
-        with:
-          ruby-version: '3.2'
-          bundler-cache: true
-
-      - name: Install Cocoapods
-        if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
-        run: gem install cocoapods -v ${{ matrix.cocoapods }}
-
-      - name: Setup node
-        if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
-        with:
-          node-version: '22.22.0'
-
       - name: Install npm dependencies
-        if: steps.cache-node-modules.outputs.cache-hit != 'true' && steps.verify-iOS-changed-files.outputs.any_changed == 'true'
         run: |
-          npm install
-          cd example
-          npm install
+          npm ci
+          npm ci --prefix example
 
       - name: Compile shared C++ Swift bridge
-        if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
         run: npm run test:cpp:ios-bridge
 
       - name: Install Pods
-        if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
         run: |
           cd example/ios
           if [ "${{ steps.cache-pods.outputs.cache-hit }}" != "true" ]; then
@@ -1048,12 +761,7 @@ jobs:
           fi
           pod install
 
-      - name: Install xcpretty
-        if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
-        run: gem install xcpretty
-
       - name: Select iOS simulator
-        if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
         id: ios-simulator
         run: |
           simulator_id="$(
@@ -1068,7 +776,6 @@ jobs:
           echo "id=$simulator_id" >> "$GITHUB_OUTPUT"
 
       - name: Build
-        if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
         run: |
           set -o pipefail
           cd example/ios
@@ -1079,7 +786,6 @@ jobs:
           }
 
       - name: Test
-        if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
         run: |
           set -o pipefail
           cd example/ios
@@ -1135,13 +841,11 @@ jobs:
             }
 
       - name: Install Pods New Architecture
-        if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
         run: |
           cd example/ios
           RCT_NEW_ARCH_ENABLED=1 NO_FLIPPER=1 pod install
 
       - name: Build New Architecture
-        if: steps.verify-iOS-changed-files.outputs.any_changed == 'true'
         run: |
           set -o pipefail
           cd example/ios
@@ -1165,7 +869,6 @@ jobs:
         web-example,
         expo-current,
         react-native-current,
-        install-dep,
         android-build,
         android-api-level-test,
         ios-build-test,
