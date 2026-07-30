@@ -1,0 +1,292 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://image-marker.corerobin.com/schema/recipe-v2.json",
+  "title": "Image Marker Recipe v2",
+  "description": "A platform-neutral ordered watermark composition document.",
+  "type": "object",
+  "required": ["schemaVersion", "layers", "output"],
+  "properties": {
+    "schemaVersion": { "const": 2 },
+    "layers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          { "$ref": "#/$defs/textLayer" },
+          { "$ref": "#/$defs/imageLayer" }
+        ]
+      }
+    },
+    "output": { "$ref": "#/$defs/output" }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "measure": {
+      "oneOf": [
+        { "type": "number" },
+        {
+          "type": "string",
+          "pattern": "^[+-]?(?:\\d+(?:\\.\\d+)?|\\.\\d+)%?$"
+        }
+      ]
+    },
+    "layerId": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,127}$"
+    },
+    "condition": {
+      "type": "object",
+      "required": ["variable", "equals"],
+      "properties": {
+        "variable": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_.-]*$"
+        },
+        "equals": {
+          "type": ["string", "number", "boolean"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "position": {
+      "type": "object",
+      "properties": {
+        "X": { "$ref": "#/$defs/measure" },
+        "Y": { "$ref": "#/$defs/measure" },
+        "edgeInset": { "$ref": "#/$defs/measure" },
+        "position": {
+          "enum": [
+            "topLeft",
+            "topCenter",
+            "topRight",
+            "bottomLeft",
+            "bottomCenter",
+            "bottomRight",
+            "center"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "layout": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "single" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type"],
+          "properties": {
+            "type": { "const": "tile" },
+            "gapX": { "$ref": "#/$defs/measure" },
+            "gapY": { "$ref": "#/$defs/measure" },
+            "offsetX": { "$ref": "#/$defs/measure" },
+            "offsetY": { "$ref": "#/$defs/measure" },
+            "stagger": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "radius": {
+      "type": "object",
+      "required": ["x", "y"],
+      "properties": {
+        "x": { "$ref": "#/$defs/measure" },
+        "y": { "$ref": "#/$defs/measure" }
+      },
+      "additionalProperties": false
+    },
+    "cornerRadius": {
+      "type": "object",
+      "properties": {
+        "topLeft": { "$ref": "#/$defs/radius" },
+        "topRight": { "$ref": "#/$defs/radius" },
+        "bottomLeft": { "$ref": "#/$defs/radius" },
+        "bottomRight": { "$ref": "#/$defs/radius" },
+        "all": { "$ref": "#/$defs/radius" }
+      },
+      "additionalProperties": false
+    },
+    "textBackground": {
+      "type": ["object", "null"],
+      "required": ["color"],
+      "properties": {
+        "type": {
+          "enum": ["stretchX", "stretchY", "fit", null]
+        },
+        "color": { "type": "string", "minLength": 1 },
+        "padding": { "$ref": "#/$defs/measure" },
+        "paddingLeft": { "$ref": "#/$defs/measure" },
+        "paddingRight": { "$ref": "#/$defs/measure" },
+        "paddingTop": { "$ref": "#/$defs/measure" },
+        "paddingBottom": { "$ref": "#/$defs/measure" },
+        "paddingHorizontal": { "$ref": "#/$defs/measure" },
+        "paddingVertical": { "$ref": "#/$defs/measure" },
+        "paddingX": { "$ref": "#/$defs/measure" },
+        "paddingY": { "$ref": "#/$defs/measure" },
+        "cornerRadius": { "$ref": "#/$defs/cornerRadius" }
+      },
+      "additionalProperties": false
+    },
+    "textStyle": {
+      "type": "object",
+      "properties": {
+        "color": { "type": "string", "minLength": 1 },
+        "fontName": { "type": "string", "minLength": 1 },
+        "fontFallbacks": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "fontSize": { "type": "number", "exclusiveMinimum": 0 },
+        "fontSizeRatio": { "type": "number", "exclusiveMinimum": 0 },
+        "maxWidth": { "$ref": "#/$defs/measure" },
+        "lineHeight": { "type": "number", "exclusiveMinimum": 0 },
+        "letterSpacing": { "type": "number" },
+        "direction": { "enum": ["auto", "ltr", "rtl"] },
+        "wrap": { "enum": ["word", "character", "none"] },
+        "maxLines": { "type": "integer", "minimum": 1 },
+        "overflow": { "enum": ["clip", "ellipsis"] },
+        "shadowStyle": {
+          "type": ["object", "null"],
+          "required": ["dx", "dy", "radius", "color"],
+          "properties": {
+            "dx": { "type": "number" },
+            "dy": { "type": "number" },
+            "radius": { "type": "number", "minimum": 0 },
+            "color": { "type": "string", "minLength": 1 }
+          },
+          "additionalProperties": false
+        },
+        "textBackgroundStyle": { "$ref": "#/$defs/textBackground" },
+        "strokeStyle": {
+          "type": ["object", "null"],
+          "required": ["color", "width"],
+          "properties": {
+            "color": { "type": "string", "minLength": 1 },
+            "width": { "type": "number", "minimum": 0 }
+          },
+          "additionalProperties": false
+        },
+        "underline": { "type": "boolean" },
+        "skewX": { "type": "number" },
+        "strikeThrough": { "type": "boolean" },
+        "textAlign": { "enum": ["left", "center", "right"] },
+        "italic": { "type": "boolean" },
+        "bold": { "type": "boolean" },
+        "rotate": { "type": "number" }
+      },
+      "additionalProperties": false
+    },
+    "layerMetadata": {
+      "type": "object",
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "$ref": "#/$defs/layerId" },
+        "name": { "type": "string", "minLength": 1 },
+        "visible": { "type": "boolean" },
+        "locked": { "type": "boolean" },
+        "groupId": { "$ref": "#/$defs/layerId" },
+        "visibleWhen": { "$ref": "#/$defs/condition" },
+        "alpha": { "type": "number", "minimum": 0, "maximum": 1 },
+        "blendMode": {
+          "enum": [
+            "normal",
+            "multiply",
+            "screen",
+            "overlay",
+            "darken",
+            "lighten"
+          ]
+        },
+        "position": { "$ref": "#/$defs/position" },
+        "layout": { "$ref": "#/$defs/layout" }
+      }
+    },
+    "textLayer": {
+      "allOf": [
+        { "$ref": "#/$defs/layerMetadata" },
+        {
+          "type": "object",
+          "required": ["id", "type", "text"],
+          "properties": {
+            "id": { "$ref": "#/$defs/layerId" },
+            "type": { "const": "text" },
+            "text": { "type": "string" },
+            "name": { "type": "string", "minLength": 1 },
+            "visible": { "type": "boolean" },
+            "locked": { "type": "boolean" },
+            "groupId": { "$ref": "#/$defs/layerId" },
+            "visibleWhen": { "$ref": "#/$defs/condition" },
+            "alpha": { "type": "number", "minimum": 0, "maximum": 1 },
+            "blendMode": {
+              "enum": [
+                "normal",
+                "multiply",
+                "screen",
+                "overlay",
+                "darken",
+                "lighten"
+              ]
+            },
+            "position": { "$ref": "#/$defs/position" },
+            "layout": { "$ref": "#/$defs/layout" },
+            "style": { "$ref": "#/$defs/textStyle" }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "imageLayer": {
+      "allOf": [
+        { "$ref": "#/$defs/layerMetadata" },
+        {
+          "type": "object",
+          "required": ["id", "type", "src"],
+          "properties": {
+            "id": { "$ref": "#/$defs/layerId" },
+            "type": { "const": "image" },
+            "src": { "not": { "type": "null" } },
+            "name": { "type": "string", "minLength": 1 },
+            "visible": { "type": "boolean" },
+            "locked": { "type": "boolean" },
+            "groupId": { "$ref": "#/$defs/layerId" },
+            "visibleWhen": { "$ref": "#/$defs/condition" },
+            "scale": { "type": "number", "exclusiveMinimum": 0 },
+            "rotate": { "type": "number" },
+            "alpha": { "type": "number", "minimum": 0, "maximum": 1 },
+            "blendMode": {
+              "enum": [
+                "normal",
+                "multiply",
+                "screen",
+                "overlay",
+                "darken",
+                "lighten"
+              ]
+            },
+            "position": { "$ref": "#/$defs/position" },
+            "layout": { "$ref": "#/$defs/layout" },
+            "trimTransparentPadding": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "output": {
+      "type": "object",
+      "properties": {
+        "quality": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "saveFormat": { "enum": ["jpg", "png", "webp", "base64"] },
+        "matteColor": { "type": "string", "minLength": 1 },
+        "rotationCanvasMode": { "enum": ["expand", "crop"] },
+        "maxSize": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    }
+  }
+}

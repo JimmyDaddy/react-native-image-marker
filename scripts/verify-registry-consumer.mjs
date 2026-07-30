@@ -39,12 +39,13 @@ try {
       2
     )
   );
-  const dependencies = [
-    `${packageName}@${version}`,
-    'typescript@5.9.3',
-    'react@18.2.0',
-    'react-native@0.73.3',
-  ];
+  const dependencies = [`${packageName}@${version}`, 'typescript@5.9.3'];
+  if (
+    packageName === 'react-native-image-marker' ||
+    packageName === 'react-native-image-marker-editor'
+  ) {
+    dependencies.push('react@18.2.0', 'react-native@0.73.3');
+  }
   if (packageName === 'react-native-image-marker-editor') {
     dependencies.push('react-native-image-marker@^2.0.0');
   }
@@ -122,7 +123,9 @@ void output;
   } else if (packageName === 'react-native-image-marker-editor') {
     const peerRange = manifest.peerDependencies?.['react-native-image-marker'];
     if (peerRange !== '^2.0.0') {
-      throw new Error(`Editor published an invalid Core peer range: ${peerRange}.`);
+      throw new Error(
+        `Editor published an invalid Core peer range: ${peerRange}.`
+      );
     }
     run('node', [
       '-e',
@@ -150,6 +153,32 @@ const request: EditorRenderRequest = {
   input: { backgroundImage: { src: '/source.png' } },
 };
 void request;
+`;
+  } else if (packageName === '@image-marker/recipe') {
+    run('node', [
+      '-e',
+      "const recipe=require('@image-marker/recipe'); if(recipe.WATERMARK_RECIPE_SCHEMA_VERSION!==2) process.exit(1)",
+    ]);
+    run('node', [
+      '--input-type=module',
+      '-e',
+      "const recipe=await import('@image-marker/recipe'); if(recipe.WATERMARK_RECIPE_SCHEMA_VERSION!==2) process.exit(1)",
+    ]);
+    consumerSource = `import {
+  createWatermarkRecipeDefinition,
+  materializeWatermarkRecipe,
+  type WatermarkRecipeDefinition,
+} from '@image-marker/recipe';
+
+const definition: WatermarkRecipeDefinition =
+  createWatermarkRecipeDefinition({
+    layers: [{ id: 'title', type: 'text', text: 'Hello {{name}}' }],
+    output: { saveFormat: 'png' },
+  });
+const materialized = materializeWatermarkRecipe(definition, {
+  variables: { name: 'Alice' },
+});
+void materialized;
 `;
   } else {
     throw new Error(`Unsupported release consumer target: ${packageName}.`);

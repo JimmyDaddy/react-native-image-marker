@@ -43,8 +43,12 @@ try {
   const expectedEditorManifest = JSON.parse(
     await readFile(join(repositoryRoot, 'packages/editor/package.json'), 'utf8')
   );
+  const expectedRecipeManifest = JSON.parse(
+    await readFile(join(repositoryRoot, 'packages/recipe/package.json'), 'utf8')
+  );
   const coreTarball = pack('.');
   const editorTarball = pack('./packages/editor');
+  const recipeTarball = pack('./packages/recipe');
   await writeFile(
     join(consumerDirectory, 'package.json'),
     JSON.stringify(
@@ -63,6 +67,7 @@ try {
     '--legacy-peer-deps',
     coreTarball,
     editorTarball,
+    recipeTarball,
   ]);
   run('npm', ['audit', '--omit=dev', '--audit-level=moderate']);
 
@@ -79,6 +84,51 @@ try {
     [
       "const core = await import('react-native-image-marker');",
       "if (core.ImageFormat.webp !== 'webp') process.exit(1);",
+    ].join(''),
+  ]);
+
+  const recipeManifest = JSON.parse(
+    await readFile(
+      join(consumerDirectory, 'node_modules/@image-marker/recipe/package.json'),
+      'utf8'
+    )
+  );
+  if (
+    recipeManifest.version !== expectedRecipeManifest.version ||
+    recipeManifest.dependencies ||
+    recipeManifest.exports?.['./schema.json'] !== './recipe.schema.json'
+  ) {
+    throw new Error(
+      'The packed Recipe manifest has an invalid version, schema export, or runtime dependency graph.'
+    );
+  }
+  const recipeSchema = JSON.parse(
+    await readFile(
+      join(
+        consumerDirectory,
+        'node_modules/@image-marker/recipe/recipe.schema.json'
+      ),
+      'utf8'
+    )
+  );
+  if (recipeSchema.properties?.schemaVersion?.const !== 2) {
+    throw new Error('The packed Recipe JSON Schema is missing or invalid.');
+  }
+  run('node', [
+    '-e',
+    [
+      "const recipe = require('@image-marker/recipe');",
+      'const value = recipe.createWatermarkRecipeDefinition({layers:[{type:"text",text:"Hello"}]});',
+      'if (value.layers[0]?.id !== "layer-1") process.exit(1);',
+    ].join(''),
+  ]);
+  run('node', [
+    '--input-type=module',
+    '-e',
+    [
+      "const recipe = await import('@image-marker/recipe');",
+      'const value = recipe.createWatermarkRecipeDefinition({layers:[{type:"text",text:"Hello"}]});',
+      'if (value.layers[0]?.id !== "layer-1") process.exit(1);',
     ].join(''),
   ]);
 
@@ -146,12 +196,18 @@ import {
 } from 'react-native-image-marker-editor';
 import { createCoreEditorAdapter } from 'react-native-image-marker-editor/core-adapter';
 import { createInvisibleWatermarkRuntime } from 'react-native-image-marker/trace-runtime';
+import {
+  createWatermarkRecipeDefinition,
+  type WatermarkRecipeDefinition as SharedRecipeDefinition,
+} from '@image-marker/recipe';
 
 const definition: WatermarkRecipeDefinition = {
   schemaVersion: 2,
   layers: [{ id: 'title', type: 'text', text: 'Hello' }],
   output: { saveFormat: ImageFormat.png },
 };
+const sharedDefinition: SharedRecipeDefinition =
+  createWatermarkRecipeDefinition(definition);
 const result: Promise<MarkerResult> = Marker.createRecipe(definition).apply(
   { backgroundImage: { src: '/source.png' } },
   { timeoutMs: 5_000 }
@@ -173,6 +229,7 @@ const request: EditorRenderRequest = {
   input: { backgroundImage: { src: '/source.png' } },
 };
 void result;
+void sharedDefinition;
 void ImageMarkerEditor;
 void ImageMarkerEditorToolbar;
 void createCoreEditorAdapter;
@@ -207,7 +264,7 @@ void createInvisibleWatermarkRuntime;
   run(join(repositoryRoot, 'node_modules/.bin/tsc'), ['-p', 'tsconfig.json']);
 
   process.stdout.write(
-    'Verified packed Core CommonJS/ESM, Editor CommonJS/ESM, peer metadata, and consumer types.\n'
+    'Verified packed Recipe, Core, and Editor CommonJS/ESM, peer metadata, and consumer types.\n'
   );
 } finally {
   await rm(consumerDirectory, { recursive: true, force: true });

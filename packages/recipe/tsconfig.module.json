@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "declaration": true,
+    "declarationMap": true,
+    "lib": ["es2022"],
+    "module": "esnext",
+    "noEmit": false,
+    "outDir": "lib/module",
+    "rootDir": "src",
+    "types": []
+  },
+  "include": ["src/**/*"],
+  "exclude": ["src/__tests__/**/*"]
+}

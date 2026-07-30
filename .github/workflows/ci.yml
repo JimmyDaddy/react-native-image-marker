@@ -23,6 +23,7 @@ jobs:
       native: ${{ steps.filter.outputs.native }}
       security: ${{ steps.filter.outputs.security }}
       editor: ${{ steps.filter.outputs.editor }}
+      recipe: ${{ steps.filter.outputs.recipe }}
     steps:
       - name: Checkout the code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -86,10 +87,12 @@ jobs:
                   "cpp/**",
                   "src/**",
                   "packages/editor/**",
+                  "packages/recipe/**",
                   "package.json",
                   "package-lock.json",
                   "app.plugin.js",
                   ".github/workflows/ci.yml",
+                  ".github/actions/**",
                   "example/android/**",
                   "example/app.json",
                   "example/babel.config.js",
@@ -110,11 +113,13 @@ jobs:
                   "cpp/**",
                   "src/**",
                   "packages/editor/**",
+                  "packages/recipe/**",
                   "package.json",
                   "package-lock.json",
                   "app.plugin.js",
                   "react-native-image-marker.podspec",
                   ".github/workflows/ci.yml",
+                  ".github/actions/**",
                   "example/app.json",
                   "example/babel.config.js",
                   "example/e2e/**",
@@ -133,6 +138,7 @@ jobs:
                   "src/**",
                   "cpp/**",
                   "packages/editor/**",
+                  "packages/recipe/**",
                   "package.json",
                   "package-lock.json",
                   "app.plugin.js",
@@ -141,6 +147,7 @@ jobs:
                   ".eslintignore",
                   ".eslintrc.js",
                   ".github/workflows/ci.yml",
+                  ".github/actions/**",
                   "example/package.json",
                   "example/package-lock.json",
                   "example/tsconfig.json",
@@ -151,20 +158,24 @@ jobs:
           web = any_changed(
               [
                   "src/**",
+                  "packages/recipe/**",
                   "package.json",
                   "package-lock.json",
                   "expo-example/**",
                   ".github/workflows/ci.yml",
+                  ".github/actions/**",
               ]
           )
           docs = any_changed(
               [
                   "src/**",
+                  "packages/recipe/**",
                   "website/**",
                   "README.MD",
                   "package.json",
                   ".github/workflows/ci.yml",
                   ".github/workflows/docs-site.yml",
+                  ".github/actions/**",
               ]
           )
           c2pa = any_changed(
@@ -180,17 +191,20 @@ jobs:
                   "src/index.ts",
                   "src/invisible-watermark.ts",
                   "src/trace-runtime.ts",
+                  "packages/recipe/**",
                   "trace-runtime.js",
                   "trace-runtime.d.ts",
                   "package.json",
                   "package-lock.json",
                   ".github/workflows/ci.yml",
+                  ".github/actions/**",
               ]
           )
           security = any_changed(
               [
                   "package.json",
                   "package-lock.json",
+                  "packages/recipe/package.json",
                   "website/package.json",
                   "website/package-lock.json",
                   "example/package.json",
@@ -223,6 +237,21 @@ jobs:
                   "package-lock.json",
                   "tsconfig*.json",
                   ".github/workflows/ci.yml",
+                  ".github/actions/**",
+              ]
+          )
+          recipe = any_changed(
+              [
+                  "packages/recipe/**",
+                  "scripts/fix-esm-imports.mjs",
+                  "scripts/verify-package-consumer.mjs",
+                  "scripts/verify-size-budgets.mjs",
+                  "scripts/size-budgets.json",
+                  "package.json",
+                  "package-lock.json",
+                  "tsconfig*.json",
+                  ".github/workflows/ci.yml",
+                  ".github/actions/**",
               ]
           )
           results = {
@@ -236,6 +265,7 @@ jobs:
               "native": android or ios,
               "security": security,
               "editor": editor,
+              "recipe": recipe,
           }
 
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
@@ -261,7 +291,7 @@ jobs:
           # and the RN 0.73 CLI still pulls ip and fast-xml-parser without
           # compatible patched releases. These advisories are accepted only
           # for the dev graph; the packed Core and Editor production graphs
-          # are audited below.
+          # and platform-neutral Recipe production graphs are audited below.
           allow-ghsas: GHSA-mh99-v99m-4gvg,GHSA-2p57-rm9w-gvfp,GHSA-gh4j-gqv2-49f6
 
       - name: Setup Node.js
@@ -358,12 +388,37 @@ jobs:
         run: |
           npm run prepack
           npm run test:editor
+          npm run build:recipe
           npm run build:editor
           npm run check:editor-api
           npm run verify:size:editor
 
       - name: Verify packed Core and Editor consumers
         run: node scripts/verify-package-consumer.mjs
+
+  recipe-check:
+    runs-on: ubuntu-latest
+    name: Recipe Package and Consumer
+    needs: changes
+    if: needs.changes.outputs.recipe == 'true'
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Setup Node.js
+        uses: ./.github/actions/setup
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test, build, and measure Recipe
+        run: |
+          npm run test:recipe
+          npm run build:recipe
+          npm run verify:size:recipe
+
+      - name: Verify packed package consumers
+        run: npm run verify:consumer
 
   c2pa-service:
     runs-on: ubuntu-latest
@@ -863,6 +918,7 @@ jobs:
         security,
         js-check,
         editor-check,
+        recipe-check,
         c2pa-service,
         trace-service,
         docs-site,

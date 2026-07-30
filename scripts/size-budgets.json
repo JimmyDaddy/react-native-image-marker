@@ -20,6 +20,12 @@
       "name": "react-native-image-marker-editor",
       "maxPackedBytes": 80000,
       "maxUnpackedBytes": 500000
+    },
+    "recipe": {
+      "directory": "packages/recipe",
+      "name": "@image-marker/recipe",
+      "maxPackedBytes": 60000,
+      "maxUnpackedBytes": 300000
     }
   }
 }

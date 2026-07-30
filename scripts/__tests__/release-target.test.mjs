@@ -32,6 +32,21 @@ test('routes editor releases without publishing the core package', () => {
   assert.equal(stable.npmTag, 'latest');
 });
 
+test('routes platform-neutral Recipe releases independently', () => {
+  const target = resolveReleaseTarget('recipe-v0.1.0');
+  assert.deepEqual(target, {
+    tag: 'recipe-v0.1.0',
+    packageName: '@image-marker/recipe',
+    packagePath: 'packages/recipe',
+    version: '0.1.0',
+    branch: 'release/2.0',
+    npmTag: 'latest',
+    additionalDistTags: [],
+    channel: 'recipe',
+  });
+  assert.equal(resolveReleaseTarget('recipe-v0.2.0-next.1').npmTag, 'next');
+});
+
 test('rejects ambiguous or unsupported release tags', () => {
   for (const tag of [
     '',
@@ -40,6 +55,7 @@ test('rejects ambiguous or unsupported release tags', () => {
     'v2.0.0-next.1',
     'editor-v1.0.0',
     'editor-v0.0.1-beta.1',
+    'recipe-v1.0.0',
   ]) {
     assert.throws(() => resolveReleaseTarget(tag));
   }

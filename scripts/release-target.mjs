@@ -1,8 +1,7 @@
 const CORE_V1_TAG = /^v(1\.\d+\.\d+)$/;
-const CORE_V2_TAG =
-  /^v(2\.\d+\.\d+(?:-(alpha|beta|rc)\.\d+)?)$/;
-const EDITOR_TAG =
-  /^editor-v(0\.\d+\.\d+(?:-next\.\d+)?)$/;
+const CORE_V2_TAG = /^v(2\.\d+\.\d+(?:-(alpha|beta|rc)\.\d+)?)$/;
+const EDITOR_TAG = /^editor-v(0\.\d+\.\d+(?:-next\.\d+)?)$/;
+const RECIPE_TAG = /^recipe-v(0\.\d+\.\d+(?:-next\.\d+)?)$/;
 
 /**
  * Resolve a release tag into the only package, branch, and npm dist-tag that
@@ -52,13 +51,25 @@ export function resolveReleaseTarget(tag) {
       branch: 'release/2.0',
       npmTag: editor[1].includes('-next.') ? 'next' : 'latest',
       additionalDistTags: [],
-      channel: editor[1].includes('-next.')
-        ? 'editor-prerelease'
-        : 'editor',
+      channel: editor[1].includes('-next.') ? 'editor-prerelease' : 'editor',
+    };
+  }
+
+  const recipe = normalizedTag.match(RECIPE_TAG);
+  if (recipe) {
+    return {
+      tag: normalizedTag,
+      packageName: '@image-marker/recipe',
+      packagePath: 'packages/recipe',
+      version: recipe[1],
+      branch: 'release/2.0',
+      npmTag: recipe[1].includes('-next.') ? 'next' : 'latest',
+      additionalDistTags: [],
+      channel: recipe[1].includes('-next.') ? 'recipe-prerelease' : 'recipe',
     };
   }
 
   throw new Error(
-    `Unsupported release tag "${normalizedTag}". Expected v1.x.y, v2.x.y[-alpha|beta|rc.n], or editor-v0.x.y[-next.n].`
+    `Unsupported release tag "${normalizedTag}". Expected v1.x.y, v2.x.y[-alpha|beta|rc.n], editor-v0.x.y[-next.n], or recipe-v0.x.y[-next.n].`
   );
 }
