@@ -90,6 +90,8 @@ jobs:
 
       - name: Publish with provenance
         working-directory: ${{ needs.resolve.outputs.package_path }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: >-
           npm publish
           --provenance
