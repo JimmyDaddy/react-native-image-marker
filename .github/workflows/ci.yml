@@ -24,6 +24,7 @@ jobs:
       security: ${{ steps.filter.outputs.security }}
       editor: ${{ steps.filter.outputs.editor }}
       recipe: ${{ steps.filter.outputs.recipe }}
+      node: ${{ steps.filter.outputs.node }}
     steps:
       - name: Checkout the code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -205,6 +206,7 @@ jobs:
                   "package.json",
                   "package-lock.json",
                   "packages/recipe/package.json",
+                  "packages/node/package.json",
                   "website/package.json",
                   "website/package-lock.json",
                   "example/package.json",
@@ -254,6 +256,23 @@ jobs:
                   ".github/actions/**",
               ]
           )
+          node = any_changed(
+              [
+                  "packages/node/**",
+                  "packages/recipe/**",
+                  "scripts/fix-esm-imports.mjs",
+                  "scripts/release-target.mjs",
+                  "scripts/verify-package-consumer.mjs",
+                  "scripts/verify-size-budgets.mjs",
+                  "scripts/size-budgets.json",
+                  "package.json",
+                  "package-lock.json",
+                  "tsconfig*.json",
+                  ".github/workflows/ci.yml",
+                  ".github/workflows/npm-publish.yml",
+                  ".github/actions/**",
+              ]
+          )
           results = {
               "android": android,
               "ios": ios,
@@ -266,6 +285,7 @@ jobs:
               "security": security,
               "editor": editor,
               "recipe": recipe,
+              "node": node,
           }
 
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
@@ -416,6 +436,34 @@ jobs:
           npm run test:recipe
           npm run build:recipe
           npm run verify:size:recipe
+
+      - name: Verify packed package consumers
+        run: npm run verify:consumer
+
+  node-check:
+    runs-on: ubuntu-latest
+    name: Node Renderer Package and Consumer
+    needs: changes
+    if: needs.changes.outputs.node == 'true'
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Setup Node.js
+        uses: ./.github/actions/setup
+        with:
+          node-version: '22.22.0'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test, build, and measure Node renderer
+        run: |
+          npm run lint
+          npm run test:node
+          npm run build:recipe
+          npm run build:node
+          npm run verify:size:node
 
       - name: Verify packed package consumers
         run: npm run verify:consumer

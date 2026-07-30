@@ -72,8 +72,8 @@ jobs:
       - name: Install release dependencies
         run: npm ci
 
-      - name: Build Core type dependency for Editor
-        if: needs.resolve.outputs.package_path == 'packages/editor'
+      - name: Build workspace package dependencies
+        if: needs.resolve.outputs.package_path == 'packages/editor' || needs.resolve.outputs.package_path == 'packages/node'
         run: npm run prepack
 
       - name: Build package

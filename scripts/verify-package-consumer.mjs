@@ -46,8 +46,12 @@ try {
   const expectedRecipeManifest = JSON.parse(
     await readFile(join(repositoryRoot, 'packages/recipe/package.json'), 'utf8')
   );
+  const expectedNodeManifest = JSON.parse(
+    await readFile(join(repositoryRoot, 'packages/node/package.json'), 'utf8')
+  );
   const coreTarball = pack('.');
   const editorTarball = pack('./packages/editor');
+  const nodeTarball = pack('./packages/node');
   const recipeTarball = pack('./packages/recipe');
   await writeFile(
     join(consumerDirectory, 'package.json'),
@@ -67,6 +71,7 @@ try {
     '--legacy-peer-deps',
     coreTarball,
     editorTarball,
+    nodeTarball,
     recipeTarball,
   ]);
   run('npm', ['audit', '--omit=dev', '--audit-level=moderate']);
@@ -76,6 +81,43 @@ try {
     [
       "const core = require('react-native-image-marker');",
       "if (core.ImageFormat.webp !== 'webp') process.exit(1);",
+    ].join(''),
+  ]);
+
+  const nodeManifest = JSON.parse(
+    await readFile(
+      join(consumerDirectory, 'node_modules/@image-marker/node/package.json'),
+      'utf8'
+    )
+  );
+  if (
+    nodeManifest.version !== expectedNodeManifest.version ||
+    nodeManifest.dependencies?.['@image-marker/recipe'] !== '^0.1.0' ||
+    nodeManifest.peerDependencies?.sharp !== '>=0.33.0' ||
+    nodeManifest.dependencies?.react ||
+    nodeManifest.dependencies?.['react-native'] ||
+    nodeManifest.peerDependencies?.react ||
+    nodeManifest.peerDependencies?.['react-native']
+  ) {
+    throw new Error(
+      'The packed Node manifest has an invalid version or dependency graph.'
+    );
+  }
+  run('node', [
+    '-e',
+    [
+      "const node = require('@image-marker/node');",
+      "if(typeof node.createNodeImageMarker!=='function') process.exit(1);",
+      'if(node.WATERMARK_RECIPE_SCHEMA_VERSION!==2) process.exit(1);',
+    ].join(''),
+  ]);
+  run('node', [
+    '--input-type=module',
+    '-e',
+    [
+      "const node = await import('@image-marker/node');",
+      "if(typeof node.createNodeImageMarker!=='function') process.exit(1);",
+      'if(node.WATERMARK_RECIPE_SCHEMA_VERSION!==2) process.exit(1);',
     ].join(''),
   ]);
   run('node', [
@@ -204,6 +246,10 @@ import {
 import { createCoreEditorAdapter } from 'react-native-image-marker-editor/core-adapter';
 import { createInvisibleWatermarkRuntime } from 'react-native-image-marker/trace-runtime';
 import {
+  createNodeImageMarker,
+  type NodeRenderResult,
+} from '@image-marker/node';
+import {
   createWatermarkRecipeDefinition,
   type WatermarkRecipeDefinition as SharedRecipeDefinition,
 } from '@image-marker/recipe';
@@ -237,6 +283,11 @@ const request: EditorRenderRequest = {
   recipe: editor.exportRecipe(),
   input: { backgroundImage: { src: '/source.png' } },
 };
+const nodeRenderer = createNodeImageMarker();
+const nodeResult: Promise<NodeRenderResult> = nodeRenderer.render(
+  definition,
+  { backgroundImage: { src: Buffer.from('fixture') } }
+);
 void result;
 void sharedDefinition;
 void ImageMarkerEditor;
@@ -250,6 +301,7 @@ void editorProps;
 void toolbarProps;
 void request;
 void createInvisibleWatermarkRuntime;
+void nodeResult;
 `
   );
   await writeFile(
@@ -277,7 +329,7 @@ void createInvisibleWatermarkRuntime;
   run(join(repositoryRoot, 'node_modules/.bin/tsc'), ['-p', 'tsconfig.json']);
 
   process.stdout.write(
-    'Verified packed Recipe, Core, and Editor CommonJS/ESM, peer metadata, and consumer types.\n'
+    'Verified packed Recipe, Core, Editor, and Node CommonJS/ESM, peer metadata, and consumer types.\n'
   );
 } finally {
   await rm(consumerDirectory, { recursive: true, force: true });

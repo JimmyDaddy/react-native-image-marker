@@ -21,6 +21,12 @@
       "maxPackedBytes": 80000,
       "maxUnpackedBytes": 500000
     },
+    "node": {
+      "directory": "packages/node",
+      "name": "@image-marker/node",
+      "maxPackedBytes": 120000,
+      "maxUnpackedBytes": 600000
+    },
     "recipe": {
       "directory": "packages/recipe",
       "name": "@image-marker/recipe",

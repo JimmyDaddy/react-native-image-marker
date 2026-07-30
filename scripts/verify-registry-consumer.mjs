@@ -49,6 +49,9 @@ try {
   if (packageName === 'react-native-image-marker-editor') {
     dependencies.push('react-native-image-marker@^2.1.0');
   }
+  if (packageName === '@image-marker/node') {
+    dependencies.push('sharp@^0.34.4');
+  }
   run('npm', [
     'install',
     '--ignore-scripts',
@@ -179,6 +182,42 @@ const materialized = materializeWatermarkRecipe(definition, {
   variables: { name: 'Alice' },
 });
 void materialized;
+`;
+  } else if (packageName === '@image-marker/node') {
+    if (
+      manifest.dependencies?.['@image-marker/recipe'] !== '^0.1.0' ||
+      manifest.peerDependencies?.sharp !== '>=0.33.0' ||
+      manifest.dependencies?.react ||
+      manifest.dependencies?.['react-native'] ||
+      manifest.peerDependencies?.react ||
+      manifest.peerDependencies?.['react-native']
+    ) {
+      throw new Error('Node published an invalid dependency graph.');
+    }
+    run('node', [
+      '-e',
+      "const node=require('@image-marker/node'); if(typeof node.createNodeImageMarker!=='function') process.exit(1)",
+    ]);
+    run('node', [
+      '--input-type=module',
+      '-e',
+      "const node=await import('@image-marker/node'); if(typeof node.createNodeImageMarker!=='function') process.exit(1)",
+    ]);
+    consumerSource = `import {
+  createNodeImageMarker,
+  type NodeRenderResult,
+} from '@image-marker/node';
+
+const renderer = createNodeImageMarker();
+const result: Promise<NodeRenderResult> = renderer.render(
+  {
+    schemaVersion: 2,
+    layers: [{ id: 'title', type: 'text', text: 'Server' }],
+    output: { saveFormat: 'png' },
+  },
+  { backgroundImage: { src: Buffer.from('fixture') } }
+);
+void result;
 `;
   } else {
     throw new Error(`Unsupported release consumer target: ${packageName}.`);
