@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.1.1](https://github.com/JimmyDaddy/react-native-image-marker/compare/v2.1.0...v2.1.1) (2026-08-20)
+
+### Bug Fixes
+
+- **android:** support 16 KB page sizes ([475eef1](https://github.com/JimmyDaddy/react-native-image-marker/commit/475eef1c2a51150cbf546c25ba9dcf3d6d5e173e))
+- **release:** provide node types to registry consumers ([5a0567d](https://github.com/JimmyDaddy/react-native-image-marker/commit/5a0567d97e7de1c46f791dd7b87ebdd1d5f9359f))
+- **release:** tolerate npm first-publish propagation ([f7d021b](https://github.com/JimmyDaddy/react-native-image-marker/commit/f7d021b22e8397183eb776033a70cc0beb8fd048))
+- **release:** use current registry verifier ([0ab5167](https://github.com/JimmyDaddy/react-native-image-marker/commit/0ab5167fa7d4d1e7921c134d8bbd9dbb810d76d7))
+
 ## 2.1.0 (2026-07-30)
 
 ### Features
