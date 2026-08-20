@@ -818,6 +818,9 @@ jobs:
           ./gradlew assembleRelease
           mv app/build/outputs/apk/release/app-release.apk app-release-${{ github.sha }}.apk
 
+      - name: Verify Android 16 KB page-size support
+        run: npm run verify:android-page-size
+
       - name: Upload APK
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
