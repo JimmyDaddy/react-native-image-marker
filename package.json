@@ -1,6 +1,6 @@
 {
   "name": "react-native-image-marker",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "packageManager": "npm@10.9.4",
   "workspaces": [
     "packages/*"
@@ -65,7 +65,7 @@
   ],
   "scripts": {
     "test": "jest",
-    "test:ci-guards": "node --test scripts/__tests__/verify-github-actions.test.mjs scripts/__tests__/verify-size-budgets.test.mjs",
+    "test:ci-guards": "node --test scripts/__tests__/verify-android-page-size.test.mjs scripts/__tests__/verify-github-actions.test.mjs scripts/__tests__/verify-size-budgets.test.mjs",
     "test:release-routing": "node --test scripts/__tests__/release-target.test.mjs",
     "test:web": "jest src/__tests__/web-marker.test.ts src/__tests__/web-marker-api.test.ts src/__tests__/web-marker-render.test.ts src/__tests__/invisible-worker-client.test.ts --runInBand",
     "test:editor": "npm test --workspace react-native-image-marker-editor",
@@ -88,6 +88,7 @@
     "check:editor-api": "npm run check:api --workspace react-native-image-marker-editor",
     "verify:consumer": "npm run prepack && npm run build:editor && npm run build:node && npm run build:cli && node scripts/verify-package-consumer.mjs",
     "verify:actions": "node scripts/verify-github-actions.mjs",
+    "verify:android-page-size": "node scripts/verify-android-page-size.mjs android/build/intermediates/stripped_native_libs/release/out/lib/arm64-v8a/libimage-marker-core.so android/build/intermediates/stripped_native_libs/release/out/lib/armeabi-v7a/libimage-marker-core.so android/build/intermediates/stripped_native_libs/release/out/lib/x86/libimage-marker-core.so android/build/intermediates/stripped_native_libs/release/out/lib/x86_64/libimage-marker-core.so",
     "verify:size:core": "node scripts/verify-size-budgets.mjs core",
     "verify:size:editor": "node scripts/verify-size-budgets.mjs editor",
     "verify:size:cli": "node scripts/verify-size-budgets.mjs cli",
