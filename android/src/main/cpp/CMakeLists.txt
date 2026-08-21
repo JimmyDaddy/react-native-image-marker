@@ -8,6 +8,14 @@ add_library(
 )
 
 target_compile_features(image-marker-core PRIVATE cxx_std_17)
+if(ANDROID)
+  target_link_options(
+    image-marker-core
+    PRIVATE
+    "-Wl,-z,max-page-size=16384"
+    "-Wl,-z,common-page-size=16384"
+  )
+endif()
 target_include_directories(
   image-marker-core
   PRIVATE
