@@ -56,7 +56,7 @@
   "dependencies": {
     "@image-marker/node": "^0.1.0",
     "@image-marker/recipe": "^0.1.0",
-    "sharp": "^0.35.3"
+    "sharp": "^0.35.4"
   },
   "devDependencies": {
     "@types/node": "^22.15.0"
