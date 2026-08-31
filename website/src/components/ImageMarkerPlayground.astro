@@ -1131,7 +1131,7 @@ const credentials = await Marker.verifyContentCredentials({
   type LayoutMode = 'single' | 'tile';
   type CodeTarget = 'web' | 'native';
   type WorkspaceTab = 'visible' | 'batch' | 'invisible' | 'editor';
-  type MarkerSdk = typeof import('../../../src/index');
+  type MarkerSdk = typeof import('@image-marker/web');
   type PositionEnum = MarkerSdk['Position'];
 
   interface PlaygroundState {
@@ -1149,7 +1149,7 @@ const credentials = await Marker.verifyContentCredentials({
   const MAX_FILE_BYTES = 12 * 1024 * 1024;
   const MAX_IMAGE_PIXELS = 16_000_000;
 
-  const sdkPromise = import('../../../src/index');
+  const sdkPromise = import('@image-marker/web');
 
   const asElement = <T extends Element>(root: ParentNode, selector: string): T => {
     const element = root.querySelector<T>(selector);
@@ -1452,7 +1452,7 @@ const credentials = await Marker.verifyContentCredentials({
         ? '// result.uri is a data:image/... URL on Web.'
         : '// result.uri is a cache-file path on iOS and Android.';
 
-      return `import Marker, { ImageFormat, Position, type MarkerResult } from 'react-native-image-marker';
+      return `import Marker, { ImageFormat, Position, type MarkerResult } from '@image-marker/web';
 
 ${resultComment}
 export async function createMarkedImage(): Promise<MarkerResult> {
@@ -1494,7 +1494,7 @@ ${layers}
 }`;
 
       if (target === 'web') {
-        return `import Marker, { ImageFormat, Position } from 'react-native-image-marker';
+        return `import Marker, { ImageFormat, Position } from '@image-marker/web';
 
 const recipe = Marker.createRecipe(
 ${indentCode(recipeOptions, 2)},
@@ -1564,7 +1564,7 @@ export async function markPhotos(
         const signalParameter = invisibleExecutor.value === 'worker'
           ? ', signal?: AbortSignal'
           : '';
-        return `import Marker, { ImageFormat } from 'react-native-image-marker';
+        return `import Marker, { ImageFormat } from '@image-marker/web';
 
 export async function embedAndVerifyTrace(file: File${signalParameter}) {
   // Keep production keys in trusted storage, not in browser source code.

@@ -71,7 +71,12 @@ const origin = `http://127.0.0.1:${address.port}`;
 let browser;
 
 try {
-  browser = await chromium.launch({ headless: true });
+  browser = await chromium.launch({
+    headless: true,
+    ...(process.env.IMAGE_MARKER_BROWSER_CHANNEL
+      ? { channel: process.env.IMAGE_MARKER_BROWSER_CHANNEL }
+      : {}),
+  });
   const page = await browser.newPage({
     viewport: { width: 1440, height: 980 },
   });
@@ -90,10 +95,10 @@ try {
   await page.getByRole('heading', { name: 'Create and batch' }).waitFor();
   const developerGroup = page
     .locator('.tool-hub-group')
-    .filter({ has: page.getByRole('heading', { name: 'Developer workflows' }) });
-  await developerGroup
-    .getByRole('link', { name: /Recipe builder/ })
-    .waitFor();
+    .filter({
+      has: page.getByRole('heading', { name: 'Developer workflows' }),
+    });
+  await developerGroup.getByRole('link', { name: /Recipe builder/ }).waitFor();
   const editorLink = page
     .locator('.tool-hub-group')
     .filter({ has: page.getByRole('heading', { name: 'Developer workflows' }) })
@@ -220,13 +225,11 @@ try {
     waitUntil: 'networkidle',
   });
   const checker = page.locator('[data-online-tool]');
-  await checker
-    .locator('[data-source-file]')
-    .setInputFiles({
-      name: 'traced.png',
-      mimeType: 'image/png',
-      buffer: tracedBuffer,
-    });
+  await checker.locator('[data-source-file]').setInputFiles({
+    name: 'traced.png',
+    mimeType: 'image/png',
+    buffer: tracedBuffer,
+  });
   await checker.locator('[data-run]').click();
   await checker
     .locator('[data-status][data-state="success"]')

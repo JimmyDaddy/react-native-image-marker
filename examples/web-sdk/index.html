@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Image Marker Web SDK</title>
+  </head>
+  <body>
+    <main>
+      <h1>Image Marker Web SDK</h1>
+      <p>Choose a local image. It stays in this browser.</p>
+      <input id="source" type="file" accept="image/png,image/jpeg,image/webp" />
+      <button id="render" type="button" disabled>Render watermark</button>
+      <button id="cancel" type="button" disabled>Cancel</button>
+      <p id="status" role="status">Choose an image to begin.</p>
+      <img id="preview" alt="Watermarked preview" />
+      <a id="download" download="marked-image.png" hidden>Download Blob</a>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

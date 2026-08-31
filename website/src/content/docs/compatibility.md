@@ -21,6 +21,7 @@ legacy bridge.
 | Expo development build        | Yes                       | Build locally with Expo CLI or use an EAS development build.                   |
 | Expo Go                       | No                        | This package's native code is not bundled with Expo Go.                        |
 | Web / React Native Web        | Yes                       | Uses Canvas 2D; `MarkerResult.uri` is an image data URL.                       |
+| Standalone Web SDK            | Yes                       | `@image-marker/web@0.1` runs without React Native or a Node sidecar.             |
 | Windows                       | Browser only              | Windows apps can use the website build, but there is no Windows-native module. |
 
 ## Web behavior

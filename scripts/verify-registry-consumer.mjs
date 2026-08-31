@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 function argument(name) {
   const index = process.argv.indexOf(name);
@@ -13,6 +14,19 @@ const version = argument('--version');
 const channel = argument('--channel');
 if (!packageName || !version || !channel) {
   throw new Error('--package-name, --version, and --channel are required.');
+}
+
+// This branch is prepared for use after publication. It deliberately uses the
+// same normal-install, strict-types and real-browser gate as unpublished packs.
+if (packageName === '@image-marker/web') {
+  if (!['web', 'web-prerelease'].includes(channel)) {
+    throw new Error(`Unsupported Web SDK channel: ${channel}`);
+  }
+  execFileSync(process.execPath, [
+    fileURLToPath(new URL('./verify-web-consumer.mjs', import.meta.url)),
+    '--registry-version', version,
+  ], { stdio: 'inherit' });
+  process.exit(0);
 }
 
 const consumerDirectory = await mkdtemp(

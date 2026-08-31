@@ -20,6 +20,7 @@ Android 在新架构与旧 bridge 下使用同一个强类型公共契约。
 | Expo 开发构建            | 支持                 | 使用 Expo CLI 在本地构建，或使用 EAS 开发构建。 |
 | Expo Go                  | 不支持               | Expo Go 未包含此包的原生代码。                  |
 | Web / React Native Web   | 支持                 | 使用 Canvas 2D；`MarkerResult.uri` 为 data URL。|
+| 独立 Web SDK              | 支持                 | `@image-marker/web@0.1` 无需 React Native 或 Node sidecar。 |
 | Windows                  | 仅浏览器             | 可以在网站中使用，但暂不支持 Windows 原生应用。 |
 
 ## Web 端行为

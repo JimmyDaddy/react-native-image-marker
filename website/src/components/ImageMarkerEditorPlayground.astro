@@ -346,10 +346,10 @@ export function WatermarkEditor() {
 </section>
 
 <script>
-  import { ImageMarkerEditorController } from '../../../packages/editor/src/controller';
-  import { createCoreEditorAdapter } from '../../../packages/editor/src/core-adapter';
-  import type { EditorState } from '../../../packages/editor/src/types';
-  import { ImageFormat } from '../../../src/index';
+  import { ImageMarkerEditorController } from '@image-marker/web/headless';
+  import { createWebEditorAdapter } from '@image-marker/web/editor-adapter';
+  import type { EditorState } from '@image-marker/web/headless';
+  import { ImageFormat } from '@image-marker/web';
 
   type PlaygroundCopy = {
     addText: string;
@@ -415,34 +415,36 @@ export function WatermarkEditor() {
     const backgroundUrl = root.dataset.backgroundUrl ?? '';
     const logoUrl = root.dataset.logoUrl ?? '';
     const controller = new ImageMarkerEditorController({
-      schemaVersion: 2,
-      layers: [
-        {
-          id: 'web-title',
-          name: 'Campaign title',
-          type: 'text',
-          text: 'IMAGE MARKER 2.1',
-          position: { X: 119, Y: 132 },
-          style: {
-            color: '#FFFFFF',
-            fontSize: 62,
-            bold: true,
-            shadowStyle: { color: '#0F172A', dx: 2, dy: 4, radius: 7 },
+      document: {
+        schemaVersion: 2,
+        layers: [
+          {
+            id: 'web-title',
+            name: 'Campaign title',
+            type: 'text',
+            text: 'IMAGE MARKER 2.1',
+            position: { X: 119, Y: 132 },
+            style: {
+              color: '#FFFFFF',
+              fontSize: 62,
+              bold: true,
+              shadowStyle: { color: '#0F172A', dx: 2, dy: 4, radius: 7 },
+            },
           },
-        },
-        {
-          id: 'web-logo',
-          name: 'Brand mark',
-          type: 'image',
-          src: logoUrl,
-          position: { X: 1101, Y: 590 },
-          scale: 0.68,
-        },
-      ],
-      output: { saveFormat: ImageFormat.png },
+          {
+            id: 'web-logo',
+            name: 'Brand mark',
+            type: 'image',
+            src: logoUrl,
+            position: { X: 1101, Y: 590 },
+            scale: 0.68,
+          },
+        ],
+        output: { saveFormat: ImageFormat.png },
+      },
     });
     controller.setSafeArea({ top: 53, right: 53, bottom: 53, left: 53 });
-    const adapter = createCoreEditorAdapter(960);
+    const adapter = createWebEditorAdapter(960);
     const canvas = element<HTMLElement>(root, '[data-editor-canvas]');
     const background = element<HTMLImageElement>(root, '[data-editor-background]');
     const layerHost = element<HTMLElement>(root, '[data-editor-layer-host]');

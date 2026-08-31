@@ -83,7 +83,7 @@ const verified = await Marker.detectInvisibleMany(
 `robust` 检测会占用较多 CPU。先把随包发布的独立 Worker 文件复制到可信的同源静态目录：
 
 ```sh
-cp node_modules/react-native-image-marker/lib/worker/invisible-watermark.js \
+cp node_modules/@image-marker/web/lib/worker/invisible-watermark.js \
   public/worker/invisible-watermark.js
 ```
 
