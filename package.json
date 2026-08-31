@@ -65,7 +65,7 @@
   ],
   "scripts": {
     "test": "jest",
-    "test:ci-guards": "node --test scripts/__tests__/verify-android-page-size.test.mjs scripts/__tests__/verify-github-actions.test.mjs scripts/__tests__/verify-size-budgets.test.mjs",
+    "test:ci-guards": "node --test scripts/__tests__/verify-android-page-size.test.mjs scripts/__tests__/verify-github-actions.test.mjs scripts/__tests__/verify-size-budgets.test.mjs scripts/__tests__/verify-expo-sdk-versions.test.mjs",
     "test:release-routing": "node --test scripts/__tests__/release-target.test.mjs",
     "test:web": "jest src/__tests__/web-marker.test.ts src/__tests__/web-marker-api.test.ts src/__tests__/web-marker-render.test.ts src/__tests__/invisible-worker-client.test.ts src/__tests__/web-runtime.test.ts --runInBand",
     "test:editor": "npm test --workspace react-native-image-marker-editor",

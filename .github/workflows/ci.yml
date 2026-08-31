@@ -151,6 +151,8 @@ jobs:
                   "scripts/build-web-package.mjs",
                   "scripts/verify-web-*.mjs",
                   "scripts/fixtures/web-consumer/**",
+                  "scripts/verify-expo-sdk-versions.mjs",
+                  "scripts/__tests__/verify-expo-sdk-versions.test.mjs",
                   "lefthook.yml",
                   ".eslintignore",
                   ".eslintrc.js",
@@ -785,8 +787,15 @@ jobs:
       - name: Install dependencies
         run: npm ci --prefix expo-example --ignore-scripts --no-audit --no-fund
 
-      - name: Verify Expo versions
-        run: (cd expo-example && npx --yes expo-doctor@1.20.1)
+      - name: Verify locked Expo SDK versions
+        # Check the installed SDK's compatibility data, not mutable patch
+        # recommendations fetched from Expo's current online version matrix.
+        run: node scripts/verify-expo-sdk-versions.mjs
+
+      - name: Verify Expo project configuration
+        # Only the dependency-version check is replaced above. Keep the other
+        # doctor checks online, including schema and React Native Directory.
+        run: (cd expo-example && EXPO_DOCTOR_SKIP_DEPENDENCY_VERSION_CHECK=1 npx --yes expo-doctor@1.20.1)
 
       - name: Build workspace dependencies
         run: |
