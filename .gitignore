@@ -85,3 +85,8 @@ website/src/content/docs/api/
 # testing
 /coverage
 examples/trace-service/benchmark-report.json
+
+# Standalone SDK generated source staging and local delivery artifacts
+packages/web/.build-*/
+/artifacts/
+examples/web-sdk/dist/

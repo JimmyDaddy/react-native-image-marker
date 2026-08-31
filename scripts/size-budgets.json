@@ -38,6 +38,12 @@
       "name": "@image-marker/recipe",
       "maxPackedBytes": 60000,
       "maxUnpackedBytes": 300000
+    },
+    "web": {
+      "directory": "packages/web",
+      "name": "@image-marker/web",
+      "maxPackedBytes": 250000,
+      "maxUnpackedBytes": 1500000
     }
   }
 }

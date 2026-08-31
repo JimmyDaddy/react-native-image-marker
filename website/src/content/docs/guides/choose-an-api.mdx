@@ -10,6 +10,7 @@ First choose the package for the environment that owns the work:
 | Need | Package |
 | --- | --- |
 | Render in iOS, Android, or a browser | `react-native-image-marker` Core 2.1 |
+| Render in a standalone browser, Vite app, or WebView without React Native | [`@image-marker/web`](/guides/web-sdk/) 0.1 |
 | Build a visual React Native or Web editing workspace | [`react-native-image-marker-editor`](/guides/editor/) |
 | Create, validate, or migrate Recipe JSON without rendering | [`@image-marker/recipe`](/recipe/) |
 | Render in a Node.js service | [`@image-marker/node`](/node/) |
@@ -25,6 +26,10 @@ The three public methods share the same output options. Choose by layer type:
 | `Marker.createRecipe` | Reuse ordered layers across one or many images | Exact Recipe `layers` array order |
 
 `markText` and `markImage` remain supported. Use `mark` when a single render needs both text and image layers or when cross-type ordering matters.
+
+For a browser-only application, prefer `@image-marker/web`. It exposes the same
+Web rendering contract without React Native peer dependencies and also provides
+`/headless`, `/editor-adapter`, and the packaged invisible-watermark Worker.
 
 <Tabs>
   <TabItem label="Text">

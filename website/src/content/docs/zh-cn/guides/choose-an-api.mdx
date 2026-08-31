@@ -10,6 +10,7 @@ import { TabItem, Tabs } from '@astrojs/starlight/components';
 | 需求 | 软件包 |
 | --- | --- |
 | 在 iOS、Android 或浏览器渲染 | `react-native-image-marker` Core 2.1 |
+| 在不安装 React Native 的浏览器、Vite 或 WebView 中渲染 | [`@image-marker/web`](/zh-cn/guides/web-sdk/) 0.1 |
 | 构建 React Native 或 Web 可视化编辑工作区 | [`react-native-image-marker-editor`](/zh-cn/guides/editor/) |
 | 不渲染，只创建、验证或迁移 Recipe JSON | [`@image-marker/recipe`](/zh-cn/recipe/) |
 | 在 Node.js 服务中渲染 | [`@image-marker/node`](/zh-cn/node/) |
@@ -25,6 +26,9 @@ import { TabItem, Tabs } from '@astrojs/starlight/components';
 | `Marker.createRecipe` | 将同一组有序图层用于一张或多张图片 | 严格按照 Recipe `layers` 数组顺序 |
 
 `markText` 和 `markImage` 仍受支持。当一次渲染需要同时包含文本和图像图层，或不同类型图层之间的顺序很重要时，请使用 `mark`。
+
+浏览器专用应用推荐使用 `@image-marker/web`。它不引入 React Native peer 依赖，
+同时提供 `/headless`、`/editor-adapter` 和随包提供的隐形水印 Worker。
 
 <Tabs>
   <TabItem label="文本">

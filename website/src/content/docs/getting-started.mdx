@@ -14,11 +14,15 @@ workflow needs: [Editor 0.3](/guides/editor/), [Recipe 0.1](/recipe/),
 <Tabs>
   <TabItem label="React Native">
     <Steps>
-      1. Install the package.
+      1. Install the standalone package for a browser-only application.
 
          ```sh
-         npm install react-native-image-marker
+         npm install @image-marker/web@0.1.0
          ```
+
+         An existing Expo Web application may keep using
+         `react-native-image-marker`; the standalone package is intended for a
+         Web build that does not install React Native.
 
       2. Install iOS pods when your project has an iOS target.
 
@@ -87,7 +91,9 @@ workflow needs: [Editor 0.3](/guides/editor/), [Recipe 0.1](/recipe/),
 
          Add the resolver explicitly with `npx expo install expo-asset` if it is not already a direct dependency.
 
-      3. Call `Marker.markText`, `Marker.markImage`, or `Marker.mark`. On Web, display or download `result.uri`.
+      3. Import `Marker` from `@image-marker/web` and call `Marker.markText`,
+         `Marker.markImage`, or `Marker.mark`. On Web, display or download
+         `result.uri`.
     </Steps>
   </TabItem>
 </Tabs>

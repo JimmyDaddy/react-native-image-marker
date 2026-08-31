@@ -2,14 +2,14 @@ import Marker, {
   ImageFormat,
   Position,
   migrateWatermarkRecipe,
-} from '../../../src/index';
+} from '@image-marker/web';
 import type {
   InvisibleWatermarkDetectionResult,
   InvisibleWatermarkSearch,
   InvisibleWatermarkStrength,
   WatermarkRecipeDefinition,
   WatermarkRecipeDocument,
-} from '../../../src/index';
+} from '@image-marker/web';
 
 const DEFAULT_BACKGROUND = '/media/playground-background.jpg';
 const DEFAULT_LOGO = '/media/marker-compass.png';
@@ -500,7 +500,7 @@ function downloadRecipe(context: ToolContext): void {
 async function copyRecipeCode(context: ToolContext): Promise<void> {
   try {
     const recipe = parseRecipe(context);
-    const code = `import Marker from 'react-native-image-marker';\n\nconst recipe = Marker.createRecipe(${JSON.stringify(
+    const code = `import Marker from '@image-marker/web';\n\nconst recipe = Marker.createRecipe(${JSON.stringify(
       recipe,
       null,
       2

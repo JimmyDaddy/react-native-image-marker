@@ -14,11 +14,14 @@ React Native Image Marker 在 iOS 和 Android 上使用原生代码，在 Web �
 <Tabs>
   <TabItem label="React Native">
     <Steps>
-      1. 安装软件包。
+      1. 浏览器专用应用安装独立 Web 包。
 
          ```sh
-         npm install react-native-image-marker
+         npm install @image-marker/web@0.1.0
          ```
+
+         现有 Expo Web 应用可以继续使用 `react-native-image-marker`；独立包面向
+         不安装 React Native 的 Web 构建。
 
       2. 如果项目包含 iOS 目标，请安装 iOS Pods。
 
@@ -87,7 +90,8 @@ React Native Image Marker 在 iOS 和 Android 上使用原生代码，在 Web �
 
          如果项目尚未直接依赖资源解析器，请运行 `npx expo install expo-asset`。
 
-      3. 调用 `Marker.markText`、`Marker.markImage` 或 `Marker.mark`。Web 端可显示或下载 `result.uri`。
+      3. 从 `@image-marker/web` 导入 `Marker`，调用 `Marker.markText`、
+         `Marker.markImage` 或 `Marker.mark`。Web 端可显示或下载 `result.uri`。
     </Steps>
   </TabItem>
 </Tabs>

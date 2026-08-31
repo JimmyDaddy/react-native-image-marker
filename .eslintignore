@@ -4,6 +4,7 @@ docs
 **/build/**
 **/dist/**
 coverage/**
+artifacts/**
 website/.astro/**
 website/versioned-dist/**
 website/public/worker/**

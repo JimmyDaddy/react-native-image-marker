@@ -73,7 +73,7 @@ jobs:
         run: npm ci
 
       - name: Build Recipe workspace dependency
-        if: needs.resolve.outputs.package_path == 'packages/editor' || needs.resolve.outputs.package_path == 'packages/node' || needs.resolve.outputs.package_path == 'packages/cli'
+        if: needs.resolve.outputs.package_path == 'packages/editor' || needs.resolve.outputs.package_path == 'packages/node' || needs.resolve.outputs.package_path == 'packages/cli' || needs.resolve.outputs.package_path == 'packages/web'
         run: npm run build:recipe
 
       - name: Build Core type dependency for Editor
@@ -155,10 +155,24 @@ jobs:
         with:
           ref: ${{ needs.resolve.outputs.branch }}
           path: .release-verifier
-          sparse-checkout: scripts/verify-registry-consumer.mjs
+          sparse-checkout: |
+            scripts/verify-registry-consumer.mjs
+            scripts/verify-web-consumer.mjs
+            scripts/fixtures/web-consumer
+            example/assets/fonts/RubikBurned-Regular.ttf
           sparse-checkout-cone-mode: false
 
+      - name: Install Web registry verifier browser tooling
+        if: needs.resolve.outputs.package_path == 'packages/web'
+        run: |
+          mkdir -p .release-verifier/.browser-tools
+          printf '{"private":true}\n' > .release-verifier/.browser-tools/package.json
+          npm install --prefix .release-verifier/.browser-tools --no-audit --no-fund playwright@1.62.1
+          node .release-verifier/.browser-tools/node_modules/playwright/cli.js install --with-deps chromium
+
       - name: Verify fresh registry consumer
+        env:
+          IMAGE_MARKER_PLAYWRIGHT_ROOT: ${{ github.workspace }}/.release-verifier/.browser-tools/node_modules/playwright
         run: >-
           node .release-verifier/scripts/verify-registry-consumer.mjs
           --package-name "${{ needs.resolve.outputs.package_name }}"

@@ -76,8 +76,7 @@ export interface WebTextMetrics {
   fontBoundingBoxDescent?: number;
 }
 
-interface WebImageElement {
-  [key: string]: unknown;
+export interface WebImageElement {
   src: string;
   crossOrigin?: string | null;
   complete?: boolean;
@@ -99,6 +98,22 @@ interface BrowserRuntime {
     createObjectURL?: (source: unknown) => string;
     revokeObjectURL?: (url: string) => void;
   };
+}
+
+/**
+ * DOM-adjacent resources used by a Web Marker instance. Providing this object
+ * keeps object-URL ownership with the instance and makes browser APIs
+ * replaceable by a desktop host without changing rendering algorithms.
+ */
+export interface WebResourceAdapter {
+  /** Standard `new Image()` and `document.createElement('img')` both fit. */
+  createImage?: () => unknown;
+  /** Standard `document.createElement('canvas')` fits without a cast. */
+  createCanvas?: (width: number, height: number) => unknown;
+  createObjectURL?: (source: Blob) => string;
+  revokeObjectURL?: (url: string) => void;
+  /** Optional byte reader for File/Blob policy boundaries. */
+  readBlobBytes?: (source: Blob) => Promise<ArrayBuffer>;
 }
 
 export interface LoadedWebImage {
@@ -223,32 +238,153 @@ function inferImageFormat(
   return 'unknown';
 }
 
+function decodeDataUrl(
+  uri: string
+): { data: ArrayBuffer; mimeType?: string } | null {
+  const match = /^data:([^,]*?),(.*)$/su.exec(uri);
+  if (!match) return null;
+  const metadata = match[1] ?? '';
+  const payload = match[2] ?? '';
+  const mimeType = metadata.split(';', 1)[0] || undefined;
+  try {
+    if (/(?:^|;)base64(?:;|$)/iu.test(metadata)) {
+      const decode = (
+        globalThis as unknown as {
+          atob?: (value: string) => string;
+        }
+      ).atob;
+      if (!decode) return null;
+      const decoded = decode(payload.replace(/\s/gu, ''));
+      const bytes = Uint8Array.from(decoded, (character) =>
+        character.charCodeAt(0)
+      );
+      return { data: bytes.buffer as ArrayBuffer, mimeType };
+    }
+    return { data: decodePercentEncodedDataUrl(payload), mimeType };
+  } catch {
+    return null;
+  }
+}
+
+function encodeUtf8(value: string): ArrayBuffer {
+  const TextEncoderClass = (
+    globalThis as unknown as {
+      TextEncoder?: new () => { encode(value: string): Uint8Array };
+    }
+  ).TextEncoder;
+  if (TextEncoderClass) {
+    return new TextEncoderClass().encode(value).buffer as ArrayBuffer;
+  }
+
+  const bytes: number[] = [];
+  for (let index = 0; index < value.length; index += 1) {
+    const first = value.charCodeAt(index);
+    const second = value.charCodeAt(index + 1);
+    let codePoint = first;
+    if (
+      first >= 0xd800 &&
+      first <= 0xdbff &&
+      second >= 0xdc00 &&
+      second <= 0xdfff
+    ) {
+      index += 1;
+      codePoint = (first - 0xd800) * 0x400 + second - 0xdc00 + 0x10000;
+    }
+    if (codePoint <= 0x7f) {
+      bytes.push(codePoint);
+    } else if (codePoint <= 0x7ff) {
+      bytes.push(
+        0xc0 + Math.floor(codePoint / 0x40),
+        0x80 + (codePoint % 0x40)
+      );
+    } else if (codePoint <= 0xffff) {
+      bytes.push(
+        0xe0 + Math.floor(codePoint / 0x1000),
+        0x80 + (Math.floor(codePoint / 0x40) % 0x40),
+        0x80 + (codePoint % 0x40)
+      );
+    } else {
+      bytes.push(
+        0xf0 + Math.floor(codePoint / 0x40000),
+        0x80 + (Math.floor(codePoint / 0x1000) % 0x40),
+        0x80 + (Math.floor(codePoint / 0x40) % 0x40),
+        0x80 + (codePoint % 0x40)
+      );
+    }
+  }
+  return Uint8Array.from(bytes).buffer as ArrayBuffer;
+}
+
+/** Decode `%xx` as bytes, keeping unescaped Unicode text encoded as UTF-8. */
+function decodePercentEncodedDataUrl(payload: string): ArrayBuffer {
+  const bytes: number[] = [];
+  let text = '';
+  const appendText = (): void => {
+    if (!text) return;
+    bytes.push(...new Uint8Array(encodeUtf8(text)));
+    text = '';
+  };
+
+  for (let index = 0; index < payload.length; index += 1) {
+    if (payload[index] !== '%' || index + 2 >= payload.length) {
+      text += payload[index];
+      continue;
+    }
+    const encoded = payload.slice(index + 1, index + 3);
+    if (!/^[\da-f]{2}$/iu.test(encoded)) {
+      text += payload[index];
+      continue;
+    }
+    appendText();
+    bytes.push(Number.parseInt(encoded, 16));
+    index += 2;
+  }
+  appendText();
+  return Uint8Array.from(bytes).buffer as ArrayBuffer;
+}
+
 async function readEncodedImageSource(
-  source: unknown
+  source: unknown,
+  resources?: WebResourceAdapter,
+  signal?: AbortSignal
 ): Promise<{ data: ArrayBuffer; mimeType?: string } | null> {
+  if (signal?.aborted) throw createAbortError();
   if (isBlobLike(source)) {
     const blob = source as {
       arrayBuffer(): Promise<ArrayBuffer>;
       type?: string;
     };
-    return { data: await blob.arrayBuffer(), mimeType: blob.type || undefined };
+    const data = resources?.readBlobBytes
+      ? await resources.readBlobBytes(source as Blob)
+      : await blob.arrayBuffer();
+    if (signal?.aborted) throw createAbortError();
+    return { data, mimeType: blob.type || undefined };
   }
 
   const uri = resolveImageUri(source);
+  if (uri?.startsWith('data:')) {
+    if (signal?.aborted) throw createAbortError();
+    return decodeDataUrl(uri);
+  }
   const fetchImage = (globalThis as { fetch?: typeof fetch }).fetch;
   if (!uri || !fetchImage) {
     return null;
   }
   try {
-    const response = await fetchImage(uri);
+    const response = signal
+      ? await fetchImage(uri, { signal })
+      : await fetchImage(uri);
     if (!response.ok && !uri.startsWith('data:')) {
       return null;
     }
+    const data = await response.arrayBuffer();
+    if (signal?.aborted) throw createAbortError();
     return {
-      data: await response.arrayBuffer(),
+      data,
       mimeType: response.headers.get('content-type') ?? undefined,
     };
   } catch {
+    if (signal?.aborted) throw createAbortError();
     return null;
   }
 }
@@ -259,9 +395,12 @@ async function readEncodedImageSource(
  * observable; drawable dimensions are the cross-origin fallback.
  */
 export async function getWebImageInfo(
-  source: unknown
+  source: unknown,
+  resources?: WebResourceAdapter,
+  signal?: AbortSignal
 ): Promise<MarkerImageInfo> {
-  const encoded = await readEncodedImageSource(source);
+  if (signal?.aborted) throw createAbortError();
+  const encoded = await readEncodedImageSource(source, resources, signal);
   if (encoded) {
     try {
       const info = parseEncodedImageInfo(encoded.data);
@@ -274,7 +413,7 @@ export async function getWebImageInfo(
     }
   }
 
-  const loaded = await loadWebImage(source);
+  const loaded = await loadWebImage(source, resources, signal);
   try {
     const uri = resolveImageUri(source);
     const mimeType =
@@ -294,7 +433,14 @@ export async function getWebImageInfo(
   }
 }
 
-function createImageElement(): WebImageElement {
+function createImageElement(resources?: WebResourceAdapter): WebImageElement {
+  if (resources?.createImage) {
+    const image = resources.createImage();
+    if (!image || typeof image !== 'object' || !('src' in image)) {
+      throw new Error('Web Marker resource adapter returned an invalid image.');
+    }
+    return image as WebImageElement;
+  }
   const runtime = getBrowserRuntime();
   if (runtime.Image) {
     return new runtime.Image();
@@ -312,8 +458,21 @@ function remoteUrl(uri: string): boolean {
   return /^(?:https?:)?\/\//i.test(uri);
 }
 
+function createAbortError(): Error {
+  const error = new Error('Web image loading was aborted.');
+  error.name = 'AbortError';
+  return error;
+}
+
 /** Load a browser drawable from a URL, data URL, {uri}, Blob/File, or image element. */
-export async function loadWebImage(source: unknown): Promise<LoadedWebImage> {
+export async function loadWebImage(
+  source: unknown,
+  resources?: WebResourceAdapter,
+  signal?: AbortSignal
+): Promise<LoadedWebImage> {
+  if (signal?.aborted) {
+    throw createAbortError();
+  }
   if (isImageLike(source)) {
     const dimensions = getImageDimensions(source);
     if (!dimensions) {
@@ -322,16 +481,17 @@ export async function loadWebImage(source: unknown): Promise<LoadedWebImage> {
     return { image: source, ...dimensions, cleanup() {} };
   }
 
-  const runtime = getBrowserRuntime();
   let objectUrl: string | undefined;
   let uri = resolveImageUri(source);
 
   if (!uri && isBlobLike(source)) {
-    const createObjectURL = runtime.URL?.createObjectURL;
+    const runtime = getBrowserRuntime();
+    const createObjectURL =
+      resources?.createObjectURL ?? runtime.URL?.createObjectURL;
     if (!createObjectURL) {
       throw new Error('This browser cannot load Blob/File image sources.');
     }
-    objectUrl = createObjectURL(source);
+    objectUrl = createObjectURL(source as Blob);
     uri = objectUrl;
   }
 
@@ -346,13 +506,49 @@ export async function loadWebImage(source: unknown): Promise<LoadedWebImage> {
     );
   }
 
-  const image = createImageElement();
+  let image: WebImageElement;
+  try {
+    image = createImageElement(resources);
+  } catch (error) {
+    if (objectUrl) {
+      const runtime = getBrowserRuntime();
+      try {
+        (resources?.revokeObjectURL ?? runtime.URL?.revokeObjectURL)?.(
+          objectUrl
+        );
+      } catch {
+        // Preserve the image-factory error; cleanup must not conceal it.
+      }
+    }
+    throw error;
+  }
   if (remoteUrl(uri)) {
     image.crossOrigin = 'anonymous';
   }
 
+  let cleanedUp = false;
+  const cleanup = (): void => {
+    if (cleanedUp) return;
+    cleanedUp = true;
+    image.onload = null;
+    image.onerror = null;
+    signal?.removeEventListener('abort', abort);
+    if (objectUrl) {
+      const runtime = getBrowserRuntime();
+      (resources?.revokeObjectURL ?? runtime.URL?.revokeObjectURL)?.(objectUrl);
+      objectUrl = undefined;
+    }
+  };
+  let rejectLoading: ((reason: unknown) => void) | undefined;
+  const abort = (): void => {
+    image.src = '';
+    cleanup();
+    rejectLoading?.(createAbortError());
+  };
+
   try {
     await new Promise<void>((resolve, reject) => {
+      rejectLoading = reject;
       image.onload = () => resolve();
       image.onerror = () => {
         const corsHint = remoteUrl(uri as string)
@@ -361,6 +557,12 @@ export async function loadWebImage(source: unknown): Promise<LoadedWebImage> {
         reject(new Error(`Unable to load web image.${corsHint}`));
       };
       image.src = uri as string;
+
+      signal?.addEventListener('abort', abort, { once: true });
+      if (signal?.aborted) {
+        abort();
+        return;
+      }
 
       if (image.complete && getImageDimensions(image)) {
         resolve();
@@ -384,16 +586,10 @@ export async function loadWebImage(source: unknown): Promise<LoadedWebImage> {
     return {
       image,
       ...dimensions,
-      cleanup() {
-        if (objectUrl) {
-          runtime.URL?.revokeObjectURL?.(objectUrl);
-        }
-      },
+      cleanup,
     };
   } catch (error) {
-    if (objectUrl) {
-      runtime.URL?.revokeObjectURL?.(objectUrl);
-    }
+    cleanup();
     throw error;
   } finally {
     image.onload = null;
@@ -401,9 +597,15 @@ export async function loadWebImage(source: unknown): Promise<LoadedWebImage> {
   }
 }
 
-export function createWebCanvas(width: number, height: number): WebCanvas {
+export function createWebCanvas(
+  width: number,
+  height: number,
+  resources?: WebResourceAdapter
+): WebCanvas {
   const runtime = getBrowserRuntime();
-  const canvas = runtime.document?.createElement('canvas');
+  const canvas =
+    resources?.createCanvas?.(width, height) ??
+    runtime.document?.createElement('canvas');
   if (!canvas || typeof canvas !== 'object') {
     throw new Error(
       'WebMarker requires Canvas 2D. Importing it during SSR is supported, but mark*() must run in a browser with canvas support.'
@@ -411,6 +613,9 @@ export function createWebCanvas(width: number, height: number): WebCanvas {
   }
 
   const result = canvas as WebCanvas;
+  if (typeof result.getContext !== 'function') {
+    throw new Error('Web Marker resource adapter returned an invalid canvas.');
+  }
   result.width = Math.max(Math.round(width), 1);
   result.height = Math.max(Math.round(height), 1);
   if (!result.getContext('2d')) {

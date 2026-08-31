@@ -3,6 +3,7 @@ const CORE_V2_TAG = /^v(2\.\d+\.\d+(?:-(alpha|beta|rc)\.\d+)?)$/;
 const EDITOR_TAG = /^editor-v(0\.\d+\.\d+(?:-next\.\d+)?)$/;
 const RECIPE_TAG = /^recipe-v(0\.\d+\.\d+(?:-next\.\d+)?)$/;
 const NODE_TAG = /^node-v(0\.\d+\.\d+(?:-next\.\d+)?)$/;
+const WEB_TAG = /^web-v(0\.\d+\.\d+(?:-next\.\d+)?)$/;
 const CLI_TAG = /^cli-v(0\.\d+\.\d+(?:-next\.\d+)?)$/;
 
 /**
@@ -85,6 +86,20 @@ export function resolveReleaseTarget(tag) {
     };
   }
 
+  const web = normalizedTag.match(WEB_TAG);
+  if (web) {
+    return {
+      tag: normalizedTag,
+      packageName: '@image-marker/web',
+      packagePath: 'packages/web',
+      version: web[1],
+      branch: 'release/2.0',
+      npmTag: web[1].includes('-next.') ? 'next' : 'latest',
+      additionalDistTags: [],
+      channel: web[1].includes('-next.') ? 'web-prerelease' : 'web',
+    };
+  }
+
   const cli = normalizedTag.match(CLI_TAG);
   if (cli) {
     return {
@@ -100,6 +115,6 @@ export function resolveReleaseTarget(tag) {
   }
 
   throw new Error(
-    `Unsupported release tag "${normalizedTag}". Expected v1.x.y, v2.x.y[-alpha|beta|rc.n], editor-v0.x.y[-next.n], recipe-v0.x.y[-next.n], node-v0.x.y[-next.n], or cli-v0.x.y[-next.n].`
+    `Unsupported release tag "${normalizedTag}". Expected v1.x.y, v2.x.y[-alpha|beta|rc.n], editor-v0.x.y[-next.n], recipe-v0.x.y[-next.n], node-v0.x.y[-next.n], cli-v0.x.y[-next.n], or web-v0.x.y[-next.n].`
   );
 }
