@@ -22,6 +22,7 @@ const requiredFiles = [
   'tools/content-credentials/index.html',
   'compatibility/index.html',
   'guides/invisible-watermarks/index.html',
+  'guides/web-sdk/index.html',
   'guides/performance-and-jobs/index.html',
   'guides/editor/index.html',
   'guides/editor/reference/index.html',
@@ -54,6 +55,7 @@ const requiredFiles = [
   'zh-cn/guides/position-and-style/index.html',
   'zh-cn/guides/output-and-quality/index.html',
   'zh-cn/guides/invisible-watermarks/index.html',
+  'zh-cn/guides/web-sdk/index.html',
   'zh-cn/guides/performance-and-jobs/index.html',
   'zh-cn/guides/editor/index.html',
   'zh-cn/guides/editor/reference/index.html',
@@ -325,6 +327,7 @@ for (const url of [
   'https://image-marker.corerobin.com/cli/',
   'https://image-marker.corerobin.com/whats-new-2/',
   'https://image-marker.corerobin.com/guides/editor/reference/',
+  'https://image-marker.corerobin.com/guides/web-sdk/',
   'https://image-marker.corerobin.com/zh-cn/sitemap/',
   'https://image-marker.corerobin.com/zh-cn/recipe/',
   'https://image-marker.corerobin.com/zh-cn/node/',
@@ -350,6 +353,7 @@ for (const url of [
   'https://image-marker.corerobin.com/zh-cn/tools/trace-lab/',
   'https://image-marker.corerobin.com/zh-cn/tools/content-credentials/',
   'https://image-marker.corerobin.com/zh-cn/whats-new-2/',
+  'https://image-marker.corerobin.com/zh-cn/guides/web-sdk/',
 ]) {
   if (!xmlSitemap.includes(`<loc>${url}</loc>`)) {
     throw new Error(`XML sitemap is missing expected URL: ${url}`);

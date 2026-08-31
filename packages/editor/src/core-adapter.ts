@@ -1,59 +1,8 @@
-import Marker, {
-  ImageFormat,
-  type MarkerImageInfo,
-  type MarkerResult,
-  type WatermarkRecipeDefinition,
-} from 'react-native-image-marker';
-import type {
-  EditorExportResult,
-  EditorRenderRequest,
-  ImageMarkerEditorRenderAdapter,
-} from './types';
-import { fitEditorSizeWithinMax, projectEditorRecipe } from './projection';
+import Marker, { type MarkerImageInfo } from './core-contract';
+import { createEditorRenderAdapter } from './adapter';
+import type { ImageMarkerEditorRenderAdapter } from './types';
 
-function withMaxSize(
-  recipe: WatermarkRecipeDefinition,
-  maxSize: number | undefined
-): WatermarkRecipeDefinition {
-  return {
-    schemaVersion: 2,
-    layers: recipe.layers,
-    output: {
-      ...recipe.output,
-      maxSize: maxSize ?? recipe.output.maxSize,
-    },
-  };
-}
-
-function signedResult(
-  watermarked: MarkerResult,
-  signedImage: string
-): MarkerResult {
-  return {
-    ...watermarked,
-    uri: signedImage,
-    output: signedImage.startsWith('data:') ? 'data-url' : 'file',
-  };
-}
-
-function toCoreSaveFormat(
-  value: WatermarkRecipeDefinition['output']['saveFormat']
-): ImageFormat | undefined {
-  switch (value) {
-    case 'jpg':
-      return ImageFormat.jpg;
-    case 'png':
-      return ImageFormat.png;
-    case 'webp':
-      return ImageFormat.webp;
-    case 'base64':
-      return ImageFormat.base64;
-    default:
-      return undefined;
-  }
-}
-
-/** Resolve display dimensions and encoded orientation through Core 2.1. */
+/** Resolve dimensions through the original Core binding selected by Metro. */
 export function resolveCoreEditorSourceInfo(
   source: unknown
 ): Promise<MarkerImageInfo> {
@@ -68,82 +17,5 @@ export function resolveCoreEditorSourceInfo(
 export function createCoreEditorAdapter(
   previewMaxSize = 1024
 ): ImageMarkerEditorRenderAdapter {
-  const renderVisible = async (
-    request: EditorRenderRequest,
-    maxSize?: number
-  ) => {
-    const sourceSize =
-      request.sourceSize ??
-      (await resolveCoreEditorSourceInfo(request.input.backgroundImage.src));
-    const targetSize = maxSize
-      ? fitEditorSizeWithinMax(sourceSize, maxSize)
-      : undefined;
-    const recipe =
-      targetSize &&
-      (targetSize.width !== sourceSize.width ||
-        targetSize.height !== sourceSize.height)
-        ? projectEditorRecipe(request.recipe, sourceSize, targetSize)
-        : request.recipe;
-    return Marker.createRecipe(withMaxSize(recipe, maxSize)).apply(
-      request.input,
-      request.control
-    );
-  };
-
-  return {
-    getSourceInfo: resolveCoreEditorSourceInfo,
-
-    renderPreview(request) {
-      return renderVisible(request, request.maxSize ?? previewMaxSize);
-    },
-
-    async exportOriginal(request): Promise<EditorExportResult> {
-      const visible = await renderVisible(
-        request,
-        request.recipe.output.maxSize
-      );
-      const invisible = request.options?.invisible;
-      const credentials = request.options?.contentCredentials;
-
-      if (credentials && !invisible) {
-        throw new Error(
-          'Content Credentials export requires invisible locator options so the signed claim can reference a stable locator.'
-        );
-      }
-      if (invisible && credentials) {
-        const result = await Marker.embedInvisibleWithCredentials(
-          {
-            watermark: {
-              image: { src: visible.uri },
-              ...invisible,
-              saveFormat: toCoreSaveFormat(request.recipe.output.saveFormat),
-              quality: request.recipe.output.quality,
-              maxSize: request.recipe.output.maxSize,
-            },
-            adapter: credentials.adapter,
-            claim: credentials.claim,
-          },
-          request.control
-        );
-        return {
-          visible,
-          final: signedResult(result.watermarkedImage, result.signedImage),
-        };
-      }
-      if (invisible) {
-        const final = await Marker.embedInvisible(
-          {
-            image: { src: visible.uri },
-            ...invisible,
-            saveFormat: toCoreSaveFormat(request.recipe.output.saveFormat),
-            quality: request.recipe.output.quality,
-            maxSize: request.recipe.output.maxSize,
-          },
-          request.control
-        );
-        return { visible, final };
-      }
-      return { visible, final: visible };
-    },
-  };
+  return createEditorRenderAdapter(Marker, previewMaxSize);
 }

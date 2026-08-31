@@ -89,6 +89,7 @@ jobs:
                   "cpp/**",
                   "src/**",
                   "packages/editor/**",
+                  "packages/web/**",
                   "packages/recipe/**",
                   "package.json",
                   "package-lock.json",
@@ -115,6 +116,7 @@ jobs:
                   "cpp/**",
                   "src/**",
                   "packages/editor/**",
+                  "packages/web/**",
                   "packages/recipe/**",
                   "package.json",
                   "package-lock.json",
@@ -140,11 +142,15 @@ jobs:
                   "src/**",
                   "cpp/**",
                   "packages/editor/**",
+                  "packages/web/**",
                   "packages/recipe/**",
                   "package.json",
                   "package-lock.json",
                   "app.plugin.js",
                   "tsconfig*.json",
+                  "scripts/build-web-package.mjs",
+                  "scripts/verify-web-*.mjs",
+                  "scripts/fixtures/web-consumer/**",
                   "lefthook.yml",
                   ".eslintignore",
                   ".eslintrc.js",
@@ -173,6 +179,7 @@ jobs:
                   "src/**",
                   "docs/**",
                   "packages/editor/**",
+                  "packages/web/**",
                   "packages/recipe/**",
                   "packages/node/**",
                   "packages/cli/**",
@@ -238,12 +245,16 @@ jobs:
           editor = any_changed(
               [
                   "packages/editor/**",
+                  "packages/web/**",
                   "src/**",
                   "scripts/fix-esm-imports.mjs",
                   "scripts/verify-package-consumer.mjs",
                   "package.json",
                   "package-lock.json",
                   "tsconfig*.json",
+                  "scripts/build-web-package.mjs",
+                  "scripts/verify-web-*.mjs",
+                  "scripts/fixtures/web-consumer/**",
                   ".github/workflows/ci.yml",
                   ".github/actions/**",
               ]
@@ -258,6 +269,9 @@ jobs:
                   "package.json",
                   "package-lock.json",
                   "tsconfig*.json",
+                  "scripts/build-web-package.mjs",
+                  "scripts/verify-web-*.mjs",
+                  "scripts/fixtures/web-consumer/**",
                   ".github/workflows/ci.yml",
                   ".github/actions/**",
               ]
@@ -274,6 +288,9 @@ jobs:
                   "package.json",
                   "package-lock.json",
                   "tsconfig*.json",
+                  "scripts/build-web-package.mjs",
+                  "scripts/verify-web-*.mjs",
+                  "scripts/fixtures/web-consumer/**",
                   ".github/workflows/ci.yml",
                   ".github/workflows/npm-publish.yml",
                   ".github/actions/**",
@@ -293,6 +310,9 @@ jobs:
                   "package.json",
                   "package-lock.json",
                   "tsconfig*.json",
+                  "scripts/build-web-package.mjs",
+                  "scripts/verify-web-*.mjs",
+                  "scripts/fixtures/web-consumer/**",
                   ".github/workflows/ci.yml",
                   ".github/workflows/npm-publish.yml",
                   ".github/actions/**",
@@ -638,6 +658,30 @@ jobs:
             throw new Error('Trace Service dependencies leaked into the package.');
           }
           NODE
+
+  web-sdk:
+    runs-on: ubuntu-latest
+    name: Standalone Web SDK Consumer
+    needs: changes
+    if: needs.changes.outputs.js == 'true' || needs.changes.outputs.editor == 'true' || needs.changes.outputs.docs == 'true'
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Setup Node.js
+        uses: ./.github/actions/setup
+        with:
+          node-version: '22.22.0'
+      - name: Install tooling
+        run: |
+          npm ci
+          npm ci --prefix website
+          npm exec --prefix website -- playwright install --with-deps chromium
+      - name: Verify standalone package and production browser consumer
+        run: |
+          npm run build:web
+          npm run check:web-api
+          npm run verify:size:web
+          node scripts/verify-web-consumer.mjs
 
   docs-site:
     runs-on: ubuntu-latest
@@ -1040,6 +1084,7 @@ jobs:
         security,
         js-check,
         editor-check,
+        web-sdk,
         recipe-check,
         c2pa-service,
         trace-service,

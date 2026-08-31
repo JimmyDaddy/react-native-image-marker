@@ -4,7 +4,6 @@ import starlightTypeDoc, {
   createStarlightTypeDocPlugin,
   typeDocSidebarGroup,
 } from 'starlight-typedoc';
-import { fileURLToPath } from 'node:url';
 import { toolSidebarGroups } from './src/data/tools.mjs';
 
 const repository = 'https://github.com/JimmyDaddy/react-native-image-marker';
@@ -56,15 +55,6 @@ export default defineConfig({
   site: 'https://image-marker.corerobin.com',
   base: '/',
   trailingSlash: 'always',
-  vite: {
-    resolve: {
-      alias: {
-        'react-native-image-marker': fileURLToPath(
-          new URL('../src/index.ts', import.meta.url)
-        ),
-      },
-    },
-  },
   integrations: [
     starlight({
       title: 'React Native Image Marker',
@@ -285,6 +275,11 @@ export default defineConfig({
               label: 'Choose an API',
               translations: { 'zh-CN': '选择 API' },
               slug: 'guides/choose-an-api',
+            },
+            {
+              label: 'Standalone Web SDK',
+              translations: { 'zh-CN': '独立 Web SDK' },
+              slug: 'guides/web-sdk',
             },
             {
               label: 'Position and style',

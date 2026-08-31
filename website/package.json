@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "astro dev",
     "check": "astro check",
-    "build": "node ../scripts/build-invisible-worker.mjs public/worker/invisible-watermark.js && astro check && astro build && node scripts/postbuild.mjs && node scripts/check-build.mjs",
+    "build": "npm run prepack --prefix .. && npm run build --prefix ../packages/web && npm run build:editor --prefix .. && node scripts/copy-web-worker.mjs && astro check && astro build && node scripts/postbuild.mjs && node scripts/check-build.mjs",
     "assemble:versions": "node scripts/assemble-versioned-site.mjs",
     "check:versions": "node scripts/check-versioned-site.mjs",
     "smoke": "node scripts/smoke-playground.mjs && node scripts/smoke-tools.mjs && node scripts/smoke-accessibility.mjs",
@@ -30,6 +30,9 @@
     "typedoc-plugin-markdown": "4.12.0",
     "typedoc-plugin-rename-defaults": "0.7.3",
     "typescript": "5.9.3"
+  },
+  "dependencies": {
+    "@image-marker/web": "file:../packages/web"
   },
   "overrides": {
     "ts-deepmerge": "8.0.0"

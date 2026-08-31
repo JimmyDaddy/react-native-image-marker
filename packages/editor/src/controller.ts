@@ -4,7 +4,7 @@ import {
   type WatermarkRecipeDefinitionLayer,
   type WatermarkRecipeDocument,
   type WatermarkRecipeLayer,
-} from 'react-native-image-marker';
+} from './core-contract';
 import { normalizeSafeArea, snapLayerPosition } from './geometry';
 import type {
   EditorAlignment,

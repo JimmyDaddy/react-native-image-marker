@@ -67,7 +67,7 @@
     "test": "jest",
     "test:ci-guards": "node --test scripts/__tests__/verify-android-page-size.test.mjs scripts/__tests__/verify-github-actions.test.mjs scripts/__tests__/verify-size-budgets.test.mjs",
     "test:release-routing": "node --test scripts/__tests__/release-target.test.mjs",
-    "test:web": "jest src/__tests__/web-marker.test.ts src/__tests__/web-marker-api.test.ts src/__tests__/web-marker-render.test.ts src/__tests__/invisible-worker-client.test.ts --runInBand",
+    "test:web": "jest src/__tests__/web-marker.test.ts src/__tests__/web-marker-api.test.ts src/__tests__/web-marker-render.test.ts src/__tests__/invisible-worker-client.test.ts src/__tests__/web-runtime.test.ts --runInBand",
     "test:editor": "npm test --workspace react-native-image-marker-editor",
     "test:cli": "npm test --workspace @image-marker/cli",
     "test:node": "npm test --workspace @image-marker/node",
@@ -75,7 +75,7 @@
     "test:cpp": "c++ -std=c++17 -Wall -Wextra -Werror cpp/tests/ImageMarkerCoreTest.cpp -o /tmp/image-marker-core-test && /tmp/image-marker-core-test",
     "test:cpp:ios-bridge": "xcrun clang++ -std=c++17 -Wall -Wextra -Werror -c ios/RCTImageMarker/ImageMarkerCoreBridge.mm -o /tmp/image-marker-core-bridge.o && xcrun swiftc -import-objc-header ios/RCTImageMarker/ImageMarkerCoreBridge.h cpp/tests/ImageMarkerCoreBridgeSmoke.swift /tmp/image-marker-core-bridge.o -lc++ -o /tmp/image-marker-core-bridge-test && /tmp/image-marker-core-bridge-test",
     "typecheck": "npm run build:recipe && tsc --noEmit && npm run typecheck:api",
-    "typecheck:api": "tsc --noEmit --strict --skipLibCheck --esModuleInterop --verbatimModuleSyntax --moduleResolution node --module esnext --target esnext src/__tests__/image-mark-options.typecheck.ts src/__tests__/trace-runtime.typecheck.ts",
+    "typecheck:api": "tsc --noEmit --strict --skipLibCheck --esModuleInterop --verbatimModuleSyntax --moduleResolution node --module esnext --target esnext src/__tests__/image-mark-options.typecheck.ts src/__tests__/trace-runtime.typecheck.ts && tsc -p packages/web/tsconfig.typecheck.json",
     "typecheck:example": "npm --prefix example run typecheck",
     "typecheck:expo-example": "npm --prefix expo-example run typecheck",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
@@ -105,7 +105,11 @@
     "docs": "npm --prefix website run build",
     "verify:release-target": "node scripts/verify-release-target.mjs",
     "docs:dev": "npm --prefix website run dev",
-    "expo-install": "yarn expo-example expo-install"
+    "expo-install": "yarn expo-example expo-install",
+    "build:web": "npm run build --workspace @image-marker/web",
+    "check:web-api": "npm run check:api --workspace @image-marker/web",
+    "verify:size:web": "node scripts/verify-size-budgets.mjs web",
+    "verify:web-consumer": "npm run build:web && node scripts/verify-web-consumer.mjs"
   },
   "keywords": [
     "react-native",
@@ -189,7 +193,8 @@
       "<rootDir>/packages/cli/",
       "<rootDir>/packages/node/",
       "<rootDir>/packages/recipe/",
-      "<rootDir>/src/__tests__/.*\\.typecheck\\.ts$"
+      "<rootDir>/src/__tests__/.*\\.typecheck\\.ts$",
+      "<rootDir>/scripts/fixtures/"
     ],
     "moduleNameMapper": {
       "^@image-marker/recipe$": "<rootDir>/packages/recipe/src/index.ts"

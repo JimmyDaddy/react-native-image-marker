@@ -4,7 +4,7 @@ import type {
   MarkerImageInfo,
   MarkerJobOptions,
   MarkerResult,
-} from 'react-native-image-marker';
+} from './core-contract';
 import type {
   WatermarkBlendMode,
   WatermarkRecipeDefinition,

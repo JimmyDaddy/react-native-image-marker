@@ -18,6 +18,7 @@ import type {
   LoadedWebImage,
   WebCanvas,
   WebCanvasContext,
+  WebResourceAdapter,
   WebTextMetrics,
 } from './browser';
 import {
@@ -37,6 +38,12 @@ import { resolveTilePlacements } from '../layout';
 export type WebRenderLayer =
   | { type: 'text'; options: TextOptions }
   | { type: 'image'; options: WatermarkImageOptions };
+
+/** Per-instance DOM resources and cooperative boundaries for Web rendering. */
+export interface WebRenderRuntime {
+  resources?: WebResourceAdapter;
+  signal?: AbortSignal;
+}
 
 type OutputOptions = Pick<
   MarkOptions,
@@ -65,6 +72,13 @@ interface ResolvedCornerRadii {
   topRight: ResolvedRadius;
   bottomRight: ResolvedRadius;
   bottomLeft: ResolvedRadius;
+}
+
+function throwIfAborted(signal: AbortSignal | undefined): void {
+  if (!signal?.aborted) return;
+  const error = new Error('Web canvas operation was aborted.');
+  error.name = 'AbortError';
+  throw error;
 }
 
 interface TextLayout {
@@ -809,8 +823,12 @@ function fullSourceBounds(image: LoadedWebImage): SourceBounds {
   return { x: 0, y: 0, width: image.width, height: image.height };
 }
 
-function getVisibleSourceBounds(image: LoadedWebImage): SourceBounds {
-  const canvas = createWebCanvas(image.width, image.height);
+function getVisibleSourceBounds(
+  image: LoadedWebImage,
+  runtime?: WebRenderRuntime
+): SourceBounds {
+  throwIfAborted(runtime?.signal);
+  const canvas = createWebCanvas(image.width, image.height, runtime?.resources);
   const context = getCanvasContext(canvas);
   context.drawImage(image.image, 0, 0);
 
@@ -858,12 +876,18 @@ async function drawImageLayer(
   context: WebCanvasContext,
   options: WatermarkImageOptions,
   canvas: Size,
-  maxSize: number | undefined
+  maxSize: number | undefined,
+  runtime?: WebRenderRuntime
 ) {
-  const image = await loadWebImage(options.src);
+  const image = await loadWebImage(
+    options.src,
+    runtime?.resources,
+    runtime?.signal
+  );
   try {
+    throwIfAborted(runtime?.signal);
     const sourceBounds = options.trimTransparentPadding
-      ? getVisibleSourceBounds(image)
+      ? getVisibleSourceBounds(image, runtime)
       : fullSourceBounds(image);
     const boundedImageSize = fitSizeWithinMax(image, maxSize);
     const decodeScale = boundedImageSize.width / image.width;
@@ -952,8 +976,10 @@ function normalizeMatteColor(value: string | undefined): string {
 export async function renderWebCompositionToCanvas(
   backgroundImage: ImageOptions,
   layers: WebRenderLayer[],
-  output: OutputOptions
+  output: OutputOptions,
+  runtime?: WebRenderRuntime
 ): Promise<WebCanvas> {
+  throwIfAborted(runtime?.signal);
   if (!backgroundImage?.src) {
     throw new Error('please set image!');
   }
@@ -976,9 +1002,14 @@ export async function renderWebCompositionToCanvas(
     backgroundImage.rotate,
     'background image rotation'
   );
-  const background = await loadWebImage(backgroundImage.src);
+  const background = await loadWebImage(
+    backgroundImage.src,
+    runtime?.resources,
+    runtime?.signal
+  );
 
   try {
+    throwIfAborted(runtime?.signal);
     const boundedBackgroundSize = fitSizeWithinMax(background, output.maxSize);
     const compositionSize = {
       width: Math.max(
@@ -994,7 +1025,11 @@ export async function renderWebCompositionToCanvas(
       canvasMode === 'expand'
         ? getExpandedCanvasSize(compositionSize, backgroundRotation)
         : compositionSize;
-    const canvas = createWebCanvas(outputSize.width, outputSize.height);
+    const canvas = createWebCanvas(
+      outputSize.width,
+      outputSize.height,
+      runtime?.resources
+    );
     const context = getCanvasContext(canvas);
 
     if (format === 'jpg') {
@@ -1029,6 +1064,7 @@ export async function renderWebCompositionToCanvas(
       }
 
       for (const layer of layers) {
+        throwIfAborted(runtime?.signal);
         if (layer.type === 'text') {
           drawTextLayer(context, layer.options, compositionSize);
         } else {
@@ -1036,7 +1072,8 @@ export async function renderWebCompositionToCanvas(
             context,
             layer.options,
             compositionSize,
-            output.maxSize
+            output.maxSize,
+            runtime
           );
         }
       }
@@ -1054,12 +1091,15 @@ export async function renderWebCompositionToCanvas(
 export async function renderWebComposition(
   backgroundImage: ImageOptions,
   layers: WebRenderLayer[],
-  output: OutputOptions
+  output: OutputOptions,
+  runtime?: WebRenderRuntime
 ): Promise<string> {
   const canvas = await renderWebCompositionToCanvas(
     backgroundImage,
     layers,
-    output
+    output,
+    runtime
   );
+  throwIfAborted(runtime?.signal);
   return encodeCanvas(canvas, output.saveFormat, output.quality);
 }

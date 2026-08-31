@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "skipLibCheck": false,
+    "types": []
+  },
+  "files": ["../../src/__tests__/web-runtime.typecheck.ts"],
+  "include": [],
+  "exclude": []
+}

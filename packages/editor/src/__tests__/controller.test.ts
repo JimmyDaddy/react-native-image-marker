@@ -81,19 +81,44 @@ describe('ImageMarkerEditorController', () => {
 
   it('imports Recipe v1, exports detached Recipe v2, and allocates stable IDs', () => {
     const controller = createController();
-    controller.importRecipe({
+    const legacyRecipe = {
       schemaVersion: 1,
       watermarks: [{ type: 'text', text: 'Legacy' }],
       saveFormat: 'jpg',
-    });
+    };
+    controller.importRecipe(legacyRecipe as never);
+    legacyRecipe.watermarks[0].text = 'Mutated after import';
     const id = controller.addLayer({ type: 'image', src: '/new.png' });
     const exported = controller.exportRecipe();
 
     expect(exported.schemaVersion).toBe(2);
     expect(exported.output.saveFormat).toBe('jpg');
+    expect(exported.layers[0]).toEqual(
+      expect.objectContaining({ id: 'layer-1', text: 'Legacy' })
+    );
     expect(id).toMatch(/^layer-editor-/);
     exported.layers[0]!.visible = false;
     expect(controller.getState().recipe.layers[0]?.visible).toBeUndefined();
+  });
+
+  it('preserves Core Recipe migration validation errors', () => {
+    expect(
+      () =>
+        new ImageMarkerEditorController({
+          schemaVersion: 2,
+          layers: [
+            {
+              id: 'title',
+              type: 'text',
+              text: 'Legacy field',
+              positionOptions: {},
+            },
+          ],
+          output: {},
+        } as never)
+    ).toThrow(
+      'watermarks[0].positionOptions was removed in v2; use position instead.'
+    );
   });
 
   it('honors locking and keyboard/a11y-friendly commands', () => {

@@ -77,6 +77,23 @@ test('routes the command-line package independently', () => {
   assert.equal(resolveReleaseTarget('cli-v0.2.0-next.1').npmTag, 'next');
 });
 
+test('routes the independent Web SDK without changing Core or Editor channels', () => {
+  assert.deepEqual(resolveReleaseTarget('web-v0.1.0'), {
+    tag: 'web-v0.1.0',
+    packageName: '@image-marker/web',
+    packagePath: 'packages/web',
+    version: '0.1.0',
+    branch: 'release/2.0',
+    npmTag: 'latest',
+    additionalDistTags: [],
+    channel: 'web',
+  });
+  assert.equal(resolveReleaseTarget('web-v0.2.0-next.1').npmTag, 'next');
+  assert.equal(resolveReleaseTarget('web-v0.2.0-next.1').channel, 'web-prerelease');
+  assert.throws(() => resolveReleaseTarget('web-v1.0.0'));
+  assert.throws(() => resolveReleaseTarget('web-v0.1.0-beta.1'));
+});
+
 test('rejects ambiguous or unsupported release tags', () => {
   for (const tag of [
     '',
