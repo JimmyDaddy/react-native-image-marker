@@ -47,13 +47,21 @@ final class ImageMarkerTextLayout {
 
     func draw(at origin: CGPoint) {
         let glyphRange = layoutManager.glyphRange(for: textContainer)
+        let textBounds = layoutManager.usedRect(for: textContainer)
+
+        // Subtract textBounds.origin to counter the alignment offset applied by
+        // drawBackground and drawGlyphs.
+        let textContainerOrigin = CGPoint(
+            x: origin.x - textBounds.origin.x,
+            y: origin.y - textBounds.origin.y
+        )
         layoutManager.drawBackground(
             forGlyphRange: glyphRange,
-            at: origin
+            at: textContainerOrigin
         )
         layoutManager.drawGlyphs(
             forGlyphRange: glyphRange,
-            at: origin
+            at: textContainerOrigin
         )
     }
 }
