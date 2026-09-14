@@ -173,6 +173,48 @@ final class ImageMarkerExampleUITests: XCTestCase {
         bytes[index] > 24 || bytes[index + 1] > 24 || bytes[index + 2] > 24
       }
     )
+
+    // Alignment must not move glyphs or their background away from the requested origin.
+    let alignmentStyle = try TextStyle(dicOpts: [:])
+    let font = UIFont.monospacedSystemFont(ofSize: 24, weight: .regular)
+    let format = UIGraphicsImageRendererFormat.default()
+    format.scale = 1
+    // Arbitrary nonzero coordinates verify that drawing respects the requested origin.
+    let origin = CGPoint(x: 13, y: 17)
+    for alignment in [NSTextAlignment.left, .center, .right] {
+      let paragraph = NSMutableParagraphStyle()
+      paragraph.alignment = alignment
+      let attributes: [NSAttributedString.Key: Any] = [
+        .font: font,
+        // Distinct colors let us check glyph and background positioning separately.
+        .foregroundColor: UIColor.blue,
+        .backgroundColor: UIColor.red,
+        .paragraphStyle: paragraph,
+      ]
+      let alignedLayout = ImageMarkerTextLayout(
+        text: NSAttributedString(string: "Hello\nWorld", attributes: attributes),
+        maxWidth: 200,
+        style: alignmentStyle
+      )
+      let image = UIGraphicsImageRenderer(
+        size: CGSize(width: 240, height: 80),
+        format: format
+      ).image { _ in
+        alignedLayout.draw(at: origin)
+      }
+      let bounds = try XCTUnwrap(bluePixelBounds(in: image))
+      // Visible glyphs must span more than one line.
+      XCTAssertGreaterThan(bounds.height, font.lineHeight)
+      XCTAssertEqual(bounds.minX, origin.x, accuracy: 0.001)
+      let pixels = try XCTUnwrap(rgbaBytes(for: image))
+      assertPixel(
+        pixels,
+        at: CGPoint(x: origin.x + 1, y: origin.y + 1),
+        width: Int(image.size.width),
+        matches: .red,
+        message: "Text background should start at the requested origin for alignment \(alignment.rawValue)"
+      )
+    }
   }
 
   func testCore21ImageInfoReadsEncodedOrientation() throws {
