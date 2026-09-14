@@ -797,6 +797,58 @@ function useViewModel(props: ImageMarkerLabProps) {
     );
   }
 
+  async function runMultilineTextAlignmentFeature() {
+    setLastRun('Multiline text alignment');
+    setUri('');
+    setShow(false);
+    setFileSize('0 B');
+    setResultContract('');
+    setLoading(true);
+
+    try {
+      const path = await resultUri(
+        Marker.markText({
+          backgroundImage: { src: assets.bg },
+          watermarkTexts: textAlignOptions.map((alignment, index) => ({
+            text: 'Hello\nWorld',
+            position: { X: '10%', Y: `${10 + index * 25}%` },
+            style: {
+              color: '#FFFFFF',
+              fontSize: 64,
+              lineHeight: 80,
+              textAlign: alignment,
+              maxWidth: '70%',
+              textBackgroundStyle: {
+                type: TextBackgroundType.none,
+                color: '#1E293B',
+                padding: 0,
+              },
+            },
+          })),
+          quality: 100,
+          saveFormat: ImageFormat.png,
+        })
+      );
+
+      setUri(formatResultUri(path, ImageFormat.png));
+      setShow(true);
+      setResultContract(
+        'Top to bottom: left, center, right. Each row should show Hello and World ' +
+          'inside its dark background. All three blocks should start at the same ' +
+          'horizontal position, with no missing or clipped text. Tap the preview to enlarge.'
+      );
+      await updateFileSize(path, ImageFormat.png);
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'multiline text alignment failed',
+        text2: error instanceof Error ? error.message : String(error),
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
   function runImageOffsetFeature() {
     setBackgroundFormat('normal image');
     runMark(
@@ -1968,6 +2020,7 @@ function useViewModel(props: ImageMarkerLabProps) {
       pickImage,
       runMark,
       runTextOffsetFeature,
+      runMultilineTextAlignmentFeature,
       runImageOffsetFeature,
       runMixedWatermarkFeature,
       runBlendModeFeature,
@@ -2082,6 +2135,14 @@ function ImageMarkerLab(props: ImageMarkerLabProps) {
                   tone="blue"
                   testID="feature-text-anchor-offset"
                   onPress={actions.runTextOffsetFeature}
+                />
+                <FeatureCard
+                  badge="Text"
+                  title="Multiline text alignment"
+                  meta="Compare left, center, and right at the same X"
+                  tone="blue"
+                  testID="feature-multiline-text-alignment"
+                  onPress={actions.runMultilineTextAlignmentFeature}
                 />
                 <FeatureCard
                   badge="Image"
