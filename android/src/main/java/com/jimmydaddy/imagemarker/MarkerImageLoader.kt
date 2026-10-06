@@ -20,6 +20,7 @@ import coil.decode.SvgDecoder
 import coil.request.CachePolicy
 import coil.request.ImageRequest
 import coil.request.SuccessResult
+import coil.size.Precision
 import coil.size.Scale
 import com.facebook.react.bridge.ReactApplicationContext
 import com.jimmydaddy.imagemarker.base.Constants.IMAGE_MARKER_TAG
@@ -144,7 +145,8 @@ class MarkerImageLoader(private val context: ReactApplicationContext, private va
         // The returned bitmap is explicitly recycled after rendering. Keep it out of Coil's
         // memory cache so that recycling cannot invalidate a shared cached drawable.
         .memoryCachePolicy(CachePolicy.DISABLED)
-      val requestedSize = if (img.src.width > 0 && img.src.height > 0) {
+      val hasSourceSize = img.src.width > 0 && img.src.height > 0
+      val requestedSize = if (hasSourceSize) {
         ImageSizeLimiter.fit(img.src.width, img.src.height, maxSize)
       } else {
         ImagePixelSize(maxSize, maxSize)
@@ -152,7 +154,12 @@ class MarkerImageLoader(private val context: ReactApplicationContext, private va
       request = request
         .size(requestedSize.width, requestedSize.height)
         .scale(Scale.FIT)
-      if (img.src.width > 0 && img.src.height > 0) {
+      if (!hasSourceSize) {
+        // Without a source size, maxSize x maxSize is only an upper bound. Coil defaults to exact
+        // precision for requests without a view, which would scale smaller images up to fill it.
+        request = request.precision(Precision.INEXACT)
+      }
+      if (hasSourceSize) {
         Log.d(IMAGE_MARKER_TAG, "src.width: " + img.src.width + " src.height: " + img.src.height)
       }
 

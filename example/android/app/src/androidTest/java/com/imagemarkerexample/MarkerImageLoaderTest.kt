@@ -44,6 +44,18 @@ class MarkerImageLoaderTest {
   }
 
   @Test
+  fun doesNotUpscaleCoilSourceWithoutExplicitSize() = runBlocking {
+    val uri = "content://com.imagemarkerexample.test.imageprovider/image"
+
+    // maxSize is an upper bound: a 3x2 source must not be enlarged to fit 2048x2048.
+    val bitmap = load(uri)
+
+    assertEquals(3, bitmap.width)
+    assertEquals(2, bitmap.height)
+    bitmap.recycle()
+  }
+
+  @Test
   fun loadsAndroidResourceUriThroughCoil() = runBlocking {
     val uri = "android.resource://${targetContext.packageName}/${R.mipmap.ic_launcher}"
 
