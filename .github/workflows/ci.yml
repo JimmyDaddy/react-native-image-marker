@@ -747,7 +747,7 @@ jobs:
         run: npm run test:web -- --coverage
 
       - name: Upload Web coverage report
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: web-coverage-${{ github.sha }}
           path: coverage
@@ -875,7 +875,7 @@ jobs:
         run: npm run verify:android-page-size
 
       - name: Upload APK
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: app-release-${{ github.sha }}.apk
           path: ${{ github.workspace }}/example/android/app-release-${{ github.sha }}.apk
@@ -935,7 +935,7 @@ jobs:
           script: bash scripts/run-android-instrumentation.sh
 
       - name: Upload Reports
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: Test-Reports-api-${{ matrix.api-level }}
           path: ${{ github.workspace }}/example/android/app/build/reports
